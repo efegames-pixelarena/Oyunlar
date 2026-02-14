@@ -413,7 +413,7 @@ onAuthStateChanged(auth, async (user)=>{
     onSnapshot(userRef,(docSnap)=>{
       if(docSnap.exists()){
         const data = docSnap.data();
-        balanceText.innerText = "💰 " + data.balance + "₺";
+        balanceText.innerText = "💵 " + data.balance + "₺";
       }
     });
 
