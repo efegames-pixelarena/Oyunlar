@@ -44,7 +44,7 @@ text-shadow:0 0 25px orange;
 
 .controls{
 position:absolute;
-bottom:40px;
+bottom:30px;
 width:100%;
 display:flex;
 justify-content:center;
@@ -53,20 +53,20 @@ pointer-events:auto;
 }
 
 button{
-padding:12px 20px;
+padding:12px 24px;
 border:none;
-border-radius:10px;
+border-radius:12px;
 font-size:16px;
 cursor:pointer;
 }
 
+.deal{background:#f9a825;color:black;}
 .hit{background:#2e7d32;color:white;}
 .stand{background:#c62828;color:white;}
-.deal{background:#f9a825;color:black;}
 
 .info{
 position:absolute;
-bottom:120px;
+bottom:100px;
 width:100%;
 text-align:center;
 font-weight:bold;
@@ -85,7 +85,7 @@ font-weight:bold;
 PixselArena<br>Blackjack Live
 </div>
 
-<div class="info" id="infoText">Bahis Yapın</div>
+<div class="info" id="infoText">Bahis 100₺</div>
 
 <div class="controls">
 <button class="deal" onclick="startGame()">DEAL</button>
@@ -99,30 +99,25 @@ PixselArena<br>Blackjack Live
 <script>
 let balance=1000;
 let bet=100;
-let player=[],dealer=[],deck=[];
+let deck=[];
+let player=[],dealer=[];
 let gameActive=false;
+let dealing=false;
 
 const scene=new THREE.Scene();
 const camera=new THREE.PerspectiveCamera(60,innerWidth/innerHeight,0.1,1000);
 const renderer=new THREE.WebGLRenderer({antialias:true});
 renderer.setSize(innerWidth,innerHeight);
-renderer.setPixelRatio(devicePixelRatio);
 document.body.appendChild(renderer.domElement);
 
 camera.position.set(0,7,13);
 camera.lookAt(0,0,0);
 
-/* Evolution Style Lighting */
+/* EVOLUTION LIGHT */
 scene.add(new THREE.AmbientLight(0xffffff,0.6));
-
-const orangeLight=new THREE.PointLight(0xff6600,3,50);
-orangeLight.position.set(0,10,5);
-scene.add(orangeLight);
-
-const spot=new THREE.SpotLight(0xff8800,4);
-spot.position.set(0,15,5);
-spot.angle=0.4;
-scene.add(spot);
+const light=new THREE.PointLight(0xff6600,3,50);
+light.position.set(0,10,5);
+scene.add(light);
 
 /* TABLE */
 const table=new THREE.Mesh(
@@ -132,6 +127,7 @@ new THREE.MeshStandardMaterial({color:0x0b0b0b})
 table.position.y=-2;
 scene.add(table);
 
+/* EDGE */
 const edge=new THREE.Mesh(
 new THREE.TorusGeometry(9,0.3,16,100),
 new THREE.MeshBasicMaterial({color:0xff6600})
@@ -140,18 +136,10 @@ edge.rotation.x=Math.PI/2;
 edge.position.y=-1.5;
 scene.add(edge);
 
-/* CARD */
-function createCard(){
-return new THREE.Mesh(
-new THREE.BoxGeometry(1.6,0.05,2.4),
-new THREE.MeshStandardMaterial({color:0xffffff})
-);
-}
-
 /* DECK */
 function initDeck(){
 deck=[];
-const suits=["S","H","D","C"];
+const suits=["♠","♥","♦","♣"];
 const vals=["A","2","3","4","5","6","7","8","9","10","J","Q","K"];
 for(let d=0;d<8;d++)
 for(let s of suits)
@@ -161,6 +149,65 @@ deck.sort(()=>Math.random()-0.5);
 }
 
 function draw(){return deck.pop();}
+
+/* CARD */
+function createCard(cardData,hidden=false){
+let geo=new THREE.BoxGeometry(1.6,0.05,2.4);
+
+let canvas=document.createElement("canvas");
+canvas.width=256;
+canvas.height=356;
+let ctx=canvas.getContext("2d");
+
+ctx.fillStyle= hidden ? "#003366" : "#ffffff";
+ctx.fillRect(0,0,256,356);
+
+if(!hidden){
+ctx.fillStyle=(cardData.s==="♥"||cardData.s==="♦")?"red":"black";
+ctx.font="60px Arial";
+ctx.fillText(cardData.v,20,70);
+ctx.fillText(cardData.s,20,140);
+}
+
+let texture=new THREE.CanvasTexture(canvas);
+let mat=new THREE.MeshStandardMaterial({map:texture});
+return new THREE.Mesh(geo,mat);
+}
+
+function animateDeal(card,x,z){
+card.position.set(0,5,-6);
+scene.add(card);
+let target=new THREE.Vector3(x,-1,z);
+let t=0;
+function anim(){
+t+=0.01;
+card.position.lerpVectors(
+new THREE.Vector3(0,5,-6),
+target,t
+);
+if(t<1)requestAnimationFrame(anim);
+}
+anim();
+}
+
+function flip(card,cardData){
+let t=0;
+function anim(){
+t+=0.05;
+card.rotation.y=Math.PI*t;
+if(t>=0.5 && !card.userData.flipped){
+scene.remove(card);
+let newCard=createCard(cardData,false);
+newCard.position.copy(card.position);
+newCard.rotation.y=Math.PI*0.5;
+scene.add(newCard);
+card=newCard;
+card.userData.flipped=true;
+}
+if(t<1)requestAnimationFrame(anim);
+}
+anim();
+}
 
 function value(hand){
 let t=0,a=0;
@@ -173,74 +220,68 @@ while(t>21&&a>0){t-=10;a--;}
 return t;
 }
 
-function animateDeal(card,x,z){
-card.position.set(0,5,-6);
-scene.add(card);
-let target=new THREE.Vector3(x,-1,z);
-let t=0;
-function anim(){
-t+=0.02;
-card.position.lerpVectors(
-new THREE.Vector3(0,5,-6),
-target,t
-);
-if(t<1)requestAnimationFrame(anim);
-}
-anim();
-}
-
-function flip(card){
-let t=0;
-function anim(){
-t+=0.05;
-card.rotation.y=Math.PI*t;
-if(t<1)requestAnimationFrame(anim);
-}
-anim();
-}
-
-function startGame(){
-if(gameActive) return;
-if(balance<bet){alert("Bakiye Yetersiz");return;}
-
-balance-=bet;
-updateBalance();
+/* GAME FLOW */
+async function startGame(){
+if(gameActive||dealing)return;
+if(balance<bet)return alert("Bakiye Yetersiz");
+balance-=bet;updateBalance();
 initDeck();
 player=[];dealer=[];
-gameActive=true;
+gameActive=true;dealing=true;
 
-dealTo(player,-2);
-dealTo(dealer,2);
-dealTo(player,-0.5);
-dealTo(dealer,0.5);
+await dealPlayer();
+await dealDealer(true);
+await dealPlayer();
+await dealDealer(false);
 
-document.getElementById("infoText").innerText="Oyun Başladı";
+dealing=false;
 }
 
-function dealTo(hand,x){
+function dealPlayer(){
+return new Promise(resolve=>{
 let data=draw();
-hand.push(data);
-let card=createCard();
-animateDeal(card,x+(hand.length*1.8),0);
-setTimeout(()=>flip(card),800);
+player.push(data);
+let card=createCard(data,false);
+animateDeal(card,-3+(player.length*2),0);
+setTimeout(resolve,3000);
+});
+}
+
+function dealDealer(hidden){
+return new Promise(resolve=>{
+let data=draw();
+dealer.push(data);
+let card=createCard(data,hidden);
+animateDeal(card,1+(dealer.length*2),0);
+card.userData.hidden=hidden;
+setTimeout(resolve,3000);
+});
 }
 
 function hit(){
-if(!gameActive) return;
-dealTo(player,-2);
-if(value(player)>21) endGame();
+if(!gameActive||dealing)return;
+dealPlayer();
+if(value(player)>21)endGame();
 }
 
-function stand(){
-if(!gameActive) return;
+async function stand(){
+if(!gameActive)return;
+gameActive=false;
+
+/* flip hidden */
+let hiddenCard=scene.children.find(o=>o.userData.hidden);
+if(hiddenCard){
+flip(hiddenCard,dealer[1]);
+hiddenCard.userData.hidden=false;
+}
+
 while(value(dealer)<17){
-dealTo(dealer,2);
+await dealDealer(false);
 }
 endGame();
 }
 
 function endGame(){
-gameActive=false;
 let p=value(player);
 let d=value(dealer);
 let result="";
@@ -258,17 +299,12 @@ function updateBalance(){
 document.getElementById("balance").innerText=balance;
 }
 
+/* LOOP */
 function animate(){
 requestAnimationFrame(animate);
 renderer.render(scene,camera);
 }
 animate();
-
-addEventListener("resize",()=>{
-camera.aspect=innerWidth/innerHeight;
-camera.updateProjectionMatrix();
-renderer.setSize(innerWidth,innerHeight);
-});
 </script>
 
 </body>
