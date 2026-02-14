@@ -125,11 +125,15 @@ const balanceEl=document.getElementById("balance");
 const betEl=document.getElementById("bet");
 const message=document.getElementById("message");
 const controls=document.getElementById("controls");
+const dealerDiv=document.getElementById("dealerCards");
+const playerDiv=document.getElementById("playerCards");
+
+let dealerHiddenCardElement=null;
+let dealerHiddenCardData=null;
 
 function disableChips(){
 document.querySelectorAll(".chip").forEach(c=>c.style.pointerEvents="none");
 }
-
 function enableChips(){
 document.querySelectorAll(".chip").forEach(c=>c.style.pointerEvents="auto");
 }
@@ -169,32 +173,21 @@ while(t>21&&a>0){t-=10;a--;}
 return t;
 }
 
+function getCardUrl(card){
+let v=card.value===1?"A":
+card.value===11?"J":
+card.value===12?"Q":
+card.value===13?"K":
+String(card.value);
+return `https://deckofcardsapi.com/static/img/${v}${card.suit}.png`;
+}
+
 function cardImage(card,hidden=false){
 let img=document.createElement("img");
 img.className="card-img";
-
-let v;
-if(card.value===1) v="A";
-else if(card.value===11) v="J";
-else if(card.value===12) v="Q";
-else if(card.value===13) v="K";
-else v=String(card.value);
-
-if(hidden){
-img.src="https://deckofcardsapi.com/static/img/back.png";
-}else{
-img.src=`https://deckofcardsapi.com/static/img/${v}${card.suit}.png`;
-}
-
-img.onerror=function(){
-img.onerror=null;
-img.src=`https://deckofcardsapi.com/static/img/${v}${card.suit}.png?retry=${Date.now()}`;
-};
-
-img.addEventListener("error",function(){
-img.src="https://deckofcardsapi.com/static/img/back.png";
-},{once:true});
-
+img.src=hidden
+?"https://deckofcardsapi.com/static/img/back.png"
+:getCardUrl(card);
 setTimeout(()=>img.classList.add("show"),30);
 return img;
 }
@@ -233,13 +226,13 @@ startGame();
 
 async function startGame(){
 gameState="dealing";
+player=[]; dealer=[];
+dealerHiddenCardElement=null;
+dealerHiddenCardData=null;
 
-player=[];
-dealer=[];
 createDeck();
-
-document.getElementById("playerCards").innerHTML="";
-document.getElementById("dealerCards").innerHTML="";
+playerDiv.innerHTML="";
+dealerDiv.innerHTML="";
 controls.style.display="none";
 
 await deal("player",false);
@@ -247,55 +240,26 @@ await deal("dealer",false);
 await deal("player",false);
 await deal("dealer",true);
 
-/* 🎯 Natural Blackjack kontrol */
-if(total(player)===21 && player.length===2){
-
-gameState="finished";
-
-/* Dealer kartlarını aç */
-document.getElementById("dealerCards").innerHTML="";
-for(let c of dealer){
-document.getElementById("dealerCards")
-.appendChild(cardImage(c,false));
-}
-
-balance += Math.floor(bet * 2.5);
-await updateDoc(userRef,{balance});
-
-message.innerText="BLACKJACK! 🎉";
-
-bet=0;
-betEl.innerText=0;
-
-setTimeout(()=>{
-document.getElementById("playerCards").innerHTML="";
-document.getElementById("dealerCards").innerHTML="";
-gameState="betting";
-message.innerText="Bahis Yapın";
-enableChips();
-},2500);
-
-return;
-}
-
 gameState="playing";
 startDecisionTimer();
 }
 
 async function deal(to,hidden){
 let card=deck.pop();
-
-/* Oyuncuya asla kapalı kart gitmez */
 if(to==="player") hidden=false;
 
 if(to==="player"){
 player.push(card);
-document.getElementById("playerCards")
-.appendChild(cardImage(card,false));
+playerDiv.appendChild(cardImage(card,false));
 }else{
 dealer.push(card);
-document.getElementById("dealerCards")
-.appendChild(cardImage(card,hidden));
+if(hidden){
+dealerHiddenCardData=card;
+dealerHiddenCardElement=cardImage(card,true);
+dealerDiv.appendChild(dealerHiddenCardElement);
+}else{
+dealerDiv.appendChild(cardImage(card,false));
+}
 }
 
 updateScores();
@@ -344,14 +308,18 @@ gameState="finished";
 controls.style.display="none";
 clearInterval(decisionTimer);
 
-document.getElementById("dealerCards").innerHTML="";
-for(let c of dealer){
-document.getElementById("dealerCards")
-.appendChild(cardImage(c,false));
+/* 🔥 Kapalı kartı aç (DOM reset yok) */
+if(dealerHiddenCardElement && dealerHiddenCardData){
+dealerHiddenCardElement.src=getCardUrl(dealerHiddenCardData);
 }
 
+updateScores();
+await delay(3000);
+
+/* 🔥 3 saniye aralıkla kart çekme */
 while(total(dealer)<17){
 await deal("dealer",false);
+await delay(3000);
 }
 
 let p=total(player);
@@ -378,12 +346,12 @@ bet=0;
 betEl.innerText=0;
 
 setTimeout(()=>{
-document.getElementById("playerCards").innerHTML="";
-document.getElementById("dealerCards").innerHTML="";
+playerDiv.innerHTML="";
+dealerDiv.innerHTML="";
 gameState="betting";
 message.innerText="Bahis Yapın";
 enableChips();
-},2000);
+},2500);
 }
 
 document.getElementById("hit").onclick=hit;
