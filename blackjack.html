@@ -3,387 +3,315 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PixelArena BJ</title>
+<title>PixelArena Blackjack</title>
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box;user-select:none;}
 body{
-height:100vh;
-overflow:hidden;
-font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
-background:
-radial-gradient(circle at center, rgba(255,180,60,0.15) 0%, transparent 40%),
-linear-gradient(to bottom,#000 0%,#000 46%,#ff7b00 47%,#0b5d2a 48%,#063d1c 100%);
-color:white;
+  margin:0;
+  background:#0f172a;
+  font-family:Arial, Helvetica, sans-serif;
+  color:white;
+  overflow:hidden;
 }
 
-/* ===== NAVBAR ===== */
-.top-bar{
-position:fixed;
-top:0;
-width:100%;
-height:60px;
-display:flex;
-align-items:center;
-justify-content:space-between;
-padding:0 16px;
-background:linear-gradient(135deg,#1a2a6c,#16245c);
-box-shadow:0 4px 15px rgba(0,0,0,0.45);
-z-index:100;
-}
-.brand{
-font-size:19px;
-font-weight:800;
-background:linear-gradient(90deg,#4fd1ff,#fff,#4fd1ff);
--webkit-background-clip:text;
--webkit-text-fill-color:transparent;
-animation:shine 3s linear infinite;
-}
-@keyframes shine{to{background-position:200% center;}}
-.right-menu{display:flex;gap:10px;}
-.nav-btn{
-padding:7px 14px;
-border-radius:12px;
-font-weight:700;
-font-size:13px;
-}
-.balance-btn{background:#273c8f;}
-.bet-btn{
-background:linear-gradient(90deg,#ff8a00,#ff5f00);
-color:#000;
+/* ===== PREMIUM TOPBAR ===== */
+
+.topbar{
+  height:50px;
+  background:#ffffff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 4px 20px rgba(0,0,0,0.15);
 }
 
-/* ===== OYUN ===== */
-.area{position:absolute;width:100%;text-align:center;}
-#dealerArea{top:95px;}
-#playerArea{bottom:220px;}
-.score{margin-top:6px;font-size:17px;color:#ffd700;}
-.dealer-title{font-size:18px;letter-spacing:4px;margin-bottom:8px;}
-.cards{display:flex;justify-content:center;gap:10px;}
-.card{
-width:60px;height:90px;border-radius:10px;
-background:white;display:flex;align-items:center;
-justify-content:center;font-size:22px;font-weight:bold;
-box-shadow:0 6px 15px rgba(0,0,0,0.5);
+.topbar-inner{
+  width:95%;
+  max-width:1200px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  font-weight:600;
+  color:#111;
 }
-.card.back{background:#111;color:transparent;}
-.red{color:#d40000;}
-.black{color:#000;}
+
+.logo{
+  font-size:17px;
+  letter-spacing:1px;
+}
+
+.wallet{
+  display:flex;
+  gap:15px;
+}
+
+.oval{
+  padding:6px 14px;
+  border-radius:30px;
+  background:#111;
+  color:#00ffcc;
+  font-weight:700;
+  animation:glow 1.2s infinite alternate;
+}
+
+@keyframes glow{
+  from{box-shadow:0 0 5px #00ffcc;}
+  to{box-shadow:0 0 15px #00ffcc;}
+}
+
+/* ===== TABLE ===== */
+
+.table{
+  text-align:center;
+  margin-top:40px;
+}
+
+.cards{
+  font-size:18px;
+  margin:15px;
+}
+
+button{
+  padding:10px 20px;
+  margin:8px;
+  font-size:16px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+}
+
+#hit{background:#22c55e;color:white;}
+#stand{background:#ef4444;color:white;}
+
+button:disabled{
+  opacity:0.4;
+  cursor:not-allowed;
+}
 
 #message{
-position:absolute;
-bottom:170px;
-width:100%;
-text-align:center;
-font-size:20px;
-font-weight:600;
+  font-size:18px;
+  margin-top:15px;
+  font-weight:600;
 }
-.controls{
-position:absolute;
-bottom:110px;
-width:100%;
-text-align:center;
-display:none;
-}
-button{
-padding:14px 28px;
-margin:8px;
-border:none;
-border-radius:12px;
-font-weight:700;
-cursor:pointer;
-}
-#hit{background:#2ecc71;color:white;}
-#stand{background:#e74c3c;color:white;}
-
-.chips{
-position:absolute;
-bottom:25px;
-width:100%;
-text-align:center;
-}
-.chip{
-display:inline-block;
-width:55px;height:55px;border-radius:50%;
-line-height:55px;margin:8px;
-font-weight:700;cursor:pointer;
-box-shadow:0 6px 15px rgba(0,0,0,0.6);
-}
-.c10{background:#f0f0f0;color:black;}
-.c25{background:#1eaa00;}
-.c50{background:#ff1c1c;}
-.c100{background:black;color:white;}
 </style>
 </head>
 <body>
 
-<div class="top-bar">
-<div class="brand">PixelArena BJ</div>
-<div class="right-menu">
-<div class="nav-btn balance-btn">
-Bakiye: <span id="balance">0</span>₺
-</div>
-<div class="nav-btn bet-btn">
-Bahis: <span id="bet">0</span>₺
-</div>
-</div>
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="logo">PixelArena BJ</div>
+    <div class="wallet">
+      <div class="oval">Bakiye ₺<span id="balance">0</span></div>
+      <div class="oval">Bahis ₺<span id="bet">0</span></div>
+    </div>
+  </div>
 </div>
 
-<div id="dealerArea" class="area">
-<div class="dealer-title">KURUPİER</div>
-<div id="dealerCards" class="cards"></div>
-<div class="score">Toplam: <span id="dealerScore">0</span></div>
-</div>
+<div class="table">
+  <div class="cards">
+    <div>Oyuncu: <span id="playerCards"></span> (<span id="playerScore">0</span>)</div>
+    <div>KURUPİER: <span id="dealerCards"></span> (<span id="dealerScore">0</span>)</div>
+  </div>
 
-<div id="message">Yükleniyor...</div>
+  <div id="message">Yükleniyor...</div>
 
-<div id="playerArea" class="area">
-<div id="playerCards" class="cards"></div>
-<div class="score">Toplam: <span id="playerScore">0</span></div>
-</div>
-
-<div class="controls" id="controls">
-<button id="hit">HIT</button>
-<button id="stand">STAND</button>
-</div>
-
-<div class="chips">
-<div class="chip c10">10</div>
-<div class="chip c25">25</div>
-<div class="chip c50">50</div>
-<div class="chip c100">100</div>
+  <button id="hit" disabled>HIT</button>
+  <button id="stand" disabled>STAND</button>
 </div>
 
 <script type="module">
 
-import { auth, db } from "./firebase-config.js";
-import { doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+/* ================= FIREBASE ================= */
 
-/* ================= AUTH GUARD ================= */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "API_KEY",
+  authDomain: "PROJECT.firebaseapp.com",
+  projectId: "PROJECT",
+  storageBucket: "PROJECT.appspot.com",
+  messagingSenderId: "XXXX",
+  appId: "XXXX"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+/* ================= STATE ================= */
+
 let currentUser=null;
+let balance=0;
+let bet=100; // sabit örnek bahis
 
-onAuthStateChanged(auth, async (user)=>{
-if(!user){
-window.location.replace("index.html");
-return;
-}
+let player=[];
+let dealer=[];
+let gameActive=false;
+let decisionTimer=null;
 
-currentUser=user;
+const balanceEl=document.getElementById("balance");
+const betEl=document.getElementById("bet");
+const playerCardsEl=document.getElementById("playerCards");
+const dealerCardsEl=document.getElementById("dealerCards");
+const playerScoreEl=document.getElementById("playerScore");
+const dealerScoreEl=document.getElementById("dealerScore");
+const message=document.getElementById("message");
+const hitBtn=document.getElementById("hit");
+const standBtn=document.getElementById("stand");
 
-const snap=await getDoc(doc(db,"users",user.uid));
-if(!snap.exists()){
-window.location.replace("index.html");
-return;
-}
+/* ================= AUTH ================= */
 
-balance=snap.data().balance || 0;
-updateUI();
-gameState="betting";
-message.innerText="Bahis Yapın";
+onAuthStateChanged(auth, async(user)=>{
+
+  if(!user){
+    window.location.replace("index.html");
+    return;
+  }
+
+  currentUser=user;
+
+  const snap=await getDoc(doc(db,"users",user.uid));
+
+  if(!snap.exists() || snap.data().balance === undefined){
+    message.innerText="Hesabınıza bakiye tanımlanmamış.";
+    return;
+  }
+
+  balance=snap.data().balance;
+
+  if(balance < bet){
+    message.innerText="Yetersiz bakiye.";
+    return;
+  }
+
+  updateUI();
+  startGame();
 });
 
 /* ================= GAME ================= */
 
-const suits=["♥","♦","♣","♠"];
-let deck=[],player=[],dealer=[];
-let balance=0,bet=0;
-let gameState="loading";
-let betTimer=null,decisionTimer=null;
-let dealerHiddenCard=null;
+function startGame(){
 
-const balanceEl=document.getElementById("balance");
-const betEl=document.getElementById("bet");
-const message=document.getElementById("message");
-const controls=document.getElementById("controls");
+  player=[];
+  dealer=[];
+  gameActive=true;
 
-function updateUI(){
-balanceEl.innerText=balance;
-betEl.innerText=bet;
-document.getElementById("playerScore").innerText=total(player);
-document.getElementById("dealerScore").innerText=
-gameState==="playing" ? (dealer[0]?cardValue(dealer[0]):0) : total(dealer);
+  balance-=bet;
+  updateUI();
+
+  player.push(draw());
+  dealer.push(draw());
+  player.push(draw());
+  dealer.push(draw());
+
+  render(true);
+
+  enableDecision();
+}
+
+function draw(){
+  return Math.floor(Math.random()*11)+1;
+}
+
+function calculate(hand){
+  return hand.reduce((a,b)=>a+b,0);
+}
+
+function render(hideDealer){
+
+  playerCardsEl.innerText=player.join(" , ");
+  playerScoreEl.innerText=calculate(player);
+
+  if(hideDealer){
+    dealerCardsEl.innerText=dealer[0]+" , ?";
+    dealerScoreEl.innerText="?";
+  }else{
+    dealerCardsEl.innerText=dealer.join(" , ");
+    dealerScoreEl.innerText=calculate(dealer);
+  }
+}
+
+function enableDecision(){
+
+  hitBtn.disabled=false;
+  standBtn.disabled=false;
+  message.innerText="Karar için 10 saniye";
+
+  decisionTimer=setTimeout(()=>{
+    if(gameActive) stand();
+  },10000);
+}
+
+hitBtn.onclick=()=>{
+  if(!gameActive) return;
+
+  player.push(draw());
+  render(true);
+
+  if(calculate(player)>21){
+    endGame("lose");
+  }
+};
+
+standBtn.onclick=stand;
+
+function stand(){
+  if(!gameActive) return;
+
+  clearTimeout(decisionTimer);
+
+  while(calculate(dealer)<17){
+    dealer.push(draw());
+  }
+
+  render(false);
+
+  const p=calculate(player);
+  const d=calculate(dealer);
+
+  if(d>21 || p>d){
+    endGame("win");
+  }else if(p<d){
+    endGame("lose");
+  }else{
+    endGame("push");
+  }
+}
+
+function endGame(result){
+
+  gameActive=false;
+  hitBtn.disabled=true;
+  standBtn.disabled=true;
+
+  if(result==="win"){
+    balance+=bet*2;
+    message.innerText="Kazandınız!";
+  }
+  else if(result==="push"){
+    balance+=bet;
+    message.innerText="Berabere.";
+  }
+  else{
+    message.innerText="Kaybettiniz.";
+  }
+
+  saveBalance();
+  updateUI();
 }
 
 async function saveBalance(){
-if(currentUser)
-await updateDoc(doc(db,"users",currentUser.uid),{balance});
+  await updateDoc(doc(db,"users",currentUser.uid),{
+    balance:balance
+  });
 }
 
-function createDeck(){
-deck=[];
-for(let s of suits)
-for(let i=1;i<=13;i++)
-deck.push({suit:s,value:i});
-deck.sort(()=>Math.random()-0.5);
+function updateUI(){
+  balanceEl.innerText=balance;
+  betEl.innerText=bet;
 }
-
-function total(hand){
-let t=0,a=0;
-hand.forEach(c=>{
-if(c.value>10)t+=10;
-else if(c.value==1){t+=11;a++;}
-else t+=c.value;
-});
-while(t>21&&a>0){t-=10;a--;}
-return t;
-}
-
-function cardValue(c){
-if(c.value>10)return 10;
-if(c.value==1)return 11;
-return c.value;
-}
-
-function renderCard(card){
-let div=document.createElement("div");
-div.className="card "+((card.suit=="♥"||card.suit=="♦")?"red":"black");
-let val=card.value==1?"A":card.value==11?"J":card.value==12?"Q":card.value==13?"K":card.value;
-div.innerHTML=val+card.suit;
-return div;
-}
-
-function renderBack(){
-let div=document.createElement("div");
-div.className="card back";
-return div;
-}
-
-document.querySelectorAll(".chip").forEach(chip=>{
-chip.onclick=()=>addBet(parseInt(chip.innerText));
-});
-
-async function addBet(amount){
-if(gameState!=="betting")return;
-if(balance<amount)return;
-
-balance-=amount;
-bet+=amount;
-
-await saveBalance();
-updateUI();
-
-if(!betTimer)startBetTimer();
-}
-
-function startBetTimer(){
-let time=5;
-message.innerText="Bahisler Kapanıyor: "+time;
-
-betTimer=setInterval(()=>{
-time--;
-message.innerText="Bahisler Kapanıyor: "+time;
-if(time<=0){
-clearInterval(betTimer);
-betTimer=null;
-startGame();
-}
-},1000);
-}
-
-function startGame(){
-if(bet<=0)return;
-
-gameState="playing";
-player=[];dealer=[];
-createDeck();
-
-playerCards.innerHTML="";
-dealerCards.innerHTML="";
-
-deal("player");
-deal("dealer");
-deal("player");
-
-dealerHiddenCard=deck.pop();
-dealer.push(dealerHiddenCard);
-
-dealerCards.appendChild(renderCard(dealer[0]));
-dealerCards.appendChild(renderBack());
-
-updateUI();
-startDecision();
-}
-
-function deal(to){
-let c=deck.pop();
-if(to==="player"){
-player.push(c);
-playerCards.appendChild(renderCard(c));
-}else{
-dealer.push(c);
-dealerCards.appendChild(renderCard(c));
-}
-updateUI();
-}
-
-function startDecision(){
-controls.style.display="block";
-let time=10;
-message.innerText="Karar İçin "+time+" Saniye";
-
-decisionTimer=setInterval(()=>{
-time--;
-message.innerText="Karar İçin "+time+" Saniye";
-if(time<=0){
-clearInterval(decisionTimer);
-stand();
-}
-},1000);
-}
-
-function hit(){
-if(gameState!=="playing")return;
-deal("player");
-if(total(player)>21)endGame("Kaybettin");
-}
-
-async function stand(){
-if(gameState!=="playing")return;
-
-gameState="finished";
-clearInterval(decisionTimer);
-controls.style.display="none";
-
-dealerCards.children[1].remove();
-dealerCards.appendChild(renderCard(dealerHiddenCard));
-
-while(total(dealer)<17)deal("dealer");
-
-let p=total(player),d=total(dealer);
-
-if(d>21||p>d){
-balance+=bet*2;
-await saveBalance();
-endGame("Kazandın");
-}
-else if(d>p){
-endGame("Dealer Kazandı");
-}
-else{
-balance+=bet;
-await saveBalance();
-endGame("Berabere");
-}
-}
-
-function endGame(text){
-bet=0;
-updateUI();
-message.innerText=text;
-
-setTimeout(()=>{
-playerCards.innerHTML="";
-dealerCards.innerHTML="";
-player=[];dealer=[];
-updateUI();
-message.innerText="Bahis Yapın";
-gameState="betting";
-},2000);
-}
-
-hit.onclick=hit;
-stand.onclick=stand;
 
 </script>
 </body>
