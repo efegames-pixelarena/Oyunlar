@@ -10,7 +10,7 @@ body{margin:0;overflow:hidden;background:#000;font-family:Arial;color:white;}
 
 .top-bar{
 height:85px;
-background:linear-gradient(to bottom,#12202a,#0e1720);
+background:linear-gradient(to bottom,#1b2735,#0f141c);
 display:flex;
 justify-content:space-between;
 align-items:center;
@@ -34,17 +34,39 @@ width:85%;
 height:200px;
 border-radius:30px;
 border:8px solid #ff6a00;
-box-shadow:0 0 30px #ff6a00;
+box-shadow:0 0 40px #ff6a00;
 display:flex;
 justify-content:center;
 align-items:center;
 font-size:28px;
-text-shadow:0 0 20px orange;
+text-shadow:0 0 25px orange;
 }
 
-.table-text{
+.controls{
 position:absolute;
-bottom:220px;
+bottom:40px;
+width:100%;
+display:flex;
+justify-content:center;
+gap:20px;
+pointer-events:auto;
+}
+
+button{
+padding:12px 20px;
+border:none;
+border-radius:10px;
+font-size:16px;
+cursor:pointer;
+}
+
+.hit{background:#2e7d32;color:white;}
+.stand{background:#c62828;color:white;}
+.deal{background:#f9a825;color:black;}
+
+.info{
+position:absolute;
+bottom:120px;
 width:100%;
 text-align:center;
 font-weight:bold;
@@ -55,7 +77,7 @@ font-weight:bold;
 
 <div id="ui">
 <div class="top-bar">
-<div class="balance">Gerçek Bakiye ₺1000</div>
+<div class="balance">Bakiye ₺<span id="balance">1000</span></div>
 <div>☰</div>
 </div>
 
@@ -63,112 +85,111 @@ font-weight:bold;
 PixselArena<br>Blackjack Live
 </div>
 
-<div class="table-text">
-BLACKJACK PAYS 3 TO 2<br>
-INSURANCE PAYS 2 TO 1
+<div class="info" id="infoText">Bahis Yapın</div>
+
+<div class="controls">
+<button class="deal" onclick="startGame()">DEAL</button>
+<button class="hit" onclick="hit()">HIT</button>
+<button class="stand" onclick="stand()">STAND</button>
 </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
 
 <script>
-let scene=new THREE.Scene();
-let camera=new THREE.PerspectiveCamera(60,window.innerWidth/window.innerHeight,0.1,1000);
-let renderer=new THREE.WebGLRenderer({antialias:true});
-renderer.setSize(window.innerWidth,window.innerHeight);
-renderer.setPixelRatio(window.devicePixelRatio);
+let balance=1000;
+let bet=100;
+let player=[],dealer=[],deck=[];
+let gameActive=false;
+
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(60,innerWidth/innerHeight,0.1,1000);
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth,innerHeight);
+renderer.setPixelRatio(devicePixelRatio);
 document.body.appendChild(renderer.domElement);
 
 camera.position.set(0,7,13);
 camera.lookAt(0,0,0);
 
-/* LIGHT */
-scene.add(new THREE.AmbientLight(0xffffff,0.8));
-const light=new THREE.PointLight(0xff6600,2,50);
-light.position.set(0,10,5);
-scene.add(light);
+/* Evolution Style Lighting */
+scene.add(new THREE.AmbientLight(0xffffff,0.6));
+
+const orangeLight=new THREE.PointLight(0xff6600,3,50);
+orangeLight.position.set(0,10,5);
+scene.add(orangeLight);
+
+const spot=new THREE.SpotLight(0xff8800,4);
+spot.position.set(0,15,5);
+spot.angle=0.4;
+scene.add(spot);
 
 /* TABLE */
-const tableGeo=new THREE.CylinderGeometry(9,9,1,64);
-const tableMat=new THREE.MeshStandardMaterial({color:0x111111});
-const table=new THREE.Mesh(tableGeo,tableMat);
+const table=new THREE.Mesh(
+new THREE.CylinderGeometry(9,9,1,64),
+new THREE.MeshStandardMaterial({color:0x0b0b0b})
+);
 table.position.y=-2;
 scene.add(table);
 
-/* NEON EDGE */
-const edgeGeo=new THREE.TorusGeometry(9,0.25,16,100);
-const edgeMat=new THREE.MeshBasicMaterial({color:0xff6600});
-const edge=new THREE.Mesh(edgeGeo,edgeMat);
+const edge=new THREE.Mesh(
+new THREE.TorusGeometry(9,0.3,16,100),
+new THREE.MeshBasicMaterial({color:0xff6600})
+);
 edge.rotation.x=Math.PI/2;
 edge.position.y=-1.5;
 scene.add(edge);
 
-/* BETTING AREA MARK */
-const betLineGeo=new THREE.TorusGeometry(5,0.1,16,100);
-const betLineMat=new THREE.MeshBasicMaterial({color:0xffffff});
-const betLine=new THREE.Mesh(betLineGeo,betLineMat);
-betLine.rotation.x=Math.PI/2;
-betLine.position.y=-1.4;
-scene.add(betLine);
-
-/* CHIP 3D */
-function createChip(value,color){
-const geo=new THREE.CylinderGeometry(0.8,0.8,0.3,32);
-const mat=new THREE.MeshStandardMaterial({color:color});
-const chip=new THREE.Mesh(geo,mat);
-chip.userData.value=value;
-chip.position.y=-1.2;
-return chip;
-}
-
-const chip50=createChip(50,0x1565c0);
-chip50.position.set(-3,-1.2,0);
-scene.add(chip50);
-
-const chip100=createChip(100,0x2e7d32);
-chip100.position.set(-1,-1.2,0);
-scene.add(chip100);
-
-const chip500=createChip(500,0xf9a825);
-chip500.position.set(1,-1.2,0);
-scene.add(chip500);
-
-const chip1000=createChip(1000,0xc62828);
-chip1000.position.set(3,-1.2,0);
-scene.add(chip1000);
-
 /* CARD */
 function createCard(){
-let geo=new THREE.BoxGeometry(1.6,0.05,2.4);
-let mat=new THREE.MeshStandardMaterial({color:0xffffff});
-let card=new THREE.Mesh(geo,mat);
-return card;
+return new THREE.Mesh(
+new THREE.BoxGeometry(1.6,0.05,2.4),
+new THREE.MeshStandardMaterial({color:0xffffff})
+);
 }
 
-/* DEAL ANIMATION */
-function dealCard(x,z){
-let card=createCard();
+/* DECK */
+function initDeck(){
+deck=[];
+const suits=["S","H","D","C"];
+const vals=["A","2","3","4","5","6","7","8","9","10","J","Q","K"];
+for(let d=0;d<8;d++)
+for(let s of suits)
+for(let v of vals)
+deck.push({v,s});
+deck.sort(()=>Math.random()-0.5);
+}
+
+function draw(){return deck.pop();}
+
+function value(hand){
+let t=0,a=0;
+hand.forEach(c=>{
+if(["J","Q","K"].includes(c.v))t+=10;
+else if(c.v==="A"){t+=11;a++;}
+else t+=parseInt(c.v);
+});
+while(t>21&&a>0){t-=10;a--;}
+return t;
+}
+
+function animateDeal(card,x,z){
 card.position.set(0,5,-6);
 scene.add(card);
-
 let target=new THREE.Vector3(x,-1,z);
 let t=0;
-
 function anim(){
 t+=0.02;
 card.position.lerpVectors(
 new THREE.Vector3(0,5,-6),
-target,
-t
+target,t
 );
 if(t<1)requestAnimationFrame(anim);
 }
 anim();
-return card;
 }
 
-/* FLIP */
-function flipCard(card){
+function flip(card){
 let t=0;
 function anim(){
 t+=0.05;
@@ -178,43 +199,75 @@ if(t<1)requestAnimationFrame(anim);
 anim();
 }
 
-/* DEALER PLACEHOLDER */
-const dealerGeo=new THREE.BoxGeometry(2,3,1);
-const dealerMat=new THREE.MeshStandardMaterial({color:0x222222});
-const dealer=new THREE.Mesh(dealerGeo,dealerMat);
-dealer.position.set(0,0,-6);
-scene.add(dealer);
+function startGame(){
+if(gameActive) return;
+if(balance<bet){alert("Bakiye Yetersiz");return;}
 
-/* CLICK RAYCAST */
-const raycaster=new THREE.Raycaster();
-const mouse=new THREE.Vector2();
+balance-=bet;
+updateBalance();
+initDeck();
+player=[];dealer=[];
+gameActive=true;
 
-window.addEventListener("click",e=>{
-mouse.x=(e.clientX/window.innerWidth)*2-1;
-mouse.y=-(e.clientY/window.innerHeight)*2+1;
-raycaster.setFromCamera(mouse,camera);
-let intersects=raycaster.intersectObjects([chip50,chip100,chip500,chip1000]);
+dealTo(player,-2);
+dealTo(dealer,2);
+dealTo(player,-0.5);
+dealTo(dealer,0.5);
 
-if(intersects.length>0){
-let card=dealCard(
-(Math.random()-0.5)*4,
-(Math.random()-0.5)*2
-);
-setTimeout(()=>flipCard(card),800);
+document.getElementById("infoText").innerText="Oyun Başladı";
 }
-});
 
-/* LOOP */
+function dealTo(hand,x){
+let data=draw();
+hand.push(data);
+let card=createCard();
+animateDeal(card,x+(hand.length*1.8),0);
+setTimeout(()=>flip(card),800);
+}
+
+function hit(){
+if(!gameActive) return;
+dealTo(player,-2);
+if(value(player)>21) endGame();
+}
+
+function stand(){
+if(!gameActive) return;
+while(value(dealer)<17){
+dealTo(dealer,2);
+}
+endGame();
+}
+
+function endGame(){
+gameActive=false;
+let p=value(player);
+let d=value(dealer);
+let result="";
+
+if(p>21) result="Kaybettiniz";
+else if(d>21||p>d){balance+=bet*2;result="Kazandınız";}
+else if(p===d){balance+=bet;result="Berabere";}
+else result="Kaybettiniz";
+
+updateBalance();
+document.getElementById("infoText").innerText=result;
+}
+
+function updateBalance(){
+document.getElementById("balance").innerText=balance;
+}
+
 function animate(){
 requestAnimationFrame(animate);
 renderer.render(scene,camera);
 }
 animate();
 
-window.addEventListener("resize",()=>{
-camera.aspect=window.innerWidth/window.innerHeight;
+addEventListener("resize",()=>{
+camera.aspect=innerWidth/innerHeight;
 camera.updateProjectionMatrix();
-renderer.setSize(window.innerWidth,window.innerHeight);
+renderer.setSize(innerWidth,innerHeight);
 });
 </script>
 
