@@ -464,10 +464,13 @@ logoutBtn.addEventListener("click", async ()=>{
   alert("Çıkış yapıldı.");
 });
 
-/* OYUNDA BAKİYE DÜŞME FONKSİYONU */
+/* OYUNDA BAKİYE DÜŞME */
 window.oynaVeBakiyedenDus = async function(miktar){
   const user = auth.currentUser;
-  if(!user) return alert("Önce giriş yap.");
+  if(!user){
+    alert("Önce giriş yap.");
+    return false;
+  }
 
   const userRef = doc(db,"users",user.uid);
   const userDoc = await getDoc(userRef);
@@ -485,6 +488,31 @@ window.oynaVeBakiyedenDus = async function(miktar){
     });
 
     return true;
+  }
+
+  return false;
+};
+
+
+/* OYUN KAZANINCA BAKİYE ARTIR */
+window.bakiyeArttir = async function(miktar){
+  const user = auth.currentUser;
+  if(!user){
+    alert("Giriş yapmalısın.");
+    return;
+  }
+
+  const userRef = doc(db,"users",user.uid);
+  const userDoc = await getDoc(userRef);
+
+  if(userDoc.exists()){
+    let currentBalance = userDoc.data().balance;
+
+    await updateDoc(userRef,{
+      balance: currentBalance + miktar
+    });
+
+    alert("Tebrikler! +" + miktar + "₺ kazandın 🎉");
   }
 };
 </script>
