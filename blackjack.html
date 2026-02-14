@@ -110,73 +110,173 @@ let gameActive=false,round=1;
 const SUITS=['♠','♥','♦','♣'];
 const VALUES=['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
 
-function buildShoe(){shoe=[];for(let d=0;d<8;d++)for(let s of SUITS)for(let v of VALUES)shoe.push({value:v,suit:s});shuffle();}
-function shuffle(){for(let i=shoe.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[shoe[i],shoe[j]]=[shoe[j],shoe[i]]}}
-function draw(){if(shoe.length<60)buildShoe();return shoe.pop();}
-function value(c){if(c.value=="A")return 11;if(["K","Q","J"].includes(c.value))return 10;return parseInt(c.value);}
-function score(h){let t=0,a=0;h.forEach(c=>{t+=value(c);if(c.value=="A")a++});while(t>21&&a>0){t-=10;a--}return t;}
-function cardHTML(c){let color=(c.suit=="♥"||c.suit=="♦")?"red":"black";return `<div class="card ${color}">${c.value}${c.suit}</div>`}
+function buildShoe(){
+shoe=[];
+for(let d=0;d<8;d++)
+for(let s of SUITS)
+for(let v of VALUES)
+shoe.push({value:v,suit:s});
+shuffle();
+}
 
-function updateUI(){balanceEl.innerText=balance;betEl.innerText=currentBet;}
-const balanceEl=document.getElementById("balance");
-const betEl=document.getElementById("bet");
+function shuffle(){
+for(let i=shoe.length-1;i>0;i--){
+let j=Math.floor(Math.random()*(i+1));
+[shoe[i],shoe[j]]=[shoe[j],shoe[i]];
+}
+}
 
-function placeBet(a){
-if(!currentUser||gameActive||balance<a)return;
-balance-=a;currentBet+=a;updateUI();
+function draw(){
+if(shoe.length<60)buildShoe();
+return shoe.pop();
+}
+
+function value(c){
+if(c.value=="A")return 11;
+if(["K","Q","J"].includes(c.value))return 10;
+return parseInt(c.value);
+}
+
+function score(h){
+let t=0,a=0;
+h.forEach(c=>{t+=value(c);if(c.value=="A")a++});
+while(t>21&&a>0){t-=10;a--}
+return t;
+}
+
+function cardHTML(c){
+let color=(c.suit=="♥"||c.suit=="♦")?"red":"black";
+return `<div class="card ${color}">${c.value}${c.suit}</div>`;
+}
+
+function updateUI(){
+document.getElementById("balance").innerText=balance;
+document.getElementById("bet").innerText=currentBet;
+}
+
+function placeBet(amount){
+if(!currentUser||gameActive||balance<amount)return;
+balance-=amount;
+currentBet+=amount;
+updateUI();
 }
 
 function startCountdown(){
-if(currentBet<=0)return;
+if(currentBet<=0||gameActive)return;
 startRound();
 }
 
 function startRound(){
-player=[];dealer=[];gameActive=true;
+player=[];dealer=[];
+gameActive=true;
+
 document.getElementById("hitBtn").disabled=false;
 document.getElementById("standBtn").disabled=false;
-player.push(draw());dealer.push(draw());player.push(draw());dealer.push(draw());
-render(true);updateScores(true);
+
+player.push(draw());
+dealer.push(draw());
+player.push(draw());
+dealer.push(draw());
+
+render(true);
+updateScores(true);
 }
 
-function hit(){player.push(draw());render(true);updateScores(true);
-if(score(player)>21){revealDealer();setTimeout(endRound,1000)}}
-function stand(){revealDealer();}
-function revealDealer(){render(false);updateScores(false);dealerPlay();}
-function dealerPlay(){let i=setInterval(()=>{if(score(dealer)<17){dealer.push(draw());render(false);updateScores(false)}
-else{clearInterval(i);setTimeout(endRound,1000)}},600);}
+function hit(){
+if(!gameActive)return;
+player.push(draw());
+render(true);
+updateScores(true);
+if(score(player)>21){
+revealDealer();
+setTimeout(endRound,1000);
+}
+}
+
+function stand(){
+if(!gameActive)return;
+revealDealer();
+}
+
+function revealDealer(){
+render(false);
+updateScores(false);
+dealerPlay();
+}
+
+function dealerPlay(){
+let interval=setInterval(()=>{
+if(score(dealer)<17){
+dealer.push(draw());
+render(false);
+updateScores(false);
+}else{
+clearInterval(interval);
+setTimeout(endRound,1000);
+}
+},600);
+}
 
 async function endRound(){
 gameActive=false;
+
 document.getElementById("hitBtn").disabled=true;
 document.getElementById("standBtn").disabled=true;
+
 let p=score(player),d=score(dealer);
-if(p<=21&&(d>21||p>d)){balance+=currentBet*2;}
-else if(p==d){balance+=currentBet;}
-currentBet=0;updateUI();
+
+if(p<=21&&(d>21||p>d)){
+balance+=currentBet*2;
+}
+else if(p==d){
+balance+=currentBet;
+}
+
+currentBet=0;
+updateUI();
+
+if(currentUser){
 await updateDoc(doc(db,"users",currentUser.uid),{balance});
 }
+}
 
-function render(h=false){
+function render(hideDealer=false){
 document.getElementById("playerHand").innerHTML=player.map(cardHTML).join("");
-document.getElementById("dealerHand").innerHTML=h?cardHTML(dealer[0]):dealer.map(cardHTML).join("");
+if(hideDealer){
+document.getElementById("dealerHand").innerHTML=dealer.length?cardHTML(dealer[0])+`<div class="card back"></div>`:"";
+}else{
+document.getElementById("dealerHand").innerHTML=dealer.map(cardHTML).join("");
 }
-function updateScores(h=false){
-document.getElementById("playerScore").innerText=player.length?"Toplam: "+score(player):"";
-document.getElementById("dealerScore").innerText=dealer.length?(h?value(dealer[0]):score(dealer)):"";
 }
 
+function updateScores(hideDealer=false){
+document.getElementById("playerScore").innerText=player.length?"Toplam: "+score(player):"";
+if(dealer.length){
+document.getElementById("dealerScore").innerText=
+hideDealer?value(dealer[0]):score(dealer);
+}else{
+document.getElementById("dealerScore").innerText="";
+}
+}
+
+/* 🔥 BURASI KRİTİK — GLOBAL BAĞLANTI */
+window.placeBet=placeBet;
+window.startCountdown=startCountdown;
+window.hit=hit;
+window.stand=stand;
+
+/* AUTH */
 onAuthStateChanged(auth,async(user)=>{
-if(!user){window.location.href="index.html";return;}
+if(!user){
+window.location.href="index.html";
+return;
+}
 currentUser=user;
 const snap=await getDoc(doc(db,"users",user.uid));
 balance=snap.exists()?snap.data().balance||0:0;
 updateUI();
-document.getElementById("dealBtn").disabled=false;
 document.getElementById("ticker").innerText="Bahis koyun";
 });
 
 buildShoe();
 </script>
-</body>
-</html>
