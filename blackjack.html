@@ -3,308 +3,260 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PixselArena Blackjack Live</title>
+<title>PixelArena Blackjack Live</title>
+
 <style>
-body{margin:0;overflow:hidden;background:#000;font-family:Arial;color:white;}
-#ui{position:absolute;top:0;width:100%;pointer-events:none;}
-
-.top-bar{
-height:85px;
-background:linear-gradient(to bottom,#1b2735,#0f141c);
-display:flex;
-justify-content:space-between;
-align-items:center;
-padding:0 20px;
-pointer-events:auto;
+body{
+    margin:0;
+    background:radial-gradient(circle at center,#111 0%,#000 70%);
+    font-family:Arial;
+    color:white;
+    overflow:hidden;
 }
 
-.balance{
-background:linear-gradient(45deg,#ff6a00,#ff2e00);
-padding:10px 20px;
-border-radius:15px;
-font-weight:bold;
+/* NEON ÜST PANEL */
+.top-panel{
+    text-align:center;
+    margin-top:40px;
+    font-size:28px;
+    padding:25px;
+    border-radius:20px;
+    width:80%;
+    margin-left:auto;
+    margin-right:auto;
+    border:4px solid #ff7b00;
+    box-shadow:0 0 30px #ff7b00, inset 0 0 30px #ff7b00;
 }
 
-.stage-frame{
-position:absolute;
-top:110px;
-left:50%;
-transform:translateX(-50%);
-width:85%;
-height:200px;
-border-radius:30px;
-border:8px solid #ff6a00;
-box-shadow:0 0 40px #ff6a00;
-display:flex;
-justify-content:center;
-align-items:center;
-font-size:28px;
-text-shadow:0 0 25px orange;
+/* MASA */
+.table{
+    position:absolute;
+    bottom:0;
+    width:100%;
+    height:55%;
+    background:radial-gradient(ellipse at center,#063 0%,#021 80%);
+    border-top:6px solid #ff7b00;
+    box-shadow:0 -10px 50px #ff7b00;
 }
 
+/* KART ALANLARI */
+.area{
+    position:absolute;
+    width:100%;
+    text-align:center;
+}
+
+#dealerArea{ top:120px; }
+#playerArea{ bottom:200px; }
+
+.card{
+    width:80px;
+    height:120px;
+    background:white;
+    border-radius:8px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    font-size:24px;
+    margin:10px;
+    color:black;
+    position:relative;
+    transform-style:preserve-3d;
+    transition:1s;
+    box-shadow:0 10px 20px rgba(0,0,0,0.6);
+}
+
+.red{ color:red; }
+
+.back{
+    background:linear-gradient(45deg,#001,#004);
+    color:white;
+}
+
+/* 3D DEAL ANIM */
+.deal{
+    animation:dealAnim 1s ease;
+}
+
+@keyframes dealAnim{
+    from{ transform:translateY(-300px) rotateY(180deg); opacity:0; }
+    to{ transform:translateY(0) rotateY(0); opacity:1; }
+}
+
+/* BUTON PANEL */
 .controls{
-position:absolute;
-bottom:30px;
-width:100%;
-display:flex;
-justify-content:center;
-gap:20px;
-pointer-events:auto;
+    position:absolute;
+    bottom:30px;
+    width:100%;
+    text-align:center;
 }
 
 button{
-padding:12px 24px;
-border:none;
-border-radius:12px;
-font-size:16px;
-cursor:pointer;
+    padding:15px 30px;
+    margin:10px;
+    font-size:18px;
+    border:none;
+    border-radius:10px;
+    font-weight:bold;
+    cursor:pointer;
 }
 
-.deal{background:#f9a825;color:black;}
-.hit{background:#2e7d32;color:white;}
-.stand{background:#c62828;color:white;}
+#dealBtn{ background:#f5a623; }
+#hitBtn{ background:#2ecc71; }
+#standBtn{ background:#e74c3c; }
 
-.info{
-position:absolute;
-bottom:100px;
-width:100%;
-text-align:center;
-font-weight:bold;
+.status{
+    position:absolute;
+    bottom:110px;
+    width:100%;
+    text-align:center;
+    font-size:20px;
 }
 </style>
 </head>
 <body>
 
-<div id="ui">
-<div class="top-bar">
-<div class="balance">Bakiye ₺<span id="balance">1000</span></div>
-<div>☰</div>
+<div class="top-panel">
+    PixelArena Blackjack Live
 </div>
 
-<div class="stage-frame">
-PixselArena<br>Blackjack Live
-</div>
+<div id="dealerArea" class="area"></div>
+<div id="playerArea" class="area"></div>
 
-<div class="info" id="infoText">Bahis 100₺</div>
+<div class="status" id="status"></div>
 
 <div class="controls">
-<button class="deal" onclick="startGame()">DEAL</button>
-<button class="hit" onclick="hit()">HIT</button>
-<button class="stand" onclick="stand()">STAND</button>
-</div>
+    <button id="dealBtn">DEAL</button>
+    <button id="hitBtn">HIT</button>
+    <button id="standBtn">STAND</button>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
+<div class="table"></div>
 
 <script>
-let balance=1000;
-let bet=100;
-let deck=[];
-let player=[],dealer=[];
-let gameActive=false;
-let dealing=false;
+const suits=["♥","♦","♣","♠"];
+let deck=[],player=[],dealer=[];
+let hiddenCard=null;
+let gameOver=true;
 
-const scene=new THREE.Scene();
-const camera=new THREE.PerspectiveCamera(60,innerWidth/innerHeight,0.1,1000);
-const renderer=new THREE.WebGLRenderer({antialias:true});
-renderer.setSize(innerWidth,innerHeight);
-document.body.appendChild(renderer.domElement);
-
-camera.position.set(0,7,13);
-camera.lookAt(0,0,0);
-
-/* EVOLUTION LIGHT */
-scene.add(new THREE.AmbientLight(0xffffff,0.6));
-const light=new THREE.PointLight(0xff6600,3,50);
-light.position.set(0,10,5);
-scene.add(light);
-
-/* TABLE */
-const table=new THREE.Mesh(
-new THREE.CylinderGeometry(9,9,1,64),
-new THREE.MeshStandardMaterial({color:0x0b0b0b})
-);
-table.position.y=-2;
-scene.add(table);
-
-/* EDGE */
-const edge=new THREE.Mesh(
-new THREE.TorusGeometry(9,0.3,16,100),
-new THREE.MeshBasicMaterial({color:0xff6600})
-);
-edge.rotation.x=Math.PI/2;
-edge.position.y=-1.5;
-scene.add(edge);
-
-/* DECK */
-function initDeck(){
-deck=[];
-const suits=["♠","♥","♦","♣"];
-const vals=["A","2","3","4","5","6","7","8","9","10","J","Q","K"];
-for(let d=0;d<8;d++)
-for(let s of suits)
-for(let v of vals)
-deck.push({v,s});
-deck.sort(()=>Math.random()-0.5);
+function createDeck(){
+    deck=[];
+    for(let s of suits){
+        for(let i=1;i<=13;i++){
+            deck.push({suit:s,value:i});
+        }
+    }
+    deck.sort(()=>Math.random()-0.5);
 }
 
-function draw(){return deck.pop();}
-
-/* CARD */
-function createCard(cardData,hidden=false){
-let geo=new THREE.BoxGeometry(1.6,0.05,2.4);
-
-let canvas=document.createElement("canvas");
-canvas.width=256;
-canvas.height=356;
-let ctx=canvas.getContext("2d");
-
-ctx.fillStyle= hidden ? "#003366" : "#ffffff";
-ctx.fillRect(0,0,256,356);
-
-if(!hidden){
-ctx.fillStyle=(cardData.s==="♥"||cardData.s==="♦")?"red":"black";
-ctx.font="60px Arial";
-ctx.fillText(cardData.v,20,70);
-ctx.fillText(cardData.s,20,140);
+function cardValue(card){
+    if(card.value>10) return 10;
+    if(card.value===1) return 11;
+    return card.value;
 }
 
-let texture=new THREE.CanvasTexture(canvas);
-let mat=new THREE.MeshStandardMaterial({map:texture});
-return new THREE.Mesh(geo,mat);
+function handValue(hand){
+    let total=0, aces=0;
+    for(let c of hand){
+        total+=cardValue(c);
+        if(c.value===1) aces++;
+    }
+    while(total>21 && aces>0){
+        total-=10;
+        aces--;
+    }
+    return total;
 }
 
-function animateDeal(card,x,z){
-card.position.set(0,5,-6);
-scene.add(card);
-let target=new THREE.Vector3(x,-1,z);
-let t=0;
-function anim(){
-t+=0.01;
-card.position.lerpVectors(
-new THREE.Vector3(0,5,-6),
-target,t
-);
-if(t<1)requestAnimationFrame(anim);
-}
-anim();
-}
-
-function flip(card,cardData){
-let t=0;
-function anim(){
-t+=0.05;
-card.rotation.y=Math.PI*t;
-if(t>=0.5 && !card.userData.flipped){
-scene.remove(card);
-let newCard=createCard(cardData,false);
-newCard.position.copy(card.position);
-newCard.rotation.y=Math.PI*0.5;
-scene.add(newCard);
-card=newCard;
-card.userData.flipped=true;
-}
-if(t<1)requestAnimationFrame(anim);
-}
-anim();
+function renderCard(card,hidden=false){
+    let div=document.createElement("div");
+    div.className="card deal";
+    if(hidden){
+        div.classList.add("back");
+        div.innerHTML="🂠";
+    }else{
+        let text=(card.value===1?"A":
+                 card.value===11?"J":
+                 card.value===12?"Q":
+                 card.value===13?"K":card.value)
+                 +card.suit;
+        div.innerHTML=text;
+        if(card.suit==="♥"||card.suit==="♦")
+            div.classList.add("red");
+    }
+    return div;
 }
 
-function value(hand){
-let t=0,a=0;
-hand.forEach(c=>{
-if(["J","Q","K"].includes(c.v))t+=10;
-else if(c.v==="A"){t+=11;a++;}
-else t+=parseInt(c.v);
-});
-while(t>21&&a>0){t-=10;a--;}
-return t;
+function dealCard(toHand,area,hidden=false){
+    let card=deck.pop();
+    toHand.push(card);
+    let el=renderCard(card,hidden);
+    area.appendChild(el);
+    return card;
 }
 
-/* GAME FLOW */
-async function startGame(){
-if(gameActive||dealing)return;
-if(balance<bet)return alert("Bakiye Yetersiz");
-balance-=bet;updateBalance();
-initDeck();
-player=[];dealer=[];
-gameActive=true;dealing=true;
+function startGame(){
+    gameOver=false;
+    document.getElementById("status").innerText="";
+    player=[]; dealer=[];
+    document.getElementById("playerArea").innerHTML="";
+    document.getElementById("dealerArea").innerHTML="";
+    createDeck();
 
-await dealPlayer();
-await dealDealer(true);
-await dealPlayer();
-await dealDealer(false);
-
-dealing=false;
-}
-
-function dealPlayer(){
-return new Promise(resolve=>{
-let data=draw();
-player.push(data);
-let card=createCard(data,false);
-animateDeal(card,-3+(player.length*2),0);
-setTimeout(resolve,3000);
-});
-}
-
-function dealDealer(hidden){
-return new Promise(resolve=>{
-let data=draw();
-dealer.push(data);
-let card=createCard(data,hidden);
-animateDeal(card,1+(dealer.length*2),0);
-card.userData.hidden=hidden;
-setTimeout(resolve,3000);
-});
+    dealCard(player,playerArea);
+    dealCard(dealer,dealerArea);
+    dealCard(player,playerArea);
+    hiddenCard=dealCard(dealer,dealerArea,true);
 }
 
 function hit(){
-if(!gameActive||dealing)return;
-dealPlayer();
-if(value(player)>21)endGame();
+    if(gameOver) return;
+    dealCard(player,playerArea);
+    if(handValue(player)>21){
+        endGame();
+    }
 }
 
-async function stand(){
-if(!gameActive)return;
-gameActive=false;
-
-/* flip hidden */
-let hiddenCard=scene.children.find(o=>o.userData.hidden);
-if(hiddenCard){
-flip(hiddenCard,dealer[1]);
-hiddenCard.userData.hidden=false;
+function stand(){
+    if(gameOver) return;
+    revealDealer();
 }
 
-while(value(dealer)<17){
-await dealDealer(false);
+function revealDealer(){
+    dealerArea.innerHTML="";
+    dealer.forEach(c=>{
+        dealerArea.appendChild(renderCard(c));
+    });
+    dealerTurn();
 }
-endGame();
+
+function dealerTurn(){
+    let interval=setInterval(()=>{
+        if(handValue(dealer)<17){
+            dealCard(dealer,dealerArea);
+        }else{
+            clearInterval(interval);
+            endGame();
+        }
+    },3000);
 }
 
 function endGame(){
-let p=value(player);
-let d=value(dealer);
-let result="";
-
-if(p>21) result="Kaybettiniz";
-else if(d>21||p>d){balance+=bet*2;result="Kazandınız";}
-else if(p===d){balance+=bet;result="Berabere";}
-else result="Kaybettiniz";
-
-updateBalance();
-document.getElementById("infoText").innerText=result;
+    gameOver=true;
+    let p=handValue(player);
+    let d=handValue(dealer);
+    let msg="";
+    if(p>21) msg="Kaybettin!";
+    else if(d>21) msg="Kazandın!";
+    else if(p>d) msg="Kazandın!";
+    else if(p<d) msg="Kaybettin!";
+    else msg="Berabere!";
+    document.getElementById("status").innerText=msg;
 }
 
-function updateBalance(){
-document.getElementById("balance").innerText=balance;
-}
-
-/* LOOP */
-function animate(){
-requestAnimationFrame(animate);
-renderer.render(scene,camera);
-}
-animate();
+dealBtn.onclick=startGame;
+hitBtn.onclick=hit;
+standBtn.onclick=stand;
 </script>
 
 </body>
