@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PixelArena Blackjack Live</title>
+<title>PixelArena Blackjack</title>
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 body{
-    font-family:Arial, sans-serif;
+    font-family:Arial;
     height:100vh;
     overflow:hidden;
     background:linear-gradient(to bottom,#000 0%,#000 45%,#ff7b00 46%,#0b5d2a 47%,#063d1c 100%);
@@ -17,290 +17,295 @@ body{
 
 /* TOP BAR */
 .top-bar{
-    position:absolute;
-    top:0;
-    width:100%;
-    height:55px;
-    background:rgba(0,0,0,0.95);
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    padding:0 20px;
-    font-weight:bold;
-    z-index:5;
+    position:absolute;top:0;width:100%;height:55px;
+    background:black;display:flex;justify-content:space-between;
+    align-items:center;padding:0 20px;font-weight:bold;
 }
 .logo{
     font-size:22px;
     animation:neon 1.5s infinite alternate;
     text-shadow:0 0 10px #ff7b00,0 0 20px #ff7b00;
 }
-@keyframes neon{from{opacity:0.7;}to{opacity:1;}}
+@keyframes neon{from{opacity:.7}to{opacity:1}}
 
-.header{
-    position:absolute;
-    top:70px;
-    width:100%;
-    text-align:center;
-}
-.header-box{
-    display:inline-block;
-    padding:20px 40px;
-    border-radius:20px;
-    border:4px solid #ff7b00;
-    box-shadow:0 0 40px #ff7b00, inset 0 0 30px #ff7b00;
-    font-size:26px;
-}
+.area{position:absolute;width:100%;text-align:center;}
+#dealerArea{top:120px;}
+#playerArea{bottom:240px;}
 
-.dealer-area{
-    position:absolute;
-    top:150px;
-    width:100%;
-    text-align:center;
-}
-.player-area{
-    position:absolute;
-    bottom:250px;
-    width:100%;
-    text-align:center;
-}
-
-.cards{
-    display:flex;
-    justify-content:center;
-    gap:15px;
-    perspective:1000px;
-}
+.cards{display:flex;justify-content:center;gap:15px;perspective:1000px;}
 
 .card{
-    width:70px;
-    height:100px;
-    background:white;
-    border-radius:10px;
+    width:75px;height:110px;
+    transform-style:preserve-3d;
     position:relative;
-    box-shadow:0 10px 20px rgba(0,0,0,0.6);
-    transform:translateY(-200px) rotateY(90deg);
-    animation:deal 0.6s forwards;
-    font-family:"Times New Roman",serif;
+    transition:transform .6s;
 }
-@keyframes deal{to{transform:translateY(0) rotateY(0deg);}}
+.card-inner{
+    position:absolute;width:100%;height:100%;
+    backface-visibility:hidden;
+    border-radius:10px;
+}
+.front{
+    background:white;color:black;
+    box-shadow:0 10px 20px rgba(0,0,0,.6);
+}
+.back{
+    background:linear-gradient(45deg,#001a4d,#003399);
+    transform:rotateY(180deg);
+    border:3px solid white;
+}
+.flip{transform:rotateY(180deg);}
 
 .corner{position:absolute;font-size:14px;font-weight:bold;}
 .top-left{top:5px;left:6px;}
 .bottom-right{bottom:5px;right:6px;transform:rotate(180deg);}
-.center-symbol{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:28px;}
+.center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:30px;}
 
 .red{color:red;}
 .black{color:black;}
 
-.back{
-    background:linear-gradient(45deg,#001a4d,#003399);
-    border:3px solid white;
-}
-.back::after{
-    content:"🂠";
+#message{
     position:absolute;
-    top:50%;left:50%;
-    transform:translate(-50%,-50%);
-    font-size:30px;color:white;
-}
-
-.wait-bar{
-    position:absolute;
-    bottom:170px;
-    width:70%;left:15%;
-    padding:18px;text-align:center;
-    font-weight:bold;
-    background:rgba(0,0,0,0.8);
-    border-radius:8px;
+    bottom:170px;width:100%;text-align:center;
+    font-size:20px;font-weight:bold;
 }
 
 .controls{
-    position:absolute;
-    bottom:100px;
-    width:100%;
-    text-align:center;
+    position:absolute;bottom:90px;width:100%;text-align:center;
 }
 button{
-    padding:14px 25px;margin:8px;
-    font-size:16px;border:none;
-    border-radius:8px;font-weight:bold;
-    cursor:pointer;
+    padding:12px 20px;margin:6px;border:none;
+    border-radius:8px;font-weight:bold;cursor:pointer;
 }
-#dealBtn{background:#f5a623;}
-#hitBtn{background:#2ecc71;}
-#standBtn{background:#e74c3c;}
+#deal{background:#f5a623}
+#hit{background:#2ecc71}
+#stand{background:#e74c3c}
+
+.chips{
+    position:absolute;bottom:10px;width:100%;
+    text-align:center;
+}
+.chip{
+    display:inline-block;
+    width:60px;height:60px;
+    border-radius:50%;
+    line-height:60px;
+    font-weight:bold;
+    margin:5px;
+    cursor:pointer;
+    box-shadow:0 0 10px black;
+}
+.c10{background:white;color:black}
+.c25{background:green}
+.c50{background:red}
+.c100{background:black}
 </style>
 </head>
 <body>
 
 <div class="top-bar">
-    <div>BAKİYE: <span id="balance">1000</span>₺</div>
-    <div class="logo">⚡ PixelArena ⚡</div>
-    <div>BAHİS: <span id="bet">50</span>₺</div>
+<div>BAKİYE: <span id="balance">1000</span>₺</div>
+<div class="logo">⚡ PixelArena ⚡</div>
+<div>BAHİS: <span id="bet">0</span>₺</div>
 </div>
 
-<div class="header">
-    <div class="header-box">PixelArena Blackjack Live</div>
+<div id="dealerArea" class="area">
+<div id="dealerCards" class="cards"></div>
 </div>
 
-<div class="dealer-area">
-    <div id="dealerCards" class="cards"></div>
-</div>
+<div id="message">Bahis Yapın</div>
 
-<div id="waitBar" class="wait-bar">SONRAKİ OYUNU BEKLEYİN</div>
-
-<div class="player-area">
-    <div id="playerCards" class="cards"></div>
+<div id="playerArea" class="area">
+<div id="playerCards" class="cards"></div>
 </div>
 
 <div class="controls">
-    <button id="dealBtn">DEAL</button>
-    <button id="hitBtn">HIT</button>
-    <button id="standBtn">STAND</button>
+<button id="deal">DEAL</button>
+<button id="hit">HIT</button>
+<button id="stand">STAND</button>
+</div>
+
+<div class="chips">
+<div class="chip c10" onclick="addBet(10)">10</div>
+<div class="chip c25" onclick="addBet(25)">25</div>
+<div class="chip c50" onclick="addBet(50)">50</div>
+<div class="chip c100" onclick="addBet(100)">100</div>
 </div>
 
 <script>
 const suits=["♥","♦","♣","♠"];
 let deck=[],player=[],dealer=[];
+let balance=1000,bet=0;
 let gameOver=true;
-let balance=1000;
-let bet=50;
+let insuranceBet=0;
 
 function createDeck(){
-    deck=[];
-    for(let s of suits){
-        for(let i=1;i<=13;i++){
-            deck.push({suit:s,value:i});
-        }
-    }
-    deck.sort(()=>Math.random()-0.5);
+deck=[];
+for(let s of suits){
+for(let i=1;i<=13;i++){
+deck.push({suit:s,value:i});
+}}
+deck.sort(()=>Math.random()-0.5);
 }
 
-function cardValue(card){
-    if(card.value>10) return 10;
-    if(card.value===1) return 11;
-    return card.value;
+function value(c){
+if(c.value>10)return 10;
+if(c.value==1)return 11;
+return c.value;
 }
 
-function handValue(hand){
-    let total=0,aces=0;
-    for(let c of hand){
-        total+=cardValue(c);
-        if(c.value===1) aces++;
-    }
-    while(total>21 && aces>0){
-        total-=10;aces--;
-    }
-    return total;
+function total(hand){
+let t=0,a=0;
+hand.forEach(c=>{t+=value(c);if(c.value==1)a++;});
+while(t>21&&a>0){t-=10;a--;}
+return t;
 }
 
-function renderCard(card,hidden=false){
-    let div=document.createElement("div");
-    div.className="card";
-    if(hidden){
-        div.classList.add("back");
-        return div;
-    }
-    let color=(card.suit==="♥"||card.suit==="♦")?"red":"black";
-    div.classList.add(color);
-
-    let value=(card.value===1?"A":
-              card.value===11?"J":
-              card.value===12?"Q":
-              card.value===13?"K":card.value);
-
-    div.innerHTML=`
-        <div class="corner top-left">${value}${card.suit}</div>
-        <div class="corner bottom-right">${value}${card.suit}</div>
-        <div class="center-symbol">${card.suit}</div>
-    `;
-    return div;
+function isBlackjack(hand){
+return hand.length==2 && total(hand)==21;
 }
 
-function dealCard(target,hidden=false){
-    return new Promise(resolve=>{
-        setTimeout(()=>{
-            let card=deck.pop();
-            if(target==="player"){
-                player.push(card);
-                playerCards.appendChild(renderCard(card,false));
-            }else{
-                dealer.push(card);
-                dealerCards.appendChild(renderCard(card,hidden));
-            }
-            resolve();
-        },600);
-    });
+function render(card,hidden=false){
+let cardDiv=document.createElement("div");
+cardDiv.className="card";
+
+let front=document.createElement("div");
+front.className="card-inner front";
+
+let back=document.createElement("div");
+back.className="card-inner back";
+
+if(!hidden){
+let color=(card.suit=="♥"||card.suit=="♦")?"red":"black";
+front.classList.add(color);
+let val=(card.value==1?"A":card.value==11?"J":card.value==12?"Q":card.value==13?"K":card.value);
+front.innerHTML=`
+<div class="corner top-left">${val}${card.suit}</div>
+<div class="corner bottom-right">${val}${card.suit}</div>
+<div class="center">${card.suit}</div>`;
 }
 
-async function startGame(){
-    gameOver=false;
-    balance-=bet;
-    document.getElementById("balance").innerText=balance;
-    waitBar.innerText="";
-    player=[];dealer=[];
-    playerCards.innerHTML="";
-    dealerCards.innerHTML="";
-    createDeck();
+cardDiv.appendChild(front);
+cardDiv.appendChild(back);
 
-    await dealCard("player",false);
-    await dealCard("dealer",false);
-    await dealCard("player",false);
-    await dealCard("dealer",true);
+if(hidden) cardDiv.classList.add("flip");
+return cardDiv;
+}
+
+function dealCard(to,hidden=false){
+let c=deck.pop();
+if(to=="player"){
+player.push(c);
+playerCards.appendChild(render(c,false));
+}else{
+dealer.push(c);
+dealerCards.appendChild(render(c,hidden));
+}
+}
+
+function addBet(amount){
+if(balance>=amount){
+bet+=amount;
+document.getElementById("bet").innerText=bet;
+}
+}
+
+function start(){
+if(bet==0)return alert("Bahis yapın");
+gameOver=false;
+balance-=bet;
+updateBalance();
+message.innerText="";
+player=[];dealer=[];
+playerCards.innerHTML="";
+dealerCards.innerHTML="";
+createDeck();
+
+dealCard("player");
+dealCard("dealer");
+dealCard("player");
+dealCard("dealer",true);
+
+if(isBlackjack(player)){
+setTimeout(()=>endGame(true),1000);
+}
+
+if(dealer[0].value==1){
+insuranceOffer();
+}
+}
+
+function insuranceOffer(){
+let take=confirm("Dealer As gösterdi. Sigorta almak ister misiniz?");
+if(take){
+insuranceBet=bet/2;
+balance-=insuranceBet;
+updateBalance();
+}
 }
 
 function hit(){
-    if(gameOver) return;
-    dealCard("player",false).then(()=>{
-        if(handValue(player)>21){
-            endGame();
-        }
-    });
+if(gameOver)return;
+dealCard("player");
+if(total(player)>21)endGame();
 }
 
-async function stand(){
-    if(gameOver) return;
-    gameOver=true;
+function stand(){
+if(gameOver)return;
+gameOver=true;
+dealerCards.innerHTML="";
+dealer.forEach(c=>dealerCards.appendChild(render(c,false)));
 
-    dealerCards.innerHTML="";
-    dealer.forEach(c=>{
-        dealerCards.appendChild(renderCard(c,false));
-    });
-
-    while(handValue(dealer)<17){
-        await dealCard("dealer",false);
-    }
-
-    endGame();
+while(total(dealer)<17){
+dealCard("dealer");
 }
 
-function endGame(){
-    let p=handValue(player);
-    let d=handValue(dealer);
-    let msg="";
-
-    if(p>21){
-        msg="Kaybettin!";
-    }else if(d>21){
-        balance+=bet*2;
-        msg="Dealer geçti! Kazandın!";
-    }else if(d<p){
-        balance+=bet*2;
-        msg="Kazandın!";
-    }else if(d>p){
-        msg="Dealer kazandı! Bahis kaybedildi.";
-    }else{
-        balance+=bet;
-        msg="Berabere!";
-    }
-
-    document.getElementById("balance").innerText=balance;
-    waitBar.innerText=msg + " - SONRAKİ OYUNU BEKLEYİN";
+endGame();
 }
 
-dealBtn.onclick=startGame;
-hitBtn.onclick=hit;
-standBtn.onclick=stand;
+function endGame(playerBJ=false){
+gameOver=true;
+let p=total(player);
+let d=total(dealer);
+let msg="";
+
+if(playerBJ && !isBlackjack(dealer)){
+balance+=bet*2.5;
+msg="BLACKJACK! 3:2 Ödeme!";
+}
+else if(isBlackjack(dealer)){
+if(insuranceBet>0) balance+=insuranceBet*3;
+msg="Dealer BLACKJACK!";
+}
+else if(p>21){
+msg="Kaybettin!";
+}
+else if(d>21 || p>d){
+balance+=bet*2;
+msg="Kazandın!";
+}
+else if(d>p){
+msg="Dealer Kazandı!";
+}
+else{
+balance+=bet;
+msg="Berabere!";
+}
+
+bet=0;
+insuranceBet=0;
+updateBalance();
+document.getElementById("bet").innerText=bet;
+message.innerText=msg;
+}
+
+function updateBalance(){
+document.getElementById("balance").innerText=balance;
+}
+
+deal.onclick=start;
+hit.onclick=hit;
+stand.onclick=stand;
 </script>
 
 </body>
