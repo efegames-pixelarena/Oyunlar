@@ -34,12 +34,8 @@ body{
     animation:neon 1.5s infinite alternate;
     text-shadow:0 0 10px #ff7b00,0 0 20px #ff7b00;
 }
-@keyframes neon{
-    from{opacity:0.7;}
-    to{opacity:1;}
-}
+@keyframes neon{from{opacity:0.7;}to{opacity:1;}}
 
-/* HEADER */
 .header{
     position:absolute;
     top:70px;
@@ -55,7 +51,6 @@ body{
     font-size:26px;
 }
 
-/* AREAS */
 .dealer-area{
     position:absolute;
     top:150px;
@@ -76,7 +71,6 @@ body{
     perspective:1000px;
 }
 
-/* REAL CARD DESIGN */
 .card{
     width:70px;
     height:100px;
@@ -88,30 +82,12 @@ body{
     animation:deal 0.6s forwards;
     font-family:"Times New Roman",serif;
 }
+@keyframes deal{to{transform:translateY(0) rotateY(0deg);}}
 
-@keyframes deal{
-    to{transform:translateY(0) rotateY(0deg);}
-}
-
-.corner{
-    position:absolute;
-    font-size:14px;
-    font-weight:bold;
-}
+.corner{position:absolute;font-size:14px;font-weight:bold;}
 .top-left{top:5px;left:6px;}
-.bottom-right{
-    bottom:5px;
-    right:6px;
-    transform:rotate(180deg);
-}
-
-.center-symbol{
-    position:absolute;
-    top:50%;
-    left:50%;
-    transform:translate(-50%,-50%);
-    font-size:28px;
-}
+.bottom-right{bottom:5px;right:6px;transform:rotate(180deg);}
+.center-symbol{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:28px;}
 
 .red{color:red;}
 .black{color:black;}
@@ -123,45 +99,21 @@ body{
 .back::after{
     content:"🂠";
     position:absolute;
-    top:50%;
-    left:50%;
+    top:50%;left:50%;
     transform:translate(-50%,-50%);
-    font-size:30px;
-    color:white;
+    font-size:30px;color:white;
 }
 
-/* CHIP AREA */
-.chip-area{
-    position:absolute;
-    top:260px;
-    width:100%;
-    display:flex;
-    justify-content:center;
-    gap:15px;
-}
-.chip{
-    padding:12px 18px;
-    border-radius:50px;
-    border:2px solid gold;
-    background:radial-gradient(circle,#ffcc00,#ff6600);
-    box-shadow:0 0 12px gold;
-    font-size:13px;
-}
-
-/* WAIT BAR */
 .wait-bar{
     position:absolute;
     bottom:170px;
-    width:70%;
-    left:15%;
-    padding:18px;
-    text-align:center;
+    width:70%;left:15%;
+    padding:18px;text-align:center;
     font-weight:bold;
     background:rgba(0,0,0,0.8);
     border-radius:8px;
 }
 
-/* CONTROLS */
 .controls{
     position:absolute;
     bottom:100px;
@@ -169,45 +121,22 @@ body{
     text-align:center;
 }
 button{
-    padding:14px 25px;
-    margin:8px;
-    font-size:16px;
-    border:none;
-    border-radius:8px;
-    font-weight:bold;
+    padding:14px 25px;margin:8px;
+    font-size:16px;border:none;
+    border-radius:8px;font-weight:bold;
     cursor:pointer;
 }
 #dealBtn{background:#f5a623;}
 #hitBtn{background:#2ecc71;}
 #standBtn{background:#e74c3c;}
-
-.bottom-icons{
-    position:absolute;
-    bottom:20px;
-    width:100%;
-    display:flex;
-    justify-content:space-between;
-    padding:0 25px;
-}
-.icon{
-    width:50px;
-    height:50px;
-    border-radius:12px;
-    border:1px solid rgba(255,255,255,0.2);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-size:22px;
-    background:rgba(0,0,0,0.6);
-}
 </style>
 </head>
 <body>
 
 <div class="top-bar">
-    <div>BAKİYE: 1000₺</div>
+    <div>BAKİYE: <span id="balance">1000</span>₺</div>
     <div class="logo">⚡ PixelArena ⚡</div>
-    <div>BAHİS: 50₺</div>
+    <div>BAHİS: <span id="bet">50</span>₺</div>
 </div>
 
 <div class="header">
@@ -216,14 +145,6 @@ button{
 
 <div class="dealer-area">
     <div id="dealerCards" class="cards"></div>
-</div>
-
-<div class="chip-area">
-    <div class="chip">BUST BONUS</div>
-    <div class="chip">21+3</div>
-    <div class="chip">50₺</div>
-    <div class="chip">PERFECT PAIRS</div>
-    <div class="chip">CRAZY</div>
 </div>
 
 <div id="waitBar" class="wait-bar">SONRAKİ OYUNU BEKLEYİN</div>
@@ -238,15 +159,12 @@ button{
     <button id="standBtn">STAND</button>
 </div>
 
-<div class="bottom-icons">
-    <div class="icon">⟳</div>
-    <div class="icon">☰</div>
-</div>
-
 <script>
 const suits=["♥","♦","♣","♠"];
 let deck=[],player=[],dealer=[];
 let gameOver=true;
+let balance=1000;
+let bet=50;
 
 function createDeck(){
     deck=[];
@@ -258,15 +176,31 @@ function createDeck(){
     deck.sort(()=>Math.random()-0.5);
 }
 
+function cardValue(card){
+    if(card.value>10) return 10;
+    if(card.value===1) return 11;
+    return card.value;
+}
+
+function handValue(hand){
+    let total=0,aces=0;
+    for(let c of hand){
+        total+=cardValue(c);
+        if(c.value===1) aces++;
+    }
+    while(total>21 && aces>0){
+        total-=10;aces--;
+    }
+    return total;
+}
+
 function renderCard(card,hidden=false){
     let div=document.createElement("div");
     div.className="card";
-
     if(hidden){
         div.classList.add("back");
         return div;
     }
-
     let color=(card.suit==="♥"||card.suit==="♦")?"red":"black";
     div.classList.add(color);
 
@@ -280,7 +214,6 @@ function renderCard(card,hidden=false){
         <div class="corner bottom-right">${value}${card.suit}</div>
         <div class="center-symbol">${card.suit}</div>
     `;
-
     return div;
 }
 
@@ -290,12 +223,10 @@ function dealCard(target,hidden=false){
             let card=deck.pop();
             if(target==="player"){
                 player.push(card);
-                document.getElementById("playerCards")
-                .appendChild(renderCard(card,hidden));
+                playerCards.appendChild(renderCard(card,false));
             }else{
                 dealer.push(card);
-                document.getElementById("dealerCards")
-                .appendChild(renderCard(card,hidden));
+                dealerCards.appendChild(renderCard(card,hidden));
             }
             resolve();
         },600);
@@ -304,9 +235,12 @@ function dealCard(target,hidden=false){
 
 async function startGame(){
     gameOver=false;
-    player=[]; dealer=[];
-    document.getElementById("playerCards").innerHTML="";
-    document.getElementById("dealerCards").innerHTML="";
+    balance-=bet;
+    document.getElementById("balance").innerText=balance;
+    waitBar.innerText="";
+    player=[];dealer=[];
+    playerCards.innerHTML="";
+    dealerCards.innerHTML="";
     createDeck();
 
     await dealCard("player",false);
@@ -315,9 +249,58 @@ async function startGame(){
     await dealCard("dealer",true);
 }
 
+function hit(){
+    if(gameOver) return;
+    dealCard("player",false).then(()=>{
+        if(handValue(player)>21){
+            endGame();
+        }
+    });
+}
+
+async function stand(){
+    if(gameOver) return;
+    gameOver=true;
+
+    dealerCards.innerHTML="";
+    dealer.forEach(c=>{
+        dealerCards.appendChild(renderCard(c,false));
+    });
+
+    while(handValue(dealer)<17){
+        await dealCard("dealer",false);
+    }
+
+    endGame();
+}
+
+function endGame(){
+    let p=handValue(player);
+    let d=handValue(dealer);
+    let msg="";
+
+    if(p>21){
+        msg="Kaybettin!";
+    }else if(d>21){
+        balance+=bet*2;
+        msg="Dealer geçti! Kazandın!";
+    }else if(d<p){
+        balance+=bet*2;
+        msg="Kazandın!";
+    }else if(d>p){
+        msg="Dealer kazandı! Bahis kaybedildi.";
+    }else{
+        balance+=bet;
+        msg="Berabere!";
+    }
+
+    document.getElementById("balance").innerText=balance;
+    waitBar.innerText=msg + " - SONRAKİ OYUNU BEKLEYİN";
+}
+
 dealBtn.onclick=startGame;
-hitBtn.onclick=()=>{ if(!gameOver) dealCard("player"); };
-standBtn.onclick=()=>{ gameOver=true; };
+hitBtn.onclick=hit;
+standBtn.onclick=stand;
 </script>
 
 </body>
