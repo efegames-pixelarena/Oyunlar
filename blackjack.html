@@ -117,7 +117,14 @@ Bahis: ₺<span id="bet">0</span>
 
 import { getApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, getDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { 
+  getFirestore, 
+  doc, 
+  getDoc, 
+  setDoc, 
+  updateDoc, 
+  onSnapshot 
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const app = getApp();
 const auth = getAuth(app);
@@ -125,37 +132,69 @@ const db = getFirestore(app);
 
 let currentUser = null;
 
-onAuthStateChanged(auth,(user)=>{
-if(!user){
-alert("Oturum bulunamadı. Tekrar giriş yap.");
-window.location.href="index.html";
-}else{
-currentUser = user;
-const userRef = doc(db,"users",user.uid);
-onSnapshot(userRef,(snap)=>{
-if(snap.exists()){
-document.getElementById("liveBalance").innerText = snap.data().balance;
-}
-});
-}
+onAuthStateChanged(auth, async (user) => {
+
+  if (!user) {
+    alert("Oturum yok");
+    window.location.href = "index.html";
+    return;
+  }
+
+  currentUser = user;
+  const userRef = doc(db, "users", user.uid);
+  const snap = await getDoc(userRef);
+
+  // 🔥 Kullanıcı yoksa oluştur
+  if (!snap.exists()) {
+    await setDoc(userRef, {
+      balance: 1000
+    });
+  }
+
+  // 🔥 Canlı bakiye dinleme
+  onSnapshot(userRef, (docSnap) => {
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      document.getElementById("liveBalance").innerText = data.balance || 0;
+    }
+  });
 });
 
-window.oynaVeBakiyedenDus = async function(miktar){
-if(!currentUser) return false;
-const ref = doc(db,"users",currentUser.uid);
-const snap = await getDoc(ref);
-let bal = snap.data().balance;
-if(bal < miktar){ alert("Yetersiz bakiye"); return false; }
-await updateDoc(ref,{balance: bal - miktar});
-return true;
+window.oynaVeBakiyedenDus = async function (miktar) {
+  if (!currentUser) return false;
+
+  const userRef = doc(db, "users", currentUser.uid);
+  const snap = await getDoc(userRef);
+
+  if (!snap.exists()) return false;
+
+  let bal = snap.data().balance || 0;
+
+  if (bal < miktar) {
+    alert("Yetersiz bakiye");
+    return false;
+  }
+
+  await updateDoc(userRef, {
+    balance: bal - miktar
+  });
+
+  return true;
 };
 
-window.bakiyeArttir = async function(miktar){
-if(!currentUser) return;
-const ref = doc(db,"users",currentUser.uid);
-const snap = await getDoc(ref);
-let bal = snap.data().balance;
-await updateDoc(ref,{balance: bal + miktar});
+window.bakiyeArttir = async function (miktar) {
+  if (!currentUser) return;
+
+  const userRef = doc(db, "users", currentUser.uid);
+  const snap = await getDoc(userRef);
+
+  if (!snap.exists()) return;
+
+  let bal = snap.data().balance || 0;
+
+  await updateDoc(userRef, {
+    balance: bal + miktar
+  });
 };
 
 /* 🎮 OYUN KODU (DEĞİŞMEDİ) */
