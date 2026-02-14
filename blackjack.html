@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>Live Blackjack Studio</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
+body{background:#000;overflow:hidden;height:100svh;}
+.app{width:100vw;height:100svh;position:relative;color:white;overflow:hidden;}
+:root{--safe-bottom: env(safe-area-inset-bottom);}
+
+.studio{
+position:absolute;top:0;left:0;width:100%;height:65%;
+background:
+linear-gradient(to bottom,rgba(0,0,0,0.2),rgba(0,0,0,0.7)),
+url('https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1400&q=80');
+background-size:cover;background-position:center;
+}
+
+.ticker{
+position:absolute;
+top:65%;
+left:50%;
+transform:translate(-50%,-50%);
+font-size:20px;
+font-weight:bold;
+color:#00ffcc;
+text-shadow:
+0 0 5px #00ffcc,
+0 0 10px #00ffcc,
+0 0 20px #00ffcc,
+0 0 40px #00ffaa;
+z-index:20;
+}
+
+.countdown{color:#22c55e;font-weight:bold;}
+
+.dealerZone{
+position:absolute;top:60px;left:0;width:100%;text-align:center;z-index:5;
+}
+.score{font-size:14px;color:#22c55e;margin-top:5px;}
+
+.topBar{
+position:absolute;top:0;width:100%;height:35px;
+background:rgba(0,0,0,.6);
+display:flex;justify-content:space-between;
+align-items:center;padding:0 10px;font-size:12px;
+}
+
+.viewer{
+position:absolute;top:45px;right:15px;
+background:rgba(0,0,0,.6);
+padding:5px 10px;border-radius:20px;font-size:12px;
+}
+
+.table{
+position:absolute;bottom:30%;left:0;width:100%;height:35%;
+background:#0a0a0a;
+border-top-left-radius:50% 25%;
+border-top-right-radius:50% 25%;
+box-shadow:0 -30px 80px rgba(0,0,0,.9);
+padding-top:25px;text-align:center;
+}
+
+.sectionTitle{font-size:12px;opacity:.6;margin-top:5px;}
+.hand{margin-top:10px;min-height:95px;}
+
+.card{
+width:60px;height:90px;background:white;border-radius:8px;
+display:inline-flex;align-items:center;justify-content:center;
+margin:4px;font-weight:bold;font-size:20px;
+animation:deal .4s ease;
+box-shadow:0 5px 15px rgba(0,0,0,.5);
+}
+
+.red{color:#c1121f}
+.black{color:black}
+.card.back{background:linear-gradient(45deg,#111,#333);color:#111;}
+
+@keyframes deal{
+from{transform:translateY(-120px) scale(.6);opacity:0}
+to{transform:translateY(0) scale(1);opacity:1}
+}
+
+.betOptions{
+position:absolute;
+bottom:calc(120px + var(--safe-bottom));
+width:100%;display:flex;justify-content:center;gap:15px;z-index:10;
+}
+
+.betBtn{
+width:60px;height:60px;border-radius:50%;
+background:rgba(255,255,255,.08);
+backdrop-filter:blur(8px);
+display:flex;align-items:center;justify-content:center;
+cursor:pointer;
+}
+
+.controls{
+position:absolute;
+bottom:calc(70px + var(--safe-bottom));
+width:100%;text-align:center;z-index:10;
+}
+
+.controls button{
+padding:8px 14px;margin:4px;border:none;
+border-radius:6px;background:#22c55e;
+color:black;font-weight:bold;cursor:pointer;
+}
+
+.controls button:disabled{background:#555;color:#aaa;}
+
+.bottomBar{
+position:absolute;bottom:0;width:100%;height:70px;
+padding-bottom:var(--safe-bottom);
+background:linear-gradient(to top,#000,#111);
+display:flex;justify-content:space-between;align-items:center;
+padding-left:15px;padding-right:15px;font-size:13px;
+}
+</style>
+</head>
+
+<body>
+<div class="app">
+<div class="studio"></div>
+
+<div class="topBar">
+<div>Türkçe Blackjack • 8 Deck • S17</div>
+<div>ID: <span id="roundId">-</span></div>
+</div>
+
+<div class="viewer">👤 56</div>
+
+<div class="dealerZone">
+<div class="sectionTitle">Dealer</div>
+<div class="score" id="dealerScore"></div>
+<div class="hand" id="dealerHand"></div>
+</div>
+
+<div class="table">
+<div class="sectionTitle">Oyuncu</div>
+<div class="score" id="playerScore"></div>
+<div class="hand" id="playerHand"></div>
+</div>
+
+<div class="betOptions">
+<div class="betBtn" onclick="placeBet(50)">50₺</div>
+<div class="betBtn" onclick="placeBet(100)">100₺</div>
+<div class="betBtn" onclick="placeBet(250)">250₺</div>
+</div>
+
+<div class="controls">
+<button id="dealBtn" onclick="startCountdown()">Dağıt</button>
+<button id="hitBtn" onclick="hit()" disabled>Hit</button>
+<button id="standBtn" onclick="stand()" disabled>Stand</button>
+</div>
+
+<div class="ticker" id="ticker">Bahis koyun</div>
+
+<div class="bottomBar">
+<div>Bakiye: ₺<span id="balance">2000</span></div>
+<div>Toplam Bahis: ₺<span id="bet">0</span></div>
+</div>
+</div>
+
+<script>
+
+/* ====== ULTRA COMPATIBLE SES SİSTEMİ (EKLENDİ) ====== */
+
+let audioCtx;
+function unlockAudio(){
+if(!audioCtx){
+audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+}
+if(audioCtx.state === "suspended"){
+audioCtx.resume();
+}
+}
+
+function createSound(src, volume=1, loop=false){
+const audio = new Audio(src);
+audio.preload="auto";
+audio.playsInline=true;
+audio.volume=volume;
+audio.loop=loop;
+return audio;
+}
+
+const ambience = createSound("https://assets.mixkit.co/sfx/preview/mixkit-casino-ambience-2003.mp3",0.15,true);
+const cardSound = createSound("https://assets.mixkit.co/sfx/preview/mixkit-playing-card-deal-1563.mp3",0.6);
+const clickSound = createSound("https://assets.mixkit.co/sfx/preview/mixkit-select-click-1109.mp3",0.7);
+const winSound = createSound("https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.mp3",0.8);
+const loseSound = createSound("https://assets.mixkit.co/sfx/preview/mixkit-losing-bleeps-2026.mp3",0.8);
+
+function playSound(sound){
+unlockAudio();
+const clone = sound.cloneNode();
+clone.volume = sound.volume;
+clone.play().catch(()=>{});
+}
+
+document.body.addEventListener("click",()=>{
+unlockAudio();
+if(ambience.paused){
+ambience.play().catch(()=>{});
+}
+},{once:true});
+
+/* ====== BURADAN SONRASI SENİN OYUN KODUN (DEĞİŞMEDİ) ====== */
+
+let shoe=[],player=[],dealer=[]
+let balance=2000,currentBet=0,round=1
+let gameActive=false
+
+const SUITS=['♠','♥','♦','♣']
+const VALUES=['A','2','3','4','5','6','7','8','9','10','J','Q','K']
+
+function buildShoe(){shoe=[];for(let d=0;d<8;d++)for(let s of SUITS)for(let v of VALUES)shoe.push({value:v,suit:s});shuffle()}
+function shuffle(){for(let i=shoe.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[shoe[i],shoe[j]]=[shoe[j],shoe[i]]}}
+function draw(){if(shoe.length<60) buildShoe();return shoe.pop()}
+function value(c){if(c.value=="A") return 11;if(["K","Q","J"].includes(c.value)) return 10;return parseInt(c.value)}
+function score(hand){let total=0,aces=0;hand.forEach(c=>{total+=value(c);if(c.value=="A") aces++});while(total>21&&aces>0){total-=10;aces--}return total}
+function cardHTML(c){let color=(c.suit=="♥"||c.suit=="♦")?"red":"black";return `<div class="card ${color}">${c.value}${c.suit}</div>`}
+
+function placeBet(amount){playSound(clickSound);if(gameActive||balance<amount)return;balance-=amount;currentBet+=amount;updateUI()}
+function startCountdown(){
+playSound(clickSound)
+if(currentBet<=0)return
+let time=3
+document.getElementById("ticker").innerHTML=`Betting Time: <span class="countdown">${time}</span>`
+let interval=setInterval(()=>{
+time--
+document.querySelector(".countdown").innerText=time
+if(time<=0){clearInterval(interval);startRound()}
+},1000)
+}
+function startRound(){
+player=[];dealer=[];gameActive=true
+document.getElementById("roundId").innerText="EV-"+round++
+document.getElementById("hitBtn").disabled=false
+document.getElementById("standBtn").disabled=false
+document.getElementById("ticker").innerText="Kartlar dağıtılıyor..."
+let sequence=[()=>player.push(draw()),()=>dealer.push(draw()),()=>player.push(draw()),()=>dealer.push(draw())]
+let i=0
+let dealInterval=setInterval(()=>{
+sequence[i++]()
+playSound(cardSound)
+render(true);updateScores(true)
+if(i>=sequence.length){clearInterval(dealInterval);document.getElementById("ticker").innerText="Karar ver"}
+},600)
+}
+function hit(){playSound(cardSound);player.push(draw());render(true);updateScores(true);if(score(player)>21){revealDealer();setTimeout(endRound,1000)}}
+function stand(){playSound(clickSound);revealDealer()}
+function revealDealer(){render(false);updateScores(false);dealerPlay()}
+function dealerPlay(){
+let interval=setInterval(()=>{
+if(score(dealer)<17){dealer.push(draw());playSound(cardSound);render(false);updateScores(false)}
+else{clearInterval(interval);setTimeout(endRound,1000)}
+},700)
+}
+function endRound(){
+gameActive=false
+document.getElementById("hitBtn").disabled=true
+document.getElementById("standBtn").disabled=true
+let p=score(player),d=score(dealer),result=""
+if(p>21){result="Bust!";playSound(loseSound)}
+else if(d>21||p>d){
+if(p==21&&player.length==2){balance+=currentBet*2.5;result="Blackjack 3:2"}
+else{balance+=currentBet*2;result="Kazandın"}
+playSound(winSound)
+}
+else if(p==d){balance+=currentBet;result="Push"}
+else{result="Kaybettin";playSound(loseSound)}
+currentBet=0;updateUI()
+document.getElementById("ticker").innerText=result
+setTimeout(resetRound,2500)
+}
+function resetRound(){player=[];dealer=[];render();updateScores();document.getElementById("ticker").innerText="Bahis koyun"}
+function render(hideDealer=false){
+document.getElementById("playerHand").innerHTML=player.map(cardHTML).join("")
+if(hideDealer){document.getElementById("dealerHand").innerHTML=dealer.length?cardHTML(dealer[0])+`<div class="card back"></div>`:""}
+else{document.getElementById("dealerHand").innerHTML=dealer.map(cardHTML).join("")}
+}
+function updateScores(hideDealer=false){
+document.getElementById("playerScore").innerText=player.length?"Toplam: "+score(player):""
+if(dealer.length){
+if(hideDealer){document.getElementById("dealerScore").innerText="Toplam: "+value(dealer[0])}
+else{document.getElementById("dealerScore").innerText="Toplam: "+score(dealer)}
+}else document.getElementById("dealerScore").innerText=""
+}
+function updateUI(){document.getElementById("balance").innerText=balance;document.getElementById("bet").innerText=currentBet}
+
+buildShoe()
+updateUI()
+
+</script>
+</body>
+</html>
