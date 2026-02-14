@@ -3,15 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PixselArena Blackjack</title>
-
+<title>PixselArena Blackjack Live</title>
 <style>
 body{margin:0;overflow:hidden;background:#000;font-family:Arial;color:white;}
-#ui{
-position:absolute;
-top:0;left:0;width:100%;
-pointer-events:none;
-}
+#ui{position:absolute;top:0;width:100%;pointer-events:none;}
 
 .top-bar{
 height:85px;
@@ -45,37 +40,14 @@ justify-content:center;
 align-items:center;
 font-size:28px;
 text-shadow:0 0 20px orange;
-pointer-events:none;
 }
 
 .table-text{
 position:absolute;
-bottom:200px;
+bottom:220px;
 width:100%;
 text-align:center;
 font-weight:bold;
-}
-
-.chips{
-position:absolute;
-bottom:40px;
-width:100%;
-display:flex;
-justify-content:center;
-gap:20px;
-pointer-events:auto;
-}
-
-.chip{
-width:70px;height:70px;
-border-radius:50%;
-background:#1976d2;
-display:flex;
-justify-content:center;
-align-items:center;
-font-weight:bold;
-cursor:pointer;
-box-shadow:0 0 20px #1976d2;
 }
 </style>
 </head>
@@ -95,13 +67,6 @@ PixselArena<br>Blackjack Live
 BLACKJACK PAYS 3 TO 2<br>
 INSURANCE PAYS 2 TO 1
 </div>
-
-<div class="chips">
-<div class="chip" onclick="placeBet(50)">50₺</div>
-<div class="chip" onclick="placeBet(100)">100₺</div>
-<div class="chip" onclick="placeBet(500)">500₺</div>
-<div class="chip" onclick="placeBet(1000)">1K</div>
-</div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
@@ -114,103 +79,132 @@ renderer.setSize(window.innerWidth,window.innerHeight);
 renderer.setPixelRatio(window.devicePixelRatio);
 document.body.appendChild(renderer.domElement);
 
-camera.position.set(0,6,12);
+camera.position.set(0,7,13);
 camera.lookAt(0,0,0);
 
-/* LIGHTS */
-const ambient=new THREE.AmbientLight(0xffffff,0.7);
-scene.add(ambient);
-
+/* LIGHT */
+scene.add(new THREE.AmbientLight(0xffffff,0.8));
 const light=new THREE.PointLight(0xff6600,2,50);
 light.position.set(0,10,5);
 scene.add(light);
 
-/* TABLE 3D */
-const tableGeo=new THREE.CylinderGeometry(8,8,1,64);
+/* TABLE */
+const tableGeo=new THREE.CylinderGeometry(9,9,1,64);
 const tableMat=new THREE.MeshStandardMaterial({color:0x111111});
 const table=new THREE.Mesh(tableGeo,tableMat);
 table.position.y=-2;
 scene.add(table);
 
 /* NEON EDGE */
-const edgeGeo=new THREE.TorusGeometry(8,0.2,16,100);
+const edgeGeo=new THREE.TorusGeometry(9,0.25,16,100);
 const edgeMat=new THREE.MeshBasicMaterial({color:0xff6600});
 const edge=new THREE.Mesh(edgeGeo,edgeMat);
 edge.rotation.x=Math.PI/2;
 edge.position.y=-1.5;
 scene.add(edge);
 
-/* CARD GEOMETRY */
-function createCard(){
-let geo=new THREE.BoxGeometry(1.5,0.05,2.2);
-let mat=new THREE.MeshStandardMaterial({color:0xffffff});
-let card=new THREE.Mesh(geo,mat);
-card.castShadow=true;
-return card;
+/* BETTING AREA MARK */
+const betLineGeo=new THREE.TorusGeometry(5,0.1,16,100);
+const betLineMat=new THREE.MeshBasicMaterial({color:0xffffff});
+const betLine=new THREE.Mesh(betLineGeo,betLineMat);
+betLine.rotation.x=Math.PI/2;
+betLine.position.y=-1.4;
+scene.add(betLine);
+
+/* CHIP 3D */
+function createChip(value,color){
+const geo=new THREE.CylinderGeometry(0.8,0.8,0.3,32);
+const mat=new THREE.MeshStandardMaterial({color:color});
+const chip=new THREE.Mesh(geo,mat);
+chip.userData.value=value;
+chip.position.y=-1.2;
+return chip;
 }
 
-/* SHUFFLE ANIMATION */
-function shuffleDeck(cards){
-cards.forEach((c,i)=>{
-c.position.set(
-(Math.random()-0.5)*4,
-0,
-(Math.random()-0.5)*4
-);
-});
+const chip50=createChip(50,0x1565c0);
+chip50.position.set(-3,-1.2,0);
+scene.add(chip50);
+
+const chip100=createChip(100,0x2e7d32);
+chip100.position.set(-1,-1.2,0);
+scene.add(chip100);
+
+const chip500=createChip(500,0xf9a825);
+chip500.position.set(1,-1.2,0);
+scene.add(chip500);
+
+const chip1000=createChip(1000,0xc62828);
+chip1000.position.set(3,-1.2,0);
+scene.add(chip1000);
+
+/* CARD */
+function createCard(){
+let geo=new THREE.BoxGeometry(1.6,0.05,2.4);
+let mat=new THREE.MeshStandardMaterial({color:0xffffff});
+let card=new THREE.Mesh(geo,mat);
+return card;
 }
 
 /* DEAL ANIMATION */
 function dealCard(x,z){
 let card=createCard();
-card.position.set(0,5,0);
+card.position.set(0,5,-6);
 scene.add(card);
 
-let target=new THREE.Vector3(x,0.1,z);
-
+let target=new THREE.Vector3(x,-1,z);
 let t=0;
-function animateDeal(){
+
+function anim(){
 t+=0.02;
 card.position.lerpVectors(
-new THREE.Vector3(0,5,0),
+new THREE.Vector3(0,5,-6),
 target,
 t
 );
-if(t<1)requestAnimationFrame(animateDeal);
+if(t<1)requestAnimationFrame(anim);
 }
-animateDeal();
-
+anim();
 return card;
 }
 
-/* FLIP ANIMATION */
+/* FLIP */
 function flipCard(card){
 let t=0;
-function animateFlip(){
+function anim(){
 t+=0.05;
 card.rotation.y=Math.PI*t;
-if(t<1)requestAnimationFrame(animateFlip);
+if(t<1)requestAnimationFrame(anim);
 }
-animateFlip();
+anim();
 }
 
-/* DEALER 3D (placeholder model) */
-const dealerGeo=new THREE.SphereGeometry(1,32,32);
+/* DEALER PLACEHOLDER */
+const dealerGeo=new THREE.BoxGeometry(2,3,1);
 const dealerMat=new THREE.MeshStandardMaterial({color:0x222222});
 const dealer=new THREE.Mesh(dealerGeo,dealerMat);
-dealer.position.set(0,2,-6);
+dealer.position.set(0,0,-6);
 scene.add(dealer);
 
-/* BET */
-function placeBet(amount){
+/* CLICK RAYCAST */
+const raycaster=new THREE.Raycaster();
+const mouse=new THREE.Vector2();
+
+window.addEventListener("click",e=>{
+mouse.x=(e.clientX/window.innerWidth)*2-1;
+mouse.y=-(e.clientY/window.innerHeight)*2+1;
+raycaster.setFromCamera(mouse,camera);
+let intersects=raycaster.intersectObjects([chip50,chip100,chip500,chip1000]);
+
+if(intersects.length>0){
 let card=dealCard(
 (Math.random()-0.5)*4,
 (Math.random()-0.5)*2
 );
 setTimeout(()=>flipCard(card),800);
 }
+});
 
-/* RENDER LOOP */
+/* LOOP */
 function animate(){
 requestAnimationFrame(animate);
 renderer.render(scene,camera);
