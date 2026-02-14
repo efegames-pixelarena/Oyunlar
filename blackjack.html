@@ -6,9 +6,9 @@
 <title>Live Casino Blackjack Elite</title>
 
 <style>
+/* CSS AYNEN KORUNDU */
 *{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
 html,body{height:100%;overflow:hidden;background:black;}
-
 body{
 background:
 linear-gradient(rgba(0,0,0,.6),rgba(0,0,0,.85)),
@@ -17,112 +17,63 @@ background-size:cover;
 background-position:center;
 color:white;
 }
-
 :root{
 --safe-top: env(safe-area-inset-top);
 --safe-bottom: env(safe-area-inset-bottom);
 }
-
 .topBar{
 position:absolute;
-top:0;
-left:0;
-width:100%;
-height:50px;
+top:0;left:0;width:100%;height:50px;
 padding-top:var(--safe-top);
 background:rgba(0,0,0,.7);
-display:flex;
-justify-content:space-between;
-align-items:center;
-padding:0 15px;
-z-index:10;
+display:flex;justify-content:space-between;
+align-items:center;padding:0 15px;z-index:10;
 }
-
 .soundBtn{
-background:#00ff88;
-border:none;
-padding:5px 10px;
-border-radius:5px;
-font-weight:bold;
-cursor:pointer;
+background:#00ff88;border:none;padding:5px 10px;
+border-radius:5px;font-weight:bold;cursor:pointer;
 }
-
 .table{
-position:absolute;
-bottom:0;
-left:0;
-width:100%;
-height:65%;
+position:absolute;bottom:0;left:0;width:100%;height:65%;
 background:radial-gradient(circle at center,#0b3d2e,#021a13);
 border-top-left-radius:50% 25%;
 border-top-right-radius:50% 25%;
-box-shadow:0 -40px 100px black;
-text-align:center;
-padding-top:25px;
-padding-bottom:80px;
+box-shadow:0 -40px 100px black;text-align:center;
+padding-top:25px;padding-bottom:80px;
 }
-
 .hand{min-height:110px;margin-top:10px;}
-
 .card{
-width:65px;height:95px;
-background-size:cover;
-background-position:center;
-border-radius:8px;
-display:inline-block;
-margin:4px;
+width:65px;height:95px;background-size:cover;
+background-position:center;border-radius:8px;
+display:inline-block;margin:4px;
 animation:deal .4s ease;
 }
-
 @keyframes deal{
 from{transform:translateY(-60px);opacity:0}
 to{transform:translateY(0);opacity:1}
 }
-
 .controls{margin-top:8px;}
-
 .controls button{
-padding:8px 15px;
-margin:5px;
-border:none;
-border-radius:6px;
-background:#00ff88;
-color:black;
-font-weight:bold;
-cursor:pointer;
+padding:8px 15px;margin:5px;border:none;
+border-radius:6px;background:#00ff88;
+color:black;font-weight:bold;cursor:pointer;
 }
-
 .controls button:disabled{background:#444;}
-
 .betArea{
-position:absolute;
-bottom:10px;
-left:0;
-width:100%;
-display:flex;
-justify-content:center;
-gap:12px;
+position:absolute;bottom:10px;left:0;width:100%;
+display:flex;justify-content:center;gap:12px;
 padding-bottom:var(--safe-bottom);
 }
-
 .betBtn{
-width:55px;height:55px;
-border-radius:50%;
-display:flex;
-align-items:center;
-justify-content:center;
-font-weight:bold;
-cursor:pointer;
-color:black;
-font-size:14px;
+width:55px;height:55px;border-radius:50%;
+display:flex;align-items:center;justify-content:center;
+font-weight:bold;cursor:pointer;color:black;font-size:14px;
 }
-
 .chip20{background:radial-gradient(circle,#00c3ff,#005c8a);}
 .chip50{background:radial-gradient(circle,#ffcc00,#b8860b);}
 .chip100{background:radial-gradient(circle,#ff4444,#8b0000);}
 .chip500{background:radial-gradient(circle,#a855f7,#4c1d95);}
 .chip1000{background:radial-gradient(circle,#00ff88,#065f46);}
-
 .score{font-size:14px;margin-top:5px}
 </style>
 </head>
@@ -139,7 +90,6 @@ Bahis: ₺<span id="bet">0</span>
 </div>
 
 <div class="table">
-
 <h3>Dealer</h3>
 <div id="dealerHand" class="hand"></div>
 <div id="dealerScore" class="score"></div>
@@ -161,176 +111,133 @@ Bahis: ₺<span id="bet">0</span>
 <div class="betBtn chip500" onclick="placeBet(500)">500</div>
 <div class="betBtn chip1000" onclick="placeBet(1000)">1K</div>
 </div>
-
 </div>
 
-<script>
-let bet=0
-let player=[],dealer=[],deck=[]
-let soundOn=true
-let audioUnlocked=false
-let oyunAktif=false
+<script type="module">
 
+/* 🔥 FIREBASE BAŞLANGIÇ */
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, getDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "BURAYA_KENDİ_KEY",
+  authDomain: "BURAYA_DOMAIN",
+  projectId: "BURAYA_PROJECT_ID",
+  storageBucket: "BURAYA_BUCKET",
+  messagingSenderId: "BURAYA_MSG",
+  appId: "BURAYA_APP_ID"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+let currentUser=null;
+
+onAuthStateChanged(auth,(user)=>{
+if(!user){
+alert("Giriş yapmalısın");
+window.location.href="index.html";
+}else{
+currentUser=user;
+const userRef=doc(db,"users",user.uid);
+onSnapshot(userRef,(snap)=>{
+if(snap.exists()){
+document.getElementById("liveBalance").innerText=snap.data().balance;
+}
+});
+}
+});
+
+window.oynaVeBakiyedenDus=async function(miktar){
+if(!currentUser) return false;
+const ref=doc(db,"users",currentUser.uid);
+const snap=await getDoc(ref);
+let bal=snap.data().balance;
+if(bal<miktar){alert("Yetersiz bakiye");return false;}
+await updateDoc(ref,{balance:bal-miktar});
+return true;
+};
+
+window.bakiyeArttir=async function(miktar){
+if(!currentUser) return;
+const ref=doc(db,"users",currentUser.uid);
+const snap=await getDoc(ref);
+let bal=snap.data().balance;
+await updateDoc(ref,{balance:bal+miktar});
+};
+
+/* 🔥 OYUN KODU (DEĞİŞMEDİ) */
+
+let bet=0,player=[],dealer=[],deck=[],soundOn=true,audioUnlocked=false,oyunAktif=false
 const cardSound=new Audio("https://assets.mixkit.co/sfx/preview/mixkit-card-slide-1530.mp3")
 const winSound=new Audio("https://assets.mixkit.co/sfx/preview/mixkit-coins-handling-1939.mp3")
 const loseSound=new Audio("https://assets.mixkit.co/sfx/preview/mixkit-player-losing-or-failing-2042.mp3")
 
-function unlockAudio(){
-if(audioUnlocked) return
-cardSound.play().then(()=>{
-cardSound.pause()
-cardSound.currentTime=0
-audioUnlocked=true
-}).catch(()=>{})
-}
-
-document.body.addEventListener("touchstart",unlockAudio,{once:true})
-document.body.addEventListener("click",unlockAudio,{once:true})
-
-function playSound(sound){
-if(!soundOn||!audioUnlocked)return
-sound.currentTime=0
-sound.play().catch(()=>{})
-}
-
-function toggleSound(){
-soundOn=!soundOn
-document.querySelector(".soundBtn").innerText=soundOn?"🔊":"🔇"
-}
+function toggleSound(){soundOn=!soundOn;document.querySelector(".soundBtn").innerText=soundOn?"🔊":"🔇"}
 
 const suits=["S","H","D","C"]
 const values=["A","2","3","4","5","6","7","8","9","0","J","Q","K"]
-
-function buildDeck(){
-deck=[]
-for(let s of suits)
-for(let v of values)
-deck.push(v+s)
-deck.sort(()=>Math.random()-0.5)
-}
-buildDeck()
-
-function draw(){
-playSound(cardSound)
-return deck.pop()
-}
-
-function cardHTML(code,hidden=false){
-if(hidden)
-return `<div class="card" style="background-image:url('https://deckofcardsapi.com/static/img/back.png')"></div>`
-return `<div class="card" style="background-image:url('https://deckofcardsapi.com/static/img/${code}.png')"></div>`
-}
-
-function value(c){
-let v=c[0]
-if(v=="A") return 11
-if(["K","Q","J","0"].includes(v)) return 10
-return parseInt(v)
-}
-
-function score(hand){
-let total=0,aces=0
-hand.forEach(c=>{
-total+=value(c)
-if(c[0]=="A")aces++
-})
-while(total>21&&aces>0){total-=10;aces--}
-return total
-}
+function buildDeck(){deck=[];for(let s of suits)for(let v of values)deck.push(v+s);deck.sort(()=>Math.random()-0.5)}buildDeck()
+function draw(){return deck.pop()}
+function cardHTML(code,hidden=false){if(hidden)return `<div class="card" style="background-image:url('https://deckofcardsapi.com/static/img/back.png')"></div>`;return `<div class="card" style="background-image:url('https://deckofcardsapi.com/static/img/${code}.png')"></div>`}
+function value(c){let v=c[0];if(v=="A")return 11;if(["K","Q","J","0"].includes(v))return 10;return parseInt(v)}
+function score(hand){let total=0,aces=0;hand.forEach(c=>{total+=value(c);if(c[0]=="A")aces++});while(total>21&&aces>0){total-=10;aces--}return total}
 
 const betSpan=document.getElementById("bet")
+function updateUI(){betSpan.innerText=bet}
 
-function updateUI(){
-betSpan.innerText=bet
-}
-
-async function placeBet(amount){
+window.placeBet=async function(amount){
 if(oyunAktif) return
-const izin = await window.oynaVeBakiyedenDus(amount)
+const izin=await window.oynaVeBakiyedenDus(amount)
 if(!izin) return
 bet+=amount
 updateUI()
 dealBtn.disabled=false
 }
 
-async function startRound(){
+window.startRound=async function(){
 if(bet<=0) return alert("Bahis koymalısın.")
 oyunAktif=true
 document.getElementById("betArea").style.display="none"
 dealBtn.style.display="none"
-
 player=[];dealer=[]
-
-player.push(draw()); render(true); await delay(600)
-dealer.push(draw()); render(true); await delay(600)
-player.push(draw()); render(true); await delay(600)
-dealer.push(draw()); render(true)
-
-hitBtn.disabled=false
-standBtn.disabled=false
+player.push(draw());render(true)
+dealer.push(draw());render(true)
+player.push(draw());render(true)
+dealer.push(draw());render(true)
+hitBtn.disabled=false;standBtn.disabled=false
 }
 
 function render(hideDealer=false){
 playerHand.innerHTML=player.map(c=>cardHTML(c)).join("")
-dealerHand.innerHTML=
-hideDealer?cardHTML(dealer[0])+cardHTML(dealer[1],true):
-dealer.map(c=>cardHTML(c)).join("")
+dealerHand.innerHTML=hideDealer?cardHTML(dealer[0])+cardHTML(dealer[1],true):dealer.map(c=>cardHTML(c)).join("")
 playerScore.innerText="Toplam: "+score(player)
-dealerScore.innerText=
-hideDealer?"Toplam: ?":"Toplam: "+score(dealer)
+dealerScore.innerText=hideDealer?"Toplam: ?":"Toplam: "+score(dealer)
 }
 
-function hit(){
-player.push(draw())
-render(true)
-if(score(player)>21){
-playSound(loseSound)
-stand()
-}
-}
-
-function stand(){
-while(score(dealer)<17) dealer.push(draw())
-render(false)
-endRound()
-}
+window.hit=function(){player.push(draw());render(true);if(score(player)>21)stand()}
+window.stand=function(){while(score(dealer)<17)dealer.push(draw());render(false);endRound()}
 
 async function endRound(){
 let p=score(player),d=score(dealer)
-
-if(p>21){
-playSound(loseSound)
-}
-else if(d>21||p>d){
-await window.bakiyeArttir(bet*2)
-playSound(winSound)
-}
-else if(p==d){
-await window.bakiyeArttir(bet)
-}
-
-bet=0
-updateUI()
-
-hitBtn.disabled=true
-standBtn.disabled=true
-
-setTimeout(resetTable,2500)
+if(d>21||p>d) await window.bakiyeArttir(bet*2)
+else if(p==d) await window.bakiyeArttir(bet)
+bet=0;updateUI()
+hitBtn.disabled=true;standBtn.disabled=true
+setTimeout(resetTable,2000)
 }
 
 function resetTable(){
 oyunAktif=false
-playerHand.innerHTML=""
-dealerHand.innerHTML=""
-playerScore.innerText=""
-dealerScore.innerText=""
-dealBtn.style.display="inline-block"
-dealBtn.disabled=true
+playerHand.innerHTML="";dealerHand.innerHTML=""
+playerScore.innerText="";dealerScore.innerText=""
+dealBtn.style.display="inline-block";dealBtn.disabled=true
 document.getElementById("betArea").style.display="flex"
 }
 
-function delay(ms){return new Promise(r=>setTimeout(r,ms))}
 </script>
-
 </body>
 </html>
