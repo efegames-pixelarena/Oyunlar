@@ -181,12 +181,30 @@ Bahis: ₺<span id="bet">0</span>
 let balance=1000, bet=0
 let player=[],dealer=[],deck=[]
 let soundOn=true
+let audioUnlocked=false
 
 const dealSound=new Audio("https://assets.mixkit.co/sfx/preview/mixkit-card-flip-1933.mp3")
 const winSound=new Audio("https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.mp3")
 const bustSound=new Audio("https://assets.mixkit.co/sfx/preview/mixkit-arcade-retro-game-over-213.mp3")
 
-function playSound(s){ if(soundOn){ s.currentTime=0; s.play(); } }
+dealSound.preload="auto"
+winSound.preload="auto"
+bustSound.preload="auto"
+
+function unlockAudio(){
+if(audioUnlocked) return
+dealSound.play().then(()=>{dealSound.pause();dealSound.currentTime=0})
+.catch(()=>{})
+audioUnlocked=true
+}
+document.body.addEventListener("click",unlockAudio,{once:true})
+
+function playSound(s){
+if(!soundOn) return
+s.currentTime=0
+s.play().catch(()=>{})
+}
+
 function toggleSound(){
 soundOn=!soundOn
 document.querySelector(".soundBtn").innerText=soundOn?"🔊":"🔇"
@@ -229,12 +247,6 @@ while(total>21&&aces>0){total-=10;aces--}
 return total
 }
 
-function updateUI(){
-balance.innerText=balanceVal
-betSpan.innerText=bet
-}
-
-const balanceVal=balance
 const balanceEl=document.getElementById("balance")
 const betSpan=document.getElementById("bet")
 
@@ -258,9 +270,9 @@ dealBtn.style.display="none"
 
 player=[];dealer=[]
 
-player.push(draw()); render(true); await delay(3000)
-dealer.push(draw()); render(true); await delay(3000)
-player.push(draw()); render(true); await delay(3000)
+player.push(draw()); render(true); await delay(800)
+dealer.push(draw()); render(true); await delay(800)
+player.push(draw()); render(true); await delay(800)
 dealer.push(draw()); render(true)
 
 hitBtn.disabled=false
@@ -294,7 +306,7 @@ let p=score(player),d=score(dealer)
 
 if(p>21){}
 else if(d>21||p>d){ balance+=bet*2; playSound(winSound); }
-else if(p==d){ balance+=bet } // PUSH
+else if(p==d){ balance+=bet }
 
 bet=0
 updateUI()
