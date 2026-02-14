@@ -118,7 +118,7 @@ const auth=getAuth(app);
 const db=getFirestore(app);
 
 let balance=0,bet=0,userRef=null;
-let gameState="betting";
+let gameState="betting"; // betting, locked, dealing, playing, finished
 let betTimer=null,decisionTimer=null;
 
 const balanceEl=document.getElementById("balance");
@@ -180,16 +180,25 @@ else if(card.value===12) v="Q";
 else if(card.value===13) v="K";
 else if(card.value===10) v="10";
 else v=String(card.value);
-
 return `https://deckofcardsapi.com/static/img/${v}${card.suit}.png`;
 }
 
 function cardImage(card,hidden=false){
 let img=document.createElement("img");
 img.className="card-img";
-img.src=hidden
+
+let url = hidden
 ?"https://deckofcardsapi.com/static/img/back.png"
 :getCardUrl(card);
+
+img.src=url;
+
+/* 🔥 Güçlü retry sistemi */
+img.onerror=function(){
+img.onerror=null;
+img.src=url+"?retry="+Date.now();
+};
+
 setTimeout(()=>img.classList.add("show"),30);
 return img;
 }
@@ -197,6 +206,7 @@ return img;
 async function addBet(amount){
 if(gameState!=="betting")return;
 if(balance<amount)return;
+if(betTimer===null && bet>0) return; // 🔥 ekstra güvenlik
 
 balance-=amount;
 bet+=amount;
@@ -210,6 +220,7 @@ window.addBet=addBet;
 
 function startBetTimer(){
 let time=5;
+gameState="betting";
 message.innerText="Bahisler Kapanıyor: "+time+" SN";
 
 betTimer=setInterval(()=>{
@@ -219,6 +230,7 @@ message.innerText="Bahisler Kapanıyor: "+time+" SN";
 }else{
 clearInterval(betTimer);
 betTimer=null;
+gameState="locked"; // 🔥 bahis tamamen kilitlendi
 disableChips();
 message.innerText="";
 startGame();
@@ -299,15 +311,13 @@ stand();
 async function hit(){
 if(gameState!=="playing")return;
 await deal("player",false);
-
 if(total(player)>21){
-await dealerTurn(); // 🔥 bust olunca dealer oynar
+await dealerTurn();
 }
 }
 
 async function stand(){
 if(gameState!=="playing")return;
-
 clearInterval(decisionTimer);
 decisionTimer=null;
 message.innerText="";
@@ -318,7 +328,6 @@ async function dealerTurn(){
 gameState="finished";
 controls.style.display="none";
 
-/* Kapalı kartı aç */
 if(dealerHiddenCardElement && dealerHiddenCardData){
 dealerHiddenCardElement.src=getCardUrl(dealerHiddenCardData);
 }
@@ -326,7 +335,6 @@ dealerHiddenCardElement.src=getCardUrl(dealerHiddenCardData);
 updateScores();
 await delay(3000);
 
-/* 3 saniye aralıkla kart çek */
 while(total(dealer)<17){
 await deal("dealer",false);
 await delay(3000);
