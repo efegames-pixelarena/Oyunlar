@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pişti Casino PRO</title>
+
+<style>
+body{
+margin:0;
+background:#0b1023;
+color:white;
+font-family:Arial;
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:center;
+height:100vh;
+overflow:hidden;
+}
+
+h1{margin:5px;}
+
+.table{
+width:95%;
+max-width:900px;
+height:520px;
+border-radius:40px;
+position:relative;
+background:radial-gradient(circle at center,#136f3a,#083d18 70%);
+box-shadow:
+inset 0 0 120px #000,
+0 0 80px #00ff99,
+0 20px 60px rgba(0,0,0,0.6);
+overflow:hidden;
+}
+
+.table-cards{
+position:absolute;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+display:flex;
+justify-content:center;
+align-items:center;
+}
+
+.stack-card{
+width:95px;
+margin-left:-65px;
+}
+
+.stack-card:first-child{
+margin-left:0;
+}
+
+.hand{
+position:absolute;
+bottom:15px;
+left:50%;
+transform:translateX(-50%);
+display:flex;
+gap:10px;
+}
+
+.computer{
+position:absolute;
+top:15px;
+left:50%;
+transform:translateX(-50%);
+display:flex;
+gap:10px;
+}
+
+.card{
+width:80px;
+cursor:pointer;
+transition:0.3s;
+}
+
+.card:hover{ transform:translateY(-10px); }
+
+.popup{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.85);
+display:flex;
+justify-content:center;
+align-items:center;
+flex-direction:column;
+z-index:999;
+}
+
+.hidden{display:none;}
+
+.popup-box{
+background:#111;
+padding:30px;
+border-radius:20px;
+box-shadow:0 0 30px #00ff99;
+}
+
+button{
+padding:10px 20px;
+border:none;
+border-radius:10px;
+cursor:pointer;
+margin:5px;
+background:#ffb300;
+font-weight:bold;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🃏 Pişti Casino PRO</h1>
+<div>Oyuncu: <span id="ps">0</span> | ChatGPT: <span id="cs">0</span></div>
+
+<div class="table" id="tableArea">
+<div class="computer" id="computerHand"></div>
+<div class="table-cards" id="tableCards"></div>
+<div class="hand" id="playerHand"></div>
+</div>
+
+<audio id="winSound" src="https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3" preload="auto"></audio>
+<audio id="sadSound" src="https://assets.mixkit.co/active_storage/sfx/2581/2581-preview.mp3" preload="auto"></audio>
+<audio id="cardSound" src="https://assets.mixkit.co/active_storage/sfx/3441/3441-preview.mp3" preload="auto"></audio>
+
+<div class="popup hidden" id="endPopup">
+<div class="popup-box">
+<h2 id="resultText"></h2>
+<button onclick="location.reload()">⌛ Yeni Oyun</button>
+<button onclick="location.href='index.html'">🏠 AnaSayfa</button>
+</div>
+</div>
+
+<script>
+const suits=["H","D","C","S"];
+const values=["A","2","3","4","5","6","7","8","9","0","J","Q","K"];
+
+let deck=[],player=[],computer=[],table=[];
+let ps=0,cs=0,lastWinner=null,round=0,totalRounds=6;
+
+const winSound=document.getElementById("winSound");
+const sadSound=document.getElementById("sadSound");
+const cardSound=document.getElementById("cardSound");
+
+function playSound(sound){
+let clone=sound.cloneNode(true);
+clone.play().catch(()=>{});
+}
+
+function unlockAudio(){
+playSound(cardSound);
+document.removeEventListener("click",unlockAudio);
+}
+document.addEventListener("click",unlockAudio);
+
+function createDeck(){
+deck=[];
+for(let s of suits)
+for(let v of values)
+deck.push(v+s);
+deck.sort(()=>Math.random()-0.5);
+}
+
+function dealInitial(){
+table=[];
+for(let i=0;i<3;i++) table.push("BACK");
+table.push(deck.shift());
+renderTable();
+setTimeout(dealRound,500);
+}
+
+function dealRound(){
+if(round>=totalRounds){ endGame(); return; }
+player=[]; computer=[];
+for(let i=0;i<4;i++){
+player.push(deck.shift());
+computer.push(deck.shift());
+}
+round++;
+render();
+}
+
+function img(card){
+return "https://deckofcardsapi.com/static/img/"+card+".png";
+}
+
+function render(){
+const ph=document.getElementById("playerHand");
+const ch=document.getElementById("computerHand");
+ph.innerHTML="";
+ch.innerHTML="";
+
+player.forEach((c,i)=>{
+let im=document.createElement("img");
+im.src=img(c);
+im.className="card";
+im.onclick=()=>play(i);
+ph.appendChild(im);
+});
+
+computer.forEach(()=>{
+let im=document.createElement("img");
+im.src="https://deckofcardsapi.com/static/img/back.png";
+im.className="card";
+ch.appendChild(im);
+});
+
+document.getElementById("ps").innerText=ps;
+document.getElementById("cs").innerText=cs;
+renderTable();
+}
+
+function renderTable(){
+const tc=document.getElementById("tableCards");
+tc.innerHTML="";
+let real=table.filter(c=>c!=="BACK");
+
+real.forEach((c,i)=>{
+let im=document.createElement("img");
+im.src=img(c);
+im.className="stack-card";
+im.style.zIndex=i;
+tc.appendChild(im);
+});
+}
+
+function play(i){
+let c=player.splice(i,1)[0];
+table.push(c);
+playSound(cardSound);
+check("p");
+render();
+setTimeout(compPlay,600);
+}
+
+/* ===================== */
+/* GELİŞMİŞ ZEKİ AI */
+/* ===================== */
+
+function chooseSmartCard(){
+
+let real=table.filter(x=>x!=="BACK");
+let top=real.length ? real[real.length-1] : null;
+
+/* 1️⃣ J ile alma */
+for(let i=0;i<computer.length;i++)
+if(computer[i][0]==="J") return i;
+
+/* 2️⃣ Eşleşme ile alma */
+if(top){
+for(let i=0;i<computer.length;i++)
+if(computer[i][0]===top[0]) return i;
+}
+
+/* 3️⃣ Kart sayma benzeri mantık */
+let counts={};
+computer.forEach(c=>{
+counts[c[0]]=(counts[c[0]]||0)+1;
+});
+
+/* Tek kalan kartı at */
+for(let i=0;i<computer.length;i++){
+if(counts[computer[i][0]]===1)
+return i;
+}
+
+/* 4️⃣ Hiçbiri yoksa ilk kart */
+return 0;
+}
+
+function compPlay(){
+if(computer.length===0){
+if(player.length===0) dealRound();
+return;
+}
+
+let index=chooseSmartCard();
+let chosen=computer.splice(index,1)[0];
+
+table.push(chosen);
+playSound(cardSound);
+check("c");
+render();
+
+if(player.length===0 && computer.length===0)
+setTimeout(dealRound,600);
+}
+
+function check(owner){
+
+let real=table.filter(x=>x!=="BACK");
+if(real.length<2) return;
+
+let last=real[real.length-1];
+let prev=real[real.length-2];
+
+if(last[0]==="J" || last[0]===prev[0]){
+
+let isRealPisti = (real.length===2 && last[0]==="J" && prev[0]==="J");
+
+if(isRealPisti){
+if(owner==="p") ps+=20;
+else cs+=20;
+}
+else if(real.length===2){
+if(owner==="p") ps+=10;
+else cs+=10;
+}
+
+take(owner);
+}
+}
+
+function take(owner){
+let real=table.filter(x=>x!=="BACK");
+let pts=real.length;
+
+if(owner==="p") ps+=pts;
+else cs+=pts;
+
+lastWinner=owner;
+table=[];
+}
+
+function endGame(){
+
+if(table.length && lastWinner){
+let real=table.filter(x=>x!=="BACK");
+if(lastWinner==="p") ps+=real.length;
+else cs+=real.length;
+}
+
+document.getElementById("resultText").innerText=
+ps>cs?"🎉 Tebrikler Kazandın!":"😂 ChatGPT Kazandı!";
+
+if(ps>cs) playSound(winSound);
+else playSound(sadSound);
+
+document.getElementById("endPopup").classList.remove("hidden");
+}
+
+createDeck();
+dealInitial();
+</script>
+
+</body>
+</html>
