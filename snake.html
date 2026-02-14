@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3310 Snake - Emirhan Efe</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
+<style>
+html,body{
+margin:0;
+padding:0;
+height:100%;
+overflow:hidden;
+background:#7c8f00;
+font-family:'Press Start 2P', monospace;
+display:flex;
+justify-content:center;
+align-items:center;
+}
+
+.startup{
+position:absolute;
+width:100%;
+height:100%;
+background:#8bac0f;
+display:flex;
+justify-content:center;
+align-items:center;
+flex-direction:column;
+color:#0f380f;
+z-index:50;
+transition:1s;
+}
+.hidden{opacity:0;visibility:hidden;}
+
+.producer{
+position:absolute;
+top:40px;
+font-size:14px;
+color:#0f380f;
+letter-spacing:2px;
+animation: blink 1s infinite;
+}
+@keyframes blink{50%{opacity:0;}}
+
+.console{
+width:340px;
+height:480px;
+background:#8bac0f;
+border:14px solid #2f4f2f;
+box-shadow:0 0 40px black inset, 0 0 30px black;
+padding:15px;
+display:flex;
+flex-direction:column;
+align-items:center;
+position:relative;
+}
+
+.score{
+font-size:12px;
+color:#0f380f;
+margin-bottom:10px;
+}
+
+.canvas-wrapper{
+position:relative;
+width:300px;
+height:300px;
+}
+
+canvas{
+background:#9bbc0f;
+image-rendering: pixelated;
+display:block;
+}
+
+.scanlines{
+position:absolute;
+top:0;
+left:0;
+width:100%;
+height:100%;
+pointer-events:none;
+background: repeating-linear-gradient(
+to bottom,
+rgba(0,0,0,0.05),
+rgba(0,0,0,0.05) 2px,
+transparent 2px,
+transparent 4px
+);
+}
+
+.gameover{
+position:absolute;
+top:0;
+left:0;
+width:300px;
+height:300px;
+background:rgba(139,172,15,0.95);
+display:flex;
+justify-content:center;
+align-items:center;
+flex-direction:column;
+font-size:12px;
+color:#0f380f;
+display:none;
+text-align:center;
+padding:20px;
+}
+
+.controls{
+display:grid;
+grid-template-columns:60px 60px 60px;
+grid-gap:5px;
+justify-content:center;
+margin-top:20px;
+}
+
+.btn{
+background:#2f4f2f;
+color:white;
+text-align:center;
+padding:15px;
+user-select:none;
+}
+</style>
+</head>
+<body>
+
+<div class="startup" id="startup">
+<h1>NOKIA</h1>
+<div>Connecting People</div>
+</div>
+
+<div class="producer">YAPIMCI: EMİRHAN EFE</div>
+
+<div class="console">
+
+<div class="score">
+Skor: <span id="score">0</span> | High: <span id="high">0</span>
+</div>
+
+<div class="canvas-wrapper">
+<canvas id="game" width="300" height="300"></canvas>
+<div class="scanlines"></div>
+<div class="gameover" id="gameover">
+GAME OVER<br><br>
+Dokunarak Yeniden Başla
+</div>
+</div>
+
+<div class="controls">
+<div></div>
+<div class="btn" onclick="setDir('UP')">↑</div>
+<div></div>
+<div class="btn" onclick="setDir('LEFT')">←</div>
+<div class="btn" onclick="setDir('DOWN')">↓</div>
+<div class="btn" onclick="setDir('RIGHT')">→</div>
+</div>
+
+</div>
+
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+const box = 15;
+const size = 300;
+
+let snake, direction, food, score;
+let started = false;
+
+let baseSpeed = 220;
+let currentSpeed = baseSpeed;
+let minSpeed = 80;
+
+let lastMoveTime = 0;
+
+let highScore = localStorage.getItem("snakeHigh") || 0;
+document.getElementById("high").innerText = highScore;
+
+/* AUDIO */
+let audioCtx;
+function initAudio(){
+if(!audioCtx){
+audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+}
+}
+function beep(freq,duration){
+if(!audioCtx) return;
+const osc = audioCtx.createOscillator();
+const gain = audioCtx.createGain();
+osc.type="square";
+osc.frequency.value=freq;
+gain.gain.setValueAtTime(0.15,audioCtx.currentTime);
+gain.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+duration/1000);
+osc.connect(gain);
+gain.connect(audioCtx.destination);
+osc.start();
+osc.stop(audioCtx.currentTime+duration/1000);
+}
+
+/* BOOT */
+if(!sessionStorage.getItem("booted")){
+document.body.addEventListener("click", boot,{once:true});
+document.body.addEventListener("touchstart", boot,{once:true});
+}else{
+document.getElementById("startup").style.display="none";
+initAudio();
+startGame();
+}
+
+function boot(){
+initAudio();
+beep(700,250);
+setTimeout(()=>{
+document.getElementById("startup").classList.add("hidden");
+sessionStorage.setItem("booted","true");
+setTimeout(()=>{startGame();},2000);
+},1000);
+}
+
+function startGame(){
+snake=[{x:150,y:150}];
+direction="RIGHT";
+food=randomFood();
+score=0;
+currentSpeed = baseSpeed;
+lastMoveTime=0;
+document.getElementById("score").innerText=0;
+document.getElementById("gameover").style.display="none";
+started=true;
+requestAnimationFrame(gameLoop);
+}
+
+function updateSpeed(){
+let newSpeed = baseSpeed - Math.floor(score/5)*15;
+if(newSpeed < minSpeed) newSpeed = minSpeed;
+currentSpeed = newSpeed;
+}
+
+function randomFood(){
+let isRed = Math.random() < 0.15;
+return{
+x:Math.floor(Math.random()*(size/box))*box,
+y:Math.floor(Math.random()*(size/box))*box,
+type:isRed?"red":"green"
+}
+}
+
+function setDir(dir){
+if(!started)return;
+if(dir==="UP"&&direction!=="DOWN")direction="UP";
+if(dir==="DOWN"&&direction!=="UP")direction="DOWN";
+if(dir==="LEFT"&&direction!=="RIGHT")direction="LEFT";
+if(dir==="RIGHT"&&direction!=="LEFT")direction="RIGHT";
+}
+
+document.addEventListener("keydown",(e)=>{
+if(e.key==="ArrowUp")setDir("UP");
+if(e.key==="ArrowDown")setDir("DOWN");
+if(e.key==="ArrowLeft")setDir("LEFT");
+if(e.key==="ArrowRight")setDir("RIGHT");
+});
+
+function gameLoop(timestamp){
+if(!started) return;
+
+if(timestamp - lastMoveTime > currentSpeed){
+update();
+lastMoveTime = timestamp;
+}
+draw();
+requestAnimationFrame(gameLoop);
+}
+
+function update(){
+let headX=snake[0].x;
+let headY=snake[0].y;
+
+if(direction==="UP")headY-=box;
+if(direction==="DOWN")headY+=box;
+if(direction==="LEFT")headX-=box;
+if(direction==="RIGHT")headX+=box;
+
+if(headX<0||headY<0||headX>=size||headY>=size||collision(headX,headY)){
+gameOver();
+return;
+}
+
+if(headX===food.x&&headY===food.y){
+if(food.type==="red"){
+score+=3;
+beep(900,120);
+}else{
+score+=1;
+beep(600,100);
+}
+food=randomFood();
+updateSpeed();
+}else{
+snake.pop();
+}
+
+snake.unshift({x:headX,y:headY});
+document.getElementById("score").innerText=score;
+}
+
+function draw(){
+ctx.fillStyle="#9bbc0f";
+ctx.fillRect(0,0,size,size);
+
+snake.forEach(s=>{
+ctx.fillStyle="#0f380f";
+ctx.fillRect(s.x,s.y,box,box);
+});
+
+ctx.font="14px Arial";
+ctx.textAlign="center";
+ctx.textBaseline="middle";
+ctx.fillText(food.type==="red"?"🍎":"🍏",food.x+box/2,food.y+box/2);
+}
+
+function collision(x,y){
+return snake.some(s=>s.x===x&&s.y===y);
+}
+
+function gameOver(){
+started=false;
+
+if(score>highScore){
+localStorage.setItem("snakeHigh",score);
+document.getElementById("high").innerText=score;
+}
+
+document.getElementById("gameover").style.display="flex";
+}
+
+document.getElementById("gameover").addEventListener("click",startGame);
+document.getElementById("gameover").addEventListener("touchstart",startGame);
+</script>
+
+</body>
+</html>
