@@ -25,12 +25,12 @@ color:white;
 touch-action:manipulation;
 }
 
-/* ===== PREMIUM NAVBAR ===== */
+/* NAVBAR */
 .top-bar{
 position:fixed;
 top:0;
 width:100%;
-height:60px;
+height:55px;
 display:flex;
 align-items:center;
 justify-content:space-between;
@@ -41,10 +41,9 @@ z-index:100;
 }
 
 .brand{
-font-size:19px;
+font-size:18px;
 font-weight:800;
-letter-spacing:0.5px;
-background:linear-gradient(90deg,#4fd1ff,#ffffff,#4fd1ff);
+background:linear-gradient(90deg,#4fd1ff,#fff,#4fd1ff);
 background-size:200% auto;
 -webkit-background-clip:text;
 -webkit-text-fill-color:transparent;
@@ -58,42 +57,34 @@ to{background-position:200% center;}
 .right-menu{
 display:flex;
 gap:10px;
-align-items:center;
 }
 
-.nav-btn{
-padding:7px 14px;
-border-radius:12px;
+.nav-box{
+padding:6px 14px;
+border-radius:14px;
 font-weight:700;
 font-size:13px;
 min-width:95px;
 text-align:center;
-display:flex;
-align-items:center;
-justify-content:center;
-height:36px;
 }
 
-.balance-btn{
+.balance-box{
 background:#273c8f;
-border:1px solid rgba(255,255,255,0.15);
 }
 
-.bet-btn{
+.bet-box{
 background:linear-gradient(90deg,#ff8a00,#ff5f00);
 color:#000;
-box-shadow:0 0 10px rgba(255,140,0,0.7);
 }
 
-/* ===== OYUN ===== */
 .area{
 position:absolute;
 width:100%;
 text-align:center;
 }
 
-#dealerArea{top:95px;}
-#playerArea{bottom:220px;}
+#dealerArea{top:85px;}
+#playerArea{bottom:210px;}
 
 .score{
 margin-top:6px;
@@ -103,12 +94,10 @@ color:#ffd700;
 }
 
 .dealer-title{
-font-size:18px;
+font-size:17px;
 letter-spacing:4px;
 margin-bottom:8px;
-background:linear-gradient(90deg,#d4af37,#f7e27b,#d4af37);
--webkit-background-clip:text;
--webkit-text-fill-color:transparent;
+color:#d4af37;
 }
 
 .cards{
@@ -118,56 +107,25 @@ gap:10px;
 }
 
 .card{
-width:70px;
-height:105px;
+width:60px;
+height:90px;
 border-radius:10px;
 background:white;
-position:relative;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:22px;
 font-weight:bold;
-box-shadow:0 8px 18px rgba(0,0,0,0.6);
-opacity:0;
-transform:translateY(-40px);
-animation:deal .4s ease forwards;
+box-shadow:0 6px 15px rgba(0,0,0,0.5);
 }
 
-@keyframes deal{
-to{
-opacity:1;
-transform:translateY(0);
-}
-}
-
-.corner{
-position:absolute;
-font-size:14px;
-line-height:14px;
-}
-
-.top-left{
-top:6px;
-left:6px;
-}
-
-.bottom-right{
-bottom:6px;
-right:6px;
-transform:rotate(180deg);
-}
-
-.center{
-position:absolute;
-top:50%;
-left:50%;
-transform:translate(-50%,-50%);
-font-size:26px;
+.card.back{
+background:linear-gradient(135deg,#1a2a6c,#000);
+color:transparent;
 }
 
 .red{color:#d40000;}
 .black{color:#000;}
-
-.card.back{
-background:linear-gradient(135deg,#1a2a6c,#000);
-}
 
 #message{
 position:absolute;
@@ -230,10 +188,10 @@ box-shadow:0 6px 15px rgba(0,0,0,0.6);
 <div class="top-bar">
 <div class="brand">PixelArena BJ</div>
 <div class="right-menu">
-<div class="nav-btn balance-btn">
+<div class="nav-box balance-box">
 Bakiye: <span id="balance">1000</span>₺
 </div>
-<div class="nav-btn bet-btn">
+<div class="nav-box bet-box">
 Bahis: <span id="bet">0</span>₺
 </div>
 </div>
@@ -242,7 +200,7 @@ Bahis: <span id="bet">0</span>₺
 <div id="dealerArea" class="area">
 <div class="dealer-title">KURUPİER</div>
 <div id="dealerCards" class="cards"></div>
-<div class="score">Toplam: <span id="dealerScore"></span></div>
+<div class="score">Toplam: <span id="dealerScore">0</span></div>
 </div>
 
 <div id="message">Bahis Yapın</div>
@@ -268,8 +226,14 @@ Bahis: <span id="bet">0</span>₺
 const suits=["♥","♦","♣","♠"];
 let deck=[],player=[],dealer=[];
 let balance=1000,bet=0;
+let gameState="betting"; // betting | playing | finished
+let betTimer=null,decisionTimer=null;
 let dealerHiddenCard=null;
-let decisionTimer;
+
+const balanceEl=document.getElementById("balance");
+const betEl=document.getElementById("bet");
+const message=document.getElementById("message");
+const controls=document.getElementById("controls");
 
 function createDeck(){
 deck=[];
@@ -278,25 +242,6 @@ for(let i=1;i<=13;i++){
 deck.push({suit:s,value:i});
 }}
 deck.sort(()=>Math.random()-0.5);
-}
-
-function cardHTML(card){
-let val=(card.value==1?"A":card.value==11?"J":card.value==12?"Q":card.value==13?"K":card.value);
-let color=(card.suit=="♥"||card.suit=="♦")?"red":"black";
-let div=document.createElement("div");
-div.className="card "+color;
-div.innerHTML=`
-<div class="corner top-left">${val}<br>${card.suit}</div>
-<div class="corner bottom-right">${val}<br>${card.suit}</div>
-<div class="center">${card.suit}</div>
-`;
-return div;
-}
-
-function backCard(){
-let div=document.createElement("div");
-div.className="card back";
-return div;
 }
 
 function total(hand){
@@ -310,124 +255,167 @@ while(t>21&&a>0){t-=10;a--;}
 return t;
 }
 
-function updateScores(showDealer=false){
-playerScore.innerText=total(player);
-dealerScore.innerText=showDealer?total(dealer):"";
+function renderCard(card){
+let div=document.createElement("div");
+div.className="card "+((card.suit=="♥"||card.suit=="♦")?"red":"black");
+let val=(card.value==1?"A":card.value==11?"J":card.value==12?"Q":card.value==13?"K":card.value);
+div.innerHTML=val+card.suit;
+return div;
+}
+
+function renderBack(){
+let div=document.createElement("div");
+div.className="card back";
+return div;
+}
+
+function updateUI(){
+balanceEl.innerText=balance;
+betEl.innerText=bet;
+document.getElementById("playerScore").innerText=total(player);
+document.getElementById("dealerScore").innerText=
+gameState==="playing" ? (dealer[0]? (dealer[0].value>10?10:dealer[0].value==1?11:dealer[0].value):0) : total(dealer);
 }
 
 function addBet(amount){
+if(gameState!=="betting") return;
 if(balance<amount) return;
+
 balance-=amount;
 bet+=amount;
-balance.innerText=balance;
-bet.innerText=bet;
-startBetCountdown();
+updateUI();
+
+if(!betTimer){
+startBetTimer();
+}
 }
 
-function startBetCountdown(){
+function startBetTimer(){
 let time=5;
 message.innerText="Bahisler Kapanıyor: "+time;
-let timer=setInterval(()=>{
+
+betTimer=setInterval(()=>{
 time--;
 message.innerText="Bahisler Kapanıyor: "+time;
+
 if(time<=0){
-clearInterval(timer);
+clearInterval(betTimer);
+betTimer=null;
 startGame();
 }
 },1000);
 }
 
 function startGame(){
-player=[];dealer=[];
-playerCards.innerHTML="";
-dealerCards.innerHTML="";
+if(bet<=0){ message.innerText="Bahis Yapın"; return; }
+
+gameState="playing";
+player=[]; dealer=[];
 createDeck();
 
-let p1=deck.pop();
-let d1=deck.pop();
-let p2=deck.pop();
+document.getElementById("playerCards").innerHTML="";
+document.getElementById("dealerCards").innerHTML="";
+
+dealCard("player");
+dealCard("dealer");
+dealCard("player");
+
 dealerHiddenCard=deck.pop();
-
-setTimeout(()=>{
-player.push(p1);
-playerCards.appendChild(cardHTML(p1));
-updateScores();
-},0);
-
-setTimeout(()=>{
-dealer.push(d1);
-dealerCards.appendChild(cardHTML(d1));
-},3000);
-
-setTimeout(()=>{
-player.push(p2);
-playerCards.appendChild(cardHTML(p2));
-updateScores();
-},6000);
-
-setTimeout(()=>{
 dealer.push(dealerHiddenCard);
-dealerCards.appendChild(backCard());
-startDecision();
-},9000);
+
+document.getElementById("dealerCards").appendChild(renderCard(dealer[0]));
+document.getElementById("dealerCards").appendChild(renderBack());
+
+updateUI();
+startDecisionTimer();
 }
 
-function startDecision(){
+function dealCard(to){
+let c=deck.pop();
+if(to==="player"){
+player.push(c);
+document.getElementById("playerCards").appendChild(renderCard(c));
+}else{
+dealer.push(c);
+document.getElementById("dealerCards").appendChild(renderCard(c));
+}
+updateUI();
+}
+
+function startDecisionTimer(){
 controls.style.display="block";
 let time=10;
 message.innerText="Karar İçin "+time+" Saniye";
+
 decisionTimer=setInterval(()=>{
 time--;
 message.innerText="Karar İçin "+time+" Saniye";
+
 if(time<=0){
 clearInterval(decisionTimer);
+decisionTimer=null;
 stand();
 }
 },1000);
 }
 
 function hit(){
-let c=deck.pop();
-player.push(c);
-playerCards.appendChild(cardHTML(c));
-updateScores();
-if(total(player)>21) endGame("Kaybettin!");
+if(gameState!=="playing") return;
+
+dealCard("player");
+
+if(total(player)>21){
+endGame("Kaybettin!");
+}
 }
 
 function stand(){
-clearInterval(decisionTimer);
-controls.style.display="none";
+if(gameState!=="playing") return;
 
-dealerCards.children[1].remove();
-dealerCards.appendChild(cardHTML(dealerHiddenCard));
+gameState="finished";
+controls.style.display="none";
+clearInterval(decisionTimer);
+
+document.getElementById("dealerCards").children[1].remove();
+document.getElementById("dealerCards").appendChild(renderCard(dealerHiddenCard));
 
 while(total(dealer)<17){
-let c=deck.pop();
-dealer.push(c);
-dealerCards.appendChild(cardHTML(c));
+dealCard("dealer");
 }
 
 let p=total(player);
 let d=total(dealer);
 
-if(d>21||p>d){balance+=bet*2;endGame("Kazandın!");}
-else if(d>p){endGame("Dealer Kazandı!");}
-else{balance+=bet;endGame("Berabere!");}
-
-updateScores(true);
+if(d>21||p>d){
+balance+=bet*2;
+endGame("Kazandın!");
+}
+else if(d>p){
+endGame("Dealer Kazandı!");
+}
+else{
+balance+=bet;
+endGame("Berabere!");
+}
 }
 
 function endGame(text){
 message.innerText=text;
 bet=0;
+updateUI();
+
 setTimeout(()=>{
-playerCards.innerHTML="";
-dealerCards.innerHTML="";
-playerScore.innerText=0;
-dealerScore.innerText="";
+document.getElementById("playerCards").innerHTML="";
+document.getElementById("dealerCards").innerHTML="";
+player=[]; dealer=[];
+updateUI();
 message.innerText="Bahis Yapın";
-},3000);
+gameState="betting";
+},2000);
 }
+
+document.getElementById("hit").onclick=hit;
+document.getElementById("stand").onclick=stand;
 </script>
 
 </body>
