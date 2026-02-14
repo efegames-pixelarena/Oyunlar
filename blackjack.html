@@ -25,23 +25,23 @@ color:white;
 touch-action:manipulation;
 }
 
-/* TOP BAR */
+/* ===== TOP BAR ===== */
 .top-bar{
-position:absolute;
+position:fixed;
 top:0;
 width:100%;
-height:85px;
+height:80px;
 display:flex;
-justify-content:space-between;
 align-items:center;
-padding:0 30px;
-background:linear-gradient(135deg,#ffffff,#f3f3f3);
-box-shadow:0 8px 30px rgba(0,0,0,0.25);
-z-index:20;
+justify-content:space-between;
+padding:0 20px;
+background:linear-gradient(135deg,#ffffff,#f2f2f2);
+box-shadow:0 6px 20px rgba(0,0,0,0.25);
+z-index:100;
 }
 
 .brand{
-font-size:26px;
+font-size:22px;
 font-weight:800;
 background:linear-gradient(90deg,#d4af37,#f7e27b,#d4af37);
 -webkit-background-clip:text;
@@ -49,46 +49,62 @@ background:linear-gradient(90deg,#d4af37,#f7e27b,#d4af37);
 }
 
 .pill{
-padding:12px 26px;
-border-radius:50px;
+padding:10px 20px;
+border-radius:40px;
 font-weight:700;
-background:linear-gradient(145deg,#ffffff,#ececec);
-box-shadow:0 6px 15px rgba(0,0,0,0.25);
-animation:pulse 2s infinite alternate;
+background:#fff;
+box-shadow:0 0 15px rgba(255,215,0,0.6);
 color:#000;
+min-width:110px;
+text-align:center;
 }
 
-@keyframes pulse{
-from{box-shadow:0 0 10px rgba(255,215,0,0.4);}
-to{box-shadow:0 0 25px rgba(255,215,0,0.9);}
+/* ALANLAR */
+.area{
+position:absolute;
+width:100%;
+text-align:center;
 }
 
-.area{position:absolute;width:100%;text-align:center;}
-#dealerArea{top:160px;}
-#playerArea{bottom:280px;}
+#dealerArea{top:110px;}
+#playerArea{bottom:220px;}
 
+.score{
+margin-top:8px;
+font-size:18px;
+font-weight:600;
+color:#ffd700;
+}
+
+/* KURUPIER */
 .dealer-title{
-font-size:20px;
-font-weight:800;
+font-size:18px;
 letter-spacing:4px;
-margin-bottom:12px;
+margin-bottom:10px;
 background:linear-gradient(90deg,#d4af37,#f7e27b,#d4af37);
 -webkit-background-clip:text;
 -webkit-text-fill-color:transparent;
 }
 
-.cards{display:flex;justify-content:center;gap:20px;}
+/* KARTLAR */
+.cards{
+display:flex;
+justify-content:center;
+gap:12px;
+flex-wrap:nowrap;
+}
 
 .card{
-width:80px;height:120px;
-border-radius:14px;
+width:65px;
+height:95px;
+border-radius:12px;
 background:white;
 display:flex;
 align-items:center;
 justify-content:center;
-font-size:30px;
+font-size:24px;
 font-weight:bold;
-box-shadow:0 12px 25px rgba(0,0,0,0.6);
+box-shadow:0 8px 18px rgba(0,0,0,0.5);
 }
 
 .red{color:#d40000;}
@@ -96,58 +112,60 @@ box-shadow:0 12px 25px rgba(0,0,0,0.6);
 
 #message{
 position:absolute;
-bottom:210px;
+bottom:170px;
 width:100%;
 text-align:center;
-font-size:22px;
+font-size:20px;
 font-weight:600;
 }
 
+/* BUTONLAR */
 .controls{
 position:absolute;
-bottom:140px;
+bottom:110px;
 width:100%;
 text-align:center;
 display:none;
-z-index:50;
 }
 
 button{
-padding:15px 30px;
-margin:10px;
+padding:14px 28px;
+margin:8px;
 border:none;
-border-radius:14px;
+border-radius:12px;
 font-weight:700;
+font-size:15px;
 cursor:pointer;
-font-size:16px;
-box-shadow:0 8px 20px rgba(0,0,0,0.5);
 }
 
 #hit{background:#2ecc71;color:white;}
 #stand{background:#e74c3c;color:white;}
 
+/* CHIPS */
 .chips{
 position:absolute;
-bottom:35px;
+bottom:25px;
 width:100%;
 text-align:center;
 }
 
 .chip{
 display:inline-block;
-width:70px;height:70px;
+width:60px;
+height:60px;
 border-radius:50%;
-line-height:70px;
-margin:10px;
+line-height:60px;
+margin:8px;
 font-weight:700;
 cursor:pointer;
-box-shadow:0 10px 25px rgba(0,0,0,0.6);
+box-shadow:0 6px 15px rgba(0,0,0,0.6);
 }
 
 .c10{background:#f0f0f0;color:black;}
 .c25{background:#1eaa00;}
 .c50{background:#ff1c1c;}
 .c100{background:black;color:white;}
+
 </style>
 </head>
 <body>
@@ -161,12 +179,14 @@ box-shadow:0 10px 25px rgba(0,0,0,0.6);
 <div id="dealerArea" class="area">
 <div class="dealer-title">KURUPİER</div>
 <div id="dealerCards" class="cards"></div>
+<div class="score">Toplam: <span id="dealerScore">0</span></div>
 </div>
 
 <div id="message">Bahis Yapın</div>
 
 <div id="playerArea" class="area">
 <div id="playerCards" class="cards"></div>
+<div class="score">Toplam: <span id="playerScore">0</span></div>
 </div>
 
 <div class="controls" id="controls">
@@ -185,8 +205,7 @@ box-shadow:0 10px 25px rgba(0,0,0,0.6);
 const suits=["♥","♦","♣","♠"];
 let deck=[],player=[],dealer=[];
 let balance=1000,bet=0;
-let decisionTimer;
-let decisionActive=false;
+let decisionTimer,decisionActive=false;
 
 function createDeck(){
 deck=[];
@@ -214,18 +233,35 @@ playerCards.appendChild(renderCard(c));
 dealer.push(c);
 dealerCards.appendChild(renderCard(c));
 }
+updateScores();
+}
+
+function total(hand){
+let t=0,a=0;
+hand.forEach(c=>{
+if(c.value>10)t+=10;
+else if(c.value==1){t+=11;a++;}
+else t+=c.value;
+});
+while(t>21&&a>0){t-=10;a--;}
+return t;
+}
+
+function updateScores(){
+playerScore.innerText=total(player);
+dealerScore.innerText=total(dealer);
 }
 
 function addBet(amount){
 if(balance-bet<amount) return;
 bet+=amount;
-document.getElementById("bet").innerText=bet;
-setTimeout(startGame,1000);
+betElement.innerText=bet;
+setTimeout(startGame,800);
 }
 
 function startGame(){
 balance-=bet;
-document.getElementById("balance").innerText=balance;
+balanceElement.innerText=balance;
 
 player=[];dealer=[];
 playerCards.innerHTML="";
@@ -243,7 +279,6 @@ startDecision();
 function startDecision(){
 decisionActive=true;
 controls.style.display="block";
-
 let time=10;
 message.innerText="Karar İçin "+time+" Saniye";
 
@@ -252,20 +287,9 @@ time--;
 message.innerText="Karar İçin "+time+" Saniye";
 if(time<=0){
 clearInterval(decisionTimer);
-if(decisionActive) stand();
+stand();
 }
 },1000);
-}
-
-function total(hand){
-let t=0,a=0;
-hand.forEach(c=>{
-if(c.value>10)t+=10;
-else if(c.value==1){t+=11;a++;}
-else t+=c.value;
-});
-while(t>21&&a>0){t-=10;a--;}
-return t;
 }
 
 function hit(){
@@ -295,9 +319,12 @@ else if(d>p){message.innerText="Dealer Kazandı!";}
 else{balance+=bet;message.innerText="Berabere!";}
 
 bet=0;
-document.getElementById("bet").innerText=0;
-document.getElementById("balance").innerText=balance;
+betElement.innerText=0;
+balanceElement.innerText=balance;
 }
+
+const balanceElement=document.getElementById("balance");
+const betElement=document.getElementById("bet");
 
 document.getElementById("hit").onclick=hit;
 document.getElementById("stand").onclick=stand;
