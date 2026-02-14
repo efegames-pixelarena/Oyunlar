@@ -6,124 +6,197 @@
 <title>PixelArena Blackjack Live</title>
 
 <style>
+*{margin:0;padding:0;box-sizing:border-box;}
 body{
-    margin:0;
-    background:radial-gradient(circle at center,#111 0%,#000 70%);
-    font-family:Arial;
-    color:white;
+    font-family:Arial, sans-serif;
+    height:100vh;
     overflow:hidden;
+    background:linear-gradient(to bottom,#000 0%,#000 45%,#ff7b00 46%,#0b5d2a 47%,#063d1c 100%);
+    color:white;
 }
 
-/* NEON ÜST PANEL */
-.top-panel{
+/* HEADER */
+.header{
+    position:absolute;
+    top:30px;
+    width:100%;
     text-align:center;
-    margin-top:40px;
-    font-size:28px;
-    padding:25px;
+}
+
+.header-box{
+    display:inline-block;
+    padding:20px 40px;
     border-radius:20px;
-    width:80%;
-    margin-left:auto;
-    margin-right:auto;
     border:4px solid #ff7b00;
-    box-shadow:0 0 30px #ff7b00, inset 0 0 30px #ff7b00;
+    box-shadow:0 0 40px #ff7b00, inset 0 0 30px #ff7b00;
+    font-size:26px;
 }
 
-/* MASA */
-.table{
+/* DEALER AREA (SİYAH BÖLGE) */
+.dealer-area{
     position:absolute;
-    bottom:0;
-    width:100%;
-    height:55%;
-    background:radial-gradient(ellipse at center,#063 0%,#021 80%);
-    border-top:6px solid #ff7b00;
-    box-shadow:0 -10px 50px #ff7b00;
-}
-
-/* KART ALANLARI */
-.area{
-    position:absolute;
+    top:120px;
     width:100%;
     text-align:center;
 }
 
-#dealerArea{ top:120px; }
-#playerArea{ bottom:200px; }
+.score-box{
+    display:inline-block;
+    background:#ffd400;
+    color:black;
+    font-weight:bold;
+    padding:6px 10px;
+    border-radius:8px;
+    margin-bottom:10px;
+}
+
+.cards{
+    display:flex;
+    justify-content:center;
+    gap:10px;
+}
 
 .card{
-    width:80px;
-    height:120px;
+    width:55px;
+    height:80px;
     background:white;
-    border-radius:8px;
-    display:inline-flex;
+    border-radius:6px;
+    display:flex;
     align-items:center;
     justify-content:center;
-    font-size:24px;
-    margin:10px;
-    color:black;
-    position:relative;
-    transform-style:preserve-3d;
+    font-size:16px;
+    font-weight:bold;
+    box-shadow:0 8px 15px rgba(0,0,0,0.6);
     transition:1s;
-    box-shadow:0 10px 20px rgba(0,0,0,0.6);
+    transform-style:preserve-3d;
 }
 
-.red{ color:red; }
-
+.red{color:red;}
 .back{
     background:linear-gradient(45deg,#001,#004);
     color:white;
 }
 
-/* 3D DEAL ANIM */
-.deal{
-    animation:dealAnim 1s ease;
+/* CHIP AREA */
+.chip-area{
+    position:absolute;
+    top:240px;
+    width:100%;
+    display:flex;
+    justify-content:center;
+    gap:15px;
 }
 
-@keyframes dealAnim{
-    from{ transform:translateY(-300px) rotateY(180deg); opacity:0; }
-    to{ transform:translateY(0) rotateY(0); opacity:1; }
+.chip{
+    padding:10px 15px;
+    border-radius:50px;
+    border:1px solid rgba(255,255,255,0.2);
+    font-size:12px;
+    opacity:0.4;
 }
 
-/* BUTON PANEL */
+.main-chip{
+    width:70px;
+    height:70px;
+    border-radius:50%;
+    border:3px solid rgba(255,255,255,0.3);
+}
+
+/* WAIT BAR */
+.wait-bar{
+    position:absolute;
+    bottom:170px;
+    width:70%;
+    left:15%;
+    padding:18px;
+    text-align:center;
+    font-weight:bold;
+    background:rgba(0,0,0,0.8);
+    border-radius:8px;
+    letter-spacing:1px;
+}
+
+/* PLAYER AREA (YEŞİL MASA) */
+.player-area{
+    position:absolute;
+    bottom:250px;
+    width:100%;
+    text-align:center;
+}
+
+/* CONTROLS */
 .controls{
     position:absolute;
-    bottom:30px;
+    bottom:100px;
     width:100%;
     text-align:center;
 }
 
 button{
-    padding:15px 30px;
-    margin:10px;
-    font-size:18px;
+    padding:14px 25px;
+    margin:8px;
+    font-size:16px;
     border:none;
-    border-radius:10px;
+    border-radius:8px;
     font-weight:bold;
     cursor:pointer;
 }
 
-#dealBtn{ background:#f5a623; }
-#hitBtn{ background:#2ecc71; }
-#standBtn{ background:#e74c3c; }
+#dealBtn{background:#f5a623;}
+#hitBtn{background:#2ecc71;}
+#standBtn{background:#e74c3c;}
 
-.status{
+/* BOTTOM ICONS */
+.bottom-icons{
     position:absolute;
-    bottom:110px;
+    bottom:20px;
     width:100%;
-    text-align:center;
-    font-size:20px;
+    display:flex;
+    justify-content:space-between;
+    padding:0 25px;
 }
+
+.icon{
+    width:50px;
+    height:50px;
+    border-radius:12px;
+    border:1px solid rgba(255,255,255,0.2);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:22px;
+    background:rgba(0,0,0,0.6);
+}
+
 </style>
 </head>
 <body>
 
-<div class="top-panel">
-    PixelArena Blackjack Live
+<div class="header">
+    <div class="header-box">PixelArena Blackjack Live</div>
 </div>
 
-<div id="dealerArea" class="area"></div>
-<div id="playerArea" class="area"></div>
+<!-- DEALER -->
+<div class="dealer-area">
+    <div id="dealerScore" class="score-box"></div>
+    <div id="dealerCards" class="cards"></div>
+</div>
 
-<div class="status" id="status"></div>
+<!-- CHIP -->
+<div class="chip-area">
+    <div class="chip">BUST BONUS</div>
+    <div class="chip">21+3</div>
+    <div class="chip main-chip"></div>
+    <div class="chip">PERFECT PAIRS</div>
+    <div class="chip">CRAZY</div>
+</div>
+
+<div id="waitBar" class="wait-bar">SONRAKİ OYUNU BEKLEYİN</div>
+
+<!-- PLAYER -->
+<div class="player-area">
+    <div id="playerCards" class="cards"></div>
+</div>
 
 <div class="controls">
     <button id="dealBtn">DEAL</button>
@@ -131,12 +204,14 @@ button{
     <button id="standBtn">STAND</button>
 </div>
 
-<div class="table"></div>
+<div class="bottom-icons">
+    <div class="icon">⟳</div>
+    <div class="icon">☰</div>
+</div>
 
 <script>
 const suits=["♥","♦","♣","♠"];
 let deck=[],player=[],dealer=[];
-let hiddenCard=null;
 let gameOver=true;
 
 function createDeck(){
@@ -170,7 +245,7 @@ function handValue(hand){
 
 function renderCard(card,hidden=false){
     let div=document.createElement("div");
-    div.className="card deal";
+    div.className="card";
     if(hidden){
         div.classList.add("back");
         div.innerHTML="🂠";
@@ -187,31 +262,44 @@ function renderCard(card,hidden=false){
     return div;
 }
 
-function dealCard(toHand,area,hidden=false){
-    let card=deck.pop();
-    toHand.push(card);
-    let el=renderCard(card,hidden);
-    area.appendChild(el);
-    return card;
-}
-
 function startGame(){
     gameOver=false;
-    document.getElementById("status").innerText="";
+    document.getElementById("waitBar").innerText="";
     player=[]; dealer=[];
-    document.getElementById("playerArea").innerHTML="";
-    document.getElementById("dealerArea").innerHTML="";
+    document.getElementById("playerCards").innerHTML="";
+    document.getElementById("dealerCards").innerHTML="";
     createDeck();
 
-    dealCard(player,playerArea);
-    dealCard(dealer,dealerArea);
-    dealCard(player,playerArea);
-    hiddenCard=dealCard(dealer,dealerArea,true);
+    player.push(deck.pop());
+    dealer.push(deck.pop());
+    player.push(deck.pop());
+    dealer.push(deck.pop());
+
+    updateUI(true);
+}
+
+function updateUI(hideDealer){
+    let pArea=document.getElementById("playerCards");
+    let dArea=document.getElementById("dealerCards");
+    pArea.innerHTML="";
+    dArea.innerHTML="";
+
+    player.forEach(c=>pArea.appendChild(renderCard(c)));
+    dealer.forEach((c,i)=>{
+        if(i===1 && hideDealer)
+            dArea.appendChild(renderCard(c,true));
+        else
+            dArea.appendChild(renderCard(c));
+    });
+
+    document.getElementById("dealerScore").innerText=
+        hideDealer?"":handValue(dealer);
 }
 
 function hit(){
     if(gameOver) return;
-    dealCard(player,playerArea);
+    player.push(deck.pop());
+    updateUI(true);
     if(handValue(player)>21){
         endGame();
     }
@@ -219,21 +307,15 @@ function hit(){
 
 function stand(){
     if(gameOver) return;
-    revealDealer();
-}
-
-function revealDealer(){
-    dealerArea.innerHTML="";
-    dealer.forEach(c=>{
-        dealerArea.appendChild(renderCard(c));
-    });
+    updateUI(false);
     dealerTurn();
 }
 
 function dealerTurn(){
     let interval=setInterval(()=>{
         if(handValue(dealer)<17){
-            dealCard(dealer,dealerArea);
+            dealer.push(deck.pop());
+            updateUI(false);
         }else{
             clearInterval(interval);
             endGame();
@@ -251,7 +333,7 @@ function endGame(){
     else if(p>d) msg="Kazandın!";
     else if(p<d) msg="Kaybettin!";
     else msg="Berabere!";
-    document.getElementById("status").innerText=msg;
+    document.getElementById("waitBar").innerText=msg + " - SONRAKİ OYUNU BEKLEYİN";
 }
 
 dealBtn.onclick=startGame;
