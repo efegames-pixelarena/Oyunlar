@@ -2,45 +2,75 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Live Casino Blackjack Elite</title>
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
+html,body{
+height:100%;
+overflow:hidden;
+background:black;
+}
+
 body{
 background:
-linear-gradient(rgba(0,0,0,.6),rgba(0,0,0,.8)),
+linear-gradient(rgba(0,0,0,.6),rgba(0,0,0,.85)),
 url("https://images.unsplash.com/photo-1596838132731-3301c3fd4317?auto=format&fit=crop&w=1600&q=80");
 background-size:cover;
 background-position:center;
-height:100vh;
-overflow:hidden;
 color:white;
 }
 
-.table{
+:root{
+--safe-top: env(safe-area-inset-top);
+--safe-bottom: env(safe-area-inset-bottom);
+}
+
+.topBar{
 position:absolute;
-bottom:0;
+top:0;
+left:0;
 width:100%;
-height:55%;
-background:radial-gradient(circle at center,#0b3d2e,#021a13);
-border-top-left-radius:50% 25%;
-border-top-right-radius:50% 25%;
-box-shadow:0 -40px 100px black;
-text-align:center;
-padding-top:30px;
+height:50px;
+padding-top:var(--safe-top);
+background:rgba(0,0,0,.7);
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding-left:15px;
+padding-right:15px;
+z-index:10;
 }
 
 .shoe{
 position:absolute;
-left:20px;
+left:15px;
 top:40%;
 width:80px;
 height:120px;
 background:#111;
 border-radius:10px;
 box-shadow:0 0 20px black inset;
+z-index:5;
 }
+
+.table{
+position:absolute;
+bottom:0;
+left:0;
+width:100%;
+height:60%;
+background:radial-gradient(circle at center,#0b3d2e,#021a13);
+border-top-left-radius:50% 25%;
+border-top-right-radius:50% 25%;
+box-shadow:0 -40px 100px black;
+text-align:center;
+padding-top:25px;
+padding-bottom:var(--safe-bottom);
+}
+
+.hand{min-height:110px;margin-top:10px}
 
 .card{
 width:70px;
@@ -54,11 +84,13 @@ animation:deal .5s ease;
 }
 
 @keyframes deal{
-from{transform:translateX(-150px) rotate(-10deg);opacity:0}
+from{transform:translateX(-120px) rotate(-8deg);opacity:0}
 to{transform:translateX(0);opacity:1}
 }
 
-.hand{min-height:110px;margin-top:10px}
+.controls{
+margin-top:10px;
+}
 
 .controls button{
 padding:8px 15px;
@@ -76,6 +108,10 @@ background:#444;
 cursor:not-allowed;
 }
 
+.betArea{
+margin-top:15px;
+}
+
 .betBtn{
 width:65px;height:65px;
 border-radius:50%;
@@ -89,47 +125,20 @@ margin:8px;
 transition:.2s;
 }
 
-.betBtn:active{
-transform:scale(.8);
-}
-
-.chip{
-position:absolute;
-width:40px;height:40px;
-border-radius:50%;
-background:red;
-animation:chipDrop .5s ease forwards;
-}
-
-@keyframes chipDrop{
-from{transform:translateY(-200px);opacity:0}
-to{transform:translateY(0);opacity:1}
-}
-
-.topBar{
-position:absolute;
-top:0;
-width:100%;
-height:40px;
-background:rgba(0,0,0,.7);
-display:flex;
-justify-content:space-between;
-align-items:center;
-padding:0 15px;
-font-size:14px;
-}
+.betBtn:active{transform:scale(.8)}
 
 .chat{
 position:absolute;
-right:10px;
-bottom:140px;
-width:200px;
+top:120px;
+right:15px;
+width:180px;
 height:120px;
-background:rgba(0,0,0,.6);
-overflow:hidden;
-padding:8px;
+background:rgba(0,0,0,.65);
+border-radius:12px;
+padding:10px;
 font-size:12px;
-border-radius:10px;
+overflow:hidden;
+z-index:9;
 }
 
 .countdown{
@@ -137,13 +146,14 @@ position:absolute;
 top:50%;
 left:50%;
 transform:translate(-50%,-50%);
-font-size:60px;
+font-size:70px;
 font-weight:bold;
 color:#00ffcc;
 display:none;
+z-index:20;
 }
 
-.score{margin-top:5px;font-size:14px}
+.score{font-size:14px;margin-top:5px}
 </style>
 </head>
 
@@ -156,8 +166,10 @@ display:none;
 
 <div class="shoe"></div>
 <div class="countdown" id="countdown">5</div>
+<div class="chat" id="chat">Canlı chat başlatıldı...</div>
 
 <div class="table">
+
 <h3>Dealer</h3>
 <div id="dealerHand" class="hand"></div>
 <div id="dealerScore" class="score"></div>
@@ -167,25 +179,25 @@ display:none;
 <div id="playerScore" class="score"></div>
 
 <div class="controls">
-<button id="dealBtn" onclick="startRound()" disabled>Dağıt</button>
-<button onclick="hit()" id="hitBtn" disabled>Hit</button>
-<button onclick="stand()" id="standBtn" disabled>Stand</button>
+<button id="dealBtn" disabled onclick="startRound()">Dağıt</button>
+<button id="hitBtn" disabled onclick="hit()">Hit</button>
+<button id="standBtn" disabled onclick="stand()">Stand</button>
 </div>
 
-<div>
+<div class="betArea">
 <div class="betBtn" onclick="placeBet(50)">50₺</div>
 <div class="betBtn" onclick="placeBet(100)">100₺</div>
 <div class="betBtn" onclick="placeBet(250)">250₺</div>
 </div>
-</div>
 
-<div class="chat" id="chat"></div>
+</div>
 
 <script>
 let balance=1000
 let bet=0
 let player=[],dealer=[]
 let deck=[]
+
 const suits=["S","H","D","C"]
 const values=["A","2","3","4","5","6","7","8","9","0","J","Q","K"]
 
@@ -225,28 +237,18 @@ total-=10;aces--
 return total
 }
 
+function updateUI(){
+document.getElementById("balance").innerText=balance
+document.getElementById("bet").innerText=bet
+}
+
 function placeBet(amount){
 if(balance>=amount){
 balance-=amount
 bet+=amount
 updateUI()
 document.getElementById("dealBtn").disabled=false
-chipAnim()
 }
-}
-
-function chipAnim(){
-let chip=document.createElement("div")
-chip.className="chip"
-chip.style.left="50%"
-chip.style.top="60%"
-document.body.appendChild(chip)
-setTimeout(()=>chip.remove(),500)
-}
-
-function updateUI(){
-document.getElementById("balance").innerText=balance
-document.getElementById("bet").innerText=bet
 }
 
 async function startRound(){
@@ -295,7 +297,7 @@ endRound()
 function endRound(){
 let p=score(player),d=score(dealer)
 if(p==21&&player.length==2){
-balance+=bet*4  // 1:3 ödeme
+balance+=bet*4
 }
 else if((p<=21&&p>d)||d>21){
 balance+=bet*2
@@ -318,13 +320,14 @@ await delay(1000)
 cd.style.display="none"
 }
 
-const messages=["Ali kazandı!","Jackpot büyüyor!","Ayşe 21 yaptı!","Büyük bahis geldi!"]
+const messages=["Ali kazandı!","Büyük bahis geldi!","Jackpot artıyor!","Ayşe 21 yaptı!"]
 setInterval(()=>{
 let msg=messages[Math.floor(Math.random()*messages.length)]
-document.getElementById("chat").innerHTML=msg
-},4000)
+document.getElementById("chat").innerText=msg
+},3500)
 
 updateUI()
 </script>
+
 </body>
 </html>
