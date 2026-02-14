@@ -171,13 +171,15 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+/* ✅ INDEX İLE AYNI FIREBASE CONFIG */
 const firebaseConfig = {
-  apiKey: "API_KEY",
-  authDomain: "PROJECT.firebaseapp.com",
-  projectId: "PROJECT_ID",
-  storageBucket: "PROJECT.appspot.com",
-  messagingSenderId: "SENDER_ID",
-  appId: "APP_ID"
+  apiKey: "AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
+  authDomain: "emirhan-site.firebaseapp.com",
+  projectId: "emirhan-site",
+  storageBucket: "emirhan-site.firebasestorage.app",
+  messagingSenderId: "668871888390",
+  appId: "1:668871888390:web:76568bda84cb1641f7bd87",
+  measurementId: "G-96ZVZX3DWH"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -185,9 +187,8 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 let currentUser = null;
-let authChecked = false;
 
-/* ===== OYUN KODUN (DEĞİŞMEDİ) ===== */
+/* ===== OYUN KODUN (DOKUNULMADI) ===== */
 
 let shoe=[],player=[],dealer=[]
 let balance=0,currentBet=0,round=1
@@ -265,11 +266,9 @@ else{result="Kaybettin"}
 currentBet=0;
 updateUI();
 
-if(currentUser){
 await updateDoc(doc(db,"users",currentUser.uid),{
 balance: balance
 });
-}
 
 document.getElementById("ticker").innerText=result
 setTimeout(resetRound,2500)
@@ -295,22 +294,25 @@ document.getElementById("balance").innerText=balance
 document.getElementById("bet").innerText=currentBet
 }
 
-/* ===== AUTH DÜZELTİLDİ ===== */
+/* ===== GİRİŞ ZORUNLU ===== */
 
 onAuthStateChanged(auth, async (user)=>{
-authChecked = true;
 
-if(user){
+if(!user){
+window.location.href="index.html"
+return
+}
+
 currentUser=user
+
 const snap=await getDoc(doc(db,"users",user.uid))
 if(snap.exists()){
 balance=snap.data().balance||0
 updateUI()
-}
 }else{
-console.log("Kullanıcı giriş yapmamış.")
-// ARTIK otomatik index'e atmıyor
+window.location.href="index.html"
 }
+
 })
 
 buildShoe()
