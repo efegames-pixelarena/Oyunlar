@@ -15,29 +15,27 @@ body{
     color:white;
 }
 
-/* ================= TOP BAR ================= */
+/* TOP BAR */
 .top-bar{
     position:absolute;
     top:0;
     width:100%;
     height:55px;
-    background:rgba(0,0,0,0.9);
+    background:rgba(0,0,0,0.95);
     display:flex;
     align-items:center;
     justify-content:space-between;
-    padding:0 25px;
+    padding:0 20px;
     font-weight:bold;
     z-index:5;
 }
-
 .logo{
     font-size:22px;
     animation:neon 1.5s infinite alternate;
-    text-shadow:0 0 8px #ff7b00,0 0 18px #ff7b00;
+    text-shadow:0 0 10px #ff7b00,0 0 20px #ff7b00;
 }
-
 @keyframes neon{
-    from{opacity:0.6;}
+    from{opacity:0.7;}
     to{opacity:1;}
 }
 
@@ -48,7 +46,6 @@ body{
     width:100%;
     text-align:center;
 }
-
 .header-box{
     display:inline-block;
     padding:20px 40px;
@@ -58,55 +55,78 @@ body{
     font-size:26px;
 }
 
-/* DEALER AREA */
+/* AREAS */
 .dealer-area{
     position:absolute;
     top:150px;
     width:100%;
     text-align:center;
 }
-
-.score-box{
-    display:inline-block;
-    background:#ffd400;
-    color:black;
-    font-weight:bold;
-    padding:6px 10px;
-    border-radius:8px;
-    margin-bottom:10px;
+.player-area{
+    position:absolute;
+    bottom:250px;
+    width:100%;
+    text-align:center;
 }
 
 .cards{
     display:flex;
     justify-content:center;
-    gap:12px;
+    gap:15px;
     perspective:1000px;
 }
 
+/* REAL CARD DESIGN */
 .card{
-    width:55px;
-    height:80px;
+    width:70px;
+    height:100px;
     background:white;
-    border-radius:6px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-size:16px;
-    font-weight:bold;
-    box-shadow:0 8px 15px rgba(0,0,0,0.6);
+    border-radius:10px;
+    position:relative;
+    box-shadow:0 10px 20px rgba(0,0,0,0.6);
     transform:translateY(-200px) rotateY(90deg);
     animation:deal 0.6s forwards;
+    font-family:"Times New Roman",serif;
 }
 
 @keyframes deal{
-    to{
-        transform:translateY(0) rotateY(0deg);
-    }
+    to{transform:translateY(0) rotateY(0deg);}
+}
+
+.corner{
+    position:absolute;
+    font-size:14px;
+    font-weight:bold;
+}
+.top-left{top:5px;left:6px;}
+.bottom-right{
+    bottom:5px;
+    right:6px;
+    transform:rotate(180deg);
+}
+
+.center-symbol{
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    font-size:28px;
 }
 
 .red{color:red;}
+.black{color:black;}
+
 .back{
-    background:linear-gradient(45deg,#001,#004);
+    background:linear-gradient(45deg,#001a4d,#003399);
+    border:3px solid white;
+}
+.back::after{
+    content:"🂠";
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    font-size:30px;
     color:white;
 }
 
@@ -119,14 +139,13 @@ body{
     justify-content:center;
     gap:15px;
 }
-
 .chip{
     padding:12px 18px;
     border-radius:50px;
     border:2px solid gold;
-    font-size:12px;
     background:radial-gradient(circle,#ffcc00,#ff6600);
-    box-shadow:0 0 10px gold;
+    box-shadow:0 0 12px gold;
+    font-size:13px;
 }
 
 /* WAIT BAR */
@@ -140,15 +159,6 @@ body{
     font-weight:bold;
     background:rgba(0,0,0,0.8);
     border-radius:8px;
-    letter-spacing:1px;
-}
-
-/* PLAYER AREA */
-.player-area{
-    position:absolute;
-    bottom:250px;
-    width:100%;
-    text-align:center;
 }
 
 /* CONTROLS */
@@ -158,7 +168,6 @@ body{
     width:100%;
     text-align:center;
 }
-
 button{
     padding:14px 25px;
     margin:8px;
@@ -168,12 +177,10 @@ button{
     font-weight:bold;
     cursor:pointer;
 }
-
 #dealBtn{background:#f5a623;}
 #hitBtn{background:#2ecc71;}
 #standBtn{background:#e74c3c;}
 
-/* BOTTOM ICONS */
 .bottom-icons{
     position:absolute;
     bottom:20px;
@@ -182,7 +189,6 @@ button{
     justify-content:space-between;
     padding:0 25px;
 }
-
 .icon{
     width:50px;
     height:50px;
@@ -198,7 +204,6 @@ button{
 </head>
 <body>
 
-<!-- TOP BAR -->
 <div class="top-bar">
     <div>BAKİYE: 1000₺</div>
     <div class="logo">⚡ PixelArena ⚡</div>
@@ -210,7 +215,6 @@ button{
 </div>
 
 <div class="dealer-area">
-    <div id="dealerScore" class="score-box"></div>
     <div id="dealerCards" class="cards"></div>
 </div>
 
@@ -257,19 +261,26 @@ function createDeck(){
 function renderCard(card,hidden=false){
     let div=document.createElement("div");
     div.className="card";
+
     if(hidden){
         div.classList.add("back");
-        div.innerHTML="🂠";
-    }else{
-        let text=(card.value===1?"A":
-                 card.value===11?"J":
-                 card.value===12?"Q":
-                 card.value===13?"K":card.value)
-                 +card.suit;
-        div.innerHTML=text;
-        if(card.suit==="♥"||card.suit==="♦")
-            div.classList.add("red");
+        return div;
     }
+
+    let color=(card.suit==="♥"||card.suit==="♦")?"red":"black";
+    div.classList.add(color);
+
+    let value=(card.value===1?"A":
+              card.value===11?"J":
+              card.value===12?"Q":
+              card.value===13?"K":card.value);
+
+    div.innerHTML=`
+        <div class="corner top-left">${value}${card.suit}</div>
+        <div class="corner bottom-right">${value}${card.suit}</div>
+        <div class="center-symbol">${card.suit}</div>
+    `;
+
     return div;
 }
 
@@ -293,7 +304,6 @@ function dealCard(target,hidden=false){
 
 async function startGame(){
     gameOver=false;
-    document.getElementById("waitBar").innerText="";
     player=[]; dealer=[];
     document.getElementById("playerCards").innerHTML="";
     document.getElementById("dealerCards").innerHTML="";
@@ -306,7 +316,7 @@ async function startGame(){
 }
 
 dealBtn.onclick=startGame;
-hitBtn.onclick=()=>{ if(!gameOver) dealCard("player",false); };
+hitBtn.onclick=()=>{ if(!gameOver) dealCard("player"); };
 standBtn.onclick=()=>{ gameOver=true; };
 </script>
 
