@@ -11,7 +11,6 @@ body{background:#000;overflow:hidden;height:100svh;}
 .app{width:100vw;height:100svh;position:relative;color:white;overflow:hidden;}
 :root{--safe-bottom: env(safe-area-inset-bottom);}
 
-/* STUDIO */
 .studio{
 position:absolute;top:0;left:0;width:100%;height:65%;
 background:
@@ -20,11 +19,8 @@ url('https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fi
 background-size:cover;background-position:center;
 }
 
-/* KRUPİYE AVATAR */
 .dealerAvatar{
-width:90px;
-border-radius:50%;
-margin-bottom:10px;
+width:90px;border-radius:50%;margin-bottom:10px;
 animation:pulse 2s infinite;
 }
 @keyframes pulse{
@@ -35,13 +31,10 @@ animation:pulse 2s infinite;
 
 .ticker{
 position:absolute;
-top:65%;
-left:50%;
+top:65%;left:50%;
 transform:translate(-50%,-50%);
-font-size:20px;
-font-weight:bold;
-color:#00ffcc;
-text-shadow:0 0 20px #00ffaa;
+font-size:20px;font-weight:bold;
+color:#00ffcc;text-shadow:0 0 20px #00ffaa;
 z-index:20;
 }
 
@@ -77,27 +70,21 @@ padding-top:25px;text-align:center;
 .hand{margin-top:10px;min-height:95px;}
 
 .card{
-width:60px;height:90px;background:white;border-radius:8px;
-display:inline-flex;align-items:center;justify-content:center;
-margin:4px;font-weight:bold;font-size:20px;
+width:60px;height:90px;
+background-size:cover;
+background-position:center;
+border-radius:8px;
+display:inline-block;
+margin:4px;
 animation:deal .4s ease;
 box-shadow:0 5px 15px rgba(0,0,0,.5);
-transition:transform .6s;
-transform-style:preserve-3d;
 }
-
-.card.flip{transform:rotateY(180deg);}
-
-.red{color:#c1121f}
-.black{color:black}
-.card.back{background:linear-gradient(45deg,#111,#333);color:#111;}
 
 @keyframes deal{
 from{transform:translateY(-120px) scale(.6);opacity:0}
 to{transform:translateY(0) scale(1);opacity:1}
 }
 
-/* CHIP EFFECT */
 .betBtn{
 width:60px;height:60px;border-radius:50%;
 background:rgba(255,255,255,.08);
@@ -134,18 +121,19 @@ display:flex;justify-content:space-between;align-items:center;
 padding:0 15px;font-size:13px;
 }
 
-/* CHAT */
 #chatBox{
 position:absolute;
 right:10px;
 bottom:160px;
 width:160px;
-height:150px;
+height:50px;
 background:rgba(0,0,0,.6);
 overflow:hidden;
 font-size:11px;
-padding:5px;
+padding:8px;
 border-radius:8px;
+display:flex;
+align-items:center;
 }
 </style>
 </head>
@@ -204,8 +192,6 @@ border-radius:8px;
 
 <script>
 
-/* ===== GAME STATE ===== */
-
 let shoe=[],player=[],dealer=[]
 let balance = localStorage.getItem("balance") ? parseInt(localStorage.getItem("balance")) : 2000;
 let currentBet=0,round=1,gameActive=false
@@ -254,119 +240,29 @@ total-=10;aces--
 return total
 }
 
-function cardHTML(c){
-let color=(c.suit=="♥"||c.suit=="♦")?"red":"black"
-return `<div class="card ${color}">${c.value}${c.suit}</div>`
+/* GERÇEK KART GÖRSELİ */
+function cardHTML(c,hidden=false){
+if(hidden){
+return `<div class="card" style="background-image:url('https://deckofcardsapi.com/static/img/back.png')"></div>`
 }
-
-function placeBet(amount){
-if(gameActive||balance<amount)return
-balance-=amount
-currentBet+=amount
-updateUI()
-}
-
-function startRound(){
-if(currentBet<=0)return
-player=[];dealer=[]
-gameActive=true
-document.getElementById("roundId").innerText="EV-"+round++
-document.getElementById("hitBtn").disabled=false
-document.getElementById("standBtn").disabled=false
-document.getElementById("doubleBtn").disabled=false
-document.getElementById("splitBtn").disabled=false
-
-player.push(draw())
-dealer.push(draw())
-player.push(draw())
-dealer.push(draw())
-
-render(true)
-updateScores(true)
-document.getElementById("ticker").innerText="Karar ver"
-}
-
-function hit(){
-player.push(draw())
-render(true)
-updateScores(true)
-if(score(player)>21){
-stand()
-}
-}
-
-function stand(){
-render(false)
-updateScores(false)
-dealerPlay()
-}
-
-function dealerPlay(){
-while(score(dealer)<17){
-dealer.push(draw())
-}
-endRound()
-}
-
-function doubleDown(){
-if(balance<currentBet||player.length!=2)return
-balance-=currentBet
-currentBet*=2
-hit()
-stand()
-}
-
-function splitHand(){
-if(player.length!=2)return
-if(player[0].value!=player[1].value)return
-if(balance<currentBet)return
-balance-=currentBet
-currentBet*=2
-player=[player[0],draw()]
-dealer.push(draw())
-render(true)
-updateScores(true)
-}
-
-function endRound(){
-gameActive=false
-document.getElementById("hitBtn").disabled=true
-document.getElementById("standBtn").disabled=true
-document.getElementById("doubleBtn").disabled=true
-document.getElementById("splitBtn").disabled=true
-
-let p=score(player),d=score(dealer)
-let result=""
-
-totalGames++
-
-if(p>21){result="Bust!"}
-else if(d>21||p>d){
-balance+=currentBet*2
-totalWins++
-if(p==21&&player.length==2){
-balance+=jackpot
-jackpot=50000
-}
-}
-else if(p==d){balance+=currentBet}
-else{result="Kaybettin"}
-
-currentBet=0
-updateUI()
-
-document.getElementById("winRate").innerText=
-Math.round((totalWins/totalGames)*100)+"%"
+let code=c.value
+if(code=="10") code="0"
+let suitMap={"♠":"S","♥":"H","♦":"D","♣":"C"}
+let img=code+suitMap[c.suit]
+return `<div class="card" style="background-image:url('https://deckofcardsapi.com/static/img/${img}.png')"></div>`
 }
 
 function render(hideDealer=false){
-document.getElementById("playerHand").innerHTML=player.map(cardHTML).join("")
+document.getElementById("playerHand").innerHTML=
+player.map(c=>cardHTML(c,false)).join("")
+
 if(hideDealer){
 document.getElementById("dealerHand").innerHTML=
-dealer.length?cardHTML(dealer[0])+`<div class="card back"></div>`:""
+dealer.length>1?
+cardHTML(dealer[0],false)+cardHTML(dealer[1],true):""
 }else{
 document.getElementById("dealerHand").innerHTML=
-dealer.map(cardHTML).join("")
+dealer.map(c=>cardHTML(c,false)).join("")
 }
 }
 
@@ -376,23 +272,18 @@ player.length?"Toplam: "+score(player):""
 
 if(dealer.length){
 if(hideDealer){
-document.getElementById("dealerScore").innerText="Toplam: "+value(dealer[0])
+document.getElementById("dealerScore").innerText=
+"Toplam: "+value(dealer[0])
 }else{
-document.getElementById("dealerScore").innerText="Toplam: "+score(dealer)
+document.getElementById("dealerScore").innerText=
+"Toplam: "+score(dealer)
 }
 }else{
 document.getElementById("dealerScore").innerText=""
 }
 }
 
-function updateUI(){
-document.getElementById("balance").innerText=balance
-document.getElementById("bet").innerText=currentBet
-document.getElementById("jackpot").innerText=jackpot
-localStorage.setItem("balance",balance)
-}
-
-/* FAKE CHAT */
+/* CHAT — TEK MESAJ */
 const fakeMessages=[
 "Ali: 1000₺ basıyorum!",
 "Ayşe: Blackjack geliyor 😎",
@@ -401,28 +292,30 @@ const fakeMessages=[
 "Kerem: Push oldu..."
 ]
 
-setInterval(()=>{
+function showMessage(){
 let msg=fakeMessages[Math.floor(Math.random()*fakeMessages.length)]
-let box=document.getElementById("chatBox")
-box.innerHTML+="<div>"+msg+"</div>"
-box.scrollTop=box.scrollHeight
-if(box.childNodes.length>10) box.removeChild(box.firstChild)
-},3000)
+document.getElementById("chatBox").innerHTML=msg
+}
 
-/* Viewer canlılık */
+showMessage()
+setInterval(()=>{
+showMessage()
+},15000+Math.random()*5000)
+
+/* Viewer */
 setInterval(()=>{
 document.querySelector(".viewer").innerText=
 "👤 "+(45+Math.floor(Math.random()*35))
 },2500)
 
-/* Jackpot artışı */
+/* Jackpot */
 setInterval(()=>{
 jackpot+=Math.floor(Math.random()*200)
-updateUI()
+document.getElementById("jackpot").innerText=jackpot
 },4000)
 
 buildShoe()
-updateUI()
+document.getElementById("balance").innerText=balance
 
 </script>
 </body>
