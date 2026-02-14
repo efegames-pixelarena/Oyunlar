@@ -1,3 +1,18 @@
+let balance = 10000;
+let currentBet = 0;
+
+function updateBalanceUI() {
+  document.getElementById("balance").textContent = balance;
+  document.getElementById("bet").textContent = currentBet;
+}
+
+function placeBet(amount) {
+  if (balance >= amount) {
+    balance -= amount;
+    currentBet += amount;
+    updateBalanceUI();
+  }
+}
 // ===== BASİT BLACKJACK MOTORU =====
 
 const suits = ["♠", "♥", "♦", "♣"];
