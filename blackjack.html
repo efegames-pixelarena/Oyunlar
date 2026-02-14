@@ -3,15 +3,34 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Live Blackjack</title>
+<title>Live 3D Blackjack</title>
 
 <style>
 body{
 margin:0;
 font-family:Arial;
-background:#0c0f14;
+background:#000;
 color:white;
 overflow:hidden;
+}
+
+/* ===== 3D SCENE ===== */
+.scene{
+position:absolute;
+inset:0;
+perspective:1200px;
+transform-style:preserve-3d;
+transition:transform 0.1s ease;
+}
+
+/* BACKGROUND */
+.background-layer{
+position:absolute;
+inset:0;
+background:
+radial-gradient(circle at center,#1a1a1a 0%,#000 80%),
+linear-gradient(to bottom,#111,#000);
+transform:translateZ(-300px) scale(1.3);
 }
 
 /* ===== TOP BAR ===== */
@@ -23,7 +42,7 @@ z-index:1000;
 }
 
 .top-bar{
-height:85px;
+height:80px;
 background:linear-gradient(to bottom,#12202a,#0e1720);
 display:flex;
 justify-content:space-between;
@@ -33,14 +52,14 @@ padding:0 15px;
 
 .balance-box{
 background:linear-gradient(45deg,#ff6a00,#ff2e00);
-padding:12px 20px;
+padding:10px 20px;
 border-radius:15px;
 font-weight:bold;
 }
 
 .menu-btn{
 background:#1c1c1c;
-padding:12px;
+padding:10px;
 border-radius:10px;
 font-size:20px;
 }
@@ -48,99 +67,86 @@ font-size:20px;
 .info-bar{
 background:#111;
 text-align:center;
-padding:8px;
+padding:6px;
 font-weight:bold;
 letter-spacing:1px;
 }
 
 /* ===== DEALER STAGE ===== */
-.dealer-stage{
-margin-top:110px;
-height:45vh;
+.stage-3d{
+position:absolute;
+top:120px;
+width:100%;
 display:flex;
 justify-content:center;
-align-items:flex-end;
-position:relative;
+transform-style:preserve-3d;
 }
 
 .stage-frame{
-position:absolute;
-top:20px;
 width:85%;
-height:70%;
-border-radius:25px;
+height:220px;
+border-radius:30px;
 border:8px solid #ff6a00;
-box-shadow:0 0 20px #ff6a00;
+box-shadow:0 0 25px #ff6a00;
+background:#1a1a1a;
 display:flex;
 justify-content:center;
 align-items:center;
-background:#1a1a1a;
+transform:rotateX(5deg) translateZ(50px);
 }
 
 .neon{
+font-size:26px;
 text-align:center;
-font-size:28px;
-text-shadow:0 0 15px orange;
+text-shadow:0 0 15px orange,0 0 30px #ff6a00;
 }
 
-.neon span{
-color:gold;
-}
+.neon span{color:gold;}
 
+/* ===== DEALER CARDS ===== */
 .dealer-cards{
 position:absolute;
-bottom:10px;
+top:320px;
+width:100%;
+text-align:center;
 font-size:22px;
 }
 
 /* ===== TABLE ===== */
-.table{
+.table-3d{
 position:absolute;
-bottom:0;
+bottom:-80px;
 width:100%;
-height:50vh;
+height:55vh;
+display:flex;
+justify-content:center;
+transform-style:preserve-3d;
+}
+
+.table-surface{
+width:95%;
+height:100%;
 background:radial-gradient(circle at center,#2b2b2b 0%,#111 80%);
-border-top-left-radius:200px;
-border-top-right-radius:200px;
-border:8px solid #ff6a00;
+border-top-left-radius:300px;
+border-top-right-radius:300px;
+border:10px solid #ff6a00;
+box-shadow:0 0 40px #ff6a00;
 text-align:center;
-padding-top:20px;
+padding-top:60px;
+transform:rotateX(55deg);
+font-weight:bold;
+opacity:0.9;
 }
 
 .player-cards{
-font-size:22px;
 margin-top:20px;
-}
-
-/* ===== CHIP AREA ===== */
-.chip-area{
-position:absolute;
-bottom:20px;
-width:100%;
-display:flex;
-justify-content:center;
-align-items:center;
-gap:20px;
-}
-
-.chip{
-width:90px;
-height:90px;
-border-radius:50%;
-background:#1976d2;
-border:6px solid white;
-display:flex;
-justify-content:center;
-align-items:center;
 font-size:22px;
-font-weight:bold;
-box-shadow:0 0 15px #1976d2;
-cursor:pointer;
 }
 
+/* ===== ACTION ===== */
 .action-bar{
 position:absolute;
-bottom:120px;
+bottom:140px;
 width:80%;
 left:10%;
 background:rgba(255,255,255,0.05);
@@ -149,6 +155,7 @@ border-radius:20px;
 padding:10px;
 display:flex;
 justify-content:space-around;
+z-index:1000;
 }
 
 .action{
@@ -166,7 +173,31 @@ background:gold;
 color:black;
 }
 
-/* ===== SOUND MODAL ===== */
+/* CHIP */
+.chip-area{
+position:absolute;
+bottom:40px;
+width:100%;
+display:flex;
+justify-content:center;
+}
+
+.chip{
+width:90px;
+height:90px;
+border-radius:50%;
+background:#1976d2;
+border:6px solid white;
+display:flex;
+justify-content:center;
+align-items:center;
+font-size:22px;
+font-weight:bold;
+box-shadow:0 0 15px #1976d2;
+cursor:pointer;
+}
+
+/* SOUND MODAL */
 .sound-modal{
 position:fixed;
 inset:0;
@@ -201,7 +232,6 @@ border:none;
 
 <body>
 
-<!-- SOUND -->
 <div id="soundModal" class="sound-modal">
 <div class="sound-box">
 <button class="sound-btn on" onclick="enableSound()">🔊 Ses Açık</button>
@@ -209,11 +239,10 @@ border:none;
 </div>
 </div>
 
-<audio id="bgMusic" loop>
-<source src="" type="audio/mpeg">
-</audio>
+<div class="scene" id="scene">
 
-<!-- TOP -->
+<div class="background-layer"></div>
+
 <div class="top-wrapper">
 <div class="top-bar">
 <div class="balance-box">Gerçek Bakiye ₺<span id="balance">1000</span></div>
@@ -222,21 +251,22 @@ border:none;
 <div class="info-bar">LÜTFEN BAHİS ALINIZ</div>
 </div>
 
-<!-- DEALER -->
-<div class="dealer-stage">
+<div class="stage-3d">
 <div class="stage-frame">
 <div class="neon">SOLO<span>BET</span><br>Blackjack <span>Auto</span></div>
 </div>
-<div class="dealer-cards" id="dealerCards"></div>
 </div>
 
-<!-- TABLE -->
-<div class="table">
-BLACKJACK PAYS 3 TO 2
+<div class="dealer-cards" id="dealerCards"></div>
+
+<div class="table-3d">
+<div class="table-surface">
+BLACKJACK PAYS 3 TO 2<br>
+INSURANCE PAYS 2 TO 1
 <div class="player-cards" id="playerCards"></div>
 </div>
+</div>
 
-<!-- ACTION -->
 <div class="action-bar">
 <button class="action" onclick="clearBet()">🗑</button>
 <button class="action active" onclick="repeatBet()">⟳</button>
@@ -245,6 +275,8 @@ BLACKJACK PAYS 3 TO 2
 
 <div class="chip-area">
 <div class="chip" onclick="addBet(20)">20</div>
+</div>
+
 </div>
 
 <script>
@@ -282,26 +314,11 @@ return t;
 }
 
 function addBet(x){
-if(balance>=x){
-bet+=x;
-balance-=x;
-update();
-}
+if(balance>=x){bet+=x;balance-=x;update();}
 }
 
-function clearBet(){
-balance+=bet;
-bet=0;
-update();
-}
-
-function repeatBet(){
-if(balance>=lastBet){
-bet+=lastBet;
-balance-=lastBet;
-update();
-}
-}
+function clearBet(){balance+=bet;bet=0;update();}
+function repeatBet(){if(balance>=lastBet){bet+=lastBet;balance-=lastBet;update();}}
 
 function deal(){
 if(bet==0)return;
@@ -313,10 +330,10 @@ lastBet=bet;
 let p=calc(player);
 let d=calc(dealer);
 
-if(p==21&&d!=21){balance+=bet*2.5;}
+if(p==21&&d!=21)balance+=bet*2.5;
 else if(p>21){}
-else if(d>21||p>d){balance+=bet*2;}
-else if(p==d){balance+=bet;}
+else if(d>21||p>d)balance+=bet*2;
+else if(p==d)balance+=bet;
 
 bet=0;
 renderCards();
@@ -331,9 +348,7 @@ document.getElementById("dealerCards").innerText=
 dealer.map(c=>c.v+c.s).join(" ")+" ("+calc(dealer)+")";
 }
 
-function update(){
-document.getElementById("balance").innerText=balance;
-}
+function update(){document.getElementById("balance").innerText=balance;}
 
 function enableSound(){
 localStorage.setItem("sound","on");
@@ -350,6 +365,20 @@ if(localStorage.getItem("sound"))
 document.getElementById("soundModal").style.display="none";
 update();
 }
+
+/* PARALLAX */
+const scene=document.getElementById("scene");
+document.addEventListener("mousemove",e=>{
+let x=(window.innerWidth/2-e.clientX)/40;
+let y=(window.innerHeight/2-e.clientY)/40;
+scene.style.transform=`rotateY(${x}deg) rotateX(${-y}deg)`;
+});
+document.addEventListener("touchmove",e=>{
+let t=e.touches[0];
+let x=(window.innerWidth/2-t.clientX)/50;
+let y=(window.innerHeight/2-t.clientY)/50;
+scene.style.transform=`rotateY(${x}deg) rotateX(${-y}deg)`;
+});
 </script>
 
 </body>
