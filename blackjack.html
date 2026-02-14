@@ -15,10 +15,36 @@ body{
     color:white;
 }
 
+/* ================= TOP BAR ================= */
+.top-bar{
+    position:absolute;
+    top:0;
+    width:100%;
+    height:55px;
+    background:rgba(0,0,0,0.9);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 25px;
+    font-weight:bold;
+    z-index:5;
+}
+
+.logo{
+    font-size:22px;
+    animation:neon 1.5s infinite alternate;
+    text-shadow:0 0 8px #ff7b00,0 0 18px #ff7b00;
+}
+
+@keyframes neon{
+    from{opacity:0.6;}
+    to{opacity:1;}
+}
+
 /* HEADER */
 .header{
     position:absolute;
-    top:30px;
+    top:70px;
     width:100%;
     text-align:center;
 }
@@ -32,10 +58,10 @@ body{
     font-size:26px;
 }
 
-/* DEALER AREA (SİYAH BÖLGE) */
+/* DEALER AREA */
 .dealer-area{
     position:absolute;
-    top:120px;
+    top:150px;
     width:100%;
     text-align:center;
 }
@@ -53,7 +79,8 @@ body{
 .cards{
     display:flex;
     justify-content:center;
-    gap:10px;
+    gap:12px;
+    perspective:1000px;
 }
 
 .card{
@@ -67,8 +94,14 @@ body{
     font-size:16px;
     font-weight:bold;
     box-shadow:0 8px 15px rgba(0,0,0,0.6);
-    transition:1s;
-    transform-style:preserve-3d;
+    transform:translateY(-200px) rotateY(90deg);
+    animation:deal 0.6s forwards;
+}
+
+@keyframes deal{
+    to{
+        transform:translateY(0) rotateY(0deg);
+    }
 }
 
 .red{color:red;}
@@ -80,7 +113,7 @@ body{
 /* CHIP AREA */
 .chip-area{
     position:absolute;
-    top:240px;
+    top:260px;
     width:100%;
     display:flex;
     justify-content:center;
@@ -88,18 +121,12 @@ body{
 }
 
 .chip{
-    padding:10px 15px;
+    padding:12px 18px;
     border-radius:50px;
-    border:1px solid rgba(255,255,255,0.2);
+    border:2px solid gold;
     font-size:12px;
-    opacity:0.4;
-}
-
-.main-chip{
-    width:70px;
-    height:70px;
-    border-radius:50%;
-    border:3px solid rgba(255,255,255,0.3);
+    background:radial-gradient(circle,#ffcc00,#ff6600);
+    box-shadow:0 0 10px gold;
 }
 
 /* WAIT BAR */
@@ -116,7 +143,7 @@ body{
     letter-spacing:1px;
 }
 
-/* PLAYER AREA (YEŞİL MASA) */
+/* PLAYER AREA */
 .player-area{
     position:absolute;
     bottom:250px;
@@ -167,33 +194,36 @@ button{
     font-size:22px;
     background:rgba(0,0,0,0.6);
 }
-
 </style>
 </head>
 <body>
+
+<!-- TOP BAR -->
+<div class="top-bar">
+    <div>BAKİYE: 1000₺</div>
+    <div class="logo">⚡ PixelArena ⚡</div>
+    <div>BAHİS: 50₺</div>
+</div>
 
 <div class="header">
     <div class="header-box">PixelArena Blackjack Live</div>
 </div>
 
-<!-- DEALER -->
 <div class="dealer-area">
     <div id="dealerScore" class="score-box"></div>
     <div id="dealerCards" class="cards"></div>
 </div>
 
-<!-- CHIP -->
 <div class="chip-area">
     <div class="chip">BUST BONUS</div>
     <div class="chip">21+3</div>
-    <div class="chip main-chip"></div>
+    <div class="chip">50₺</div>
     <div class="chip">PERFECT PAIRS</div>
     <div class="chip">CRAZY</div>
 </div>
 
 <div id="waitBar" class="wait-bar">SONRAKİ OYUNU BEKLEYİN</div>
 
-<!-- PLAYER -->
 <div class="player-area">
     <div id="playerCards" class="cards"></div>
 </div>
@@ -224,25 +254,6 @@ function createDeck(){
     deck.sort(()=>Math.random()-0.5);
 }
 
-function cardValue(card){
-    if(card.value>10) return 10;
-    if(card.value===1) return 11;
-    return card.value;
-}
-
-function handValue(hand){
-    let total=0, aces=0;
-    for(let c of hand){
-        total+=cardValue(c);
-        if(c.value===1) aces++;
-    }
-    while(total>21 && aces>0){
-        total-=10;
-        aces--;
-    }
-    return total;
-}
-
 function renderCard(card,hidden=false){
     let div=document.createElement("div");
     div.className="card";
@@ -262,7 +273,25 @@ function renderCard(card,hidden=false){
     return div;
 }
 
-function startGame(){
+function dealCard(target,hidden=false){
+    return new Promise(resolve=>{
+        setTimeout(()=>{
+            let card=deck.pop();
+            if(target==="player"){
+                player.push(card);
+                document.getElementById("playerCards")
+                .appendChild(renderCard(card,hidden));
+            }else{
+                dealer.push(card);
+                document.getElementById("dealerCards")
+                .appendChild(renderCard(card,hidden));
+            }
+            resolve();
+        },600);
+    });
+}
+
+async function startGame(){
     gameOver=false;
     document.getElementById("waitBar").innerText="";
     player=[]; dealer=[];
@@ -270,75 +299,15 @@ function startGame(){
     document.getElementById("dealerCards").innerHTML="";
     createDeck();
 
-    player.push(deck.pop());
-    dealer.push(deck.pop());
-    player.push(deck.pop());
-    dealer.push(deck.pop());
-
-    updateUI(true);
-}
-
-function updateUI(hideDealer){
-    let pArea=document.getElementById("playerCards");
-    let dArea=document.getElementById("dealerCards");
-    pArea.innerHTML="";
-    dArea.innerHTML="";
-
-    player.forEach(c=>pArea.appendChild(renderCard(c)));
-    dealer.forEach((c,i)=>{
-        if(i===1 && hideDealer)
-            dArea.appendChild(renderCard(c,true));
-        else
-            dArea.appendChild(renderCard(c));
-    });
-
-    document.getElementById("dealerScore").innerText=
-        hideDealer?"":handValue(dealer);
-}
-
-function hit(){
-    if(gameOver) return;
-    player.push(deck.pop());
-    updateUI(true);
-    if(handValue(player)>21){
-        endGame();
-    }
-}
-
-function stand(){
-    if(gameOver) return;
-    updateUI(false);
-    dealerTurn();
-}
-
-function dealerTurn(){
-    let interval=setInterval(()=>{
-        if(handValue(dealer)<17){
-            dealer.push(deck.pop());
-            updateUI(false);
-        }else{
-            clearInterval(interval);
-            endGame();
-        }
-    },3000);
-}
-
-function endGame(){
-    gameOver=true;
-    let p=handValue(player);
-    let d=handValue(dealer);
-    let msg="";
-    if(p>21) msg="Kaybettin!";
-    else if(d>21) msg="Kazandın!";
-    else if(p>d) msg="Kazandın!";
-    else if(p<d) msg="Kaybettin!";
-    else msg="Berabere!";
-    document.getElementById("waitBar").innerText=msg + " - SONRAKİ OYUNU BEKLEYİN";
+    await dealCard("player",false);
+    await dealCard("dealer",false);
+    await dealCard("player",false);
+    await dealCard("dealer",true);
 }
 
 dealBtn.onclick=startGame;
-hitBtn.onclick=hit;
-standBtn.onclick=stand;
+hitBtn.onclick=()=>{ if(!gameOver) dealCard("player",false); };
+standBtn.onclick=()=>{ gameOver=true; };
 </script>
 
 </body>
