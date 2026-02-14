@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Fruit Slash Master</title>
+
+<style>
+html,body{
+margin:0;
+overflow:hidden;
+background:#000;
+touch-action:none;
+font-family:Arial;
+color:white;
+}
+
+#menu,#gameOverBox{
+position:absolute;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+text-align:center;
+z-index:20;
+}
+
+button{
+padding:12px 22px;
+margin:10px;
+border:none;
+border-radius:10px;
+font-size:18px;
+cursor:pointer;
+}
+
+#ui{
+position:fixed;
+top:10px;
+left:10px;
+z-index:10;
+font-size:18px;
+}
+
+canvas{display:block;}
+
+#gameOverBox{
+display:none;
+background:#111;
+padding:30px;
+border-radius:15px;
+box-shadow:0 0 40px red;
+}
+</style>
+</head>
+<body>
+
+<div id="menu">
+<h1>Fruit Slash Master</h1>
+<button onclick="startGame('hard')">Zor</button>
+<button onclick="startGame('easy')">Kolay</button>
+</div>
+
+<div id="ui">
+Skor: <span id="score">0</span> |
+Combo: <span id="combo">0</span> |
+Bomb: <span id="bombHits">0</span>/3
+</div>
+
+<div id="gameOverBox">
+<h2>OYUN BİTTİ</h2>
+<p>SKOR: <span id="finalScore"></span></p>
+<button onclick="restartGame()">⌛️ Tekrar Oyna</button>
+<button onclick="goHome()">🏠 AnaSayfa</button>
+</div>
+
+<canvas id="game"></canvas>
+
+<script>
+const canvas=document.getElementById("game");
+const ctx=canvas.getContext("2d");
+
+function resize(){
+canvas.width=innerWidth;
+canvas.height=innerHeight;
+}
+resize();
+window.addEventListener("resize",resize);
+
+let fruits=[];
+let pieces=[];
+let particles=[];
+let score=0;
+let combo=0;
+let bombHits=0;
+let mode="hard";
+let running=false;
+let gravity=0.35;
+
+const fruitEmojis=["🍎","🍉","🍌","🍓","🍍","🍑","🥝"];
+
+/* AUDIO SYSTEM */
+let audioCtx;
+function initAudio(){
+audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+}
+function playSlice(){
+let osc=audioCtx.createOscillator();
+let gain=audioCtx.createGain();
+osc.type="sawtooth";
+osc.frequency.setValueAtTime(800,audioCtx.currentTime);
+osc.frequency.exponentialRampToValueAtTime(200,audioCtx.currentTime+0.1);
+gain.gain.value=0.15;
+osc.connect(gain);
+gain.connect(audioCtx.destination);
+osc.start();
+osc.stop(audioCtx.currentTime+0.1);
+}
+
+/* BACKGROUND */
+let stars=[];
+for(let i=0;i<150;i++){
+stars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,s:Math.random()*2});
+}
+
+function drawBackground(){
+ctx.fillStyle="black";
+ctx.fillRect(0,0,canvas.width,canvas.height);
+ctx.fillStyle="white";
+stars.forEach(st=>{
+ctx.fillRect(st.x,st.y,st.s,st.s);
+st.y+=0.4;
+if(st.y>canvas.height) st.y=0;
+});
+}
+
+/* FRUIT */
+class Fruit{
+constructor(){
+this.radius=45;
+this.x=Math.random()*(canvas.width-this.radius*2)+this.radius;
+this.y=canvas.height+this.radius;
+this.vx=(Math.random()-0.5)*4;
+this.vy=-(canvas.height*0.025 + Math.random()*6);
+this.type=(mode==="hard" && Math.random()<0.25)?"bomb":"fruit";
+this.emoji=this.type==="bomb"?"💣":fruitEmojis[Math.floor(Math.random()*fruitEmojis.length)];
+}
+
+update(){
+this.vy+=gravity;
+this.x+=this.vx;
+this.y+=this.vy;
+
+if(this.x<this.radius) this.x=this.radius;
+if(this.x>canvas.width-this.radius) this.x=canvas.width-this.radius;
+}
+
+draw(){
+ctx.font="65px Arial";
+ctx.textAlign="center";
+ctx.fillText(this.emoji,this.x,this.y);
+}
+}
+
+/* PARTICLE (bomb explosion) */
+class Particle{
+constructor(x,y){
+this.x=x;
+this.y=y;
+this.vx=(Math.random()-0.5)*8;
+this.vy=(Math.random()-0.5)*8;
+this.life=40;
+}
+update(){
+this.x+=this.vx;
+this.y+=this.vy;
+this.life--;
+}
+draw(){
+ctx.fillStyle="orange";
+ctx.fillRect(this.x,this.y,5,5);
+}
+}
+
+/* START */
+function startGame(selected){
+mode=selected;
+document.getElementById("menu").style.display="none";
+initAudio();
+running=true;
+spawnFruit();
+animate();
+}
+
+/* SPAWN */
+function spawnFruit(){
+if(!running) return;
+fruits.push(new Fruit());
+setTimeout(spawnFruit,900-Math.min(score*6,600));
+}
+
+/* SLICE */
+function slice(x,y){
+fruits.forEach((f,i)=>{
+let dx=f.x-x;
+let dy=f.y-y;
+if(Math.sqrt(dx*dx+dy*dy)<45){
+
+if(f.type==="bomb"){
+bombHits++;
+document.getElementById("bombHits").innerText=bombHits;
+navigator.vibrate?.(200);
+
+for(let i=0;i<40;i++){
+particles.push(new Particle(f.x,f.y));
+}
+
+fruits.splice(i,1);
+
+if(bombHits>=3) gameOver();
+return;
+}
+
+/* fruit slice */
+playSlice();
+navigator.vibrate?.(50);
+
+score+=1+Math.floor(combo/5);
+combo++;
+
+pieces.push({x:f.x,y:f.y,vx:-3,vy:-4,life:60,emoji:f.emoji});
+pieces.push({x:f.x,y:f.y,vx:3,vy:-4,life:60,emoji:f.emoji});
+
+fruits.splice(i,1);
+updateUI();
+}
+});
+}
+
+/* INPUT */
+canvas.addEventListener("touchmove",e=>{
+e.preventDefault();
+let t=e.touches[0];
+slice(t.clientX,t.clientY);
+});
+canvas.addEventListener("mousemove",e=>{
+slice(e.clientX,e.clientY);
+});
+
+/* UI */
+function updateUI(){
+document.getElementById("score").innerText=score;
+document.getElementById("combo").innerText=combo;
+}
+
+/* LOOP */
+function animate(){
+drawBackground();
+
+fruits.forEach((f,i)=>{
+f.update();
+f.draw();
+});
+
+pieces.forEach((p,i)=>{
+p.vy+=gravity;
+p.x+=p.vx;
+p.y+=p.vy;
+p.life--;
+ctx.font="65px Arial";
+ctx.fillText(p.emoji,p.x,p.y);
+if(p.life<=0) pieces.splice(i,1);
+});
+
+particles.forEach((p,i)=>{
+p.update();
+p.draw();
+if(p.life<=0) particles.splice(i,1);
+});
+
+if(running) requestAnimationFrame(animate);
+}
+
+/* GAME OVER */
+function gameOver(){
+running=false;
+document.getElementById("finalScore").innerText=score;
+document.getElementById("gameOverBox").style.display="block";
+}
+
+/* RESTART */
+function restartGame(){
+location.reload();
+}
+
+function goHome(){
+window.location.href="index.html";
+}
+</script>
+
+</body>
+</html>
