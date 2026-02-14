@@ -2,43 +2,181 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>Live Blackjack Studio</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Live Blackjack</title>
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
-body{background:#000;overflow:hidden;height:100svh;}
-.app{width:100vw;height:100svh;position:relative;color:white;overflow:hidden;}
-.studio{position:absolute;top:0;left:0;width:100%;height:65%;
-background:linear-gradient(to bottom,rgba(0,0,0,0.2),rgba(0,0,0,0.7)),
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial;
+}
+
+html,body{
+height:100%;
+overflow:hidden;
+background:#000;
+overscroll-behavior:none;
+}
+
+.app{
+position:fixed;
+inset:0;
+width:100%;
+height:100%;
+color:white;
+overflow:hidden;
+}
+
+/* ÜST ARKA PLAN */
+.studio{
+position:absolute;
+top:0;
+left:0;
+width:100%;
+height:60%;
+background:
+linear-gradient(to bottom,rgba(0,0,0,0.2),rgba(0,0,0,0.7)),
 url('https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1400&q=80');
-background-size:cover;background-position:center;}
-.ticker{position:absolute;top:65%;left:50%;transform:translate(-50%,-50%);
-font-size:20px;font-weight:bold;color:#00ffcc;text-shadow:0 0 15px #00ffcc;z-index:20;}
-.dealerZone{position:absolute;top:60px;width:100%;text-align:center;}
-.score{font-size:14px;color:#22c55e;margin-top:5px;}
-.topBar{position:absolute;top:0;width:100%;height:35px;background:rgba(0,0,0,.6);
-display:flex;justify-content:space-between;align-items:center;padding:0 10px;font-size:12px;}
-.table{position:absolute;bottom:30%;width:100%;height:35%;
-background:#0a0a0a;border-top-left-radius:50% 25%;
-border-top-right-radius:50% 25%;padding-top:25px;text-align:center;}
-.hand{margin-top:10px;min-height:95px;}
-.card{width:60px;height:90px;background:white;border-radius:8px;
-display:inline-flex;align-items:center;justify-content:center;
-margin:4px;font-weight:bold;font-size:20px;}
-.red{color:#c1121f}.black{color:black}
-.betOptions{position:absolute;bottom:120px;width:100%;
-display:flex;justify-content:center;gap:15px;}
-.betBtn{width:60px;height:60px;border-radius:50%;
+background-size:cover;
+background-position:center;
+}
+
+/* ÜST BAR */
+.topBar{
+position:absolute;
+top:0;
+width:100%;
+height:40px;
+background:rgba(0,0,0,.6);
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:0 12px;
+font-size:13px;
+z-index:10;
+}
+
+/* DEALER */
+.dealerZone{
+position:absolute;
+top:60px;
+width:100%;
+text-align:center;
+}
+
+.score{
+font-size:14px;
+color:#22c55e;
+margin-top:5px;
+}
+
+/* MASA */
+.table{
+position:absolute;
+bottom:110px;
+width:100%;
+height:35%;
+background:#0a0a0a;
+border-top-left-radius:50% 25%;
+border-top-right-radius:50% 25%;
+padding-top:25px;
+text-align:center;
+}
+
+/* KARTLAR */
+.hand{
+margin-top:10px;
+min-height:95px;
+}
+
+.card{
+width:60px;
+height:90px;
+background:white;
+border-radius:8px;
+display:inline-flex;
+align-items:center;
+justify-content:center;
+margin:4px;
+font-weight:bold;
+font-size:20px;
+}
+
+.red{color:#c1121f;}
+.black{color:black;}
+
+/* BAHİS */
+.betOptions{
+position:absolute;
+bottom:90px;
+width:100%;
+display:flex;
+justify-content:center;
+gap:15px;
+}
+
+.betBtn{
+width:65px;
+height:65px;
+border-radius:50%;
 background:rgba(255,255,255,.1);
-display:flex;align-items:center;justify-content:center;cursor:pointer;}
-.controls{position:absolute;bottom:70px;width:100%;text-align:center;}
-.controls button{padding:8px 14px;margin:4px;border:none;
-border-radius:6px;background:#22c55e;color:black;font-weight:bold;}
-.controls button:disabled{background:#555;color:#aaa;}
-.bottomBar{position:absolute;bottom:0;width:100%;height:70px;
-background:#000;display:flex;justify-content:space-between;
-align-items:center;padding:0 15px;font-size:13px;}
+display:flex;
+align-items:center;
+justify-content:center;
+cursor:pointer;
+font-weight:bold;
+}
+
+/* KONTROLLER */
+.controls{
+position:absolute;
+bottom:50px;
+width:100%;
+text-align:center;
+}
+
+.controls button{
+padding:8px 14px;
+margin:4px;
+border:none;
+border-radius:6px;
+background:#22c55e;
+color:black;
+font-weight:bold;
+}
+
+.controls button:disabled{
+background:#555;
+color:#aaa;
+}
+
+/* ALT BAR */
+.bottomBar{
+position:absolute;
+bottom:0;
+width:100%;
+height:50px;
+background:#000;
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:0 15px;
+font-size:13px;
+padding-bottom:env(safe-area-inset-bottom);
+}
+
+.ticker{
+position:absolute;
+bottom:160px;
+width:100%;
+text-align:center;
+font-size:18px;
+font-weight:bold;
+color:#00ffcc;
+text-shadow:0 0 15px #00ffcc;
+}
 </style>
 </head>
 
@@ -49,7 +187,7 @@ align-items:center;padding:0 15px;font-size:13px;}
 
 <div class="topBar">
 <div>Türkçe Blackjack • 8 Deck • S17</div>
-<div>ID: <span id="roundId">-</span></div>
+<div>ID: -</div>
 </div>
 
 <div class="dealerZone">
@@ -64,6 +202,8 @@ align-items:center;padding:0 15px;font-size:13px;}
 <div class="hand" id="playerHand"></div>
 </div>
 
+<div class="ticker" id="ticker">Bahis koyun</div>
+
 <div class="betOptions">
 <div class="betBtn" onclick="placeBet(50)">50₺</div>
 <div class="betBtn" onclick="placeBet(100)">100₺</div>
@@ -76,11 +216,9 @@ align-items:center;padding:0 15px;font-size:13px;}
 <button id="standBtn" disabled onclick="stand()">Stand</button>
 </div>
 
-<div class="ticker" id="ticker">Yükleniyor...</div>
-
 <div class="bottomBar">
 <div>Bakiye: ₺<span id="balance">0</span></div>
-<div>Toplam Bahis: ₺<span id="bet">0</span></div>
+<div>Bahis: ₺<span id="bet">0</span></div>
 </div>
 
 </div>
@@ -104,9 +242,8 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 let currentUser=null;
-let balance=0,currentBet=0;
+let balance=0,currentBet=0,gameActive=false;
 let shoe=[],player=[],dealer=[];
-let gameActive=false;
 
 const SUITS=['♠','♥','♦','♣'];
 const VALUES=['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
@@ -139,12 +276,12 @@ return parseInt(c.value);
 }
 
 function score(hand){
-let total=0, aces=0;
+let total=0,aces=0;
 hand.forEach(c=>{
 total+=value(c);
 if(c.value==="A") aces++;
 });
-while(total>21 && aces>0){
+while(total>21&&aces>0){
 total-=10;
 aces--;
 }
@@ -156,51 +293,58 @@ document.getElementById("balance").innerText=balance;
 document.getElementById("bet").innerText=currentBet;
 }
 
-function setButtons(deal=false,hit=false,stand=false){
-document.getElementById("dealBtn").disabled=!deal;
-document.getElementById("hitBtn").disabled=!hit;
-document.getElementById("standBtn").disabled=!stand;
+function setButtons(d=false,h=false,s=false){
+dealBtn.disabled=!d;
+hitBtn.disabled=!h;
+standBtn.disabled=!s;
 }
 
-function cardHTML(c){
-let color=(c.suit==="♥"||c.suit==="♦")?"red":"black";
-return `<div class="card ${color}">${c.value}${c.suit}</div>`;
-}
-
-function placeBet(amount){
+window.placeBet=function(amount){
 if(!currentUser||gameActive||balance<amount)return;
 balance-=amount;
 currentBet+=amount;
 updateUI();
-if(currentBet>0)setButtons(true,false,false);
+if(currentBet>0) dealBtn.disabled=false;
 }
 
-function startRound(){
+window.startRound=function(){
 if(gameActive||currentBet<=0)return;
 gameActive=true;
 player=[];dealer=[];
 setButtons(false,true,true);
-player.push(draw());dealer.push(draw());
-player.push(draw());dealer.push(draw());
-render(true);updateScores(true);
+player.push(draw());
+dealer.push(draw());
+player.push(draw());
+dealer.push(draw());
+render(true);
+updateScores(true);
 }
 
-function hit(){
+window.hit=function(){
 if(!gameActive)return;
 player.push(draw());
-render(true);updateScores(true);
+render(true);
+updateScores(true);
 if(score(player)>21){revealDealer();setTimeout(endRound,800);}
 }
 
-function stand(){if(!gameActive)return;revealDealer();}
+window.stand=function(){
+if(!gameActive)return;
+revealDealer();
+}
 
-function revealDealer(){render(false);updateScores(false);dealerPlay();}
+function revealDealer(){
+render(false);
+updateScores(false);
+dealerPlay();
+}
 
 function dealerPlay(){
 let interval=setInterval(()=>{
 if(score(dealer)<17){
 dealer.push(draw());
-render(false);updateScores(false);
+render(false);
+updateScores(false);
 }else{
 clearInterval(interval);
 setTimeout(endRound,800);
@@ -216,28 +360,25 @@ else if(p===d)balance+=currentBet;
 currentBet=0;
 updateUI();
 setButtons(false,false,false);
-document.getElementById("ticker").innerText="Bahis koyun";
 if(currentUser)await updateDoc(doc(db,"users",currentUser.uid),{balance});
 }
 
-function render(hideDealer=false){
-document.getElementById("playerHand").innerHTML=player.map(cardHTML).join("");
-document.getElementById("dealerHand").innerHTML=
-hideDealer&&dealer.length?cardHTML(dealer[0])+`<div class="card"></div>`:
+function cardHTML(c){
+let color=(c.suit==="♥"||c.suit==="♦")?"red":"black";
+return `<div class="card ${color}">${c.value}${c.suit}</div>`;
+}
+
+function render(hide=false){
+playerHand.innerHTML=player.map(cardHTML).join("");
+dealerHand.innerHTML=
+hide&&dealer.length?cardHTML(dealer[0])+`<div class="card"></div>`:
 dealer.map(cardHTML).join("");
 }
 
-function updateScores(hideDealer=false){
-document.getElementById("playerScore").innerText=
-player.length?"Toplam: "+score(player):"";
-document.getElementById("dealerScore").innerText=
-dealer.length?(hideDealer?value(dealer[0]):score(dealer)):"";
+function updateScores(hide=false){
+playerScore.innerText=player.length?"Toplam: "+score(player):"";
+dealerScore.innerText=dealer.length?(hide?value(dealer[0]):score(dealer)):"";
 }
-
-window.placeBet=placeBet;
-window.startRound=startRound;
-window.hit=hit;
-window.stand=stand;
 
 onAuthStateChanged(auth,async(user)=>{
 if(!user){window.location.replace("index.html");return;}
@@ -246,10 +387,10 @@ const snap=await getDoc(doc(db,"users",user.uid));
 balance=snap.exists()?snap.data().balance||0:0;
 updateUI();
 setButtons(false,false,false);
-document.getElementById("ticker").innerText="Bahis koyun";
 });
 
 buildShoe();
 </script>
+
 </body>
 </html>
