@@ -7,7 +7,6 @@
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif;}
-
 body{
 background:linear-gradient(180deg,#0b1023,#0d1333,#0a0f1f);
 color:white;
@@ -35,7 +34,6 @@ align-items:center;
 justify-content:space-between;
 padding:0 15px;
 background:linear-gradient(90deg,#11193a,#1a2255);
-backdrop-filter:blur(10px);
 box-shadow:0 4px 20px #00000080;
 z-index:1000;
 }
@@ -48,11 +46,7 @@ background:linear-gradient(45deg,#00c6ff,#0072ff);
 color:transparent;
 }
 
-.header-buttons{
-display:flex;
-gap:10px;
-align-items:center;
-}
+.header-buttons{display:flex;gap:10px;align-items:center;}
 
 .btn{
 padding:8px 15px;
@@ -63,40 +57,17 @@ font-weight:bold;
 font-size:14px;
 }
 
-.login-btn{
-background:#1e2a5a;
-color:white;
-border:1px solid #2f3a80;
-}
-
-.register-btn{
-background:linear-gradient(45deg,#ffb300,#ff8800);
-color:black;
-}
+.login-btn{background:#1e2a5a;color:white;border:1px solid #2f3a80;}
+.register-btn{background:linear-gradient(45deg,#ffb300,#ff8800);color:black;}
 
 /* SEARCH */
 .search-bar{margin-top:90px;padding:0 15px;}
 .search-bar input{
-width:100%;
-padding:15px;
-border-radius:15px;
-border:none;
-background:#151c3f;
-color:white;
-font-size:16px;
-outline:none;
+width:100%;padding:15px;border-radius:15px;border:none;
+background:#151c3f;color:white;font-size:16px;outline:none;
 }
 
-/* MAIN */
-main{padding-top:30px;}
-
-.section-title{
-padding-left:20px;
-margin-top:30px;
-font-size:22px;
-font-weight:bold;
-}
-
+/* GRID */
 .games-grid{
 display:grid;
 grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
@@ -113,21 +84,8 @@ cursor:pointer;
 transition:0.4s;
 border:1px solid #2a3577;
 box-shadow:0 0 15px #ffb30030;
-position:relative;
-overflow:hidden;
 }
 
-.game-card::after{
-content:"";
-position:absolute;
-top:-100%;left:-100%;
-width:200%;height:200%;
-background:linear-gradient(120deg,transparent,rgba(255,255,255,0.15),transparent);
-transform:rotate(25deg);
-transition:0.7s;
-}
-
-.game-card:hover::after{top:0;left:0;}
 .game-card:hover{
 transform:translateY(-10px) scale(1.03);
 box-shadow:0 0 30px #ffb300;
@@ -136,89 +94,26 @@ border:1px solid #ffb300;
 
 .game-icon{font-size:45px;margin-bottom:15px;}
 
-/* FOOTER */
-.footer{
-background:linear-gradient(180deg,#0a0f1f,#0c1328);
-padding:50px 20px 20px;
-margin-top:60px;
-border-top:1px solid #1e2a5a;
-}
-
-.footer-links{
-display:flex;
-justify-content:space-between;
-max-width:1000px;
-margin:auto;
-flex-wrap:wrap;
-gap:30px;
-}
-
-.footer-column h3{
-margin-bottom:15px;
-color:#ffb300;
-}
-
-.footer-column p, .footer-column li{
-color:#aaa;
-margin-bottom:10px;
-font-size:14px;
-}
-
-.footer-column ul{list-style:none;}
-
-.social-icons{
-display:flex;
-gap:15px;
-margin-top:10px;
-}
-
-.social-icons a{
-width:45px;height:45px;
-display:flex;
-align-items:center;
-justify-content:center;
-border-radius:12px;
-background:#1c2455;
-transition:0.3s;
-color:white;
-text-decoration:none;
-font-size:18px;
-}
-
-.social-icons a:hover{
-background:#ffb300;
-color:black;
-}
-
-.footer-bottom{
-text-align:center;
-margin-top:40px;
-padding-top:20px;
-border-top:1px solid #1e2a5a;
-color:#aaa;
-font-size:14px;
-}
-
-/* AUTH MODAL */
+/* MODAL */
 .auth-modal{
 position:fixed;
-top:0;left:0;
-width:100%;height:100%;
+inset:0;
 background:rgba(0,0,0,0.7);
-backdrop-filter:blur(12px);
-display:none;
+display:flex;
 align-items:center;
 justify-content:center;
+visibility:hidden;
+opacity:0;
+transition:0.3s;
 z-index:2000;
 }
 
 .auth-box{
-width:90%;max-width:400px;
+background:linear-gradient(180deg,#1b2252,#12183c);
 padding:30px;
 border-radius:20px;
-background:linear-gradient(145deg,#141b3f,#1b2252);
-border:1px solid #2a3577;
-box-shadow:0 0 40px #00000090;
+width:90%;
+max-width:400px;
 position:relative;
 }
 
@@ -226,51 +121,72 @@ position:relative;
 
 .auth-box input{
 width:100%;
-padding:14px;
+padding:12px;
 margin-bottom:15px;
-border-radius:12px;
 border:none;
-background:#151c3f;
+border-radius:10px;
+background:#1c2455;
 color:white;
-font-size:15px;
-outline:none;
 }
 
-.auth-btn{
+.auth-box button{
 width:100%;
-padding:14px;
+padding:12px;
 border:none;
 border-radius:12px;
-font-weight:bold;
-font-size:16px;
-cursor:pointer;
 background:linear-gradient(45deg,#ffb300,#ff8800);
-color:black;
-}
-
-.switch-text{
-text-align:center;
-margin-top:15px;
-font-size:14px;
-color:#aaa;
-}
-
-.switch-text span{
-color:#ffb300;
-cursor:pointer;
 font-weight:bold;
+cursor:pointer;
 }
 
 .close-btn{
 position:absolute;
-top:15px;
 right:15px;
+top:10px;
 cursor:pointer;
-font-size:18px;
-color:#aaa;
+font-size:20px;
+}
+
+.auth-switch{
+text-align:center;
+margin-top:10px;
+cursor:pointer;
+color:#ffb300;
+}
+
+/* 3D SOSYAL */
+.social-section{
+text-align:center;
+margin-top:60px;
+}
+
+.social-icons{
+display:flex;
+justify-content:center;
+gap:25px;
+margin-top:20px;
+}
+
+.social-btn{
+width:60px;height:60px;
+border-radius:15px;
+background:linear-gradient(145deg,#1c2455,#12183c);
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:25px;
+cursor:pointer;
+transition:0.4s;
+box-shadow:5px 5px 15px #000, -3px -3px 10px #1f2a6a;
+}
+
+.social-btn:hover{
+transform:translateY(-8px) scale(1.1);
+box-shadow:0 0 20px #ffb300;
 }
 </style>
 </head>
+
 <body>
 
 <canvas id="snow"></canvas>
@@ -287,79 +203,41 @@ color:#aaa;
 <input type="text" placeholder="🕹️ Oyun Ara">
 </div>
 
-<main>
-<div class="section-title">Güncel Oyunlar</div>
 <div class="games-grid">
-<div class="game-card"><div class="game-icon">♠️</div>Blackjack</div>
-<div class="game-card"><div class="game-icon">✈️</div>Crash</div>
-<div class="game-card"><div class="game-icon">🃏</div>Pişti</div>
-<div class="game-card"><div class="game-icon">🐍</div>Yılan</div>
-<div class="game-card"><div class="game-icon">🥕</div>Reflex</div>
-<div class="game-card"><div class="game-icon">🚀</div>Roket</div>
-</div>
-</main>
-
-<footer class="footer">
-<div class="footer-links">
-
-<div class="footer-column">
-<h3>Flood</h3>
-<p>Bu platform tamamen eğlence amaçlıdır.</p>
-<p>Sanal bakiye sistemi içerir.</p>
+<div class="game-card">♠️ Blackjack</div>
+<div class="game-card">✈️ Crash</div>
+<div class="game-card">🃏 Pişti</div>
+<div class="game-card">🐍 Yılan</div>
+<div class="game-card">🚀 Roket</div>
 </div>
 
-<div class="footer-column">
-<h3>Hakkımda</h3>
-<p>Ben Emirhan Efe.</p>
-<p>Web geliştirme ve oyun sistemleri ile ilgileniyorum.</p>
-</div>
+<div class="social-section">
+<h2>Hakkımda</h2>
+<p>Emirhan FE oyun platformu</p>
 
-<div class="footer-column">
-<h3>Sosyal</h3>
 <div class="social-icons">
-<a href="https://instagram.com" target="_blank">IG</a>
-<a href="https://t.me" target="_blank">TG</a>
-<a href="https://github.com" target="_blank">GH</a>
+<div class="social-btn">📷</div>
+<div class="social-btn">💬</div>
+<div class="social-btn">▶️</div>
 </div>
 </div>
 
-</div>
-
-<div class="footer-bottom">
-© 2026 Emirhan Efe - Tüm Hakları Saklıdır
-</div>
-</footer>
-
-<!-- AUTH MODAL -->
-<div id="authModal" class="auth-modal">
+<!-- MODAL -->
+<div class="auth-modal" id="authModal">
 <div class="auth-box">
-
-<div id="loginForm">
-<h2>Giriş Yap</h2>
-<input type="email" id="loginEmail" placeholder="Kullanıcı Adı veya E-posta">
-<input type="password" id="loginPassword" placeholder="Şifre">
-<button class="auth-btn" onclick="login()">Giriş Yap</button>
-<p class="switch-text">Hesabın yok mu? <span onclick="showRegister()">Kayıt Ol</span></p>
-</div>
-
-<div id="registerForm" style="display:none;">
-<h2>Kayıt Ol</h2>
-<input type="text" id="registerUsername" placeholder="Kullanıcı Adı">
-<input type="email" id="registerEmail" placeholder="E-mail">
-<input type="password" id="registerPassword" placeholder="Şifre">
-<input type="password" id="registerPassword2" placeholder="Şifre Tekrar">
-<button class="auth-btn" onclick="register()">Kayıt Ol</button>
-<p class="switch-text">Zaten hesabın var mı? <span onclick="showLogin()">Giriş Yap</span></p>
-</div>
-
-<div class="close-btn" onclick="closeModal()">✕</div>
+<div class="close-btn" onclick="closeModal()">✖</div>
+<h2 id="authTitle">Giriş Yap</h2>
+<input type="text" id="usernameInput" placeholder="Kullanıcı Adı veya E-posta">
+<input type="password" id="passwordInput" placeholder="Şifre">
+<button onclick="submitAuth()">Giriş Yap</button>
+<div class="auth-switch" onclick="toggleMode()">Hesabın yok mu? Kayıt Ol</div>
 </div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig={
 apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
@@ -374,76 +252,89 @@ const app=initializeApp(firebaseConfig);
 const auth=getAuth(app);
 const db=getFirestore(app);
 
-document.querySelector(".login-btn").onclick=()=>openModal();
-document.querySelector(".register-btn").onclick=()=>{openModal();showRegister();};
+let isRegister=false;
 
-function openModal(){authModal.style.display="flex";}
-function closeModal(){authModal.style.display="none";}
-function showRegister(){loginForm.style.display="none";registerForm.style.display="block";}
-function showLogin(){registerForm.style.display="none";loginForm.style.display="block";}
+document.querySelector(".login-btn").onclick=()=>openModal(false);
+document.querySelector(".register-btn").onclick=()=>openModal(true);
 
-async function register(){
-if(registerPassword.value!==registerPassword2.value) return alert("Şifreler eşleşmiyor");
-const user=await createUserWithEmailAndPassword(auth,registerEmail.value,registerPassword.value);
+window.openModal=(mode)=>{
+isRegister=mode;
+document.getElementById("authModal").style.visibility="visible";
+document.getElementById("authModal").style.opacity="1";
+document.getElementById("authTitle").innerText=mode?"Kayıt Ol":"Giriş Yap";
+};
+
+window.closeModal=()=>{
+document.getElementById("authModal").style.visibility="hidden";
+document.getElementById("authModal").style.opacity="0";
+};
+
+window.toggleMode=()=>openModal(!isRegister);
+
+window.submitAuth=async()=>{
+const usernameOrEmail=document.getElementById("usernameInput").value;
+const password=document.getElementById("passwordInput").value;
+if(!usernameOrEmail||!password) return alert("Boş alan bırakma");
+
+try{
+if(isRegister){
+const user=await createUserWithEmailAndPassword(auth,usernameOrEmail,password);
 await setDoc(doc(db,"users",user.user.uid),{
-username:registerUsername.value,
-email:registerEmail.value,
+username:usernameOrEmail,
+email:usernameOrEmail,
 balance:10000
 });
-alert("10.000₺ yüklendi");
-closeModal();
+alert("Kayıt başarılı 10.000₺ yüklendi");
+}else{
+let email=usernameOrEmail;
+
+if(!usernameOrEmail.includes("@")){
+const q=query(collection(db,"users"),where("username","==",usernameOrEmail));
+const snap=await getDocs(q);
+if(snap.empty) return alert("Kullanıcı bulunamadı");
+email=snap.docs[0].data().email;
 }
 
-async function login(){
-await signInWithEmailAndPassword(auth,loginEmail.value,loginPassword.value);
+await signInWithEmailAndPassword(auth,email,password);
+alert("Giriş başarılı");
 closeModal();
 }
+}catch(e){alert(e.message);}
+};
 
 onAuthStateChanged(auth,async(user)=>{
 if(user){
 const snap=await getDoc(doc(db,"users",user.uid));
 const data=snap.data();
 document.querySelector(".header-buttons").innerHTML=
-`<div style="color:#00ff99;font-weight:bold;">${data.balance}₺</div>
-<div>${data.username}</div>
-<button onclick="logout()" style="background:red;color:white;border:none;border-radius:8px;padding:5px 10px;">Çıkış</button>`;
+`${data.balance}₺ | ${data.username} <button onclick="logout()">Çıkış</button>`;
 }
 });
 
-window.logout=function(){signOut(auth).then(()=>location.reload());}
-</script>
+window.logout=()=>signOut(auth).then(()=>location.reload());
 
-<script>
+/* KAR EFEKTİ */
 const canvas=document.getElementById("snow");
 const ctx=canvas.getContext("2d");
-canvas.width=window.innerWidth;
-canvas.height=window.innerHeight;
-
-let snow=[];
-for(let i=0;i<150;i++){
-snow.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*3+1,d:Math.random()*1});
+canvas.width=innerWidth;
+canvas.height=innerHeight;
+let snowflakes=[];
+for(let i=0;i<100;i++){
+snowflakes.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*3+1});
 }
-
-function draw(){
+function drawSnow(){
 ctx.clearRect(0,0,canvas.width,canvas.height);
 ctx.fillStyle="white";
+snowflakes.forEach(f=>{
 ctx.beginPath();
-snow.forEach(f=>{ctx.moveTo(f.x,f.y);ctx.arc(f.x,f.y,f.r,0,Math.PI*2,true);});
+ctx.arc(f.x,f.y,f.r,0,Math.PI*2);
 ctx.fill();
-move();
-}
-
-let angle=0;
-function move(){
-angle+=0.01;
-snow.forEach(f=>{
-f.y+=Math.cos(angle+f.d)+1+f.r/2;
-f.x+=Math.sin(angle)*2;
-if(f.y>canvas.height){f.y=0;f.x=Math.random()*canvas.width;}
+f.y+=1;
+if(f.y>canvas.height) f.y=0;
 });
+requestAnimationFrame(drawSnow);
 }
-
-setInterval(draw,33);
+drawSnow();
 </script>
 
 </body>
