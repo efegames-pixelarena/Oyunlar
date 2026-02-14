@@ -161,15 +161,35 @@ while(t>21&&a>0){t-=10;a--;}
 return t;
 }
 
+/* 🔥 GÜNCELLENMİŞ — ? KART HATASI TAM ÇÖZÜM */
 function cardImage(card,hidden=false){
 let img=document.createElement("img");
 img.className="card-img";
+
+let v;
+if(card.value===1) v="A";
+else if(card.value===11) v="J";
+else if(card.value===12) v="Q";
+else if(card.value===13) v="K";
+else v=String(card.value);
+
 if(hidden){
 img.src="https://deckofcardsapi.com/static/img/back.png";
 }else{
-let v=card.value==1?"A":card.value==11?"J":card.value==12?"Q":card.value==13?"K":card.value;
 img.src=`https://deckofcardsapi.com/static/img/${v}${card.suit}.png`;
 }
+
+/* İlk hata olursa cache kırarak tekrar dene */
+img.onerror=function(){
+img.onerror=null; // sonsuz loop engelle
+img.src=`https://deckofcardsapi.com/static/img/${v}${card.suit}.png?retry=${Date.now()}`;
+};
+
+/* İkinci hata olursa kart arkası göster */
+img.addEventListener("error",function(){
+img.src="https://deckofcardsapi.com/static/img/back.png";
+},{once:true});
+
 setTimeout(()=>img.classList.add("show"),30);
 return img;
 }
@@ -284,7 +304,6 @@ gameState="finished";
 controls.style.display="none";
 clearInterval(decisionTimer);
 
-/* Kapalı kartı aç */
 document.getElementById("dealerCards").innerHTML="";
 for(let c of dealer){
 document.getElementById("dealerCards")
