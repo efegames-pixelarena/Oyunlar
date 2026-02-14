@@ -55,19 +55,19 @@ Bahis: ₺<span id="bet">0</span>
 
 <script type="module">
 
-/* 🔥 FIREBASE IMPORT */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, doc, getDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-/* 🔥 KENDİ CONFIGİNİ KOY */
+/* ✅ GERÇEK CONFIG */
 const firebaseConfig = {
-  apiKey: "API_KEY",
-  authDomain: "PROJECT.firebaseapp.com",
-  projectId: "PROJECT_ID",
-  storageBucket: "PROJECT.appspot.com",
-  messagingSenderId: "SENDER_ID",
-  appId: "APP_ID"
+  apiKey: "AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
+  authDomain: "emirhan-site.firebaseapp.com",
+  projectId: "emirhan-site",
+  storageBucket: "emirhan-site.firebasestorage.app",
+  messagingSenderId: "668871888390",
+  appId: "1:668871888390:web:76568bda84cb1641f7bd87",
+  measurementId: "G-96ZVZX3DWH"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -76,6 +76,7 @@ const db = getFirestore(app);
 
 let currentUser = null;
 let bet = 0;
+let unsubscribe = null;
 
 const balanceSpan = document.getElementById("liveBalance");
 const betSpan = document.getElementById("bet");
@@ -83,7 +84,7 @@ const dealBtn = document.getElementById("dealBtn");
 const hitBtn = document.getElementById("hitBtn");
 const standBtn = document.getElementById("standBtn");
 
-/* 🔥 GİRİŞ KONTROL */
+/* 🔐 AUTH KONTROL */
 onAuthStateChanged(auth, (user) => {
 
   if (!user) {
@@ -95,23 +96,27 @@ onAuthStateChanged(auth, (user) => {
   currentUser = user;
   const userRef = doc(db, "users", user.uid);
 
-  /* 🔥 CANLI BAKİYE */
-  onSnapshot(userRef, (snap) => {
+  if (unsubscribe) unsubscribe();
+
+  /* 💰 CANLI BAKİYE */
+  unsubscribe = onSnapshot(userRef, (snap) => {
     if (snap.exists()) {
-      balanceSpan.innerText = snap.data().balance || 0;
+      const balance = snap.data().balance ?? 0;
+      balanceSpan.innerText = balance.toLocaleString("tr-TR");
     }
   });
 
 });
 
-/* 🔥 BAKİYE DÜŞ */
+/* 💸 BAKİYE DÜŞ */
 async function bakiyeDus(miktar) {
+
   const userRef = doc(db, "users", currentUser.uid);
   const snap = await getDoc(userRef);
 
   if (!snap.exists()) return false;
 
-  let bal = snap.data().balance || 0;
+  let bal = snap.data().balance ?? 0;
 
   if (bal < miktar) {
     alert("Yetersiz bakiye!");
@@ -125,33 +130,39 @@ async function bakiyeDus(miktar) {
   return true;
 }
 
-/* 🔥 BAKİYE ARTIR */
+/* 💵 BAKİYE ARTIR */
 async function bakiyeArttir(miktar) {
+
   const userRef = doc(db, "users", currentUser.uid);
   const snap = await getDoc(userRef);
 
   if (!snap.exists()) return;
 
-  let bal = snap.data().balance || 0;
+  let bal = snap.data().balance ?? 0;
 
   await updateDoc(userRef, {
     balance: bal + miktar
   });
 }
 
-/* 🎮 BAHİS */
+/* 🎯 BAHİS */
 window.placeBet = async function(amount) {
+
   const izin = await bakiyeDus(amount);
   if (!izin) return;
 
   bet += amount;
-  betSpan.innerText = bet;
+  betSpan.innerText = bet.toLocaleString("tr-TR");
   dealBtn.disabled = false;
 };
 
 /* 🎮 ROUND BAŞLAT */
 dealBtn.onclick = function(){
-  if (bet <= 0) return alert("Bahis koymalısın.");
+
+  if (bet <= 0) {
+    alert("Bahis koymalısın.");
+    return;
+  }
 
   hitBtn.disabled = false;
   standBtn.disabled = false;
