@@ -18,29 +18,26 @@
 <div id="tableId">Masa ID: -</div>
 </div>
 
-<div class="dealerZone">
-<div>Dealer</div>
-<div class="score" id="dealerScore"></div>
-<div class="hand" id="dealerHand"></div>
+<div>Bakiyeniz: ₺<span id="balance"></span></div>
+<div>Bahis: ₺<span id="bet"></span></div>
+
+<div id="betOptions" class="betOptions"></div>
+
+<div class="area">
+  <h2>Dealer (<span id="dealerScore"></span>)</h2>
+  <div id="dealerCards" class="cards"></div>
 </div>
 
-<div class="table">
-<div>Oyuncu</div>
-<div class="score" id="playerScore"></div>
-<div class="hand" id="playerHand"></div>
+<div class="area">
+  <h2>Oyuncu (<span id="playerScore"></span>)</h2>
+  <div id="playerCards" class="cards"></div>
 </div>
 
-<div class="ticker" id="ticker">Bahis koyun</div>
+<h2 id="message"></h2>
 
-<div class="betOptions" id="betOptions"></div>
-
-<div class="controls">
 <button id="dealBtn">Dağıt</button>
 <button id="hitBtn">Hit</button>
 <button id="standBtn">Stand</button>
-<button id="doubleBtn">Double</button>
-<button id="splitBtn">Split</button>
-</div>
 
 <div class="bottomBar">
 <div>Bakiye: ₺<span id="balance">0</span></div>
