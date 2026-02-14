@@ -105,10 +105,12 @@ const db=getFirestore(app);
 let currentUser=null;
 let balance=0,currentBet=0;
 let shoe=[],player=[],dealer=[];
-let gameActive=false,round=1;
+let gameActive=false;
 
 const SUITS=['♠','♥','♦','♣'];
 const VALUES=['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+
+/* ===================== KART SİSTEMİ ===================== */
 
 function buildShoe(){
 shoe=[];
@@ -127,25 +129,33 @@ let j=Math.floor(Math.random()*(i+1));
 }
 
 function draw(){
-if(shoe.length<60)buildShoe();
+if(shoe.length<60) buildShoe();
 return shoe.pop();
 }
 
 function value(c){
-if(c.value=="A")return 11;
-if(["K","Q","J"].includes(c.value))return 10;
+if(c.value==="A") return 11;
+if(["K","Q","J"].includes(c.value)) return 10;
 return parseInt(c.value);
 }
 
-function score(h){
-let t=0,a=0;
-h.forEach(c=>{t+=value(c);if(c.value=="A")a++});
-while(t>21&&a>0){t-=10;a--}
-return t;
+function score(hand){
+let total=0, aces=0;
+hand.forEach(c=>{
+total+=value(c);
+if(c.value==="A") aces++;
+});
+while(total>21 && aces>0){
+total-=10;
+aces--;
+}
+return total;
 }
 
+/* ===================== UI ===================== */
+
 function cardHTML(c){
-let color=(c.suit=="♥"||c.suit=="♦")?"red":"black";
+let color=(c.suit==="♥"||c.suit==="♦")?"red":"black";
 return `<div class="card ${color}">${c.value}${c.suit}</div>`;
 }
 
@@ -154,24 +164,42 @@ document.getElementById("balance").innerText=balance;
 document.getElementById("bet").innerText=currentBet;
 }
 
-function placeBet(amount){
-if(!currentUser||gameActive||balance<amount)return;
-balance-=amount;
-currentBet+=amount;
-updateUI();
+function setButtons(deal,hit,stand){
+document.getElementById("dealBtn").disabled=!deal;
+document.getElementById("hitBtn").disabled=!hit;
+document.getElementById("standBtn").disabled=!stand;
 }
 
+/* ===================== BAHİS ===================== */
+
+function placeBet(amount){
+if(!currentUser || gameActive) return;
+if(balance < amount) return;
+
+balance -= amount;
+currentBet += amount;
+
+updateUI();
+
+if(currentBet > 0){
+setButtons(true,false,false);
+}
+}
+
+/* ===================== OYUN ===================== */
+
 function startCountdown(){
-if(currentBet<=0||gameActive)return;
+if(gameActive || currentBet<=0) return;
 startRound();
 }
 
 function startRound(){
-player=[];dealer=[];
 gameActive=true;
 
-document.getElementById("hitBtn").disabled=false;
-document.getElementById("standBtn").disabled=false;
+player=[];
+dealer=[];
+
+setButtons(false,true,true);
 
 player.push(draw());
 dealer.push(draw());
@@ -183,18 +211,20 @@ updateScores(true);
 }
 
 function hit(){
-if(!gameActive)return;
+if(!gameActive) return;
+
 player.push(draw());
 render(true);
 updateScores(true);
+
 if(score(player)>21){
 revealDealer();
-setTimeout(endRound,1000);
+setTimeout(endRound,800);
 }
 }
 
 function stand(){
-if(!gameActive)return;
+if(!gameActive) return;
 revealDealer();
 }
 
@@ -212,69 +242,85 @@ render(false);
 updateScores(false);
 }else{
 clearInterval(interval);
-setTimeout(endRound,1000);
+setTimeout(endRound,800);
 }
-},600);
+},500);
 }
 
 async function endRound(){
 gameActive=false;
 
-document.getElementById("hitBtn").disabled=true;
-document.getElementById("standBtn").disabled=true;
+let p=score(player);
+let d=score(dealer);
 
-let p=score(player),d=score(dealer);
-
-if(p<=21&&(d>21||p>d)){
-balance+=currentBet*2;
+if(p<=21 && (d>21 || p>d)){
+balance += currentBet*2;
 }
-else if(p==d){
-balance+=currentBet;
+else if(p===d){
+balance += currentBet;
 }
 
 currentBet=0;
+
 updateUI();
+
+setButtons(true,false,false);
+document.getElementById("ticker").innerText="Bahis koyun";
 
 if(currentUser){
 await updateDoc(doc(db,"users",currentUser.uid),{balance});
 }
 }
 
+/* ===================== RENDER ===================== */
+
 function render(hideDealer=false){
-document.getElementById("playerHand").innerHTML=player.map(cardHTML).join("");
+document.getElementById("playerHand").innerHTML=
+player.map(cardHTML).join("");
+
 if(hideDealer){
-document.getElementById("dealerHand").innerHTML=dealer.length?cardHTML(dealer[0])+`<div class="card back"></div>`:"";
+document.getElementById("dealerHand").innerHTML=
+dealer.length ? cardHTML(dealer[0]) + `<div class="card"></div>` : "";
 }else{
-document.getElementById("dealerHand").innerHTML=dealer.map(cardHTML).join("");
+document.getElementById("dealerHand").innerHTML=
+dealer.map(cardHTML).join("");
 }
 }
 
 function updateScores(hideDealer=false){
-document.getElementById("playerScore").innerText=player.length?"Toplam: "+score(player):"";
+document.getElementById("playerScore").innerText=
+player.length ? "Toplam: "+score(player) : "";
+
 if(dealer.length){
 document.getElementById("dealerScore").innerText=
-hideDealer?value(dealer[0]):score(dealer);
+hideDealer ? value(dealer[0]) : score(dealer);
 }else{
 document.getElementById("dealerScore").innerText="";
 }
 }
 
-/* 🔥 BURASI KRİTİK — GLOBAL BAĞLANTI */
+/* ===================== GLOBAL ===================== */
+
 window.placeBet=placeBet;
 window.startCountdown=startCountdown;
 window.hit=hit;
 window.stand=stand;
 
-/* AUTH */
+/* ===================== AUTH ===================== */
+
 onAuthStateChanged(auth,async(user)=>{
 if(!user){
 window.location.href="index.html";
 return;
 }
+
 currentUser=user;
+
 const snap=await getDoc(doc(db,"users",user.uid));
 balance=snap.exists()?snap.data().balance||0:0;
+
 updateUI();
+setButtons(false,false,false);
 document.getElementById("ticker").innerText="Bahis koyun";
 });
 
