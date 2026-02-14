@@ -6,7 +6,7 @@
 <title>EMİRHAN FE</title>
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:Arial, sans-serif;}
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif;}
 
 body{
 background:linear-gradient(180deg,#0b1023,#0d1333,#0a0f1f);
@@ -75,11 +75,7 @@ color:black;
 }
 
 /* SEARCH */
-.search-bar{
-margin-top:90px;
-padding:0 15px;
-}
-
+.search-bar{margin-top:90px;padding:0 15px;}
 .search-bar input{
 width:100%;
 padding:15px;
@@ -101,7 +97,6 @@ font-size:22px;
 font-weight:bold;
 }
 
-/* GRID */
 .games-grid{
 display:grid;
 grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
@@ -109,7 +104,6 @@ gap:20px;
 padding:20px;
 }
 
-/* CARD */
 .game-card{
 background:linear-gradient(145deg,#141b3f,#1b2252);
 border-radius:18px;
@@ -126,17 +120,14 @@ overflow:hidden;
 .game-card::after{
 content:"";
 position:absolute;
-top:-100%;
-left:-100%;
-width:200%;
-height:200%;
+top:-100%;left:-100%;
+width:200%;height:200%;
 background:linear-gradient(120deg,transparent,rgba(255,255,255,0.15),transparent);
 transform:rotate(25deg);
 transition:0.7s;
 }
 
 .game-card:hover::after{top:0;left:0;}
-
 .game-card:hover{
 transform:translateY(-10px) scale(1.03);
 box-shadow:0 0 30px #ffb300;
@@ -153,21 +144,51 @@ margin-top:60px;
 border-top:1px solid #1e2a5a;
 }
 
-.footer-center{text-align:center;}
-.footer-logo{
-font-size:28px;
-font-weight:bold;
-background:linear-gradient(90deg,#00eaff,#4cc3ff,#00eaff);
-background-size:200% auto;
--webkit-background-clip:text;
-color:transparent;
-animation:shine 3s linear infinite;
-margin-bottom:15px;
+.footer-links{
+display:flex;
+justify-content:space-between;
+max-width:1000px;
+margin:auto;
+flex-wrap:wrap;
+gap:30px;
 }
 
-@keyframes shine{to{background-position:200% center;}}
+.footer-column h3{
+margin-bottom:15px;
+color:#ffb300;
+}
 
-.footer-mail{color:#ccc;margin-bottom:20px;}
+.footer-column p, .footer-column li{
+color:#aaa;
+margin-bottom:10px;
+font-size:14px;
+}
+
+.footer-column ul{list-style:none;}
+
+.social-icons{
+display:flex;
+gap:15px;
+margin-top:10px;
+}
+
+.social-icons a{
+width:45px;height:45px;
+display:flex;
+align-items:center;
+justify-content:center;
+border-radius:12px;
+background:#1c2455;
+transition:0.3s;
+color:white;
+text-decoration:none;
+font-size:18px;
+}
+
+.social-icons a:hover{
+background:#ffb300;
+color:black;
+}
 
 .footer-bottom{
 text-align:center;
@@ -181,10 +202,8 @@ font-size:14px;
 /* AUTH MODAL */
 .auth-modal{
 position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
+top:0;left:0;
+width:100%;height:100%;
 background:rgba(0,0,0,0.7);
 backdrop-filter:blur(12px);
 display:none;
@@ -194,8 +213,7 @@ z-index:2000;
 }
 
 .auth-box{
-width:90%;
-max-width:400px;
+width:90%;max-width:400px;
 padding:30px;
 border-radius:20px;
 background:linear-gradient(145deg,#141b3f,#1b2252);
@@ -237,7 +255,11 @@ font-size:14px;
 color:#aaa;
 }
 
-.switch-text span{color:#ffb300;cursor:pointer;font-weight:bold;}
+.switch-text span{
+color:#ffb300;
+cursor:pointer;
+font-weight:bold;
+}
 
 .close-btn{
 position:absolute;
@@ -278,16 +300,40 @@ color:#aaa;
 </main>
 
 <footer class="footer">
-<div class="footer-center">
-<div class="footer-logo">EMİRHAN FE</div>
-<div class="footer-mail">Flood Hakkımda: Bu platform tamamen eğlence amaçlıdır.</div>
-<div class="footer-bottom">© 2026 Emirhan Efe - Tüm Hakları Saklıdır</div>
+<div class="footer-links">
+
+<div class="footer-column">
+<h3>Flood</h3>
+<p>Bu platform tamamen eğlence amaçlıdır.</p>
+<p>Sanal bakiye sistemi içerir.</p>
+</div>
+
+<div class="footer-column">
+<h3>Hakkımda</h3>
+<p>Ben Emirhan Efe.</p>
+<p>Web geliştirme ve oyun sistemleri ile ilgileniyorum.</p>
+</div>
+
+<div class="footer-column">
+<h3>Sosyal</h3>
+<div class="social-icons">
+<a href="https://instagram.com" target="_blank">IG</a>
+<a href="https://t.me" target="_blank">TG</a>
+<a href="https://github.com" target="_blank">GH</a>
+</div>
+</div>
+
+</div>
+
+<div class="footer-bottom">
+© 2026 Emirhan Efe - Tüm Hakları Saklıdır
 </div>
 </footer>
 
 <!-- AUTH MODAL -->
 <div id="authModal" class="auth-modal">
 <div class="auth-box">
+
 <div id="loginForm">
 <h2>Giriş Yap</h2>
 <input type="email" id="loginEmail" placeholder="Kullanıcı Adı veya E-posta">
@@ -331,19 +377,19 @@ const db=getFirestore(app);
 document.querySelector(".login-btn").onclick=()=>openModal();
 document.querySelector(".register-btn").onclick=()=>{openModal();showRegister();};
 
-function openModal(){document.getElementById("authModal").style.display="flex";}
-function closeModal(){document.getElementById("authModal").style.display="none";}
+function openModal(){authModal.style.display="flex";}
+function closeModal(){authModal.style.display="none";}
 function showRegister(){loginForm.style.display="none";registerForm.style.display="block";}
 function showLogin(){registerForm.style.display="none";loginForm.style.display="block";}
 
 async function register(){
-const username=registerUsername.value;
-const email=registerEmail.value;
-const pass=registerPassword.value;
-const pass2=registerPassword2.value;
-if(pass!==pass2) return alert("Şifreler eşleşmiyor");
-const user=await createUserWithEmailAndPassword(auth,email,pass);
-await setDoc(doc(db,"users",user.user.uid),{username,email,balance:10000});
+if(registerPassword.value!==registerPassword2.value) return alert("Şifreler eşleşmiyor");
+const user=await createUserWithEmailAndPassword(auth,registerEmail.value,registerPassword.value);
+await setDoc(doc(db,"users",user.user.uid),{
+username:registerUsername.value,
+email:registerEmail.value,
+balance:10000
+});
 alert("10.000₺ yüklendi");
 closeModal();
 }
@@ -367,50 +413,37 @@ document.querySelector(".header-buttons").innerHTML=
 window.logout=function(){signOut(auth).then(()=>location.reload());}
 </script>
 
-<!-- KAR SCRIPT -->
 <script>
 const canvas=document.getElementById("snow");
 const ctx=canvas.getContext("2d");
 canvas.width=window.innerWidth;
 canvas.height=window.innerHeight;
 
-let snowflakes=[];
+let snow=[];
 for(let i=0;i<150;i++){
-snowflakes.push({
-x:Math.random()*canvas.width,
-y:Math.random()*canvas.height,
-r:Math.random()*3+1,
-d:Math.random()*1
-});
+snow.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*3+1,d:Math.random()*1});
 }
 
-function drawSnow(){
+function draw(){
 ctx.clearRect(0,0,canvas.width,canvas.height);
 ctx.fillStyle="white";
 ctx.beginPath();
-for(let i=0;i<snowflakes.length;i++){
-let f=snowflakes[i];
-ctx.moveTo(f.x,f.y);
-ctx.arc(f.x,f.y,f.r,0,Math.PI*2,true);
-}
+snow.forEach(f=>{ctx.moveTo(f.x,f.y);ctx.arc(f.x,f.y,f.r,0,Math.PI*2,true);});
 ctx.fill();
-moveSnow();
+move();
 }
 
 let angle=0;
-function moveSnow(){
+function move(){
 angle+=0.01;
-for(let i=0;i<snowflakes.length;i++){
-let f=snowflakes[i];
+snow.forEach(f=>{
 f.y+=Math.cos(angle+f.d)+1+f.r/2;
 f.x+=Math.sin(angle)*2;
-if(f.x>canvas.width||f.x<0||f.y>canvas.height){
-snowflakes[i]={x:Math.random()*canvas.width,y:0,r:f.r,d:f.d};
-}
-}
+if(f.y>canvas.height){f.y=0;f.x=Math.random()*canvas.width;}
+});
 }
 
-setInterval(drawSnow,33);
+setInterval(draw,33);
 </script>
 
 </body>
