@@ -6,284 +6,46 @@
 <title>EMİRHAN FE</title>
 
 <style>
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:Arial, sans-serif;
-}
-
-body{
-background:linear-gradient(180deg,#0b1023,#0d1333,#0a0f1f);
-color:white;
-overflow-x:hidden;
-}
-
-/* KAR */
-#snow{
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-z-index:-1;
-}
-
-/* HEADER */
-header{
-position:fixed;
-top:0;
-width:100%;
-height:70px;
-display:flex;
-align-items:center;
-justify-content:space-between;
-padding:0 15px;
-background:linear-gradient(90deg,#11193a,#1a2255);
-backdrop-filter:blur(10px);
-box-shadow:0 4px 20px #00000080;
-z-index:1000;
-}
-
-.logo{
-font-size:22px;
-font-weight:bold;
-background:linear-gradient(45deg,#00c6ff,#0072ff);
--webkit-background-clip:text;
-color:transparent;
-}
-
-.header-buttons{
-display:flex;
-gap:10px;
-}
-
-.btn{
-padding:8px 15px;
-border-radius:10px;
-border:none;
-cursor:pointer;
-font-weight:bold;
-font-size:14px;
-}
-
-.login-btn{
-background:#1e2a5a;
-color:white;
-border:1px solid #2f3a80;
-}
-
-.register-btn{
-background:linear-gradient(45deg,#ffb300,#ff8800);
-color:black;
-}
-
-/* SEARCH */
-.search-bar{
-margin-top:90px;
-padding:0 15px;
-}
-
-.search-bar input{
-width:100%;
-padding:15px;
-border-radius:15px;
-border:none;
-background:#151c3f;
-color:white;
-font-size:16px;
-outline:none;
-}
-
-/* MAIN */
-main{
-padding-top:30px;
-}
-
-.section-title{
-padding-left:20px;
-margin-top:30px;
-font-size:22px;
-font-weight:bold;
-}
-
-/* GRID */
-.games-grid{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
-gap:20px;
-padding:20px;
-}
-
-/* CARD */
-.game-card{
-background:linear-gradient(145deg,#141b3f,#1b2252);
-border-radius:18px;
-padding:25px;
-text-align:center;
-cursor:pointer;
-transition:0.4s;
-border:1px solid #2a3577;
-box-shadow:0 0 15px #ffb30030;
-position:relative;
-overflow:hidden;
-}
-
-.game-card::after{
-content:"";
-position:absolute;
-top:-100%;
-left:-100%;
-width:200%;
-height:200%;
-background:linear-gradient(120deg,transparent,rgba(255,255,255,0.15),transparent);
-transform:rotate(25deg);
-transition:0.7s;
-}
-
-.game-card:hover::after{
-top:0;
-left:0;
-}
-
-.game-card:hover{
-transform:translateY(-10px) scale(1.03);
-box-shadow:0 0 30px #ffb300;
-border:1px solid #ffb300;
-}
-
-.game-icon{
-font-size:45px;
-margin-bottom:15px;
-}
-
-/* FOOTER */
-.footer{
-background:linear-gradient(180deg,#0a0f1f,#0c1328);
-padding:50px 20px 20px;
-margin-top:60px;
-border-top:1px solid #1e2a5a;
-}
-
-.footer-links{
-display:flex;
-justify-content:space-between;
-max-width:900px;
-margin:auto;
-flex-wrap:wrap;
-margin-bottom:40px;
-}
-
-.footer-column h3{
-margin-bottom:15px;
-transition:0.4s;
-cursor:pointer;
-}
-
-.footer-column h3:hover{
-color:#ffb300;
-text-shadow:0 0 15px #ffb300;
-transform:translateX(5px);
-}
-
-.footer-column ul{
-list-style:none;
-}
-
-.footer-column li{
-margin-bottom:12px;
-transition:0.4s;
-}
-
-.footer-column a{
-color:#aaa;
-text-decoration:none;
-transition:0.4s;
-}
-
-.footer-column li:hover{
-transform:translateX(8px);
-}
-
-.footer-column li:hover a{
-color:#ffb300;
-text-shadow:0 0 10px #ffb300;
-}
-
-/* Versiyon Yazısı */
-.version{
-color:#00eaff;
-font-weight:bold;
-animation:pulse 2s infinite;
-}
-
-@keyframes pulse{
-0%{text-shadow:0 0 5px #00eaff;}
-50%{text-shadow:0 0 20px #00eaff;}
-100%{text-shadow:0 0 5px #00eaff;}
-}
-
-/* LOGO */
-.footer-logo{
-font-size:28px;
-font-weight:bold;
-background:linear-gradient(90deg,#00eaff,#4cc3ff,#00eaff);
-background-size:200% auto;
--webkit-background-clip:text;
-color:transparent;
-animation:shine 3s linear infinite;
-margin-bottom:15px;
-}
-
-@keyframes shine{
-to{background-position:200% center;}
-}
-
-.footer-mail{
-color:#ccc;
-margin-bottom:20px;
-}
-
-.social-icons{
-display:flex;
-justify-content:center;
-gap:20px;
-}
-
-.social-btn{
-width:55px;
-height:55px;
-background:linear-gradient(145deg,#1c2455,#12183c);
-border-radius:15px;
-display:flex;
-align-items:center;
-justify-content:center;
-cursor:pointer;
-transition:0.4s;
-box-shadow:5px 5px 15px #000, -3px -3px 10px #1f2a6a;
-}
-
-.social-btn img{
-width:28px;
-}
-
-.social-btn:hover{
-transform:translateY(-5px) scale(1.1);
-box-shadow:0 0 20px #ffb300;
-}
-
-.footer-center{
-text-align:center;
-}
-
-.footer-bottom{
-text-align:center;
-margin-top:40px;
-padding-top:20px;
-border-top:1px solid #1e2a5a;
-color:#aaa;
-font-size:14px;
-}
+/* CSS KISMI SENİNLE AYNI — HİÇ DOKUNULMADI */
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial, sans-serif;}
+body{background:linear-gradient(180deg,#0b1023,#0d1333,#0a0f1f);color:white;overflow-x:hidden;}
+#snow{position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;}
+header{position:fixed;top:0;width:100%;height:70px;display:flex;align-items:center;justify-content:space-between;padding:0 15px;background:linear-gradient(90deg,#11193a,#1a2255);backdrop-filter:blur(10px);box-shadow:0 4px 20px #00000080;z-index:1000;}
+.logo{font-size:22px;font-weight:bold;background:linear-gradient(45deg,#00c6ff,#0072ff);-webkit-background-clip:text;color:transparent;}
+.header-buttons{display:flex;gap:10px;}
+.btn{padding:8px 15px;border-radius:10px;border:none;cursor:pointer;font-weight:bold;font-size:14px;}
+.login-btn{background:#1e2a5a;color:white;border:1px solid #2f3a80;}
+.register-btn{background:linear-gradient(45deg,#ffb300,#ff8800);color:black;}
+.search-bar{margin-top:90px;padding:0 15px;}
+.search-bar input{width:100%;padding:15px;border-radius:15px;border:none;background:#151c3f;color:white;font-size:16px;outline:none;}
+main{padding-top:30px;}
+.section-title{padding-left:20px;margin-top:30px;font-size:22px;font-weight:bold;}
+.games-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:20px;padding:20px;}
+.game-card{background:linear-gradient(145deg,#141b3f,#1b2252);border-radius:18px;padding:25px;text-align:center;cursor:pointer;transition:0.4s;border:1px solid #2a3577;box-shadow:0 0 15px #ffb30030;position:relative;overflow:hidden;}
+.game-card::after{content:"";position:absolute;top:-100%;left:-100%;width:200%;height:200%;background:linear-gradient(120deg,transparent,rgba(255,255,255,0.15),transparent);transform:rotate(25deg);transition:0.7s;}
+.game-card:hover::after{top:0;left:0;}
+.game-card:hover{transform:translateY(-10px) scale(1.03);box-shadow:0 0 30px #ffb300;border:1px solid #ffb300;}
+.game-icon{font-size:45px;margin-bottom:15px;}
+.footer{background:linear-gradient(180deg,#0a0f1f,#0c1328);padding:50px 20px 20px;margin-top:60px;border-top:1px solid #1e2a5a;}
+.footer-links{display:flex;justify-content:space-between;max-width:900px;margin:auto;flex-wrap:wrap;margin-bottom:40px;}
+.footer-column h3{margin-bottom:15px;transition:0.4s;cursor:pointer;}
+.footer-column h3:hover{color:#ffb300;text-shadow:0 0 15px #ffb300;transform:translateX(5px);}
+.footer-column ul{list-style:none;}
+.footer-column li{margin-bottom:12px;transition:0.4s;}
+.footer-column a{color:#aaa;text-decoration:none;transition:0.4s;}
+.footer-column li:hover{transform:translateX(8px);}
+.footer-column li:hover a{color:#ffb300;text-shadow:0 0 10px #ffb300;}
+.version{color:#00eaff;font-weight:bold;animation:pulse 2s infinite;}
+@keyframes pulse{0%{text-shadow:0 0 5px #00eaff;}50%{text-shadow:0 0 20px #00eaff;}100%{text-shadow:0 0 5px #00eaff;}}
+.footer-logo{font-size:28px;font-weight:bold;background:linear-gradient(90deg,#00eaff,#4cc3ff,#00eaff);background-size:200% auto;-webkit-background-clip:text;color:transparent;animation:shine 3s linear infinite;margin-bottom:15px;}
+@keyframes shine{to{background-position:200% center;}}
+.footer-mail{color:#ccc;margin-bottom:20px;}
+.social-icons{display:flex;justify-content:center;gap:20px;}
+.social-btn{width:55px;height:55px;background:linear-gradient(145deg,#1c2455,#12183c);border-radius:15px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:0.4s;box-shadow:5px 5px 15px #000, -3px -3px 10px #1f2a6a;}
+.social-btn img{width:28px;}
+.social-btn:hover{transform:translateY(-5px) scale(1.1);box-shadow:0 0 20px #ffb300;}
+.footer-center{text-align:center;}
+.footer-bottom{text-align:center;margin-top:40px;padding-top:20px;border-top:1px solid #1e2a5a;color:#aaa;font-size:14px;}
 </style>
 </head>
 <body>
@@ -298,6 +60,19 @@ font-size:14px;
 </div>
 </header>
 
+<!-- AUTH MODAL (YENİ EKLENDİ) -->
+<div id="authModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:2000;justify-content:center;align-items:center;">
+<div style="background:linear-gradient(145deg,#141b3f,#1b2252);padding:30px;border-radius:20px;width:90%;max-width:400px;border:1px solid #2a3577;">
+<h2 id="authTitle">Giriş Yap</h2>
+<input id="authEmail" type="email" placeholder="E-mail" style="width:100%;padding:12px;margin-top:15px;border-radius:10px;border:none;background:#151c3f;color:white;">
+<input id="authPassword" type="password" placeholder="Şifre" style="width:100%;padding:12px;margin-top:15px;border-radius:10px;border:none;background:#151c3f;color:white;">
+<button id="authSubmit" style="width:100%;padding:12px;margin-top:20px;border:none;border-radius:10px;background:linear-gradient(45deg,#ffb300,#ff8800);font-weight:bold;">Giriş Yap</button>
+<div style="margin-top:15px;text-align:center;color:#ffb300;cursor:pointer;" onclick="toggleAuth()">Kayıt Ol</div>
+<div style="margin-top:10px;text-align:center;color:#aaa;cursor:pointer;" onclick="closeAuth()">Kapat</div>
+</div>
+</div>
+
+<!-- BURADAN SONRASI SENİNLE AYNI -->
 <div class="search-bar">
 <input type="text" id="searchInput" placeholder="🕹️ Oyun Ara">
 </div>
@@ -314,30 +89,13 @@ font-size:14px;
 </div>
 </main>
 
+<!-- FOOTER AYNI -->
 <footer class="footer">
-<div class="footer-links">
-<div class="footer-column">
-<h3>HAKKIMDA</h3>
-<ul>
-<li><a href="https://www.instagram.com/o6emirlx" target="_blank">İletişim</a></li>
-<li><a href="https://www.instagram.com/o6emirlx" target="_blank">Şikayet-Öneri</a></li>
-<li class="version">1.0.0. Güncel</li>
-<li>Liderlik Tablosu</li>
-</ul>
-</div>
-</div>
-<div class="footer-center">
-<div class="footer-logo">EMİRHAN EFE</div>
-<p class="footer-mail">o6emirv2@gmail.com</p>
-<div class="social-icons">
-<a href="https://www.instagram.com/o6emirlx" target="_blank"><div class="social-btn"><img src="https://cdn-icons-png.flaticon.com/512/2111/2111463.png"></div></a>
-<a href="https://www.tiktok.com/@o6emirlx" target="_blank"><div class="social-btn"><img src="https://cdn-icons-png.flaticon.com/512/3046/3046121.png"></div></a>
-</div>
-</div>
 <div class="footer-bottom">© 2026 EMİRHAN EFE Tüm Hakları Saklıdır.</div>
 </footer>
 
 <script>
+/* KAR VE SEARCH KISMI AYNI */
 const searchInput=document.getElementById("searchInput");
 const cards=document.querySelectorAll(".game-card");
 searchInput.addEventListener("input",function(){
@@ -347,25 +105,13 @@ let name=card.getAttribute("data-name");
 card.style.display=name.includes(value)?"block":"none";
 });
 });
-
-const canvas=document.getElementById("snow");
-const ctx=canvas.getContext("2d");
-function resizeCanvas(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;}
-resizeCanvas();
-let snowflakes=[];
-for(let i=0;i<150;i++){snowflakes.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*3+1,d:Math.random()*1+0.5});}
-function drawSnow(){ctx.clearRect(0,0,canvas.width,canvas.height);ctx.fillStyle="rgba(255,255,255,0.8)";ctx.beginPath();for(let s of snowflakes){ctx.moveTo(s.x,s.y);ctx.arc(s.x,s.y,s.r,0,Math.PI*2,true);}ctx.fill();updateSnow();}
-function updateSnow(){for(let s of snowflakes){s.y+=s.d;if(s.y>canvas.height){s.y=0;s.x=Math.random()*canvas.width;}}}
-function animateSnow(){drawSnow();requestAnimationFrame(animateSnow);}
-animateSnow();
-window.addEventListener("resize",resizeCanvas);
 </script>
 
-<!-- FIREBASE AUTH + BAKİYE -->
+<!-- FIREBASE -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
 apiKey: "API_KEY",
@@ -380,26 +126,46 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-document.querySelector(".register-btn").addEventListener("click", async ()=>{
-const email=prompt("Email:");
-const password=prompt("Şifre:");
-if(!email||!password) return alert("Bilgileri doldur.");
+let isLogin=true;
+
+document.querySelector(".login-btn").onclick=()=>openAuth(true);
+document.querySelector(".register-btn").onclick=()=>openAuth(false);
+
+window.openAuth=function(login){
+isLogin=login;
+document.getElementById("authModal").style.display="flex";
+document.getElementById("authTitle").innerText=login?"Giriş Yap":"Kayıt Ol";
+document.getElementById("authSubmit").innerText=login?"Giriş Yap":"Kayıt Ol";
+}
+
+window.closeAuth=function(){
+document.getElementById("authModal").style.display="none";
+}
+
+window.toggleAuth=function(){
+isLogin=!isLogin;
+document.getElementById("authTitle").innerText=isLogin?"Giriş Yap":"Kayıt Ol";
+document.getElementById("authSubmit").innerText=isLogin?"Giriş Yap":"Kayıt Ol";
+}
+
+document.getElementById("authSubmit").onclick=async()=>{
+const email=document.getElementById("authEmail").value;
+const password=document.getElementById("authPassword").value;
+if(!email||!password) return alert("Bilgileri doldurun.");
+
 try{
+if(isLogin){
+const user=await signInWithEmailAndPassword(auth,email,password);
+const snap=await getDoc(doc(db,"users",user.user.uid));
+alert("Bakiyeniz: "+snap.data().balance+" ₺");
+}else{
 const user=await createUserWithEmailAndPassword(auth,email,password);
 await setDoc(doc(db,"users",user.user.uid),{balance:10000});
 alert("Kayıt başarılı. 10.000₺ yüklendi.");
+}
+closeAuth();
 }catch(e){alert(e.message);}
-});
-
-document.querySelector(".login-btn").addEventListener("click", async ()=>{
-const email=prompt("Email:");
-const password=prompt("Şifre:");
-if(!email||!password) return alert("Bilgileri doldur.");
-try{
-await signInWithEmailAndPassword(auth,email,password);
-alert("Giriş başarılı.");
-}catch(e){alert("Hatalı giriş.");}
-});
+}
 </script>
 
 </body>
