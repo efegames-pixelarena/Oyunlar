@@ -7,11 +7,7 @@
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
-html,body{
-height:100%;
-overflow:hidden;
-background:black;
-}
+html,body{height:100%;overflow:hidden;background:black;}
 
 body{
 background:
@@ -28,46 +24,28 @@ color:white;
 }
 
 .topBar{
-position:absolute;
-top:0;
-left:0;
-width:100%;
-height:50px;
+position:absolute;top:0;left:0;width:100%;height:50px;
 padding-top:var(--safe-top);
 background:rgba(0,0,0,.7);
-display:flex;
-justify-content:space-between;
-align-items:center;
-padding-left:15px;
-padding-right:15px;
-z-index:10;
+display:flex;justify-content:space-between;align-items:center;
+padding-left:15px;padding-right:15px;z-index:10;
 }
 
 .table{
-position:absolute;
-bottom:0;
-left:0;
-width:100%;
-height:60%;
+position:absolute;bottom:0;left:0;width:100%;height:60%;
 background:radial-gradient(circle at center,#0b3d2e,#021a13);
 border-top-left-radius:50% 25%;
 border-top-right-radius:50% 25%;
 box-shadow:0 -40px 100px black;
-text-align:center;
-padding-top:25px;
-padding-bottom:var(--safe-bottom);
+text-align:center;padding-top:25px;padding-bottom:var(--safe-bottom);
 }
 
 .hand{min-height:110px;margin-top:10px}
 
 .card{
-width:70px;
-height:100px;
-background-size:cover;
-background-position:center;
-border-radius:8px;
-display:inline-block;
-margin:5px;
+width:70px;height:100px;
+background-size:cover;background-position:center;
+border-radius:8px;display:inline-block;margin:5px;
 animation:deal .5s ease;
 }
 
@@ -76,69 +54,45 @@ from{transform:translateX(-120px) rotate(-8deg);opacity:0}
 to{transform:translateX(0);opacity:1}
 }
 
-.controls{
-margin-top:10px;
-}
+.controls{margin-top:10px;}
 
 .controls button{
-padding:8px 15px;
-margin:5px;
-border:none;
-border-radius:6px;
-background:#00ff88;
-color:black;
-font-weight:bold;
-cursor:pointer;
+padding:8px 15px;margin:5px;border:none;border-radius:6px;
+background:#00ff88;color:black;font-weight:bold;cursor:pointer;
 }
 
-.controls button:disabled{
-background:#444;
-cursor:not-allowed;
-}
+.controls button:disabled{background:#444;cursor:not-allowed;}
 
-.betArea{
-margin-top:15px;
-}
+.betArea{margin-top:15px;}
 
 .betBtn{
-width:65px;height:65px;
-border-radius:50%;
+width:65px;height:65px;border-radius:50%;
 background:radial-gradient(circle,#ffcc00,#b8860b);
-display:inline-flex;
-align-items:center;
-justify-content:center;
-font-weight:bold;
-cursor:pointer;
-margin:8px;
+display:inline-flex;align-items:center;justify-content:center;
+font-weight:bold;cursor:pointer;margin:6px;
 transition:.2s;
 }
 
-.betBtn:active{transform:scale(.8)}
+.betBtn.big{animation:chipPulse .4s ease;}
+@keyframes chipPulse{
+0%{transform:scale(1)}
+50%{transform:scale(1.2)}
+100%{transform:scale(1)}
+}
 
 .chat{
-position:absolute;
-top:120px;
-right:15px;
-max-width:180px;
-background:rgba(0,0,0,.65);
-border-radius:12px;
-padding:8px 10px;
-font-size:12px;
-display:inline-block;
-white-space:nowrap;
+position:absolute;top:120px;right:15px;
+max-width:180px;background:rgba(0,0,0,.65);
+border-radius:12px;padding:8px 10px;
+font-size:12px;display:inline-block;white-space:nowrap;
 z-index:9;
 }
 
 .countdown{
-position:absolute;
-top:50%;
-left:50%;
+position:absolute;top:50%;left:50%;
 transform:translate(-50%,-50%);
-font-size:70px;
-font-weight:bold;
-color:#00ffcc;
-display:none;
-z-index:20;
+font-size:70px;font-weight:bold;
+color:#00ffcc;display:none;z-index:20;
 }
 
 .score{font-size:14px;margin-top:5px}
@@ -172,18 +126,39 @@ z-index:20;
 </div>
 
 <div class="betArea">
-<div class="betBtn" onclick="placeBet(50)">50₺</div>
-<div class="betBtn" onclick="placeBet(100)">100₺</div>
-<div class="betBtn" onclick="placeBet(250)">250₺</div>
+<div class="betBtn" onclick="placeBet(20,this)">20₺</div>
+<div class="betBtn" onclick="placeBet(50,this)">50₺</div>
+<div class="betBtn" onclick="placeBet(100,this)">100₺</div>
+<div class="betBtn" onclick="placeBet(500,this)">500₺</div>
+<div class="betBtn" onclick="placeBet(1000,this)">1K</div>
+<div class="betBtn" onclick="placeBet(2000,this)">2K</div>
 </div>
 
 </div>
+
+<!-- SESLER -->
+<audio id="dealSound" src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3"></audio>
+<audio id="winSound" src="https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3"></audio>
+<audio id="bustSound" src="https://assets.mixkit.co/active_storage/sfx/2955/2955-preview.mp3"></audio>
 
 <script>
 let balance=1000
 let bet=0
 let player=[],dealer=[]
 let deck=[]
+let audioUnlocked=false
+
+const dealSound=document.getElementById("dealSound")
+const winSound=document.getElementById("winSound")
+const bustSound=document.getElementById("bustSound")
+
+function unlockAudio(){
+if(!audioUnlocked){
+dealSound.play().then(()=>{dealSound.pause();dealSound.currentTime=0})
+audioUnlocked=true
+}
+}
+document.body.addEventListener("click",unlockAudio,{once:true})
 
 const suits=["S","H","D","C"]
 const values=["A","2","3","4","5","6","7","8","9","0","J","Q","K"]
@@ -197,11 +172,13 @@ deck.sort(()=>Math.random()-0.5)
 }
 buildDeck()
 
-function draw(){return deck.pop()}
+function draw(){
+dealSound.currentTime=0
+dealSound.play()
+return deck.pop()
+}
 
-function cardHTML(code,hidden=false){
-if(hidden)
-return `<div class="card" style="background-image:url('https://deckofcardsapi.com/static/img/back.png')"></div>`
+function cardHTML(code){
 return `<div class="card" style="background-image:url('https://deckofcardsapi.com/static/img/${code}.png')"></div>`
 }
 
@@ -218,9 +195,7 @@ hand.forEach(c=>{
 total+=value(c)
 if(c[0]=="A")aces++
 })
-while(total>21&&aces>0){
-total-=10;aces--
-}
+while(total>21&&aces>0){total-=10;aces--}
 return total
 }
 
@@ -229,12 +204,15 @@ document.getElementById("balance").innerText=balance
 document.getElementById("bet").innerText=bet
 }
 
-function placeBet(amount){
+function placeBet(amount,el){
 if(balance>=amount){
 balance-=amount
 bet+=amount
 updateUI()
 document.getElementById("dealBtn").disabled=false
+
+el.classList.add("big")
+setTimeout(()=>el.classList.remove("big"),400)
 }
 }
 
@@ -243,51 +221,55 @@ document.getElementById("dealBtn").style.display="none"
 await countdown()
 
 player=[];dealer=[]
-player.push(draw())
-await delay(1000)
-dealer.push(draw())
-await delay(1000)
-player.push(draw())
-await delay(1000)
+player.push(draw()); await delay(700)
+dealer.push(draw()); await delay(700)
+player.push(draw()); await delay(700)
 dealer.push(draw())
 
-render(true)
+render()
 
 document.getElementById("hitBtn").disabled=false
 document.getElementById("standBtn").disabled=false
 }
 
-function render(hideDealer=false){
+function render(){
 document.getElementById("playerHand").innerHTML=
 player.map(c=>cardHTML(c)).join("")
 document.getElementById("dealerHand").innerHTML=
-hideDealer?cardHTML(dealer[0])+cardHTML(dealer[1],true):
 dealer.map(c=>cardHTML(c)).join("")
 document.getElementById("playerScore").innerText="Toplam: "+score(player)
-document.getElementById("dealerScore").innerText=
-hideDealer?"Toplam: ?":"Toplam: "+score(dealer)
+document.getElementById("dealerScore").innerText="Toplam: "+score(dealer)
 }
 
 function hit(){
 player.push(draw())
-render(true)
-if(score(player)>21) stand()
+render()
+if(score(player)>21){
+bustSound.play()
+stand()
+}
 }
 
 function stand(){
 while(score(dealer)<17)
 dealer.push(draw())
-render(false)
+render()
 endRound()
 }
 
 function endRound(){
 let p=score(player),d=score(dealer)
+
 if(p==21&&player.length==2){
 balance+=bet*4
+winSound.play()
 }
 else if((p<=21&&p>d)||d>21){
 balance+=bet*2
+winSound.play()
+}
+else if(p>21){
+bustSound.play()
 }
 
 bet=0
