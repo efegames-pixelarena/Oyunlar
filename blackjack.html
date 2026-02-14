@@ -1,263 +1,356 @@
 <!DOCTYPE html>
-<html>
+<html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>Real Casino Blackjack</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Live Blackjack</title>
+
 <style>
-body {
-    background: #075e1a;
-    color: white;
-    font-family: Arial;
-    text-align: center;
+body{
+margin:0;
+font-family:Arial;
+background:#0c0f14;
+color:white;
+overflow:hidden;
 }
-.table {
-    margin-top: 30px;
+
+/* ===== TOP BAR ===== */
+.top-wrapper{
+position:fixed;
+top:0;
+width:100%;
+z-index:1000;
 }
-.cards {
-    margin: 10px;
-    font-size: 22px;
+
+.top-bar{
+height:85px;
+background:linear-gradient(to bottom,#12202a,#0e1720);
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:0 15px;
 }
-button {
-    padding: 10px 15px;
-    margin: 5px;
-    font-size: 16px;
+
+.balance-box{
+background:linear-gradient(45deg,#ff6a00,#ff2e00);
+padding:12px 20px;
+border-radius:15px;
+font-weight:bold;
 }
-.chips button {
-    background: gold;
+
+.menu-btn{
+background:#1c1c1c;
+padding:12px;
+border-radius:10px;
+font-size:20px;
 }
+
+.info-bar{
+background:#111;
+text-align:center;
+padding:8px;
+font-weight:bold;
+letter-spacing:1px;
+}
+
+/* ===== DEALER STAGE ===== */
+.dealer-stage{
+margin-top:110px;
+height:45vh;
+display:flex;
+justify-content:center;
+align-items:flex-end;
+position:relative;
+}
+
+.stage-frame{
+position:absolute;
+top:20px;
+width:85%;
+height:70%;
+border-radius:25px;
+border:8px solid #ff6a00;
+box-shadow:0 0 20px #ff6a00;
+display:flex;
+justify-content:center;
+align-items:center;
+background:#1a1a1a;
+}
+
+.neon{
+text-align:center;
+font-size:28px;
+text-shadow:0 0 15px orange;
+}
+
+.neon span{
+color:gold;
+}
+
+.dealer-cards{
+position:absolute;
+bottom:10px;
+font-size:22px;
+}
+
+/* ===== TABLE ===== */
+.table{
+position:absolute;
+bottom:0;
+width:100%;
+height:50vh;
+background:radial-gradient(circle at center,#2b2b2b 0%,#111 80%);
+border-top-left-radius:200px;
+border-top-right-radius:200px;
+border:8px solid #ff6a00;
+text-align:center;
+padding-top:20px;
+}
+
+.player-cards{
+font-size:22px;
+margin-top:20px;
+}
+
+/* ===== CHIP AREA ===== */
+.chip-area{
+position:absolute;
+bottom:20px;
+width:100%;
+display:flex;
+justify-content:center;
+align-items:center;
+gap:20px;
+}
+
+.chip{
+width:90px;
+height:90px;
+border-radius:50%;
+background:#1976d2;
+border:6px solid white;
+display:flex;
+justify-content:center;
+align-items:center;
+font-size:22px;
+font-weight:bold;
+box-shadow:0 0 15px #1976d2;
+cursor:pointer;
+}
+
+.action-bar{
+position:absolute;
+bottom:120px;
+width:80%;
+left:10%;
+background:rgba(255,255,255,0.05);
+backdrop-filter:blur(8px);
+border-radius:20px;
+padding:10px;
+display:flex;
+justify-content:space-around;
+}
+
+.action{
+width:55px;
+height:55px;
+border-radius:12px;
+background:#1c1c1c;
+border:none;
+color:white;
+font-size:20px;
+}
+
+.action.active{
+background:gold;
+color:black;
+}
+
+/* ===== SOUND MODAL ===== */
+.sound-modal{
+position:fixed;
+inset:0;
+background:rgba(0,0,0,0.9);
+display:flex;
+justify-content:center;
+align-items:center;
+z-index:2000;
+}
+
+.sound-box{
+background:#1a1a1a;
+padding:25px;
+border-radius:20px;
+width:280px;
+text-align:center;
+}
+
+.sound-btn{
+width:100%;
+padding:15px;
+margin:10px 0;
+font-size:18px;
+border-radius:12px;
+border:none;
+}
+
+.on{background:#f4c542;color:black;}
+.off{background:#333;color:white;}
 </style>
 </head>
+
 <body>
 
-<h1>Blackjack</h1>
-<h2>Balance: $<span id="balance">1000</span></h2>
-<h3>Bet: $<span id="bet">0</span></h3>
-
-<div class="chips">
-    <button onclick="addBet(10)">+10</button>
-    <button onclick="addBet(50)">+50</button>
-    <button onclick="addBet(100)">+100</button>
+<!-- SOUND -->
+<div id="soundModal" class="sound-modal">
+<div class="sound-box">
+<button class="sound-btn on" onclick="enableSound()">🔊 Ses Açık</button>
+<button class="sound-btn off" onclick="disableSound()">🔇 Ses Kapalı</button>
+</div>
 </div>
 
-<button onclick="startRound()">Deal</button>
+<audio id="bgMusic" loop>
+<source src="" type="audio/mpeg">
+</audio>
 
+<!-- TOP -->
+<div class="top-wrapper">
+<div class="top-bar">
+<div class="balance-box">Gerçek Bakiye ₺<span id="balance">1000</span></div>
+<div class="menu-btn">☰</div>
+</div>
+<div class="info-bar">LÜTFEN BAHİS ALINIZ</div>
+</div>
+
+<!-- DEALER -->
+<div class="dealer-stage">
+<div class="stage-frame">
+<div class="neon">SOLO<span>BET</span><br>Blackjack <span>Auto</span></div>
+</div>
+<div class="dealer-cards" id="dealerCards"></div>
+</div>
+
+<!-- TABLE -->
 <div class="table">
-    <h2>Dealer (<span id="dealerTotal">?</span>)</h2>
-    <div id="dealerCards" class="cards"></div>
-
-    <h2>Player (<span id="playerTotal">0</span>)</h2>
-    <div id="playerCards" class="cards"></div>
+BLACKJACK PAYS 3 TO 2
+<div class="player-cards" id="playerCards"></div>
 </div>
 
-<div>
-    <button onclick="hit()">Hit</button>
-    <button onclick="stand()">Stand</button>
-    <button onclick="doubleDown()">Double</button>
-    <button onclick="split()">Split</button>
-    <button onclick="insurance()">Insurance</button>
+<!-- ACTION -->
+<div class="action-bar">
+<button class="action" onclick="clearBet()">🗑</button>
+<button class="action active" onclick="repeatBet()">⟳</button>
+<button class="action" onclick="deal()">▶</button>
 </div>
 
-<h2 id="message"></h2>
+<div class="chip-area">
+<div class="chip" onclick="addBet(20)">20</div>
+</div>
 
 <script>
-
-let balance = 1000;
-let bet = 0;
-let insuranceBet = 0;
+let balance=1000;
+let bet=0;
+let lastBet=0;
 let shoe;
-let playerHands = [[]];
-let currentHand = 0;
-let dealerHand = [];
-let gameActive = false;
-let splitCount = 0;
+let player=[];
+let dealer=[];
 
-class Shoe {
-    constructor(decks = 8) {
-        this.decks = decks;
-        this.init();
-    }
-    init() {
-        const suits = ["♠","♥","♦","♣"];
-        const values = ["A","2","3","4","5","6","7","8","9","10","J","Q","K"];
-        this.cards = [];
-        for (let d=0; d<this.decks; d++){
-            for (let s of suits){
-                for (let v of values){
-                    this.cards.push({value:v, suit:s});
-                }
-            }
-        }
-        this.shuffle();
-        this.cut = Math.floor(this.cards.length*0.75);
-    }
-    shuffle() {
-        for (let i=this.cards.length-1;i>0;i--){
-            let j=Math.floor(Math.random()*(i+1));
-            [this.cards[i],this.cards[j]]=[this.cards[j],this.cards[i]];
-        }
-    }
-    draw() {
-        if(this.cards.length<=this.cut){this.init();}
-        return this.cards.pop();
-    }
+class Shoe{
+constructor(d=8){this.d=d;this.init();}
+init(){
+const suits=["♠","♥","♦","♣"];
+const vals=["A","2","3","4","5","6","7","8","9","10","J","Q","K"];
+this.cards=[];
+for(let k=0;k<this.d;k++)
+for(let s of suits)
+for(let v of vals)
+this.cards.push({v,s});
+this.cards.sort(()=>Math.random()-0.5);
+}
+draw(){return this.cards.pop();}
 }
 
 function calc(hand){
-    let total=0, aces=0;
-    for(let c of hand){
-        if(["J","Q","K"].includes(c.value)) total+=10;
-        else if(c.value==="A"){total+=11;aces++;}
-        else total+=parseInt(c.value);
-    }
-    while(total>21 && aces>0){total-=10;aces--;}
-    return total;
+let t=0,a=0;
+for(let c of hand){
+if(["J","Q","K"].includes(c.v))t+=10;
+else if(c.v=="A"){t+=11;a++;}
+else t+=parseInt(c.v);
+}
+while(t>21&&a>0){t-=10;a--;}
+return t;
 }
 
-function render(){
-    document.getElementById("balance").innerText=balance;
-    document.getElementById("bet").innerText=bet;
-
-    document.getElementById("dealerCards").innerText=
-        dealerHand.map((c,i)=> (gameActive && i==1?"🂠":c.value+c.suit)).join(" ");
-
-    document.getElementById("playerCards").innerText=
-        playerHands[currentHand].map(c=>c.value+c.suit).join(" ");
-
-    document.getElementById("playerTotal").innerText=
-        calc(playerHands[currentHand]);
-
-    document.getElementById("dealerTotal").innerText=
-        gameActive?"?":calc(dealerHand);
+function addBet(x){
+if(balance>=x){
+bet+=x;
+balance-=x;
+update();
+}
 }
 
-function addBet(amount){
-    if(gameActive) return;
-    if(balance>=amount){
-        bet+=amount;
-        balance-=amount;
-    }
-    render();
+function clearBet(){
+balance+=bet;
+bet=0;
+update();
 }
 
-function startRound(){
-    if(bet==0) return;
-    shoe = shoe || new Shoe();
-    playerHands=[[]];
-    dealerHand=[];
-    currentHand=0;
-    splitCount=0;
-    gameActive=true;
-
-    playerHands[0].push(shoe.draw());
-    dealerHand.push(shoe.draw());
-    playerHands[0].push(shoe.draw());
-    dealerHand.push(shoe.draw());
-
-    if(calc(playerHands[0])==21){
-        gameActive=false;
-        if(calc(dealerHand)==21){
-            message("Push");
-            balance+=bet;
-        }else{
-            message("Blackjack! 3:2");
-            balance+=bet*2.5;
-        }
-        bet=0;
-    }
-
-    render();
+function repeatBet(){
+if(balance>=lastBet){
+bet+=lastBet;
+balance-=lastBet;
+update();
+}
 }
 
-function hit(){
-    if(!gameActive) return;
-    playerHands[currentHand].push(shoe.draw());
-    if(calc(playerHands[currentHand])>21){
-        message("Bust!");
-        nextHand();
-    }
-    render();
+function deal(){
+if(bet==0)return;
+shoe=shoe||new Shoe();
+player=[shoe.draw(),shoe.draw()];
+dealer=[shoe.draw(),shoe.draw()];
+lastBet=bet;
+
+let p=calc(player);
+let d=calc(dealer);
+
+if(p==21&&d!=21){balance+=bet*2.5;}
+else if(p>21){}
+else if(d>21||p>d){balance+=bet*2;}
+else if(p==d){balance+=bet;}
+
+bet=0;
+renderCards();
+update();
 }
 
-function stand(){
-    nextHand();
+function renderCards(){
+document.getElementById("playerCards").innerText=
+player.map(c=>c.v+c.s).join(" ")+" ("+calc(player)+")";
+
+document.getElementById("dealerCards").innerText=
+dealer.map(c=>c.v+c.s).join(" ")+" ("+calc(dealer)+")";
 }
 
-function nextHand(){
-    if(currentHand<playerHands.length-1){
-        currentHand++;
-    }else{
-        dealerTurn();
-    }
+function update(){
+document.getElementById("balance").innerText=balance;
 }
 
-function dealerTurn(){
-    gameActive=false;
-    while(calc(dealerHand)<17){
-        dealerHand.push(shoe.draw());
-    }
-    settle();
-    render();
+function enableSound(){
+localStorage.setItem("sound","on");
+document.getElementById("soundModal").style.display="none";
 }
 
-function settle(){
-    for(let hand of playerHands){
-        let p=calc(hand);
-        let d=calc(dealerHand);
-
-        if(p>21) continue;
-        if(d>21 || p>d) balance+=bet*2;
-        else if(p==d) balance+=bet;
-    }
-    bet=0;
+function disableSound(){
+localStorage.setItem("sound","off");
+document.getElementById("soundModal").style.display="none";
 }
 
-function doubleDown(){
-    if(!gameActive || playerHands[currentHand].length!=2) return;
-    if(balance<bet) return;
-    balance-=bet;
-    bet*=2;
-    hit();
-    stand();
+window.onload=function(){
+if(localStorage.getItem("sound"))
+document.getElementById("soundModal").style.display="none";
+update();
 }
-
-function split(){
-    let hand=playerHands[currentHand];
-    if(!gameActive || hand.length!=2) return;
-    if(hand[0].value!=hand[1].value) return;
-    if(balance<bet || splitCount>=3) return;
-
-    balance-=bet;
-    splitCount++;
-
-    playerHands.push([hand.pop()]);
-    playerHands[currentHand].push(shoe.draw());
-    playerHands[playerHands.length-1].push(shoe.draw());
-    render();
-}
-
-function insurance(){
-    if(!gameActive) return;
-    if(dealerHand[0].value!="A") return;
-    let ins=bet/2;
-    if(balance<ins) return;
-    balance-=ins;
-    insuranceBet=ins;
-
-    if(calc(dealerHand)==21){
-        balance+=insuranceBet*3;
-        message("Insurance Won");
-    }else{
-        message("Insurance Lost");
-    }
-    render();
-}
-
-function message(text){
-    document.getElementById("message").innerText=text;
-}
-
-render();
-
 </script>
+
 </body>
 </html>
