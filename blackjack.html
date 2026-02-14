@@ -2,236 +2,222 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>Live Blackjack Studio PRO</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Live Casino Blackjack Elite</title>
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
-body{background:#000;overflow:hidden;height:100svh;}
-.app{width:100vw;height:100svh;position:relative;color:white;overflow:hidden;}
-:root{--safe-bottom: env(safe-area-inset-bottom);}
-
-.studio{
-position:absolute;top:0;left:0;width:100%;height:65%;
+body{
 background:
-linear-gradient(to bottom,rgba(0,0,0,0.2),rgba(0,0,0,0.7)),
-url('https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1400&q=80');
-background-size:cover;background-position:center;
+linear-gradient(rgba(0,0,0,.6),rgba(0,0,0,.8)),
+url("https://images.unsplash.com/photo-1596838132731-3301c3fd4317?auto=format&fit=crop&w=1600&q=80");
+background-size:cover;
+background-position:center;
+height:100vh;
+overflow:hidden;
+color:white;
 }
-
-.dealerAvatar{
-width:90px;border-radius:50%;margin-bottom:10px;
-animation:pulse 2s infinite;
-}
-@keyframes pulse{
-0%{transform:scale(1)}
-50%{transform:scale(1.05)}
-100%{transform:scale(1)}
-}
-
-.ticker{
-position:absolute;
-top:65%;left:50%;
-transform:translate(-50%,-50%);
-font-size:20px;font-weight:bold;
-color:#00ffcc;text-shadow:0 0 20px #00ffaa;
-z-index:20;
-}
-
-.topBar{
-position:absolute;top:0;width:100%;height:35px;
-background:rgba(0,0,0,.6);
-display:flex;justify-content:space-between;
-align-items:center;padding:0 10px;font-size:12px;
-}
-
-.viewer{
-position:absolute;top:45px;right:15px;
-background:rgba(0,0,0,.6);
-padding:5px 10px;border-radius:20px;font-size:12px;
-}
-
-.dealerZone{
-position:absolute;top:60px;left:0;width:100%;text-align:center;
-}
-
-.score{font-size:14px;color:#22c55e;margin-top:5px;}
-.sectionTitle{font-size:12px;opacity:.6;margin-top:5px;}
 
 .table{
-position:absolute;bottom:30%;left:0;width:100%;height:35%;
-background:#0a0a0a;
+position:absolute;
+bottom:0;
+width:100%;
+height:55%;
+background:radial-gradient(circle at center,#0b3d2e,#021a13);
 border-top-left-radius:50% 25%;
 border-top-right-radius:50% 25%;
-box-shadow:0 -30px 80px rgba(0,0,0,.9);
-padding-top:25px;text-align:center;
+box-shadow:0 -40px 100px black;
+text-align:center;
+padding-top:30px;
 }
 
-.hand{margin-top:10px;min-height:95px;}
+.shoe{
+position:absolute;
+left:20px;
+top:40%;
+width:80px;
+height:120px;
+background:#111;
+border-radius:10px;
+box-shadow:0 0 20px black inset;
+}
 
 .card{
-width:60px;height:90px;
+width:70px;
+height:100px;
 background-size:cover;
 background-position:center;
 border-radius:8px;
 display:inline-block;
-margin:4px;
-animation:deal .4s ease;
-box-shadow:0 5px 15px rgba(0,0,0,.5);
+margin:5px;
+animation:deal .5s ease;
 }
 
 @keyframes deal{
-from{transform:translateY(-120px) scale(.6);opacity:0}
-to{transform:translateY(0) scale(1);opacity:1}
+from{transform:translateX(-150px) rotate(-10deg);opacity:0}
+to{transform:translateX(0);opacity:1}
+}
+
+.hand{min-height:110px;margin-top:10px}
+
+.controls button{
+padding:8px 15px;
+margin:5px;
+border:none;
+border-radius:6px;
+background:#00ff88;
+color:black;
+font-weight:bold;
+cursor:pointer;
+}
+
+.controls button:disabled{
+background:#444;
+cursor:not-allowed;
 }
 
 .betBtn{
-width:60px;height:60px;border-radius:50%;
-background:rgba(255,255,255,.08);
-display:flex;align-items:center;justify-content:center;
-cursor:pointer;transition:.2s;
+width:65px;height:65px;
+border-radius:50%;
+background:radial-gradient(circle,#ffcc00,#b8860b);
+display:inline-flex;
+align-items:center;
+justify-content:center;
+font-weight:bold;
+cursor:pointer;
+margin:8px;
+transition:.2s;
 }
+
 .betBtn:active{
-transform:scale(.85);
-box-shadow:0 0 25px #22c55e;
+transform:scale(.8);
 }
 
-.betOptions{
+.chip{
 position:absolute;
-bottom:120px;
-width:100%;display:flex;justify-content:center;gap:15px;
+width:40px;height:40px;
+border-radius:50%;
+background:red;
+animation:chipDrop .5s ease forwards;
 }
 
-.controls{
+@keyframes chipDrop{
+from{transform:translateY(-200px);opacity:0}
+to{transform:translateY(0);opacity:1}
+}
+
+.topBar{
 position:absolute;
-bottom:70px;
-width:100%;text-align:center;
+top:0;
+width:100%;
+height:40px;
+background:rgba(0,0,0,.7);
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:0 15px;
+font-size:14px;
 }
 
-.controls button{
-padding:8px 14px;margin:4px;border:none;
-border-radius:6px;background:#22c55e;
-color:black;font-weight:bold;cursor:pointer;
-}
-
-.bottomBar{
-position:absolute;bottom:0;width:100%;height:70px;
-background:linear-gradient(to top,#000,#111);
-display:flex;justify-content:space-between;align-items:center;
-padding:0 15px;font-size:13px;
-}
-
-#chatBox{
+.chat{
 position:absolute;
 right:10px;
-bottom:160px;
-width:160px;
-height:50px;
+bottom:140px;
+width:200px;
+height:120px;
 background:rgba(0,0,0,.6);
 overflow:hidden;
-font-size:11px;
 padding:8px;
-border-radius:8px;
-display:flex;
-align-items:center;
+font-size:12px;
+border-radius:10px;
 }
+
+.countdown{
+position:absolute;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+font-size:60px;
+font-weight:bold;
+color:#00ffcc;
+display:none;
+}
+
+.score{margin-top:5px;font-size:14px}
 </style>
 </head>
 
 <body>
-<div class="app">
-<div class="studio"></div>
 
 <div class="topBar">
-<div>Türkçe Blackjack • 8 Deck • S17</div>
-<div>ID: <span id="roundId">-</span></div>
+<div>Bakiye: ₺<span id="balance">1000</span></div>
+<div>Bahis: ₺<span id="bet">0</span></div>
 </div>
 
-<div class="viewer">👤 56</div>
-
-<div class="dealerZone">
-<img class="dealerAvatar" src="https://i.imgur.com/8Km9tLL.png">
-<div class="sectionTitle">Dealer</div>
-<div class="score" id="dealerScore"></div>
-<div class="hand" id="dealerHand"></div>
-</div>
+<div class="shoe"></div>
+<div class="countdown" id="countdown">5</div>
 
 <div class="table">
-<div class="sectionTitle">Oyuncu</div>
-<div class="score" id="playerScore"></div>
-<div class="hand" id="playerHand"></div>
+<h3>Dealer</h3>
+<div id="dealerHand" class="hand"></div>
+<div id="dealerScore" class="score"></div>
+
+<h3>Oyuncu</h3>
+<div id="playerHand" class="hand"></div>
+<div id="playerScore" class="score"></div>
+
+<div class="controls">
+<button id="dealBtn" onclick="startRound()" disabled>Dağıt</button>
+<button onclick="hit()" id="hitBtn" disabled>Hit</button>
+<button onclick="stand()" id="standBtn" disabled>Stand</button>
 </div>
 
-<div id="chatBox"></div>
-
-<div class="betOptions">
+<div>
 <div class="betBtn" onclick="placeBet(50)">50₺</div>
 <div class="betBtn" onclick="placeBet(100)">100₺</div>
 <div class="betBtn" onclick="placeBet(250)">250₺</div>
 </div>
-
-<div class="controls">
-<button onclick="startRound()">Dağıt</button>
-<button onclick="hit()">Hit</button>
-<button onclick="stand()">Stand</button>
-<button onclick="doubleDown()">Double</button>
-<button onclick="splitHand()">Split</button>
 </div>
 
-<div class="ticker" id="ticker">Bahis koyun</div>
-
-<div class="bottomBar">
-<div>Bakiye: ₺<span id="balance">500</span></div>
-<div>Bahis: ₺<span id="bet">0</span></div>
-<div>Jackpot: ₺<span id="jackpot">50000</span></div>
-<div>Win Rate: <span id="winRate">0%</span></div>
-</div>
-</div>
+<div class="chat" id="chat"></div>
 
 <script>
+let balance=1000
+let bet=0
+let player=[],dealer=[]
+let deck=[]
+const suits=["S","H","D","C"]
+const values=["A","2","3","4","5","6","7","8","9","0","J","Q","K"]
 
-/* HER YENİLEMEDE 500₺ */
-localStorage.setItem("balance",500)
-let balance=500
-
-let shoe=[],player=[],dealer=[]
-let currentBet=0,totalWins=0,totalGames=0,jackpot=50000
-
-const SUITS=['♠','♥','♦','♣']
-const VALUES=['A','2','3','4','5','6','7','8','9','10','J','Q','K']
-
-function buildShoe(){
-shoe=[]
-for(let d=0;d<8;d++)
-for(let s of SUITS)
-for(let v of VALUES)
-shoe.push({value:v,suit:s})
-shuffle()
+function buildDeck(){
+deck=[]
+for(let s of suits)
+for(let v of values)
+deck.push(v+s)
+deck.sort(()=>Math.random()-0.5)
 }
+buildDeck()
 
-function shuffle(){
-for(let i=shoe.length-1;i>0;i--){
-let j=Math.floor(Math.random()*(i+1))
-;[shoe[i],shoe[j]]=[shoe[j],shoe[i]]
-}
-}
+function draw(){return deck.pop()}
 
-function draw(){
-if(shoe.length<60) buildShoe()
-return shoe.pop()
+function cardHTML(code,hidden=false){
+if(hidden)
+return `<div class="card" style="background-image:url('https://deckofcardsapi.com/static/img/back.png')"></div>`
+return `<div class="card" style="background-image:url('https://deckofcardsapi.com/static/img/${code}.png')"></div>`
 }
 
 function value(c){
-if(c.value=="A") return 11
-if(["K","Q","J"].includes(c.value)) return 10
-return parseInt(c.value)
+let v=c[0]
+if(v=="A") return 11
+if(["K","Q","J","0"].includes(v)) return 10
+return parseInt(v)
 }
 
 function score(hand){
 let total=0,aces=0
 hand.forEach(c=>{
 total+=value(c)
-if(c.value=="A") aces++
+if(c[0]=="A")aces++
 })
 while(total>21&&aces>0){
 total-=10;aces--
@@ -239,44 +225,58 @@ total-=10;aces--
 return total
 }
 
-function cardHTML(c,hidden=false){
-if(hidden){
-return `<div class="card" style="background-image:url('https://deckofcardsapi.com/static/img/back.png')"></div>`
+function placeBet(amount){
+if(balance>=amount){
+balance-=amount
+bet+=amount
+updateUI()
+document.getElementById("dealBtn").disabled=false
+chipAnim()
 }
-let code=c.value
-if(code=="10") code="0"
-let suitMap={"♠":"S","♥":"H","♦":"D","♣":"C"}
-let img=code+suitMap[c.suit]
-return `<div class="card" style="background-image:url('https://deckofcardsapi.com/static/img/${img}.png')"></div>`
+}
+
+function chipAnim(){
+let chip=document.createElement("div")
+chip.className="chip"
+chip.style.left="50%"
+chip.style.top="60%"
+document.body.appendChild(chip)
+setTimeout(()=>chip.remove(),500)
+}
+
+function updateUI(){
+document.getElementById("balance").innerText=balance
+document.getElementById("bet").innerText=bet
+}
+
+async function startRound(){
+document.getElementById("dealBtn").style.display="none"
+await countdown()
+
+player=[];dealer=[]
+player.push(draw())
+await delay(1000)
+dealer.push(draw())
+await delay(1000)
+player.push(draw())
+await delay(1000)
+dealer.push(draw())
+
+render(true)
+
+document.getElementById("hitBtn").disabled=false
+document.getElementById("standBtn").disabled=false
 }
 
 function render(hideDealer=false){
-document.getElementById("playerHand").innerHTML=player.map(c=>cardHTML(c)).join("")
-if(hideDealer){
+document.getElementById("playerHand").innerHTML=
+player.map(c=>cardHTML(c)).join("")
 document.getElementById("dealerHand").innerHTML=
-cardHTML(dealer[0])+cardHTML(dealer[1],true)
-}else{
-document.getElementById("dealerHand").innerHTML=
+hideDealer?cardHTML(dealer[0])+cardHTML(dealer[1],true):
 dealer.map(c=>cardHTML(c)).join("")
-}
 document.getElementById("playerScore").innerText="Toplam: "+score(player)
 document.getElementById("dealerScore").innerText=
-hideDealer?"Toplam: "+value(dealer[0]):"Toplam: "+score(dealer)
-}
-
-function placeBet(a){
-if(balance>=a){
-balance-=a
-currentBet+=a
-updateUI()
-}
-}
-
-function startRound(){
-if(currentBet<=0)return
-player=[draw(),draw()]
-dealer=[draw(),draw()]
-render(true)
+hideDealer?"Toplam: ?":"Toplam: "+score(dealer)
 }
 
 function hit(){
@@ -286,54 +286,45 @@ if(score(player)>21) stand()
 }
 
 function stand(){
-while(score(dealer)<17) dealer.push(draw())
+while(score(dealer)<17)
+dealer.push(draw())
 render(false)
 endRound()
 }
 
-function doubleDown(){
-if(balance>=currentBet){
-balance-=currentBet
-currentBet*=2
-hit()
-stand()
-}
-}
-
-function splitHand(){
-if(player.length==2 && player[0].value==player[1].value && balance>=currentBet){
-balance-=currentBet
-currentBet*=2
-player=[player[0],draw()]
-render(true)
-}
-}
-
 function endRound(){
-totalGames++
 let p=score(player),d=score(dealer)
-if((p<=21 && p>d) || d>21){
-balance+=currentBet*2
-totalWins++
+if(p==21&&player.length==2){
+balance+=bet*4  // 1:3 ödeme
 }
-else if(p==d){
-balance+=currentBet
+else if((p<=21&&p>d)||d>21){
+balance+=bet*2
 }
-currentBet=0
+bet=0
 updateUI()
+document.getElementById("hitBtn").disabled=true
+document.getElementById("standBtn").disabled=true
 }
 
-function updateUI(){
-document.getElementById("balance").innerText=balance
-document.getElementById("bet").innerText=currentBet
-document.getElementById("jackpot").innerText=jackpot
-document.getElementById("winRate").innerText=
-totalGames?Math.round((totalWins/totalGames)*100)+"%":"0%"
+function delay(ms){return new Promise(r=>setTimeout(r,ms))}
+
+async function countdown(){
+let cd=document.getElementById("countdown")
+cd.style.display="block"
+for(let i=5;i>0;i--){
+cd.innerText=i
+await delay(1000)
+}
+cd.style.display="none"
 }
 
-buildShoe()
+const messages=["Ali kazandı!","Jackpot büyüyor!","Ayşe 21 yaptı!","Büyük bahis geldi!"]
+setInterval(()=>{
+let msg=messages[Math.floor(Math.random()*messages.length)]
+document.getElementById("chat").innerHTML=msg
+},4000)
+
 updateUI()
-
 </script>
 </body>
 </html>
