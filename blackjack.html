@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>PixelArena Blackjack</title>
+<title>PixelArena BJ</title>
 
 <style>
 *{
@@ -25,7 +25,7 @@ color:white;
 touch-action:manipulation;
 }
 
-/* ===== TOP BAR ===== */
+/* ===== PREMIUM TOP BAR ===== */
 .top-bar{
 position:fixed;
 top:0;
@@ -34,32 +34,43 @@ height:80px;
 display:flex;
 align-items:center;
 justify-content:space-between;
-padding:0 20px;
-background:linear-gradient(135deg,#ffffff,#f2f2f2);
-box-shadow:0 6px 20px rgba(0,0,0,0.25);
+padding:0 18px;
+background:linear-gradient(135deg,#1a2a6c,#16245c);
+box-shadow:0 6px 20px rgba(0,0,0,0.5);
 z-index:100;
 }
 
 .brand{
 font-size:22px;
 font-weight:800;
-background:linear-gradient(90deg,#d4af37,#f7e27b,#d4af37);
+letter-spacing:1px;
+background:linear-gradient(90deg,#3ec6ff,#00f0ff);
 -webkit-background-clip:text;
 -webkit-text-fill-color:transparent;
 }
 
-.pill{
-padding:10px 20px;
-border-radius:40px;
+.nav-btn{
+padding:10px 18px;
+border-radius:14px;
 font-weight:700;
-background:#fff;
-box-shadow:0 0 15px rgba(255,215,0,0.6);
-color:#000;
+font-size:14px;
 min-width:110px;
 text-align:center;
 }
 
-/* ALANLAR */
+.balance-pill{
+background:#2b3c94;
+color:white;
+box-shadow:0 0 12px rgba(0,255,255,0.6);
+}
+
+.bet-pill{
+background:linear-gradient(90deg,#ff8a00,#ff5f00);
+color:black;
+box-shadow:0 0 12px rgba(255,140,0,0.8);
+}
+
+/* ===== OYUN ALANI ===== */
 .area{
 position:absolute;
 width:100%;
@@ -70,41 +81,38 @@ text-align:center;
 #playerArea{bottom:220px;}
 
 .score{
-margin-top:8px;
-font-size:18px;
+margin-top:6px;
+font-size:17px;
 font-weight:600;
 color:#ffd700;
 }
 
-/* KURUPIER */
 .dealer-title{
 font-size:18px;
 letter-spacing:4px;
-margin-bottom:10px;
+margin-bottom:8px;
 background:linear-gradient(90deg,#d4af37,#f7e27b,#d4af37);
 -webkit-background-clip:text;
 -webkit-text-fill-color:transparent;
 }
 
-/* KARTLAR */
 .cards{
 display:flex;
 justify-content:center;
-gap:12px;
-flex-wrap:nowrap;
+gap:10px;
 }
 
 .card{
-width:65px;
-height:95px;
-border-radius:12px;
+width:60px;
+height:90px;
+border-radius:10px;
 background:white;
 display:flex;
 align-items:center;
 justify-content:center;
-font-size:24px;
+font-size:22px;
 font-weight:bold;
-box-shadow:0 8px 18px rgba(0,0,0,0.5);
+box-shadow:0 6px 15px rgba(0,0,0,0.5);
 }
 
 .red{color:#d40000;}
@@ -119,7 +127,7 @@ font-size:20px;
 font-weight:600;
 }
 
-/* BUTONLAR */
+/* ===== BUTONLAR ===== */
 .controls{
 position:absolute;
 bottom:110px;
@@ -141,7 +149,7 @@ cursor:pointer;
 #hit{background:#2ecc71;color:white;}
 #stand{background:#e74c3c;color:white;}
 
-/* CHIPS */
+/* ===== CHIPS ===== */
 .chips{
 position:absolute;
 bottom:25px;
@@ -151,10 +159,10 @@ text-align:center;
 
 .chip{
 display:inline-block;
-width:60px;
-height:60px;
+width:55px;
+height:55px;
 border-radius:50%;
-line-height:60px;
+line-height:55px;
 margin:8px;
 font-weight:700;
 cursor:pointer;
@@ -165,15 +173,21 @@ box-shadow:0 6px 15px rgba(0,0,0,0.6);
 .c25{background:#1eaa00;}
 .c50{background:#ff1c1c;}
 .c100{background:black;color:white;}
-
 </style>
 </head>
+
 <body>
 
 <div class="top-bar">
-<div class="pill">BAKİYE: <span id="balance">1000</span>₺</div>
-<div class="brand">PixelArena</div>
-<div class="pill">BAHİS: <span id="bet">0</span>₺</div>
+<div class="nav-btn balance-pill">
+Bakiye: <span id="balance">1000</span>₺
+</div>
+
+<div class="brand">PixelArena BJ</div>
+
+<div class="nav-btn bet-pill">
+Bahis: <span id="bet">0</span>₺
+</div>
 </div>
 
 <div id="dealerArea" class="area">
@@ -253,16 +267,15 @@ dealerScore.innerText=total(dealer);
 }
 
 function addBet(amount){
-if(balance-bet<amount) return;
+if(balance<amount) return;
 bet+=amount;
+balance-=amount;
+balanceElement.innerText=balance;
 betElement.innerText=bet;
-setTimeout(startGame,800);
+if(bet>0) startGame();
 }
 
 function startGame(){
-balance-=bet;
-balanceElement.innerText=balance;
-
 player=[];dealer=[];
 playerCards.innerHTML="";
 dealerCards.innerHTML="";
@@ -300,6 +313,8 @@ decisionActive=false;
 clearInterval(decisionTimer);
 controls.style.display="none";
 message.innerText="Kaybettin!";
+bet=0;
+betElement.innerText=0;
 }
 }
 
@@ -314,9 +329,17 @@ while(total(dealer)<17) dealCard("dealer");
 let p=total(player);
 let d=total(dealer);
 
-if(d>21||p>d){balance+=bet*2;message.innerText="Kazandın!";}
-else if(d>p){message.innerText="Dealer Kazandı!";}
-else{balance+=bet;message.innerText="Berabere!";}
+if(d>21||p>d){
+balance+=bet*2;
+message.innerText="Kazandın!";
+}
+else if(d>p){
+message.innerText="Dealer Kazandı!";
+}
+else{
+balance+=bet;
+message.innerText="Berabere!";
+}
 
 bet=0;
 betElement.innerText=0;
