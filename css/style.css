@@ -1,90 +1,57 @@
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:Arial, Helvetica, sans-serif;
+body {
+  background: linear-gradient(to bottom, #00111a, #000);
+  color: white;
+  font-family: Arial, sans-serif;
+  text-align: center;
 }
 
-body{
-background:#0b0f14;
-color:white;
-display:flex;
-justify-content:center;
+.area {
+  background: #14532d;
+  padding: 20px;
+  margin: 15px;
+  border-radius: 15px;
 }
 
-.app{
-width:100%;
-max-width:480px;
-padding:15px;
+.cards {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 10px;
 }
 
-.topBar,
-.bottomBar{
-display:flex;
-justify-content:space-between;
-margin-bottom:10px;
-font-size:14px;
-opacity:.9;
+.card {
+  background: white;
+  color: black;
+  padding: 15px;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 18px;
 }
 
-.dealerZone,
-.table{
-background:#0f3d1f;
-padding:15px;
-border-radius:15px;
-margin-bottom:15px;
-box-shadow:0 0 20px rgba(0,0,0,.5);
+button {
+  padding: 10px 18px;
+  margin: 5px;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  background: #1e88e5;
+  color: white;
 }
 
-.hand{
-display:flex;
-gap:8px;
-margin-top:10px;
+button:hover {
+  opacity: 0.8;
 }
 
-.card{
-width:45px;
-height:65px;
-background:white;
-border-radius:8px;
-display:flex;
-justify-content:center;
-align-items:center;
-font-weight:bold;
-font-size:18px;
+.betOptions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 15px 0;
 }
 
-.card.red{
-color:#d40000;
-}
-
-.card.black{
-color:black;
-}
-
-.controls{
-display:flex;
-flex-wrap:wrap;
-gap:8px;
-margin-top:10px;
-}
-
-button{
-flex:1;
-padding:10px;
-border:none;
-border-radius:8px;
-background:#1e88e5;
-color:white;
-font-weight:bold;
-}
-
-button:active{
-transform:scale(.95);
-}
-
-.ticker{
-text-align:center;
-margin:10px 0;
-font-weight:bold;
+.betOptions button {
+  background: gold;
+  color: black;
+  border-radius: 50px;
 }
