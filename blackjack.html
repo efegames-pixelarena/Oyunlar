@@ -2,51 +2,92 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Live Casino Blackjack Elite</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blackjack</title>
+<style>
+body{
+  background:#0b3d2e;
+  color:white;
+  font-family:Arial;
+  text-align:center;
+}
+.topbar{
+  padding:15px;
+  font-size:18px;
+}
+button{
+  padding:10px 20px;
+  margin:5px;
+  border:none;
+  border-radius:8px;
+  font-size:16px;
+}
+.betBtn{
+  border-radius:50%;
+  width:60px;
+  height:60px;
+  font-weight:bold;
+}
+</style>
 </head>
 <body>
 
-<div>
+<div class="topbar">
 Bakiye: ₺<span id="liveBalance">0</span> |
 Bahis: ₺<span id="bet">0</span>
-<button onclick="toggleSound()">🔊</button>
 </div>
 
-<button id="dealBtn" disabled onclick="startRound()">Dağıt</button>
-<button id="hitBtn" disabled onclick="hit()">Hit</button>
-<button id="standBtn" disabled onclick="stand()">Stand</button>
+<div>
+<button id="dealBtn" disabled>Dağıt</button>
+<button id="hitBtn" disabled>Hit</button>
+<button id="standBtn" disabled>Stand</button>
+</div>
+
+<br><br>
+
+<div>
+<button class="betBtn" onclick="placeBet(20)">20</button>
+<button class="betBtn" onclick="placeBet(50)">50</button>
+<button class="betBtn" onclick="placeBet(100)">100</button>
+<button class="betBtn" onclick="placeBet(500)">500</button>
+<button class="betBtn" onclick="placeBet(1000)">1K</button>
+</div>
 
 <script type="module">
 
-import { getApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+/* 🔥 FIREBASE IMPORT */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { 
-  getFirestore, 
-  doc, 
-  getDoc, 
-  updateDoc, 
-  onSnapshot 
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, doc, getDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-const app = getApp();
+/* 🔥 KENDİ CONFIGİNİ KOY */
+const firebaseConfig = {
+  apiKey: "API_KEY",
+  authDomain: "PROJECT.firebaseapp.com",
+  projectId: "PROJECT_ID",
+  storageBucket: "PROJECT.appspot.com",
+  messagingSenderId: "SENDER_ID",
+  appId: "APP_ID"
+};
+
+const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
 let currentUser = null;
 let bet = 0;
 
+const balanceSpan = document.getElementById("liveBalance");
+const betSpan = document.getElementById("bet");
 const dealBtn = document.getElementById("dealBtn");
 const hitBtn = document.getElementById("hitBtn");
 const standBtn = document.getElementById("standBtn");
-const betSpan = document.getElementById("bet");
-const balanceSpan = document.getElementById("liveBalance");
 
-/* 🔥 SADECE OKU — KULLANICI OLUŞTURMA YOK */
+/* 🔥 GİRİŞ KONTROL */
 onAuthStateChanged(auth, (user) => {
 
   if (!user) {
-    alert("Oturum yok");
+    alert("Giriş yapmalısın");
     window.location.href = "index.html";
     return;
   }
@@ -54,18 +95,17 @@ onAuthStateChanged(auth, (user) => {
   currentUser = user;
   const userRef = doc(db, "users", user.uid);
 
-  // 🔥 CANLI BAKİYE
-  onSnapshot(userRef, (docSnap) => {
-    if (docSnap.exists()) {
-      const data = docSnap.data();
-      balanceSpan.innerText = data.balance || 0;
+  /* 🔥 CANLI BAKİYE */
+  onSnapshot(userRef, (snap) => {
+    if (snap.exists()) {
+      balanceSpan.innerText = snap.data().balance || 0;
     }
   });
+
 });
 
 /* 🔥 BAKİYE DÜŞ */
-async function oynaVeBakiyedenDus(miktar) {
-
+async function bakiyeDus(miktar) {
   const userRef = doc(db, "users", currentUser.uid);
   const snap = await getDoc(userRef);
 
@@ -74,7 +114,7 @@ async function oynaVeBakiyedenDus(miktar) {
   let bal = snap.data().balance || 0;
 
   if (bal < miktar) {
-    alert("Yetersiz bakiye");
+    alert("Yetersiz bakiye!");
     return false;
   }
 
@@ -87,7 +127,6 @@ async function oynaVeBakiyedenDus(miktar) {
 
 /* 🔥 BAKİYE ARTIR */
 async function bakiyeArttir(miktar) {
-
   const userRef = doc(db, "users", currentUser.uid);
   const snap = await getDoc(userRef);
 
@@ -100,32 +139,36 @@ async function bakiyeArttir(miktar) {
   });
 }
 
-/* 🎮 BASİT BLACKJACK MANTIĞI */
+/* 🎮 BAHİS */
+window.placeBet = async function(amount) {
+  const izin = await bakiyeDus(amount);
+  if (!izin) return;
 
-window.placeBet = async function(amount){
-  const izin = await oynaVeBakiyedenDus(amount);
-  if(!izin) return;
   bet += amount;
   betSpan.innerText = bet;
   dealBtn.disabled = false;
-}
+};
 
-window.startRound = function(){
-  if(bet <= 0) return alert("Bahis koymalısın.");
+/* 🎮 ROUND BAŞLAT */
+dealBtn.onclick = function(){
+  if (bet <= 0) return alert("Bahis koymalısın.");
+
   hitBtn.disabled = false;
   standBtn.disabled = false;
   dealBtn.disabled = true;
-}
+};
 
-window.hit = function(){
-  if(Math.random() > 0.7){
-    stand();
+/* 🎮 HIT */
+hitBtn.onclick = function(){
+  if (Math.random() > 0.7) {
+    standBtn.click();
   }
-}
+};
 
-window.stand = async function(){
+/* 🎮 STAND */
+standBtn.onclick = async function(){
 
-  if(Math.random() > 0.5){
+  if (Math.random() > 0.5) {
     await bakiyeArttir(bet * 2);
   }
 
@@ -134,7 +177,7 @@ window.stand = async function(){
 
   hitBtn.disabled = true;
   standBtn.disabled = true;
-}
+};
 
 </script>
 
