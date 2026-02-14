@@ -126,6 +126,14 @@ const betEl=document.getElementById("bet");
 const message=document.getElementById("message");
 const controls=document.getElementById("controls");
 
+function disableChips(){
+document.querySelectorAll(".chip").forEach(c=>c.style.pointerEvents="none");
+}
+
+function enableChips(){
+document.querySelectorAll(".chip").forEach(c=>c.style.pointerEvents="auto");
+}
+
 onAuthStateChanged(auth,user=>{
 if(!user){message.innerText="Giriş yapmalısın";return;}
 userRef=doc(db,"users",user.uid);
@@ -161,7 +169,6 @@ while(t>21&&a>0){t-=10;a--;}
 return t;
 }
 
-/* 🔥 GÜNCELLENMİŞ — ? KART HATASI TAM ÇÖZÜM */
 function cardImage(card,hidden=false){
 let img=document.createElement("img");
 img.className="card-img";
@@ -179,13 +186,11 @@ img.src="https://deckofcardsapi.com/static/img/back.png";
 img.src=`https://deckofcardsapi.com/static/img/${v}${card.suit}.png`;
 }
 
-/* İlk hata olursa cache kırarak tekrar dene */
 img.onerror=function(){
-img.onerror=null; // sonsuz loop engelle
+img.onerror=null;
 img.src=`https://deckofcardsapi.com/static/img/${v}${card.suit}.png?retry=${Date.now()}`;
 };
 
-/* İkinci hata olursa kart arkası göster */
 img.addEventListener("error",function(){
 img.src="https://deckofcardsapi.com/static/img/back.png";
 },{once:true});
@@ -219,6 +224,7 @@ message.innerText="Bahisler Kapanıyor: "+time+" SN";
 }else{
 clearInterval(betTimer);
 betTimer=null;
+disableChips();
 message.innerText="";
 startGame();
 }
@@ -241,12 +247,46 @@ await deal("dealer",false);
 await deal("player",false);
 await deal("dealer",true);
 
+/* 🎯 Natural Blackjack kontrol */
+if(total(player)===21 && player.length===2){
+
+gameState="finished";
+
+/* Dealer kartlarını aç */
+document.getElementById("dealerCards").innerHTML="";
+for(let c of dealer){
+document.getElementById("dealerCards")
+.appendChild(cardImage(c,false));
+}
+
+balance += Math.floor(bet * 2.5);
+await updateDoc(userRef,{balance});
+
+message.innerText="BLACKJACK! 🎉";
+
+bet=0;
+betEl.innerText=0;
+
+setTimeout(()=>{
+document.getElementById("playerCards").innerHTML="";
+document.getElementById("dealerCards").innerHTML="";
+gameState="betting";
+message.innerText="Bahis Yapın";
+enableChips();
+},2500);
+
+return;
+}
+
 gameState="playing";
 startDecisionTimer();
 }
 
 async function deal(to,hidden){
 let card=deck.pop();
+
+/* Oyuncuya asla kapalı kart gitmez */
+if(to==="player") hidden=false;
 
 if(to==="player"){
 player.push(card);
@@ -342,6 +382,7 @@ document.getElementById("playerCards").innerHTML="";
 document.getElementById("dealerCards").innerHTML="";
 gameState="betting";
 message.innerText="Bahis Yapın";
+enableChips();
 },2000);
 }
 
