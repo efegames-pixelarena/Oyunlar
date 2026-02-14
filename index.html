@@ -365,40 +365,66 @@ window.addEventListener("resize",resizeCanvas);
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
-apiKey: "API_KEY",
-authDomain: "PROJECT_ID.firebaseapp.com",
-projectId: "PROJECT_ID",
-storageBucket: "PROJECT_ID.appspot.com",
-messagingSenderId: "XXXX",
-appId: "APP_ID"
+  apiKey: "AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
+  authDomain: "emirhan-site.firebaseapp.com",
+  projectId: "emirhan-site",
+  storageBucket: "emirhan-site.firebasestorage.app",
+  messagingSenderId: "668871888390",
+  appId: "1:668871888390:web:76568bda84cb1641f7bd87",
+  measurementId: "G-96ZVZX3DWH"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+/* KAYIT */
 document.querySelector(".register-btn").addEventListener("click", async ()=>{
-const email=prompt("Email:");
-const password=prompt("Şifre:");
-if(!email||!password) return alert("Bilgileri doldur.");
-try{
-const user=await createUserWithEmailAndPassword(auth,email,password);
-await setDoc(doc(db,"users",user.user.uid),{balance:10000});
-alert("Kayıt başarılı. 10.000₺ yüklendi.");
-}catch(e){alert(e.message);}
+  const email = prompt("Email:");
+  const password = prompt("Şifre:");
+  if(!email || !password) return alert("Bilgileri doldur.");
+
+  try{
+    const userCredential = await createUserWithEmailAndPassword(auth,email,password);
+    const uid = userCredential.user.uid;
+
+    await setDoc(doc(db,"users",uid),{
+      balance: 10000,
+      email: email,
+      createdAt: new Date()
+    });
+
+    alert("Kayıt başarılı. 10.000₺ bakiyen yüklendi.");
+  }
+  catch(error){
+    alert("Kayıt hatası: " + error.message);
+  }
 });
 
+/* GİRİŞ */
 document.querySelector(".login-btn").addEventListener("click", async ()=>{
-const email=prompt("Email:");
-const password=prompt("Şifre:");
-if(!email||!password) return alert("Bilgileri doldur.");
-try{
-await signInWithEmailAndPassword(auth,email,password);
-alert("Giriş başarılı.");
-}catch(e){alert("Hatalı giriş.");}
+  const email = prompt("Email:");
+  const password = prompt("Şifre:");
+  if(!email || !password) return alert("Bilgileri doldur.");
+
+  try{
+    const userCredential = await signInWithEmailAndPassword(auth,email,password);
+    const uid = userCredential.user.uid;
+
+    const userDoc = await getDoc(doc(db,"users",uid));
+    if(userDoc.exists()){
+      const data = userDoc.data();
+      alert("Giriş başarılı.\nBakiyen: " + data.balance + "₺");
+    } else {
+      alert("Kullanıcı verisi bulunamadı.");
+    }
+  }
+  catch(error){
+    alert("Giriş hatası: " + error.message);
+  }
 });
 </script>
 
