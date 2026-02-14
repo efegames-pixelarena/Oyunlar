@@ -25,55 +25,62 @@ color:white;
 touch-action:manipulation;
 }
 
-/* ===== NAVBAR (BİREBİR HİZALI) ===== */
+/* ===== PREMIUM NAVBAR ===== */
 .top-bar{
 position:fixed;
 top:0;
 width:100%;
-height:75px;
+height:60px; /* küçültüldü */
 display:flex;
 align-items:center;
 justify-content:space-between;
-padding:0 18px;
+padding:0 16px;
 background:linear-gradient(135deg,#1a2a6c,#16245c);
-box-shadow:0 6px 20px rgba(0,0,0,0.5);
+box-shadow:0 4px 15px rgba(0,0,0,0.45);
 z-index:100;
 }
 
 .brand{
-font-size:22px;
+font-size:19px;
 font-weight:800;
-letter-spacing:1px;
+letter-spacing:0.5px;
 color:#4fd1ff;
+display:flex;
+align-items:center;
+height:100%;
 }
 
 .right-menu{
 display:flex;
-gap:12px;
+gap:10px;
 align-items:center;
 }
 
 .nav-btn{
-padding:10px 18px;
-border-radius:14px;
+padding:7px 14px;  /* küçültüldü */
+border-radius:12px;
 font-weight:700;
-font-size:14px;
-min-width:110px;
+font-size:13px;
+min-width:95px;
 text-align:center;
+display:flex;
+align-items:center;
+justify-content:center;
+height:36px;
 }
 
-/* GİRİŞ STİLİ (BAKİYE) */
+/* BAKİYE */
 .balance-btn{
 background:#273c8f;
-border:1px solid rgba(255,255,255,0.2);
+border:1px solid rgba(255,255,255,0.15);
 color:#fff;
 }
 
-/* KAYIT STİLİ (BAHİS) */
+/* BAHİS */
 .bet-btn{
 background:linear-gradient(90deg,#ff8a00,#ff5f00);
 color:#000;
-box-shadow:0 0 15px rgba(255,140,0,0.8);
+box-shadow:0 0 10px rgba(255,140,0,0.7);
 }
 
 /* ===== OYUN ALANI ===== */
@@ -83,7 +90,7 @@ width:100%;
 text-align:center;
 }
 
-#dealerArea{top:110px;}
+#dealerArea{top:95px;} /* navbar küçüldü diye ayarlandı */
 #playerArea{bottom:220px;}
 
 .score{
