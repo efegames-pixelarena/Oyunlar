@@ -2,211 +2,89 @@
 margin:0;
 padding:0;
 box-sizing:border-box;
-font-family: 'Segoe UI', sans-serif;
+font-family:Arial, Helvetica, sans-serif;
 }
 
-html,body{
-height:100%;
-background:#000;
-overflow:hidden;
-}
-
-/* APP */
-.app{
-position:fixed;
-inset:0;
+body{
+background:#0b0f14;
 color:white;
-overflow:hidden;
+display:flex;
+justify-content:center;
 }
 
-/* STUDIO BACKGROUND */
-.studio{
-position:absolute;
-top:0;
-left:0;
+.app{
 width:100%;
-height:60%;
-background:
-linear-gradient(to bottom,rgba(0,0,0,0.3),rgba(0,0,0,0.9)),
-url('../assets/img/casino-bg.jpg');
-background-size:cover;
-background-position:center;
-filter:brightness(.9);
+max-width:480px;
+padding:15px;
 }
 
-/* ÜST BAR */
-.topBar{
-position:absolute;
-top:0;
-width:100%;
-height:45px;
-background:rgba(0,0,0,.7);
+.topBar,
+.bottomBar{
 display:flex;
 justify-content:space-between;
-align-items:center;
-padding:0 15px;
+margin-bottom:10px;
 font-size:14px;
-backdrop-filter:blur(6px);
-border-bottom:1px solid rgba(255,255,255,.1);
+opacity:.9;
 }
 
-/* DEALER */
-.dealerZone{
-position:absolute;
-top:70px;
-width:100%;
-text-align:center;
-}
-
-.score{
-font-size:15px;
-margin-top:6px;
-color:#00ffae;
-text-shadow:0 0 10px #00ffae;
-}
-
-/* MASA */
+.dealerZone,
 .table{
-position:absolute;
-bottom:120px;
-width:100%;
-height:38%;
-background:radial-gradient(circle at center,#0b3d2e 0%,#05251c 100%);
-border-top-left-radius:50% 28%;
-border-top-right-radius:50% 28%;
-box-shadow:0 -20px 60px rgba(0,0,0,.8);
-padding-top:30px;
-text-align:center;
+background:#0f3d1f;
+padding:15px;
+border-radius:15px;
+margin-bottom:15px;
+box-shadow:0 0 20px rgba(0,0,0,.5);
 }
 
-/* KARTLAR */
 .hand{
-margin-top:15px;
-min-height:110px;
+display:flex;
+gap:8px;
+margin-top:10px;
 }
 
 .card{
-width:70px;
-height:105px;
-border-radius:10px;
+width:45px;
+height:65px;
 background:white;
-display:inline-flex;
-align-items:center;
-justify-content:center;
-margin:6px;
-font-weight:bold;
-font-size:22px;
-box-shadow:0 8px 25px rgba(0,0,0,.6);
-animation:deal .35s ease;
-transform-style:preserve-3d;
-transition:transform .4s;
-}
-
-.card:hover{
-transform:scale(1.05);
-}
-
-.red{color:#c1121f;}
-.black{color:black;}
-
-/* DEAL ANIMATION */
-@keyframes deal{
-from{transform:translateY(-200px) scale(.6);opacity:0;}
-to{transform:translateY(0) scale(1);opacity:1;}
-}
-
-/* BAHİS */
-.betOptions{
-position:absolute;
-bottom:95px;
-width:100%;
+border-radius:8px;
 display:flex;
 justify-content:center;
-gap:18px;
+align-items:center;
+font-weight:bold;
+font-size:18px;
 }
 
-.betBtn{
-width:70px;
-height:70px;
-border-radius:50%;
-background:radial-gradient(circle,#f1c40f,#d4a90b);
+.card.red{
+color:#d40000;
+}
+
+.card.black{
 color:black;
-display:flex;
-align-items:center;
-justify-content:center;
-font-weight:bold;
-font-size:15px;
-cursor:pointer;
-box-shadow:0 0 15px rgba(255,215,0,.6);
-transition:.2s;
 }
 
-.betBtn:hover{
-transform:scale(1.1);
-}
-
-/* CONTROLS */
 .controls{
-position:absolute;
-bottom:55px;
-width:100%;
-text-align:center;
+display:flex;
+flex-wrap:wrap;
+gap:8px;
+margin-top:10px;
 }
 
-.controls button{
-padding:10px 18px;
-margin:5px;
+button{
+flex:1;
+padding:10px;
 border:none;
 border-radius:8px;
-background:#00ffae;
-color:black;
+background:#1e88e5;
+color:white;
 font-weight:bold;
-font-size:14px;
-cursor:pointer;
-transition:.2s;
-box-shadow:0 0 10px rgba(0,255,174,.6);
 }
 
-.controls button:hover{
-transform:scale(1.05);
+button:active{
+transform:scale(.95);
 }
 
-.controls button:disabled{
-background:#555;
-color:#aaa;
-box-shadow:none;
-cursor:not-allowed;
-}
-
-/* ALT BAR */
-.bottomBar{
-position:absolute;
-bottom:0;
-width:100%;
-height:55px;
-background:#000;
-display:flex;
-justify-content:space-between;
-align-items:center;
-padding:0 20px;
-font-size:14px;
-border-top:1px solid rgba(255,255,255,.1);
-}
-
-/* TICKER */
 .ticker{
-position:absolute;
-bottom:170px;
-width:100%;
 text-align:center;
-font-size:20px;
+margin:10px 0;
 font-weight:bold;
-color:#00ffcc;
-text-shadow:0 0 20px #00ffcc;
-animation:glow 1.5s infinite alternate;
-}
-
-@keyframes glow{
-from{text-shadow:0 0 10px #00ffcc;}
-to{text-shadow:0 0 30px #00ffcc;}
 }
