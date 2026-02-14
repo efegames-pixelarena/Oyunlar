@@ -363,11 +363,24 @@ animateSnow();
 window.addEventListener("resize",resizeCanvas);
 </script>
 
-<!-- FIREBASE AUTH + BAKİYE -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { 
+  getAuth, 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+import { 
+  getFirestore, 
+  doc, 
+  setDoc, 
+  getDoc,
+  updateDoc,
+  onSnapshot
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
@@ -383,51 +396,97 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+const loginBtn = document.querySelector(".login-btn");
+const registerBtn = document.querySelector(".register-btn");
+const logoutBtn = document.querySelector(".logout-btn");
+const balanceText = document.getElementById("userBalance");
+
+/* PROFİL + CANLI BAKİYE */
+onAuthStateChanged(auth, async (user)=>{
+  if(user){
+    loginBtn.style.display="none";
+    registerBtn.style.display="none";
+    logoutBtn.style.display="inline-block";
+
+    const userRef = doc(db,"users",user.uid);
+
+    onSnapshot(userRef,(docSnap)=>{
+      if(docSnap.exists()){
+        const data = docSnap.data();
+        balanceText.innerText = "💰 " + data.balance + "₺";
+      }
+    });
+
+  } else {
+    loginBtn.style.display="inline-block";
+    registerBtn.style.display="inline-block";
+    logoutBtn.style.display="none";
+    balanceText.innerText="";
+  }
+});
+
 /* KAYIT */
-document.querySelector(".register-btn").addEventListener("click", async ()=>{
+registerBtn.addEventListener("click", async ()=>{
   const email = prompt("Email:");
   const password = prompt("Şifre:");
   if(!email || !password) return alert("Bilgileri doldur.");
 
   try{
     const userCredential = await createUserWithEmailAndPassword(auth,email,password);
-    const uid = userCredential.user.uid;
-
-    await setDoc(doc(db,"users",uid),{
-      balance: 10000,
-      email: email,
-      createdAt: new Date()
+    await setDoc(doc(db,"users",userCredential.user.uid),{
+      balance:10000,
+      email:email,
+      createdAt:new Date()
     });
-
-    alert("Kayıt başarılı. 10.000₺ bakiyen yüklendi.");
-  }
-  catch(error){
-    alert("Kayıt hatası: " + error.message);
+    alert("Kayıt başarılı. 10.000₺ yüklendi.");
+  } catch(e){
+    alert(e.message);
   }
 });
 
 /* GİRİŞ */
-document.querySelector(".login-btn").addEventListener("click", async ()=>{
+loginBtn.addEventListener("click", async ()=>{
   const email = prompt("Email:");
   const password = prompt("Şifre:");
   if(!email || !password) return alert("Bilgileri doldur.");
 
   try{
-    const userCredential = await signInWithEmailAndPassword(auth,email,password);
-    const uid = userCredential.user.uid;
-
-    const userDoc = await getDoc(doc(db,"users",uid));
-    if(userDoc.exists()){
-      const data = userDoc.data();
-      alert("Giriş başarılı.\nBakiyen: " + data.balance + "₺");
-    } else {
-      alert("Kullanıcı verisi bulunamadı.");
-    }
-  }
-  catch(error){
-    alert("Giriş hatası: " + error.message);
+    await signInWithEmailAndPassword(auth,email,password);
+    alert("Giriş başarılı.");
+  } catch(e){
+    alert("Hatalı giriş.");
   }
 });
+
+/* ÇIKIŞ */
+logoutBtn.addEventListener("click", async ()=>{
+  await signOut(auth);
+  alert("Çıkış yapıldı.");
+});
+
+/* OYUNDA BAKİYE DÜŞME FONKSİYONU */
+window.oynaVeBakiyedenDus = async function(miktar){
+  const user = auth.currentUser;
+  if(!user) return alert("Önce giriş yap.");
+
+  const userRef = doc(db,"users",user.uid);
+  const userDoc = await getDoc(userRef);
+
+  if(userDoc.exists()){
+    let currentBalance = userDoc.data().balance;
+
+    if(currentBalance < miktar){
+      alert("Yetersiz bakiye!");
+      return false;
+    }
+
+    await updateDoc(userRef,{
+      balance: currentBalance - miktar
+    });
+
+    return true;
+  }
+};
 </script>
 
 </body>
