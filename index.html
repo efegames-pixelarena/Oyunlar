@@ -6,12 +6,7 @@
 <title>EMİRHAN FE</title>
 
 <style>
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:Arial, sans-serif;
-}
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial, sans-serif;}
 
 body{
 background:linear-gradient(180deg,#0b1023,#0d1333,#0a0f1f);
@@ -97,9 +92,7 @@ outline:none;
 }
 
 /* MAIN */
-main{
-padding-top:30px;
-}
+main{padding-top:30px;}
 
 .section-title{
 padding-left:20px;
@@ -142,10 +135,7 @@ transform:rotate(25deg);
 transition:0.7s;
 }
 
-.game-card:hover::after{
-top:0;
-left:0;
-}
+.game-card:hover::after{top:0;left:0;}
 
 .game-card:hover{
 transform:translateY(-10px) scale(1.03);
@@ -153,10 +143,7 @@ box-shadow:0 0 30px #ffb300;
 border:1px solid #ffb300;
 }
 
-.game-icon{
-font-size:45px;
-margin-bottom:15px;
-}
+.game-icon{font-size:45px;margin-bottom:15px;}
 
 /* FOOTER */
 .footer{
@@ -166,64 +153,7 @@ margin-top:60px;
 border-top:1px solid #1e2a5a;
 }
 
-.footer-links{
-display:flex;
-justify-content:space-between;
-max-width:900px;
-margin:auto;
-flex-wrap:wrap;
-margin-bottom:40px;
-}
-
-.footer-column h3{
-margin-bottom:15px;
-transition:0.4s;
-cursor:pointer;
-}
-
-.footer-column h3:hover{
-color:#ffb300;
-text-shadow:0 0 15px #ffb300;
-transform:translateX(5px);
-}
-
-.footer-column ul{
-list-style:none;
-}
-
-.footer-column li{
-margin-bottom:12px;
-transition:0.4s;
-}
-
-.footer-column a{
-color:#aaa;
-text-decoration:none;
-transition:0.4s;
-}
-
-.footer-column li:hover{
-transform:translateX(8px);
-}
-
-.footer-column li:hover a{
-color:#ffb300;
-text-shadow:0 0 10px #ffb300;
-}
-
-.version{
-color:#00eaff;
-font-weight:bold;
-animation:pulse 2s infinite;
-}
-
-@keyframes pulse{
-0%{text-shadow:0 0 5px #00eaff;}
-50%{text-shadow:0 0 20px #00eaff;}
-100%{text-shadow:0 0 5px #00eaff;}
-}
-
-/* LOGO */
+.footer-center{text-align:center;}
 .footer-logo{
 font-size:28px;
 font-weight:bold;
@@ -235,46 +165,9 @@ animation:shine 3s linear infinite;
 margin-bottom:15px;
 }
 
-@keyframes shine{
-to{background-position:200% center;}
-}
+@keyframes shine{to{background-position:200% center;}}
 
-.footer-mail{
-color:#ccc;
-margin-bottom:20px;
-}
-
-.social-icons{
-display:flex;
-justify-content:center;
-gap:20px;
-}
-
-.social-btn{
-width:55px;
-height:55px;
-background:linear-gradient(145deg,#1c2455,#12183c);
-border-radius:15px;
-display:flex;
-align-items:center;
-justify-content:center;
-cursor:pointer;
-transition:0.4s;
-box-shadow:5px 5px 15px #000, -3px -3px 10px #1f2a6a;
-}
-
-.social-btn img{
-width:28px;
-}
-
-.social-btn:hover{
-transform:translateY(-5px) scale(1.1);
-box-shadow:0 0 20px #ffb300;
-}
-
-.footer-center{
-text-align:center;
-}
+.footer-mail{color:#ccc;margin-bottom:20px;}
 
 .footer-bottom{
 text-align:center;
@@ -283,6 +176,76 @@ padding-top:20px;
 border-top:1px solid #1e2a5a;
 color:#aaa;
 font-size:14px;
+}
+
+/* AUTH MODAL */
+.auth-modal{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.7);
+backdrop-filter:blur(12px);
+display:none;
+align-items:center;
+justify-content:center;
+z-index:2000;
+}
+
+.auth-box{
+width:90%;
+max-width:400px;
+padding:30px;
+border-radius:20px;
+background:linear-gradient(145deg,#141b3f,#1b2252);
+border:1px solid #2a3577;
+box-shadow:0 0 40px #00000090;
+position:relative;
+}
+
+.auth-box h2{text-align:center;margin-bottom:20px;}
+
+.auth-box input{
+width:100%;
+padding:14px;
+margin-bottom:15px;
+border-radius:12px;
+border:none;
+background:#151c3f;
+color:white;
+font-size:15px;
+outline:none;
+}
+
+.auth-btn{
+width:100%;
+padding:14px;
+border:none;
+border-radius:12px;
+font-weight:bold;
+font-size:16px;
+cursor:pointer;
+background:linear-gradient(45deg,#ffb300,#ff8800);
+color:black;
+}
+
+.switch-text{
+text-align:center;
+margin-top:15px;
+font-size:14px;
+color:#aaa;
+}
+
+.switch-text span{color:#ffb300;cursor:pointer;font-weight:bold;}
+
+.close-btn{
+position:absolute;
+top:15px;
+right:15px;
+cursor:pointer;
+font-size:18px;
+color:#aaa;
 }
 </style>
 </head>
@@ -299,22 +262,54 @@ font-size:14px;
 </header>
 
 <div class="search-bar">
-<input type="text" id="searchInput" placeholder="🕹️ Oyun Ara">
+<input type="text" placeholder="🕹️ Oyun Ara">
 </div>
 
 <main>
 <div class="section-title">Güncel Oyunlar</div>
 <div class="games-grid">
-<div class="game-card" data-name="blackjack" onclick="window.location.href='blackjack.html'"><div class="game-icon">♠️</div>Blackjack Auto</div>
-<div class="game-card" data-name="skycrash" onclick="window.location.href='crash.html'"><div class="game-icon">✈️</div>SkyCrash</div>
-<div class="game-card" data-name="pişt" onclick="window.location.href='pisti.html'"><div class="game-icon">🃏</div>Pişti Oyunu</div>
-<div class="game-card" data-name="yılan" onclick="window.location.href='snake.html'"><div class="game-icon">🐍</div>Yılan Oyunu</div>
-<div class="game-card" data-name="fruit ninja" onclick="window.location.href='reflex.html'"><div class="game-icon">🥕</div>Fruit Ninja</div>
-<div class="game-card" data-name="roket" onclick="window.location.href='rocket.html'"><div class="game-icon">🚀</div>Roket Oyunu</div>
+<div class="game-card"><div class="game-icon">♠️</div>Blackjack</div>
+<div class="game-card"><div class="game-icon">✈️</div>Crash</div>
+<div class="game-card"><div class="game-icon">🃏</div>Pişti</div>
+<div class="game-card"><div class="game-icon">🐍</div>Yılan</div>
+<div class="game-card"><div class="game-icon">🥕</div>Reflex</div>
+<div class="game-card"><div class="game-icon">🚀</div>Roket</div>
 </div>
 </main>
 
-<!-- AUTH + PROFİL + 10.000₺ SİSTEMİ -->
+<footer class="footer">
+<div class="footer-center">
+<div class="footer-logo">EMİRHAN FE</div>
+<div class="footer-mail">Flood Hakkımda: Bu platform tamamen eğlence amaçlıdır.</div>
+<div class="footer-bottom">© 2026 Emirhan Efe - Tüm Hakları Saklıdır</div>
+</div>
+</footer>
+
+<!-- AUTH MODAL -->
+<div id="authModal" class="auth-modal">
+<div class="auth-box">
+<div id="loginForm">
+<h2>Giriş Yap</h2>
+<input type="email" id="loginEmail" placeholder="Kullanıcı Adı veya E-posta">
+<input type="password" id="loginPassword" placeholder="Şifre">
+<button class="auth-btn" onclick="login()">Giriş Yap</button>
+<p class="switch-text">Hesabın yok mu? <span onclick="showRegister()">Kayıt Ol</span></p>
+</div>
+
+<div id="registerForm" style="display:none;">
+<h2>Kayıt Ol</h2>
+<input type="text" id="registerUsername" placeholder="Kullanıcı Adı">
+<input type="email" id="registerEmail" placeholder="E-mail">
+<input type="password" id="registerPassword" placeholder="Şifre">
+<input type="password" id="registerPassword2" placeholder="Şifre Tekrar">
+<button class="auth-btn" onclick="register()">Kayıt Ol</button>
+<p class="switch-text">Zaten hesabın var mı? <span onclick="showLogin()">Giriş Yap</span></p>
+</div>
+
+<div class="close-btn" onclick="closeModal()">✕</div>
+</div>
+</div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -333,49 +328,89 @@ const app=initializeApp(firebaseConfig);
 const auth=getAuth(app);
 const db=getFirestore(app);
 
-let isRegister=false;
+document.querySelector(".login-btn").onclick=()=>openModal();
+document.querySelector(".register-btn").onclick=()=>{openModal();showRegister();};
 
-document.querySelector(".login-btn").onclick=()=>authAction(false);
-document.querySelector(".register-btn").onclick=()=>authAction(true);
+function openModal(){document.getElementById("authModal").style.display="flex";}
+function closeModal(){document.getElementById("authModal").style.display="none";}
+function showRegister(){loginForm.style.display="none";registerForm.style.display="block";}
+function showLogin(){registerForm.style.display="none";loginForm.style.display="block";}
 
-async function authAction(registerMode){
-isRegister=registerMode;
-const email=prompt("Email:");
-const password=prompt("Şifre:");
-if(!email||!password) return;
-
-try{
-if(isRegister){
-const username=prompt("Kullanıcı Adı:");
-const user=await createUserWithEmailAndPassword(auth,email,password);
-await setDoc(doc(db,"users",user.user.uid),{
-username:username,
-email:email,
-balance:10000,
-createdAt:new Date()
-});
-alert("Kayıt başarılı! 10.000₺ yüklendi 🔥");
-}else{
-await signInWithEmailAndPassword(auth,email,password);
-alert("Giriş başarılı 🔥");
+async function register(){
+const username=registerUsername.value;
+const email=registerEmail.value;
+const pass=registerPassword.value;
+const pass2=registerPassword2.value;
+if(pass!==pass2) return alert("Şifreler eşleşmiyor");
+const user=await createUserWithEmailAndPassword(auth,email,pass);
+await setDoc(doc(db,"users",user.user.uid),{username,email,balance:10000});
+alert("10.000₺ yüklendi");
+closeModal();
 }
-}catch(e){alert(e.message);}
+
+async function login(){
+await signInWithEmailAndPassword(auth,loginEmail.value,loginPassword.value);
+closeModal();
 }
 
 onAuthStateChanged(auth,async(user)=>{
 if(user){
 const snap=await getDoc(doc(db,"users",user.uid));
-if(snap.exists()){
 const data=snap.data();
 document.querySelector(".header-buttons").innerHTML=
 `<div style="color:#00ff99;font-weight:bold;">${data.balance}₺</div>
 <div>${data.username}</div>
 <button onclick="logout()" style="background:red;color:white;border:none;border-radius:8px;padding:5px 10px;">Çıkış</button>`;
 }
-}
 });
 
 window.logout=function(){signOut(auth).then(()=>location.reload());}
+</script>
+
+<!-- KAR SCRIPT -->
+<script>
+const canvas=document.getElementById("snow");
+const ctx=canvas.getContext("2d");
+canvas.width=window.innerWidth;
+canvas.height=window.innerHeight;
+
+let snowflakes=[];
+for(let i=0;i<150;i++){
+snowflakes.push({
+x:Math.random()*canvas.width,
+y:Math.random()*canvas.height,
+r:Math.random()*3+1,
+d:Math.random()*1
+});
+}
+
+function drawSnow(){
+ctx.clearRect(0,0,canvas.width,canvas.height);
+ctx.fillStyle="white";
+ctx.beginPath();
+for(let i=0;i<snowflakes.length;i++){
+let f=snowflakes[i];
+ctx.moveTo(f.x,f.y);
+ctx.arc(f.x,f.y,f.r,0,Math.PI*2,true);
+}
+ctx.fill();
+moveSnow();
+}
+
+let angle=0;
+function moveSnow(){
+angle+=0.01;
+for(let i=0;i<snowflakes.length;i++){
+let f=snowflakes[i];
+f.y+=Math.cos(angle+f.d)+1+f.r/2;
+f.x+=Math.sin(angle)*2;
+if(f.x>canvas.width||f.x<0||f.y>canvas.height){
+snowflakes[i]={x:Math.random()*canvas.width,y:0,r:f.r,d:f.d};
+}
+}
+}
+
+setInterval(drawSnow,33);
 </script>
 
 </body>
