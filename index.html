@@ -303,42 +303,18 @@ font-size:14px;
 </div>
 
 <main>
-
 <div class="section-title">Güncel Oyunlar</div>
-
 <div class="games-grid">
-
-<div class="game-card" data-name="blackjack" onclick="window.location.href='blackjack.html'">
-<div class="game-icon">♠️</div>Blackjack Auto
+<div class="game-card" data-name="blackjack" onclick="window.location.href='blackjack.html'"><div class="game-icon">♠️</div>Blackjack Auto</div>
+<div class="game-card" data-name="skycrash" onclick="window.location.href='crash.html'"><div class="game-icon">✈️</div>SkyCrash</div>
+<div class="game-card" data-name="pişt" onclick="window.location.href='pisti.html'"><div class="game-icon">🃏</div>Pişti Oyunu</div>
+<div class="game-card" data-name="yılan" onclick="window.location.href='snake.html'"><div class="game-icon">🐍</div>Yılan Oyunu</div>
+<div class="game-card" data-name="fruit ninja" onclick="window.location.href='reflex.html'"><div class="game-icon">🥕</div>Fruit Ninja</div>
+<div class="game-card" data-name="roket" onclick="window.location.href='rocket.html'"><div class="game-icon">🚀</div>Roket Oyunu</div>
 </div>
-
-<div class="game-card" data-name="skycrash" onclick="window.location.href='crash.html'">
-<div class="game-icon">✈️</div>SkyCrash
-</div>
-
-<div class="game-card" data-name="pişt" onclick="window.location.href='pisti.html'">
-<div class="game-icon">🃏</div>Pişti Oyunu
-</div>
-
-<div class="game-card" data-name="yılan" onclick="window.location.href='snake.html'">
-<div class="game-icon">🐍</div>Yılan Oyunu
-</div>
-
-<div class="game-card" data-name="fruit ninja" onclick="window.location.href='reflex.html'">
-<div class="game-icon">🥕</div>Fruit Ninja 
-</div>
-
-<div class="game-card" data-name="roket" onclick="window.location.href='rocket.html'">
-<div class="game-icon">🚀</div>Roket Oyunu
-</div>
-
-</div>
-
 </main>
 
-<!-- FOOTER SENİN ORİJİNALİN -->
 <footer class="footer">
-
 <div class="footer-links">
 <div class="footer-column">
 <h3>HAKKIMDA</h3>
@@ -350,38 +326,20 @@ font-size:14px;
 </ul>
 </div>
 </div>
-
 <div class="footer-center">
 <div class="footer-logo">EMİRHAN EFE</div>
 <p class="footer-mail">o6emirv2@gmail.com</p>
-
 <div class="social-icons">
-<a href="https://www.instagram.com/o6emirlx" target="_blank">
-<div class="social-btn">
-<img src="https://cdn-icons-png.flaticon.com/512/2111/2111463.png">
-</div>
-</a>
-
-<a href="https://www.tiktok.com/@o6emirlx" target="_blank">
-<div class="social-btn">
-<img src="https://cdn-icons-png.flaticon.com/512/3046/3046121.png">
-</div>
-</a>
+<a href="https://www.instagram.com/o6emirlx" target="_blank"><div class="social-btn"><img src="https://cdn-icons-png.flaticon.com/512/2111/2111463.png"></div></a>
+<a href="https://www.tiktok.com/@o6emirlx" target="_blank"><div class="social-btn"><img src="https://cdn-icons-png.flaticon.com/512/3046/3046121.png"></div></a>
 </div>
 </div>
-
-<div class="footer-bottom">
-© 2026 EMİRHAN EFE Tüm Hakları Saklıdır.
-</div>
-
+<div class="footer-bottom">© 2026 EMİRHAN EFE Tüm Hakları Saklıdır.</div>
 </footer>
 
 <script>
-
-/* ARAMA */
 const searchInput=document.getElementById("searchInput");
 const cards=document.querySelectorAll(".game-card");
-
 searchInput.addEventListener("input",function(){
 let value=this.value.toLowerCase();
 cards.forEach(card=>{
@@ -390,56 +348,58 @@ card.style.display=name.includes(value)?"block":"none";
 });
 });
 
-/* KAR */
 const canvas=document.getElementById("snow");
 const ctx=canvas.getContext("2d");
-
-function resizeCanvas(){
-canvas.width=window.innerWidth;
-canvas.height=window.innerHeight;
-}
+function resizeCanvas(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;}
 resizeCanvas();
-
 let snowflakes=[];
-for(let i=0;i<150;i++){
-snowflakes.push({
-x:Math.random()*canvas.width,
-y:Math.random()*canvas.height,
-r:Math.random()*3+1,
-d:Math.random()*1+0.5
-});
-}
-
-function drawSnow(){
-ctx.clearRect(0,0,canvas.width,canvas.height);
-ctx.fillStyle="rgba(255,255,255,0.8)";
-ctx.beginPath();
-for(let s of snowflakes){
-ctx.moveTo(s.x,s.y);
-ctx.arc(s.x,s.y,s.r,0,Math.PI*2,true);
-}
-ctx.fill();
-updateSnow();
-}
-
-function updateSnow(){
-for(let s of snowflakes){
-s.y+=s.d;
-if(s.y>canvas.height){
-s.y=0;
-s.x=Math.random()*canvas.width;
-}
-}
-}
-
-function animateSnow(){
-drawSnow();
-requestAnimationFrame(animateSnow);
-}
-
+for(let i=0;i<150;i++){snowflakes.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*3+1,d:Math.random()*1+0.5});}
+function drawSnow(){ctx.clearRect(0,0,canvas.width,canvas.height);ctx.fillStyle="rgba(255,255,255,0.8)";ctx.beginPath();for(let s of snowflakes){ctx.moveTo(s.x,s.y);ctx.arc(s.x,s.y,s.r,0,Math.PI*2,true);}ctx.fill();updateSnow();}
+function updateSnow(){for(let s of snowflakes){s.y+=s.d;if(s.y>canvas.height){s.y=0;s.x=Math.random()*canvas.width;}}}
+function animateSnow(){drawSnow();requestAnimationFrame(animateSnow);}
 animateSnow();
 window.addEventListener("resize",resizeCanvas);
+</script>
 
+<!-- FIREBASE AUTH + BAKİYE -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+apiKey: "API_KEY",
+authDomain: "PROJECT_ID.firebaseapp.com",
+projectId: "PROJECT_ID",
+storageBucket: "PROJECT_ID.appspot.com",
+messagingSenderId: "XXXX",
+appId: "APP_ID"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+document.querySelector(".register-btn").addEventListener("click", async ()=>{
+const email=prompt("Email:");
+const password=prompt("Şifre:");
+if(!email||!password) return alert("Bilgileri doldur.");
+try{
+const user=await createUserWithEmailAndPassword(auth,email,password);
+await setDoc(doc(db,"users",user.user.uid),{balance:10000});
+alert("Kayıt başarılı. 10.000₺ yüklendi.");
+}catch(e){alert(e.message);}
+});
+
+document.querySelector(".login-btn").addEventListener("click", async ()=>{
+const email=prompt("Email:");
+const password=prompt("Şifre:");
+if(!email||!password) return alert("Bilgileri doldur.");
+try{
+await signInWithEmailAndPassword(auth,email,password);
+alert("Giriş başarılı.");
+}catch(e){alert("Hatalı giriş.");}
+});
 </script>
 
 </body>
