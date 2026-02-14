@@ -171,17 +171,17 @@ align-items:center;
 </div>
 
 <div class="controls">
-<button id="dealBtn" onclick="startRound()">Dağıt</button>
-<button id="hitBtn" onclick="hit()" disabled>Hit</button>
-<button id="standBtn" onclick="stand()" disabled>Stand</button>
-<button id="doubleBtn" onclick="doubleDown()" disabled>Double</button>
-<button id="splitBtn" onclick="splitHand()" disabled>Split</button>
+<button onclick="startRound()">Dağıt</button>
+<button onclick="hit()">Hit</button>
+<button onclick="stand()">Stand</button>
+<button onclick="doubleDown()">Double</button>
+<button onclick="splitHand()">Split</button>
 </div>
 
 <div class="ticker" id="ticker">Bahis koyun</div>
 
 <div class="bottomBar">
-<div>Bakiye: ₺<span id="balance">0</span></div>
+<div>Bakiye: ₺<span id="balance">500</span></div>
 <div>Bahis: ₺<span id="bet">0</span></div>
 <div>Jackpot: ₺<span id="jackpot">50000</span></div>
 <div>Win Rate: <span id="winRate">0%</span></div>
@@ -190,12 +190,149 @@ align-items:center;
 
 <script>
 
-/* ===== HER YENİLEMEDE 500₺ ===== */
-let balance = 500;
-localStorage.setItem("balance", 500);
-document.getElementById("balance").innerText = balance;
+/* HER YENİLEMEDE 500₺ */
+localStorage.setItem("balance",500)
+let balance=500
 
-/* Diğer sistemler aynı şekilde devam eder */
+let shoe=[],player=[],dealer=[]
+let currentBet=0,totalWins=0,totalGames=0,jackpot=50000
+
+const SUITS=['♠','♥','♦','♣']
+const VALUES=['A','2','3','4','5','6','7','8','9','10','J','Q','K']
+
+function buildShoe(){
+shoe=[]
+for(let d=0;d<8;d++)
+for(let s of SUITS)
+for(let v of VALUES)
+shoe.push({value:v,suit:s})
+shuffle()
+}
+
+function shuffle(){
+for(let i=shoe.length-1;i>0;i--){
+let j=Math.floor(Math.random()*(i+1))
+;[shoe[i],shoe[j]]=[shoe[j],shoe[i]]
+}
+}
+
+function draw(){
+if(shoe.length<60) buildShoe()
+return shoe.pop()
+}
+
+function value(c){
+if(c.value=="A") return 11
+if(["K","Q","J"].includes(c.value)) return 10
+return parseInt(c.value)
+}
+
+function score(hand){
+let total=0,aces=0
+hand.forEach(c=>{
+total+=value(c)
+if(c.value=="A") aces++
+})
+while(total>21&&aces>0){
+total-=10;aces--
+}
+return total
+}
+
+function cardHTML(c,hidden=false){
+if(hidden){
+return `<div class="card" style="background-image:url('https://deckofcardsapi.com/static/img/back.png')"></div>`
+}
+let code=c.value
+if(code=="10") code="0"
+let suitMap={"♠":"S","♥":"H","♦":"D","♣":"C"}
+let img=code+suitMap[c.suit]
+return `<div class="card" style="background-image:url('https://deckofcardsapi.com/static/img/${img}.png')"></div>`
+}
+
+function render(hideDealer=false){
+document.getElementById("playerHand").innerHTML=player.map(c=>cardHTML(c)).join("")
+if(hideDealer){
+document.getElementById("dealerHand").innerHTML=
+cardHTML(dealer[0])+cardHTML(dealer[1],true)
+}else{
+document.getElementById("dealerHand").innerHTML=
+dealer.map(c=>cardHTML(c)).join("")
+}
+document.getElementById("playerScore").innerText="Toplam: "+score(player)
+document.getElementById("dealerScore").innerText=
+hideDealer?"Toplam: "+value(dealer[0]):"Toplam: "+score(dealer)
+}
+
+function placeBet(a){
+if(balance>=a){
+balance-=a
+currentBet+=a
+updateUI()
+}
+}
+
+function startRound(){
+if(currentBet<=0)return
+player=[draw(),draw()]
+dealer=[draw(),draw()]
+render(true)
+}
+
+function hit(){
+player.push(draw())
+render(true)
+if(score(player)>21) stand()
+}
+
+function stand(){
+while(score(dealer)<17) dealer.push(draw())
+render(false)
+endRound()
+}
+
+function doubleDown(){
+if(balance>=currentBet){
+balance-=currentBet
+currentBet*=2
+hit()
+stand()
+}
+}
+
+function splitHand(){
+if(player.length==2 && player[0].value==player[1].value && balance>=currentBet){
+balance-=currentBet
+currentBet*=2
+player=[player[0],draw()]
+render(true)
+}
+}
+
+function endRound(){
+totalGames++
+let p=score(player),d=score(dealer)
+if((p<=21 && p>d) || d>21){
+balance+=currentBet*2
+totalWins++
+}
+else if(p==d){
+balance+=currentBet
+}
+currentBet=0
+updateUI()
+}
+
+function updateUI(){
+document.getElementById("balance").innerText=balance
+document.getElementById("bet").innerText=currentBet
+document.getElementById("jackpot").innerText=jackpot
+document.getElementById("winRate").innerText=
+totalGames?Math.round((totalWins/totalGames)*100)+"%":"0%"
+}
+
+buildShoe()
+updateUI()
 
 </script>
 </body>
