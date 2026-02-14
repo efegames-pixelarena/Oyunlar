@@ -2,312 +2,305 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>PixelArena BJ</title>
-
+<title>Blackjack</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;}
 body{
-height:100vh;overflow:hidden;
-font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
-background:
-radial-gradient(circle at center, rgba(255,180,60,0.15) 0%, transparent 40%),
-linear-gradient(to bottom,#000 0%,#000 46%,#ff7b00 47%,#0b5d2a 48%,#063d1c 100%);
-color:white;touch-action:manipulation;
+background:#0f172a;
+color:white;
+font-family:Arial;
+text-align:center;
+margin:0;
+padding:0;
 }
-.top-bar{
-position:fixed;top:0;width:100%;height:55px;
-display:flex;align-items:center;justify-content:space-between;
-padding:0 16px;background:linear-gradient(135deg,#1a2a6c,#16245c);
-box-shadow:0 4px 15px rgba(0,0,0,0.45);z-index:100;
+
+.topbar{
+background:#111827;
+padding:15px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+font-size:18px;
 }
-.brand{
-font-size:18px;font-weight:800;
-background:linear-gradient(90deg,#4fd1ff,#fff,#4fd1ff);
-background-size:200% auto;
--webkit-background-clip:text;-webkit-text-fill-color:transparent;
-animation:shine 3s linear infinite;
+
+.game-area{
+margin-top:30px;
 }
-@keyframes shine{to{background-position:200% center;}}
-.right-menu{display:flex;gap:10px;}
-.nav-box{padding:6px 14px;border-radius:14px;font-weight:700;font-size:13px;min-width:95px;text-align:center;}
-.balance-box{background:#273c8f;}
-.bet-box{background:linear-gradient(90deg,#ff8a00,#ff5f00);color:#000;}
-.area{position:absolute;width:100%;text-align:center;}
-#dealerArea{top:85px;}
-#playerArea{bottom:210px;}
-.score{margin-top:6px;font-size:17px;font-weight:600;color:#ffd700;}
-.dealer-title{font-size:17px;letter-spacing:4px;margin-bottom:8px;color:#d4af37;}
-.cards{display:flex;justify-content:center;gap:10px;}
+
+.cards{
+display:flex;
+justify-content:center;
+gap:10px;
+margin:15px 0;
+}
+
 .card{
-width:60px;height:90px;border-radius:10px;background:white;
-display:flex;align-items:center;justify-content:center;
-font-size:22px;font-weight:bold;
-box-shadow:0 6px 15px rgba(0,0,0,0.5);
+width:70px;
+height:100px;
+background:white;
+color:black;
+border-radius:8px;
+display:flex;
+align-items:center;
+justify-content:center;
+font-weight:bold;
+font-size:20px;
 }
-.card.back{background:linear-gradient(135deg,#1a2a6c,#000);color:transparent;}
-.red{color:#d40000;} .black{color:#000;}
-#message{position:absolute;bottom:170px;width:100%;text-align:center;font-size:20px;font-weight:600;}
-.controls{position:absolute;bottom:110px;width:100%;text-align:center;display:none;}
-button{padding:14px 28px;margin:8px;border:none;border-radius:12px;font-weight:700;font-size:15px;cursor:pointer;}
-#hit{background:#2ecc71;color:white;}
-#stand{background:#e74c3c;color:white;}
-.chips{position:absolute;bottom:25px;width:100%;text-align:center;}
-.chip{
-display:inline-block;width:55px;height:55px;border-radius:50%;
-line-height:55px;margin:8px;font-weight:700;cursor:pointer;
-box-shadow:0 6px 15px rgba(0,0,0,0.6);
+
+.red{color:red;}
+.back{background:#374151;}
+
+button{
+padding:10px 20px;
+margin:5px;
+border:none;
+border-radius:6px;
+cursor:pointer;
+font-size:16px;
 }
-.c10{background:#f0f0f0;color:black;}
-.c25{background:#1eaa00;}
-.c50{background:#ff1c1c;}
-.c100{background:black;color:white;}
+
+.bet-btn{background:#2563eb;color:white;}
+.control-btn{background:#16a34a;color:white;}
+#controls{display:none;}
 </style>
 </head>
-
 <body>
 
-<div class="top-bar">
-<div class="brand">PixelArena BJ</div>
-<div class="right-menu">
-<div class="nav-box balance-box">
-Bakiye: <span id="balance">0</span>₺
-</div>
-<div class="nav-box bet-box">
-Bahis: <span id="bet">0</span>₺
-</div>
-</div>
+<div class="topbar">
+<div>Bakiye: ₺<span id="balance">0</span></div>
+<div>Bahis: ₺<span id="bet">0</span></div>
 </div>
 
-<div id="dealerArea" class="area">
-<div class="dealer-title">KURUPİER</div>
+<div class="game-area">
+<h2>Krupi̇ye</h2>
 <div id="dealerCards" class="cards"></div>
-<div class="score">Toplam: <span id="dealerScore">0</span></div>
-</div>
+<div>Skor: <span id="dealerScore">0</span></div>
 
-<div id="message">Yükleniyor...</div>
-
-<div id="playerArea" class="area">
+<h2>Oyuncu</h2>
 <div id="playerCards" class="cards"></div>
-<div class="score">Toplam: <span id="playerScore">0</span></div>
+<div>Skor: <span id="playerScore">0</span></div>
+
+<h3 id="message">Yükleniyor...</h3>
+
+<div>
+<button class="bet-btn" onclick="addBet(100)">100₺</button>
+<button class="bet-btn" onclick="addBet(500)">500₺</button>
+<button class="bet-btn" onclick="addBet(1000)">1000₺</button>
 </div>
 
-<div class="controls" id="controls">
-<button id="hit">HIT</button>
-<button id="stand">STAND</button>
+<div id="controls">
+<button id="hit" class="control-btn">HIT</button>
+<button id="stand" class="control-btn">STAND</button>
 </div>
 
-<div class="chips">
-<div class="chip c10" onclick="addBet(10)">10</div>
-<div class="chip c25" onclick="addBet(25)">25</div>
-<div class="chip c50" onclick="addBet(50)">50</div>
-<div class="chip c100" onclick="addBet(100)">100</div>
 </div>
 
-<script>
-let balance = 0;
-let bet = 0;
-let betTimer = null;
-let decisionTimer = null;
-let betTimeLeft = 5;
-let decisionTimeLeft = 10;
-let gamePhase = "betting";
-let deck = [];
-let playerHand = [];
-let dealerHand = [];
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth,onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore,doc,onSnapshot,updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// ELEMENTLER
-const betDisplay = document.getElementById("betAmount");
-const balanceDisplay = document.getElementById("balanceAmount");
-const betTimerDisplay = document.getElementById("betTimer");
-const decisionTimerDisplay = document.getElementById("decisionTimer");
-const hitBtn = document.getElementById("hitBtn");
-const standBtn = document.getElementById("standBtn");
+const firebaseConfig={
+apiKey:"API_KEY",
+authDomain:"PROJECT.firebaseapp.com",
+projectId:"PROJECT",
+storageBucket:"PROJECT.appspot.com",
+messagingSenderId:"XXXX",
+appId:"XXXX"
+};
 
-// DECK OLUŞTUR
-function createDeck() {
-    const suits = ["♠","♥","♦","♣"];
-    const values = [
-        {name:"A", val:11},{name:"2", val:2},{name:"3", val:3},
-        {name:"4", val:4},{name:"5", val:5},{name:"6", val:6},
-        {name:"7", val:7},{name:"8", val:8},{name:"9", val:9},
-        {name:"10", val:10},{name:"J", val:10},{name:"Q", val:10},{name:"K", val:10}
-    ];
-    deck = [];
-    for(let s of suits){
-        for(let v of values){
-            deck.push({suit:s, name:v.name, val:v.val});
-        }
-    }
-    deck.sort(()=>Math.random()-0.5);
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getFirestore(app);
+
+let balance=0,bet=0,userRef=null;
+let betTimer=null,decisionTimer=null;
+let betTime=5,decisionTime=10;
+let gameState="betting";
+let deck=[],player=[],dealer=[],dealerHidden=null;
+
+const balanceEl=document.getElementById("balance");
+const betEl=document.getElementById("bet");
+const messageEl=document.getElementById("message");
+const playerCardsEl=document.getElementById("playerCards");
+const dealerCardsEl=document.getElementById("dealerCards");
+const playerScoreEl=document.getElementById("playerScore");
+const dealerScoreEl=document.getElementById("dealerScore");
+const controls=document.getElementById("controls");
+
+onAuthStateChanged(auth,user=>{
+if(!user){
+messageEl.innerText="Giriş Yapmalısın";
+return;
 }
-
-// EL DEĞERİ
-function getHandValue(hand){
-    let total = 0;
-    let aces = 0;
-    for(let c of hand){
-        total += c.val;
-        if(c.name==="A") aces++;
-    }
-    while(total>21 && aces>0){
-        total-=10;
-        aces--;
-    }
-    return total;
+userRef=doc(db,"users",user.uid);
+onSnapshot(userRef,snap=>{
+if(!snap.exists()||snap.data().balance==null){
+messageEl.innerText="Balance Yok";
+return;
 }
-
-// BAHİS EKLE
-function placeBet(amount){
-    if(gamePhase!=="betting") return;
-    if(balance < amount) return;
-
-    if(!betTimer){
-        startBetTimer();
-    }
-
-    bet += amount;
-    balance -= amount;
-
-    updateUI();
-}
-
-// 5 SANİYE BAHİS SÜRESİ
-function startBetTimer(){
-    betTimeLeft = 5;
-    betTimerDisplay.innerText = betTimeLeft;
-    betTimer = setInterval(()=>{
-        betTimeLeft--;
-        betTimerDisplay.innerText = betTimeLeft;
-
-        if(betTimeLeft<=0){
-            clearInterval(betTimer);
-            betTimer = null;
-            betTimerDisplay.innerText = "";
-            if(bet>0){
-                startGame();
-            }
-        }
-    },1000);
-}
-
-// OYUNU BAŞLAT
-function startGame(){
-    gamePhase="dealing";
-    createDeck();
-    playerHand=[];
-    dealerHand=[];
-
-    setTimeout(()=>{
-        playerHand.push(deck.pop());
-        dealerHand.push(deck.pop());
-        playerHand.push(deck.pop());
-        dealerHand.push(deck.pop());
-
-        renderHands();
-        startDecisionPhase();
-    },3000);
-}
-
-// KARAR SÜRESİ
-function startDecisionPhase(){
-    gamePhase="decision";
-    decisionTimeLeft = 10;
-    hitBtn.style.display="inline-block";
-    standBtn.style.display="inline-block";
-    decisionTimerDisplay.innerText = decisionTimeLeft;
-
-    decisionTimer = setInterval(()=>{
-        decisionTimeLeft--;
-        decisionTimerDisplay.innerText = decisionTimeLeft;
-
-        if(decisionTimeLeft<=0){
-            clearInterval(decisionTimer);
-            stand();
-        }
-    },1000);
-}
-
-// HIT
-function hit(){
-    if(gamePhase!=="decision") return;
-
-    playerHand.push(deck.pop());
-    renderHands();
-
-    if(getHandValue(playerHand)>21){
-        endGame("lose");
-    }
-}
-
-// STAND
-function stand(){
-    if(gamePhase!=="decision") return;
-    clearInterval(decisionTimer);
-    dealerPlay();
-}
-
-// DEALER OYUNU
-function dealerPlay(){
-    while(getHandValue(dealerHand)<17){
-        dealerHand.push(deck.pop());
-    }
-    renderHands();
-    decideWinner();
-}
-
-// KAZANAN
-function decideWinner(){
-    let player = getHandValue(playerHand);
-    let dealer = getHandValue(dealerHand);
-
-    if(dealer>21 || player>dealer){
-        endGame("win");
-    } else if(player<dealer){
-        endGame("lose");
-    } else {
-        endGame("push");
-    }
-}
-
-// OYUN SONU
-function endGame(result){
-    gamePhase="ended";
-    hitBtn.style.display="none";
-    standBtn.style.display="none";
-
-    if(result==="win"){
-        balance += bet*2;
-    } else if(result==="push"){
-        balance += bet;
-    }
-
-    bet = 0;
-    updateUI();
-
-    setTimeout(()=>{
-        resetGame();
-    },4000);
-}
-
-// RESET
-function resetGame(){
-    gamePhase="betting";
-    playerHand=[];
-    dealerHand=[];
-    bet=0;
-    updateUI();
-}
-
-// UI GÜNCELLE
-function updateUI(){
-    betDisplay.innerText = bet;
-    balanceDisplay.innerText = balance;
-}
-
-// BAŞLAT
+balance=snap.data().balance;
 updateUI();
-</script>
+messageEl.innerText="Bahis Yapın";
+});
+});
 
+function updateUI(){
+balanceEl.innerText=balance;
+betEl.innerText=bet;
+playerScoreEl.innerText=total(player);
+dealerScoreEl.innerText=(gameState==="playing")?(dealer[0]?cardValue(dealer[0]):0):total(dealer);
+}
+
+function createDeck(){
+deck=[];
+for(let s of ["♥","♦","♣","♠"]){
+for(let v=1;v<=13;v++){
+deck.push({suit:s,value:v});
+}}
+deck.sort(()=>Math.random()-0.5);
+}
+
+function cardValue(c){
+if(c.value>10)return 10;
+if(c.value===1)return 11;
+return c.value;
+}
+
+function total(hand){
+let t=0,a=0;
+for(let c of hand){
+let v=cardValue(c);
+t+=v;
+if(c.value===1)a++;
+}
+while(t>21&&a>0){t-=10;a--;}
+return t;
+}
+
+function renderCard(c){
+let d=document.createElement("div");
+d.className="card "+((c.suit==="♥"||c.suit==="♦")?"red":"");
+let v=c.value===1?"A":c.value===11?"J":c.value===12?"Q":c.value===13?"K":c.value;
+d.innerText=v+c.suit;
+return d;
+}
+
+function renderBack(){
+let d=document.createElement("div");
+d.className="card back";
+return d;
+}
+
+window.addBet=async function(amount){
+if(gameState!=="betting"||balance<amount)return;
+balance-=amount;
+bet+=amount;
+await updateDoc(userRef,{balance});
+updateUI();
+if(!betTimer)startBetTimer();
+}
+
+function startBetTimer(){
+betTime=5;
+messageEl.innerText="Bahisler Kapanıyor: "+betTime;
+betTimer=setInterval(()=>{
+betTime--;
+if(betTime<=0){
+clearInterval(betTimer);
+betTimer=null;
+messageEl.innerText="";
+if(bet>0)startGame();
+}else{
+messageEl.innerText="Bahisler Kapanıyor: "+betTime;
+}
+},1000);
+}
+
+function startGame(){
+gameState="dealing";
+createDeck();
+player=[];dealer=[];
+playerCardsEl.innerHTML="";
+dealerCardsEl.innerHTML="";
+setTimeout(()=>{
+deal("player");
+deal("dealer");
+deal("player");
+dealerHidden=deck.pop();
+dealer.push(dealerHidden);
+dealerCardsEl.appendChild(renderCard(dealer[0]));
+dealerCardsEl.appendChild(renderBack());
+gameState="playing";
+controls.style.display="block";
+startDecisionTimer();
+updateUI();
+},3000);
+}
+
+function deal(to){
+let c=deck.pop();
+if(to==="player"){
+player.push(c);
+playerCardsEl.appendChild(renderCard(c));
+}else{
+dealer.push(c);
+dealerCardsEl.appendChild(renderCard(c));
+}
+updateUI();
+}
+
+function startDecisionTimer(){
+decisionTime=10;
+messageEl.innerText="Karar Süresi: "+decisionTime;
+decisionTimer=setInterval(()=>{
+decisionTime--;
+if(decisionTime<=0){
+clearInterval(decisionTimer);
+stand();
+}else{
+messageEl.innerText="Karar Süresi: "+decisionTime;
+}
+},1000);
+}
+
+document.getElementById("hit").onclick=()=>{
+if(gameState!=="playing")return;
+deal("player");
+if(total(player)>21)finish("lose");
+};
+
+async function stand(){
+if(gameState!=="playing")return;
+clearInterval(decisionTimer);
+gameState="finished";
+controls.style.display="none";
+dealerCardsEl.children[1].remove();
+dealerCardsEl.appendChild(renderCard(dealerHidden));
+while(total(dealer)<17)deal("dealer");
+let p=total(player),d=total(dealer);
+if(d>21||p>d){
+await updateDoc(userRef,{balance:balance+bet*2});
+}
+else if(p===d){
+await updateDoc(userRef,{balance:balance+bet});
+}
+finish("done");
+}
+
+document.getElementById("stand").onclick=stand;
+
+function finish(){
+bet=0;
+updateUI();
+setTimeout(()=>{
+player=[];dealer=[];
+playerCardsEl.innerHTML="";
+dealerCardsEl.innerHTML="";
+messageEl.innerText="Bahis Yapın";
+gameState="betting";
+updateUI();
+},3000);
+}
+</script>
 </body>
 </html>
