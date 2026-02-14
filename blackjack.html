@@ -123,18 +123,6 @@ font-size:14px;
 .chip500{background:radial-gradient(circle,#a855f7,#4c1d95);}
 .chip1000{background:radial-gradient(circle,#00ff88,#065f46);}
 
-.countdown{
-position:absolute;
-top:50%;
-left:50%;
-transform:translate(-50%,-50%);
-font-size:70px;
-font-weight:bold;
-color:#00ffcc;
-display:none;
-z-index:20;
-}
-
 .score{font-size:14px;margin-top:5px}
 </style>
 </head>
@@ -142,14 +130,12 @@ z-index:20;
 <body>
 
 <div class="topBar">
-<div>Bakiye: ₺<span id="balance">1000</span></div>
+<div>Blackjack</div>
 <div>
 Bahis: ₺<span id="bet">0</span>
 <button class="soundBtn" onclick="toggleSound()">🔊</button>
 </div>
 </div>
-
-<div class="countdown" id="countdown">5</div>
 
 <div class="table">
 
@@ -178,20 +164,15 @@ Bahis: ₺<span id="bet">0</span>
 </div>
 
 <script>
-let balance=1000, bet=0
+let bet=0
 let player=[],dealer=[],deck=[]
 let soundOn=true
 let audioUnlocked=false
-
-/* ====== GARANTİLİ SES SİSTEMİ ====== */
+let oyunAktif=false
 
 const cardSound=new Audio("https://assets.mixkit.co/sfx/preview/mixkit-card-slide-1530.mp3")
 const winSound=new Audio("https://assets.mixkit.co/sfx/preview/mixkit-coins-handling-1939.mp3")
 const loseSound=new Audio("https://assets.mixkit.co/sfx/preview/mixkit-player-losing-or-failing-2042.mp3")
-
-cardSound.preload="auto"
-winSound.preload="auto"
-loseSound.preload="auto"
 
 function unlockAudio(){
 if(audioUnlocked) return
@@ -215,8 +196,6 @@ function toggleSound(){
 soundOn=!soundOn
 document.querySelector(".soundBtn").innerText=soundOn?"🔊":"🔇"
 }
-
-/* ============================== */
 
 const suits=["S","H","D","C"]
 const values=["A","2","3","4","5","6","7","8","9","0","J","Q","K"]
@@ -258,32 +237,32 @@ while(total>21&&aces>0){total-=10;aces--}
 return total
 }
 
-const balanceEl=document.getElementById("balance")
 const betSpan=document.getElementById("bet")
 
 function updateUI(){
-balanceEl.innerText=balance
 betSpan.innerText=bet
 }
 
-function placeBet(amount){
-if(balance>=amount){
-balance-=amount
+async function placeBet(amount){
+if(oyunAktif) return
+const izin = await window.oynaVeBakiyedenDus(amount)
+if(!izin) return
 bet+=amount
 updateUI()
 dealBtn.disabled=false
 }
-}
 
 async function startRound(){
+if(bet<=0) return alert("Bahis koymalısın.")
+oyunAktif=true
 document.getElementById("betArea").style.display="none"
 dealBtn.style.display="none"
 
 player=[];dealer=[]
 
-player.push(draw()); render(true); await delay(800)
-dealer.push(draw()); render(true); await delay(800)
-player.push(draw()); render(true); await delay(800)
+player.push(draw()); render(true); await delay(600)
+dealer.push(draw()); render(true); await delay(600)
+player.push(draw()); render(true); await delay(600)
 dealer.push(draw()); render(true)
 
 hitBtn.disabled=false
@@ -315,18 +294,18 @@ render(false)
 endRound()
 }
 
-function endRound(){
+async function endRound(){
 let p=score(player),d=score(dealer)
 
 if(p>21){
 playSound(loseSound)
 }
 else if(d>21||p>d){
-balance+=bet*2
+await window.bakiyeArttir(bet*2)
 playSound(winSound)
 }
 else if(p==d){
-balance+=bet
+await window.bakiyeArttir(bet)
 }
 
 bet=0
@@ -339,6 +318,7 @@ setTimeout(resetTable,2500)
 }
 
 function resetTable(){
+oyunAktif=false
 playerHand.innerHTML=""
 dealerHand.innerHTML=""
 playerScore.innerText=""
@@ -349,8 +329,6 @@ document.getElementById("betArea").style.display="flex"
 }
 
 function delay(ms){return new Promise(r=>setTimeout(r,ms))}
-
-updateUI()
 </script>
 
 </body>
