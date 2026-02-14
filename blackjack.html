@@ -27,19 +27,13 @@ transform:translate(-50%,-50%);
 font-size:20px;
 font-weight:bold;
 color:#00ffcc;
-text-shadow:
-0 0 5px #00ffcc,
-0 0 10px #00ffcc,
-0 0 20px #00ffcc,
-0 0 40px #00ffaa;
+text-shadow:0 0 5px #00ffcc,0 0 10px #00ffcc,0 0 20px #00ffcc,0 0 40px #00ffaa;
 z-index:20;
 }
 
 .countdown{color:#22c55e;font-weight:bold;}
 
-.dealerZone{
-position:absolute;top:60px;left:0;width:100%;text-align:center;z-index:5;
-}
+.dealerZone{position:absolute;top:60px;left:0;width:100%;text-align:center;z-index:5;}
 .score{font-size:14px;color:#22c55e;margin-top:5px;}
 
 .topBar{
@@ -157,10 +151,10 @@ padding-left:15px;padding-right:15px;font-size:13px;
 <button id="standBtn" onclick="stand()" disabled>Stand</button>
 </div>
 
-<div class="ticker" id="ticker">Bahis koyun</div>
+<div class="ticker" id="ticker">Yükleniyor...</div>
 
 <div class="bottomBar">
-<div>Bakiye: ₺<span id="balance">2000</span></div>
+<div>Bakiye: ₺<span id="balance">0</span></div>
 <div>Toplam Bahis: ₺<span id="bet">0</span></div>
 </div>
 </div>
@@ -171,25 +165,20 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-/* ✅ INDEX İLE AYNI FIREBASE CONFIG */
 const firebaseConfig = {
   apiKey: "AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
   authDomain: "emirhan-site.firebaseapp.com",
   projectId: "emirhan-site",
   storageBucket: "emirhan-site.firebasestorage.app",
   messagingSenderId: "668871888390",
-  appId: "1:668871888390:web:76568bda84cb1641f7bd87",
-  measurementId: "G-96ZVZX3DWH"
+  appId: "1:668871888390:web:76568bda84cb1641f7bd87"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-let currentUser = null;
-
-/* ===== OYUN KODUN (DOKUNULMADI) ===== */
-
+let currentUser=null;
 let shoe=[],player=[],dealer=[]
 let balance=0,currentBet=0,round=1
 let gameActive=false
@@ -212,7 +201,7 @@ updateUI();
 }
 
 function startCountdown(){
-if(currentBet<=0)return
+if(currentBet<=0||!currentUser)return
 let time=3
 document.getElementById("ticker").innerHTML=`Betting Time: <span class="countdown">${time}</span>`
 let interval=setInterval(()=>{
@@ -227,25 +216,9 @@ player=[];dealer=[];gameActive=true
 document.getElementById("roundId").innerText="EV-"+round++
 document.getElementById("hitBtn").disabled=false
 document.getElementById("standBtn").disabled=false
-document.getElementById("ticker").innerText="Kartlar dağıtılıyor..."
-let sequence=[()=>player.push(draw()),()=>dealer.push(draw()),()=>player.push(draw()),()=>dealer.push(draw())]
-let i=0
-let dealInterval=setInterval(()=>{
-sequence[i++]()
+document.getElementById("ticker").innerText="Karar ver"
+player.push(draw());dealer.push(draw());player.push(draw());dealer.push(draw());
 render(true);updateScores(true)
-if(i>=sequence.length){clearInterval(dealInterval);document.getElementById("ticker").innerText="Karar ver"}
-},600)
-}
-
-function hit(){player.push(draw());render(true);updateScores(true);if(score(player)>21){revealDealer();setTimeout(endRound,1000)}}
-function stand(){revealDealer()}
-function revealDealer(){render(false);updateScores(false);dealerPlay()}
-
-function dealerPlay(){
-let interval=setInterval(()=>{
-if(score(dealer)<17){dealer.push(draw());render(false);updateScores(false)}
-else{clearInterval(interval);setTimeout(endRound,1000)}
-},700)
 }
 
 async function endRound(){
@@ -254,7 +227,6 @@ document.getElementById("hitBtn").disabled=true
 document.getElementById("standBtn").disabled=true
 
 let p=score(player),d=score(dealer),result=""
-
 if(p>21){result="Bust!"}
 else if(d>21||p>d){
 if(p==21&&player.length==2){balance+=currentBet*2.5;result="Blackjack 3:2"}
@@ -266,22 +238,21 @@ else{result="Kaybettin"}
 currentBet=0;
 updateUI();
 
-await updateDoc(doc(db,"users",currentUser.uid),{
-balance: balance
-});
+await updateDoc(doc(db,"users",currentUser.uid),{balance: balance});
 
 document.getElementById("ticker").innerText=result
 setTimeout(resetRound,2500)
 }
 
+function hit(){player.push(draw());render(true);updateScores(true);if(score(player)>21){revealDealer();setTimeout(endRound,1000)}}
+function stand(){revealDealer()}
+function revealDealer(){render(false);updateScores(false);dealerPlay()}
+function dealerPlay(){let interval=setInterval(()=>{if(score(dealer)<17){dealer.push(draw());render(false);updateScores(false)}else{clearInterval(interval);setTimeout(endRound,1000)}},700)}
 function resetRound(){player=[];dealer=[];render();updateScores();document.getElementById("ticker").innerText="Bahis koyun"}
 function render(hideDealer=false){
 document.getElementById("playerHand").innerHTML=player.map(cardHTML).join("")
-if(hideDealer){
-document.getElementById("dealerHand").innerHTML=dealer.length?cardHTML(dealer[0])+`<div class="card back"></div>`:""
-}else{
-document.getElementById("dealerHand").innerHTML=dealer.map(cardHTML).join("")
-}}
+if(hideDealer){document.getElementById("dealerHand").innerHTML=dealer.length?cardHTML(dealer[0])+`<div class="card back"></div>`:""}
+else{document.getElementById("dealerHand").innerHTML=dealer.map(cardHTML).join("")}}
 function updateScores(hideDealer=false){
 document.getElementById("playerScore").innerText=player.length?"Toplam: "+score(player):""
 if(dealer.length){
@@ -294,25 +265,21 @@ document.getElementById("balance").innerText=balance
 document.getElementById("bet").innerText=currentBet
 }
 
-/* ===== GİRİŞ ZORUNLU ===== */
-
+/* 🔥 STABİL AUTH */
 onAuthStateChanged(auth, async (user)=>{
-
-if(!user){
-window.location.href="index.html"
-return
-}
-
+if(user){
 currentUser=user
-
 const snap=await getDoc(doc(db,"users",user.uid))
 if(snap.exists()){
 balance=snap.data().balance||0
 updateUI()
+document.getElementById("ticker").innerText="Bahis koyun"
 }else{
 window.location.href="index.html"
 }
-
+}else{
+window.location.href="index.html"
+}
 })
 
 buildShoe()
