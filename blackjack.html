@@ -2,11 +2,18 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>PixelArena Blackjack</title>
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box;}
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+-webkit-tap-highlight-color:transparent;
+user-select:none;
+}
+
 body{
 height:100vh;
 overflow:hidden;
@@ -15,15 +22,7 @@ background:
 radial-gradient(circle at center, rgba(255,180,60,0.15) 0%, transparent 40%),
 linear-gradient(to bottom,#000 0%,#000 46%,#ff7b00 47%,#0b5d2a 48%,#063d1c 100%);
 color:white;
-}
-
-/* Premium vignette */
-body:after{
-content:"";
-position:absolute;
-inset:0;
-background:radial-gradient(circle, transparent 60%, rgba(0,0,0,0.55) 100%);
-pointer-events:none;
+touch-action:manipulation;
 }
 
 /* ===== PREMIUM ÜST BAR ===== */
@@ -31,61 +30,71 @@ pointer-events:none;
 position:absolute;
 top:0;
 width:100%;
-height:75px;
-background:linear-gradient(to bottom,#ffffff 0%,#f2f2f2 100%);
+height:85px;
 display:flex;
 justify-content:space-between;
 align-items:center;
 padding:0 30px;
+background:linear-gradient(135deg,#ffffff,#f3f3f3);
+box-shadow:0 8px 30px rgba(0,0,0,0.25);
 z-index:20;
-box-shadow:0 6px 25px rgba(0,0,0,0.25);
-border-bottom:2px solid #e6e6e6;
 }
 
-.top-bar div{font-size:16px;color:#333;font-weight:600;}
-.top-bar div:nth-child(2){
-font-size:24px;
-font-weight:700;
+.brand{
+font-size:26px;
+font-weight:800;
 background:linear-gradient(90deg,#d4af37,#f7e27b,#d4af37);
 -webkit-background-clip:text;
 -webkit-text-fill-color:transparent;
-letter-spacing:1px;
 }
-#balance,#bet{font-weight:700;color:#000;}
+
+.pill{
+padding:12px 26px;
+border-radius:50px;
+font-weight:700;
+background:linear-gradient(145deg,#ffffff,#ececec);
+box-shadow:0 6px 15px rgba(0,0,0,0.25);
+animation:pulse 2s infinite alternate;
+color:#000;
+}
+
+@keyframes pulse{
+from{box-shadow:0 0 10px rgba(255,215,0,0.4);}
+to{box-shadow:0 0 25px rgba(255,215,0,0.9);}
+}
 
 /* Alanlar */
 .area{position:absolute;width:100%;text-align:center;}
-#dealerArea{top:150px;}
+#dealerArea{top:160px;}
 #playerArea{bottom:280px;}
 
 .dealer-title{
 font-size:20px;
-font-weight:700;
-letter-spacing:3px;
-margin-bottom:14px;
+font-weight:800;
+letter-spacing:4px;
+margin-bottom:12px;
 background:linear-gradient(90deg,#d4af37,#f7e27b,#d4af37);
 -webkit-background-clip:text;
 -webkit-text-fill-color:transparent;
-text-shadow:0 3px 10px rgba(0,0,0,0.6);
 }
 
-.cards{display:flex;justify-content:center;gap:20px;perspective:1200px;}
+.cards{display:flex;justify-content:center;gap:20px;perspective:1000px;}
 
 .card{
 width:80px;height:120px;
 position:relative;
 transform-style:preserve-3d;
-animation:slideDeal .6s ease forwards;
+animation:deal .6s ease forwards;
 }
-@keyframes slideDeal{
-from{transform:translateY(-250px) rotateY(70deg);opacity:0;}
+@keyframes deal{
+from{transform:translateY(-200px) rotateY(60deg);opacity:0;}
 to{transform:translateY(0) rotateY(0);opacity:1;}
 }
 .inner{
 position:absolute;width:100%;height:100%;
 border-radius:14px;
 backface-visibility:hidden;
-box-shadow:0 14px 30px rgba(0,0,0,0.6);
+box-shadow:0 12px 25px rgba(0,0,0,0.6);
 }
 .front{background:white;border:1px solid #ddd;}
 .back{
@@ -98,11 +107,7 @@ border:3px solid white;
 .corner{position:absolute;font-size:14px;font-weight:700;}
 .top-left{top:6px;left:8px;}
 .bottom-right{bottom:6px;right:8px;transform:rotate(180deg);}
-.center{
-position:absolute;top:50%;left:50%;
-transform:translate(-50%,-50%);
-font-size:34px;
-}
+.center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:34px;}
 .red{color:#d40000;}
 .black{color:#000;}
 
@@ -113,7 +118,6 @@ width:100%;
 text-align:center;
 font-size:22px;
 font-weight:600;
-text-shadow:0 3px 8px rgba(0,0,0,0.6);
 }
 
 .controls{
@@ -124,22 +128,18 @@ text-align:center;
 display:none;
 }
 button{
-padding:15px 32px;
+padding:15px 30px;
 margin:10px;
 border:none;
 border-radius:14px;
 font-weight:700;
 cursor:pointer;
 font-size:15px;
-backdrop-filter:blur(6px);
 box-shadow:0 8px 20px rgba(0,0,0,0.5);
-transition:.2s;
 }
 #hit{background:#2ecc71;color:white;}
 #stand{background:#e74c3c;color:white;}
-button:hover{transform:scale(1.05);}
 
-/* Chips */
 .chips{
 position:absolute;
 bottom:35px;
@@ -155,11 +155,6 @@ margin:10px;
 font-weight:700;
 cursor:pointer;
 box-shadow:0 10px 25px rgba(0,0,0,0.6);
-transition:.2s;
-}
-.chip:hover{
-transform:translateY(-6px) scale(1.08);
-box-shadow:0 15px 30px rgba(255,215,0,0.5);
 }
 .c10{background:#f0f0f0;color:black;}
 .c25{background:#1eaa00;}
@@ -170,9 +165,9 @@ box-shadow:0 15px 30px rgba(255,215,0,0.5);
 <body>
 
 <div class="top-bar">
-<div>BAKİYE: <span id="balance">1000</span>₺</div>
-<div>PixelArena</div>
-<div>BAHİS: <span id="bet">0</span>₺</div>
+<div class="pill">BAKİYE: <span id="balance">1000</span>₺</div>
+<div class="brand">PixelArena</div>
+<div class="pill">BAHİS: <span id="bet">0</span>₺</div>
 </div>
 
 <div id="dealerArea" class="area">
@@ -202,7 +197,8 @@ box-shadow:0 15px 30px rgba(255,215,0,0.5);
 const suits=["♥","♦","♣","♠"];
 let deck=[],player=[],dealer=[];
 let balance=1000,bet=0;
-let decisionTimer,betTimer;
+let betTimerStarted=false,betCountdown=5;
+let decisionTimer,decisionTime;
 let insuranceBet=0;
 
 function createDeck(){
@@ -226,12 +222,10 @@ if(!hidden){
 let color=(card.suit=="♥"||card.suit=="♦")?"red":"black";
 front.classList.add(color);
 let val=(card.value==1?"A":card.value==11?"J":card.value==12?"Q":card.value==13?"K":card.value);
-front.innerHTML=`
-<div class="corner top-left">${val}${card.suit}</div>
+front.innerHTML=`<div class="corner top-left">${val}${card.suit}</div>
 <div class="corner bottom-right">${val}${card.suit}</div>
 <div class="center">${card.suit}</div>`;
 }
-
 cardDiv.appendChild(front);
 cardDiv.appendChild(back);
 if(hidden) cardDiv.classList.add("flip");
@@ -250,30 +244,29 @@ dealerCards.appendChild(renderCard(c,hidden));
 }
 
 function addBet(amount){
-if(balance>=amount){
+if(balance-bet < amount) return;
 bet+=amount;
 document.getElementById("bet").innerText=bet;
-startBetCountdown();
-}
-}
 
-function startBetCountdown(){
-clearInterval(betTimer);
-let time=5;
-message.innerText="Bahislerin Kapanmasına "+time+" Saniye";
-betTimer=setInterval(()=>{
-time--;
-message.innerText="Bahislerin Kapanmasına "+time+" Saniye";
-if(time==0){
-clearInterval(betTimer);
+if(!betTimerStarted){
+betTimerStarted=true;
+let interval=setInterval(()=>{
+betCountdown--;
+message.innerText="Bahislerin Kapanmasına "+betCountdown+" Saniye";
+if(betCountdown==0){
+clearInterval(interval);
 startGame();
 }
 },1000);
+}
 }
 
 function startGame(){
 balance-=bet;
 document.getElementById("balance").innerText=balance;
+betCountdown=5;
+betTimerStarted=false;
+
 player=[];dealer=[];
 playerCards.innerHTML="";
 dealerCards.innerHTML="";
@@ -285,13 +278,13 @@ setTimeout(()=>dealCard("player",false),1000);
 setTimeout(()=>{
 dealCard("dealer",true);
 checkInsurance();
-startDecisionCountdown();
+startDecision();
 },1500);
 }
 
 function checkInsurance(){
-if(dealer[0].value==1){
-let take=confirm("Dealer As gösterdi. Sigorta almak ister misiniz?");
+if(dealer[0].value==1 && balance>=bet/2){
+let take=confirm("Kurupiyer As gösterdi. Sigorta ister misiniz?");
 if(take){
 insuranceBet=bet/2;
 balance-=insuranceBet;
@@ -300,14 +293,14 @@ document.getElementById("balance").innerText=balance;
 }
 }
 
-function startDecisionCountdown(){
+function startDecision(){
 controls.style.display="block";
-let time=10;
-message.innerText="Karar İçin "+time+" Saniye";
+decisionTime=10;
+message.innerText="Karar İçin "+decisionTime+" Saniye";
 decisionTimer=setInterval(()=>{
-time--;
-message.innerText="Karar İçin "+time+" Saniye";
-if(time==0){
+decisionTime--;
+message.innerText="Karar İçin "+decisionTime+" Saniye";
+if(decisionTime==0){
 clearInterval(decisionTimer);
 stand();
 }
@@ -326,25 +319,16 @@ return t;
 }
 
 function hit(){
-message.innerText="Kart Çekiliyor...";
 dealCard("player",false);
-if(total(player)>21){
-endGame();
-}
+if(total(player)>21) endGame();
 }
 
 function stand(){
 clearInterval(decisionTimer);
 controls.style.display="none";
-message.innerText="Kart İstenmiyor";
-
 dealerCards.innerHTML="";
 dealer.forEach(c=>dealerCards.appendChild(renderCard(c,false)));
-
-while(total(dealer)<17){
-dealCard("dealer",false);
-}
-
+while(total(dealer)<17) dealCard("dealer",false);
 endGame();
 }
 
@@ -352,18 +336,11 @@ function endGame(){
 let p=total(player);
 let d=total(dealer);
 let msg="";
-
-if(dealer.length==2 && total(dealer)==21){
-if(insuranceBet>0) balance+=insuranceBet*3;
-msg="Dealer Blackjack!";
-}
-else if(p>21) msg="Kaybettin!";
+if(p>21) msg="Kaybettin!";
 else if(d>21||p>d){balance+=bet*2;msg="Kazandın!";}
 else if(d>p) msg="Dealer Kazandı!";
 else{balance+=bet;msg="Berabere!";}
-
-bet=0;
-insuranceBet=0;
+bet=0;insuranceBet=0;
 document.getElementById("bet").innerText=bet;
 document.getElementById("balance").innerText=balance;
 message.innerText=msg;
