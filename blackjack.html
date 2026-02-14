@@ -144,7 +144,6 @@ userRef=doc(db,"users",user.uid);
 onSnapshot(userRef,snap=>{
 balance=snap.data()?.balance||0;
 balanceEl.innerText=balance;
-if(gameState==="betting") message.innerText="Bahis Yapın";
 });
 });
 
@@ -174,11 +173,14 @@ return t;
 }
 
 function getCardUrl(card){
-let v=card.value===1?"A":
-card.value===11?"J":
-card.value===12?"Q":
-card.value===13?"K":
-String(card.value);
+let v;
+if(card.value===1) v="A";
+else if(card.value===11) v="J";
+else if(card.value===12) v="Q";
+else if(card.value===13) v="K";
+else if(card.value===10) v="10";
+else v=String(card.value);
+
 return `https://deckofcardsapi.com/static/img/${v}${card.suit}.png`;
 }
 
@@ -288,6 +290,7 @@ if(time>0){
 message.innerText="Karar İçin "+time+" Saniye";
 }else{
 clearInterval(decisionTimer);
+decisionTimer=null;
 stand();
 }
 },1000);
@@ -296,19 +299,26 @@ stand();
 async function hit(){
 if(gameState!=="playing")return;
 await deal("player",false);
+
 if(total(player)>21){
-endGame("Kaybettin!");
+await dealerTurn(); // 🔥 bust olunca dealer oynar
 }
 }
 
 async function stand(){
 if(gameState!=="playing")return;
 
+clearInterval(decisionTimer);
+decisionTimer=null;
+message.innerText="";
+await dealerTurn();
+}
+
+async function dealerTurn(){
 gameState="finished";
 controls.style.display="none";
-clearInterval(decisionTimer);
 
-/* 🔥 Kapalı kartı aç (DOM reset yok) */
+/* Kapalı kartı aç */
 if(dealerHiddenCardElement && dealerHiddenCardData){
 dealerHiddenCardElement.src=getCardUrl(dealerHiddenCardData);
 }
@@ -316,7 +326,7 @@ dealerHiddenCardElement.src=getCardUrl(dealerHiddenCardData);
 updateScores();
 await delay(3000);
 
-/* 🔥 3 saniye aralıkla kart çekme */
+/* 3 saniye aralıkla kart çek */
 while(total(dealer)<17){
 await deal("dealer",false);
 await delay(3000);
@@ -324,6 +334,11 @@ await delay(3000);
 
 let p=total(player);
 let d=total(dealer);
+
+if(p>21){
+endGame("Kaybettin!");
+return;
+}
 
 if(d>21||p>d){
 balance+=bet*2;
