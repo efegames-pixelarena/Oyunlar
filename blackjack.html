@@ -118,25 +118,56 @@ gap:10px;
 }
 
 .card{
-width:60px;
-height:90px;
+width:70px;
+height:105px;
 border-radius:10px;
 background:white;
-display:flex;
-align-items:center;
-justify-content:center;
-font-size:22px;
+position:relative;
 font-weight:bold;
-box-shadow:0 6px 15px rgba(0,0,0,0.5);
+box-shadow:0 8px 18px rgba(0,0,0,0.6);
+opacity:0;
+transform:translateY(-40px);
+animation:deal .4s ease forwards;
 }
 
-.card.back{
-background:linear-gradient(135deg,#1a2a6c,#000);
-color:transparent;
+@keyframes deal{
+to{
+opacity:1;
+transform:translateY(0);
+}
+}
+
+.corner{
+position:absolute;
+font-size:14px;
+line-height:14px;
+}
+
+.top-left{
+top:6px;
+left:6px;
+}
+
+.bottom-right{
+bottom:6px;
+right:6px;
+transform:rotate(180deg);
+}
+
+.center{
+position:absolute;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+font-size:26px;
 }
 
 .red{color:#d40000;}
 .black{color:#000;}
+
+.card.back{
+background:linear-gradient(135deg,#1a2a6c,#000);
+}
 
 #message{
 position:absolute;
@@ -211,7 +242,7 @@ Bahis: <span id="bet">0</span>₺
 <div id="dealerArea" class="area">
 <div class="dealer-title">KURUPİER</div>
 <div id="dealerCards" class="cards"></div>
-<div class="score">Toplam: <span id="dealerScore">0</span></div>
+<div class="score">Toplam: <span id="dealerScore"></span></div>
 </div>
 
 <div id="message">Bahis Yapın</div>
@@ -237,9 +268,8 @@ Bahis: <span id="bet">0</span>₺
 const suits=["♥","♦","♣","♠"];
 let deck=[],player=[],dealer=[];
 let balance=1000,bet=0;
-let decisionTimer,betTimer;
-let decisionActive=false,bettingPhase=false;
 let dealerHiddenCard=null;
+let decisionTimer;
 
 function createDeck(){
 deck=[];
@@ -250,15 +280,20 @@ deck.push({suit:s,value:i});
 deck.sort(()=>Math.random()-0.5);
 }
 
-function renderCard(card){
-let div=document.createElement("div");
-div.className="card "+((card.suit=="♥"||card.suit=="♦")?"red":"black");
+function cardHTML(card){
 let val=(card.value==1?"A":card.value==11?"J":card.value==12?"Q":card.value==13?"K":card.value);
-div.innerHTML=val+card.suit;
+let color=(card.suit=="♥"||card.suit=="♦")?"red":"black";
+let div=document.createElement("div");
+div.className="card "+color;
+div.innerHTML=`
+<div class="corner top-left">${val}<br>${card.suit}</div>
+<div class="corner bottom-right">${val}<br>${card.suit}</div>
+<div class="center">${card.suit}</div>
+`;
 return div;
 }
 
-function renderBack(){
+function backCard(){
 let div=document.createElement("div");
 div.className="card back";
 return div;
@@ -275,34 +310,28 @@ while(t>21&&a>0){t-=10;a--;}
 return t;
 }
 
-function updateScores(){
+function updateScores(showDealer=false){
 playerScore.innerText=total(player);
-dealerScore.innerText=decisionActive?dealer[0]? (dealer[0].value>10?10:dealer[0].value==1?11:dealer[0].value):0 : total(dealer);
+dealerScore.innerText=showDealer?total(dealer):"";
 }
 
 function addBet(amount){
 if(balance<amount) return;
 balance-=amount;
 bet+=amount;
-balanceElement.innerText=balance;
-betElement.innerText=bet;
-
-if(!bettingPhase){
+balance.innerText=balance;
+bet.innerText=bet;
 startBetCountdown();
-}
 }
 
 function startBetCountdown(){
-bettingPhase=true;
 let time=5;
 message.innerText="Bahisler Kapanıyor: "+time;
-
-betTimer=setInterval(()=>{
+let timer=setInterval(()=>{
 time--;
 message.innerText="Bahisler Kapanıyor: "+time;
 if(time<=0){
-clearInterval(betTimer);
-bettingPhase=false;
+clearInterval(timer);
 startGame();
 }
 },1000);
@@ -314,38 +343,39 @@ playerCards.innerHTML="";
 dealerCards.innerHTML="";
 createDeck();
 
-dealCard("player");
-dealCard("dealer");
-dealCard("player");
-
+let p1=deck.pop();
+let d1=deck.pop();
+let p2=deck.pop();
 dealerHiddenCard=deck.pop();
+
+setTimeout(()=>{
+player.push(p1);
+playerCards.appendChild(cardHTML(p1));
+updateScores();
+},0);
+
+setTimeout(()=>{
+dealer.push(d1);
+dealerCards.appendChild(cardHTML(d1));
+},3000);
+
+setTimeout(()=>{
+player.push(p2);
+playerCards.appendChild(cardHTML(p2));
+updateScores();
+},6000);
+
+setTimeout(()=>{
 dealer.push(dealerHiddenCard);
-
-dealerCards.appendChild(renderCard(dealer[0]));
-dealerCards.appendChild(renderBack());
-
-updateScores();
+dealerCards.appendChild(backCard());
 startDecision();
-}
-
-function dealCard(to){
-let c=deck.pop();
-if(to=="player"){
-player.push(c);
-playerCards.appendChild(renderCard(c));
-}else{
-dealer.push(c);
-dealerCards.appendChild(renderCard(c));
-}
-updateScores();
+},9000);
 }
 
 function startDecision(){
-decisionActive=true;
 controls.style.display="block";
 let time=10;
 message.innerText="Karar İçin "+time+" Saniye";
-
 decisionTimer=setInterval(()=>{
 time--;
 message.innerText="Karar İçin "+time+" Saniye";
@@ -357,61 +387,47 @@ stand();
 }
 
 function hit(){
-if(!decisionActive) return;
-dealCard("player");
-if(total(player)>21){
-endGame("Kaybettin!");
-}
+let c=deck.pop();
+player.push(c);
+playerCards.appendChild(cardHTML(c));
+updateScores();
+if(total(player)>21) endGame("Kaybettin!");
 }
 
 function stand(){
-if(!decisionActive) return;
-decisionActive=false;
 clearInterval(decisionTimer);
 controls.style.display="none";
 
 dealerCards.children[1].remove();
-dealerCards.appendChild(renderCard(dealerHiddenCard));
+dealerCards.appendChild(cardHTML(dealerHiddenCard));
 
-while(total(dealer)<17) dealCard("dealer");
+while(total(dealer)<17){
+let c=deck.pop();
+dealer.push(c);
+dealerCards.appendChild(cardHTML(c));
+}
 
 let p=total(player);
 let d=total(dealer);
 
-if(d>21||p>d){
-balance+=bet*2;
-endGame("Kazandın!");
-}
-else if(d>p){
-endGame("Dealer Kazandı!");
-}
-else{
-balance+=bet;
-endGame("Berabere!");
-}
+if(d>21||p>d){balance+=bet*2;endGame("Kazandın!");}
+else if(d>p){endGame("Dealer Kazandı!");}
+else{balance+=bet;endGame("Berabere!");}
+
+updateScores(true);
 }
 
 function endGame(text){
-decisionActive=false;
-controls.style.display="none";
 message.innerText=text;
 bet=0;
-betElement.innerText=0;
-balanceElement.innerText=balance;
-
 setTimeout(()=>{
 playerCards.innerHTML="";
 dealerCards.innerHTML="";
 playerScore.innerText=0;
-dealerScore.innerText=0;
+dealerScore.innerText="";
 message.innerText="Bahis Yapın";
-},2000);
+},3000);
 }
-
-const balanceElement=document.getElementById("balance");
-const betElement=document.getElementById("bet");
-document.getElementById("hit").onclick=hit;
-document.getElementById("stand").onclick=stand;
 </script>
 
 </body>
