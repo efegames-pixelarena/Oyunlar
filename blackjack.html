@@ -25,7 +25,7 @@ color:white;
 touch-action:manipulation;
 }
 
-/* ===== PREMIUM ÜST BAR ===== */
+/* TOP BAR */
 .top-bar{
 position:absolute;
 top:0;
@@ -63,7 +63,6 @@ from{box-shadow:0 0 10px rgba(255,215,0,0.4);}
 to{box-shadow:0 0 25px rgba(255,215,0,0.9);}
 }
 
-/* Alanlar */
 .area{position:absolute;width:100%;text-align:center;}
 #dealerArea{top:160px;}
 #playerArea{bottom:280px;}
@@ -78,36 +77,20 @@ background:linear-gradient(90deg,#d4af37,#f7e27b,#d4af37);
 -webkit-text-fill-color:transparent;
 }
 
-.cards{display:flex;justify-content:center;gap:20px;perspective:1000px;}
+.cards{display:flex;justify-content:center;gap:20px;}
 
 .card{
 width:80px;height:120px;
-position:relative;
-transform-style:preserve-3d;
-animation:deal .6s ease forwards;
-}
-@keyframes deal{
-from{transform:translateY(-200px) rotateY(60deg);opacity:0;}
-to{transform:translateY(0) rotateY(0);opacity:1;}
-}
-.inner{
-position:absolute;width:100%;height:100%;
 border-radius:14px;
-backface-visibility:hidden;
+background:white;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:30px;
+font-weight:bold;
 box-shadow:0 12px 25px rgba(0,0,0,0.6);
 }
-.front{background:white;border:1px solid #ddd;}
-.back{
-background:linear-gradient(45deg,#002a7f,#0040c1);
-transform:rotateY(180deg);
-border:3px solid white;
-}
-.flip{transform:rotateY(180deg);transition:transform .6s;}
 
-.corner{position:absolute;font-size:14px;font-weight:700;}
-.top-left{top:6px;left:8px;}
-.bottom-right{bottom:6px;right:8px;transform:rotate(180deg);}
-.center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:34px;}
 .red{color:#d40000;}
 .black{color:#000;}
 
@@ -126,7 +109,9 @@ bottom:140px;
 width:100%;
 text-align:center;
 display:none;
+z-index:50;
 }
+
 button{
 padding:15px 30px;
 margin:10px;
@@ -134,9 +119,10 @@ border:none;
 border-radius:14px;
 font-weight:700;
 cursor:pointer;
-font-size:15px;
+font-size:16px;
 box-shadow:0 8px 20px rgba(0,0,0,0.5);
 }
+
 #hit{background:#2ecc71;color:white;}
 #stand{background:#e74c3c;color:white;}
 
@@ -146,6 +132,7 @@ bottom:35px;
 width:100%;
 text-align:center;
 }
+
 .chip{
 display:inline-block;
 width:70px;height:70px;
@@ -156,6 +143,7 @@ font-weight:700;
 cursor:pointer;
 box-shadow:0 10px 25px rgba(0,0,0,0.6);
 }
+
 .c10{background:#f0f0f0;color:black;}
 .c25{background:#1eaa00;}
 .c50{background:#ff1c1c;}
@@ -197,9 +185,8 @@ box-shadow:0 10px 25px rgba(0,0,0,0.6);
 const suits=["♥","♦","♣","♠"];
 let deck=[],player=[],dealer=[];
 let balance=1000,bet=0;
-let betTimerStarted=false,betCountdown=5;
-let decisionTimer,decisionTime;
-let insuranceBet=0;
+let decisionTimer;
+let decisionActive=false;
 
 function createDeck(){
 deck=[];
@@ -210,99 +197,62 @@ deck.push({suit:s,value:i});
 deck.sort(()=>Math.random()-0.5);
 }
 
-function renderCard(card,hidden=false){
-let cardDiv=document.createElement("div");
-cardDiv.className="card";
-let front=document.createElement("div");
-front.className="inner front";
-let back=document.createElement("div");
-back.className="inner back";
-
-if(!hidden){
-let color=(card.suit=="♥"||card.suit=="♦")?"red":"black";
-front.classList.add(color);
+function renderCard(card){
+let div=document.createElement("div");
+div.className="card "+((card.suit=="♥"||card.suit=="♦")?"red":"black");
 let val=(card.value==1?"A":card.value==11?"J":card.value==12?"Q":card.value==13?"K":card.value);
-front.innerHTML=`<div class="corner top-left">${val}${card.suit}</div>
-<div class="corner bottom-right">${val}${card.suit}</div>
-<div class="center">${card.suit}</div>`;
-}
-cardDiv.appendChild(front);
-cardDiv.appendChild(back);
-if(hidden) cardDiv.classList.add("flip");
-return cardDiv;
+div.innerHTML=val+card.suit;
+return div;
 }
 
-function dealCard(to,hidden){
+function dealCard(to){
 let c=deck.pop();
 if(to=="player"){
 player.push(c);
-playerCards.appendChild(renderCard(c,false));
+playerCards.appendChild(renderCard(c));
 }else{
 dealer.push(c);
-dealerCards.appendChild(renderCard(c,hidden));
+dealerCards.appendChild(renderCard(c));
 }
 }
 
 function addBet(amount){
-if(balance-bet < amount) return;
+if(balance-bet<amount) return;
 bet+=amount;
 document.getElementById("bet").innerText=bet;
-
-if(!betTimerStarted){
-betTimerStarted=true;
-let interval=setInterval(()=>{
-betCountdown--;
-message.innerText="Bahislerin Kapanmasına "+betCountdown+" Saniye";
-if(betCountdown==0){
-clearInterval(interval);
-startGame();
-}
-},1000);
-}
+setTimeout(startGame,1000);
 }
 
 function startGame(){
 balance-=bet;
 document.getElementById("balance").innerText=balance;
-betCountdown=5;
-betTimerStarted=false;
 
 player=[];dealer=[];
 playerCards.innerHTML="";
 dealerCards.innerHTML="";
 createDeck();
 
-dealCard("player",false);
-setTimeout(()=>dealCard("dealer",false),500);
-setTimeout(()=>dealCard("player",false),1000);
-setTimeout(()=>{
-dealCard("dealer",true);
-checkInsurance();
-startDecision();
-},1500);
-}
+dealCard("player");
+dealCard("dealer");
+dealCard("player");
+dealCard("dealer");
 
-function checkInsurance(){
-if(dealer[0].value==1 && balance>=bet/2){
-let take=confirm("Kurupiyer As gösterdi. Sigorta ister misiniz?");
-if(take){
-insuranceBet=bet/2;
-balance-=insuranceBet;
-document.getElementById("balance").innerText=balance;
-}
-}
+startDecision();
 }
 
 function startDecision(){
+decisionActive=true;
 controls.style.display="block";
-decisionTime=10;
-message.innerText="Karar İçin "+decisionTime+" Saniye";
+
+let time=10;
+message.innerText="Karar İçin "+time+" Saniye";
+
 decisionTimer=setInterval(()=>{
-decisionTime--;
-message.innerText="Karar İçin "+decisionTime+" Saniye";
-if(decisionTime==0){
+time--;
+message.innerText="Karar İçin "+time+" Saniye";
+if(time<=0){
 clearInterval(decisionTimer);
-stand();
+if(decisionActive) stand();
 }
 },1000);
 }
@@ -319,35 +269,38 @@ return t;
 }
 
 function hit(){
-dealCard("player",false);
-if(total(player)>21) endGame();
+if(!decisionActive) return;
+dealCard("player");
+if(total(player)>21){
+decisionActive=false;
+clearInterval(decisionTimer);
+controls.style.display="none";
+message.innerText="Kaybettin!";
+}
 }
 
 function stand(){
+if(!decisionActive) return;
+decisionActive=false;
 clearInterval(decisionTimer);
 controls.style.display="none";
-dealerCards.innerHTML="";
-dealer.forEach(c=>dealerCards.appendChild(renderCard(c,false)));
-while(total(dealer)<17) dealCard("dealer",false);
-endGame();
-}
 
-function endGame(){
+while(total(dealer)<17) dealCard("dealer");
+
 let p=total(player);
 let d=total(dealer);
-let msg="";
-if(p>21) msg="Kaybettin!";
-else if(d>21||p>d){balance+=bet*2;msg="Kazandın!";}
-else if(d>p) msg="Dealer Kazandı!";
-else{balance+=bet;msg="Berabere!";}
-bet=0;insuranceBet=0;
-document.getElementById("bet").innerText=bet;
+
+if(d>21||p>d){balance+=bet*2;message.innerText="Kazandın!";}
+else if(d>p){message.innerText="Dealer Kazandı!";}
+else{balance+=bet;message.innerText="Berabere!";}
+
+bet=0;
+document.getElementById("bet").innerText=0;
 document.getElementById("balance").innerText=balance;
-message.innerText=msg;
 }
 
-hit.onclick=hit;
-stand.onclick=stand;
+document.getElementById("hit").onclick=hit;
+document.getElementById("stand").onclick=stand;
 </script>
 
 </body>
