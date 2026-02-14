@@ -181,34 +181,37 @@ Bahis: ₺<span id="bet">0</span>
 let balance=1000, bet=0
 let player=[],dealer=[],deck=[]
 let soundOn=true
-let audioUnlocked=false
 
-const dealSound=new Audio("https://assets.mixkit.co/sfx/preview/mixkit-card-flip-1933.mp3")
-const winSound=new Audio("https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.mp3")
-const bustSound=new Audio("https://assets.mixkit.co/sfx/preview/mixkit-arcade-retro-game-over-213.mp3")
+/* =======================
+   PROFESYONEL SES MOTORU
+======================= */
+let audioCtx;
 
-dealSound.preload="auto"
-winSound.preload="auto"
-bustSound.preload="auto"
-
-function unlockAudio(){
-if(audioUnlocked) return
-dealSound.play().then(()=>{dealSound.pause();dealSound.currentTime=0})
-.catch(()=>{})
-audioUnlocked=true
+async function initAudio(){
+if(!audioCtx){
+audioCtx=new(window.AudioContext||window.webkitAudioContext)()
+await audioCtx.resume()
 }
-document.body.addEventListener("click",unlockAudio,{once:true})
+}
 
-function playSound(s){
-if(!soundOn) return
-s.currentTime=0
-s.play().catch(()=>{})
+document.body.addEventListener("click",initAudio,{once:true})
+
+async function playSound(url){
+if(!soundOn||!audioCtx)return
+const res=await fetch(url)
+const arr=await res.arrayBuffer()
+const buffer=await audioCtx.decodeAudioData(arr)
+const src=audioCtx.createBufferSource()
+src.buffer=buffer
+src.connect(audioCtx.destination)
+src.start(0)
 }
 
 function toggleSound(){
 soundOn=!soundOn
 document.querySelector(".soundBtn").innerText=soundOn?"🔊":"🔇"
 }
+/* ======================= */
 
 const suits=["S","H","D","C"]
 const values=["A","2","3","4","5","6","7","8","9","0","J","Q","K"]
@@ -222,7 +225,10 @@ deck.sort(()=>Math.random()-0.5)
 }
 buildDeck()
 
-function draw(){ playSound(dealSound); return deck.pop() }
+function draw(){
+playSound("https://assets.mixkit.co/sfx/preview/mixkit-card-flip-1933.mp3")
+return deck.pop()
+}
 
 function cardHTML(code,hidden=false){
 if(hidden)
@@ -292,7 +298,10 @@ hideDealer?"Toplam: ?":"Toplam: "+score(dealer)
 function hit(){
 player.push(draw())
 render(true)
-if(score(player)>21){ playSound(bustSound); stand(); }
+if(score(player)>21){
+playSound("https://assets.mixkit.co/sfx/preview/mixkit-arcade-retro-game-over-213.mp3")
+stand()
+}
 }
 
 function stand(){
@@ -305,7 +314,10 @@ function endRound(){
 let p=score(player),d=score(dealer)
 
 if(p>21){}
-else if(d>21||p>d){ balance+=bet*2; playSound(winSound); }
+else if(d>21||p>d){
+balance+=bet*2
+playSound("https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.mp3")
+}
 else if(p==d){ balance+=bet }
 
 bet=0
