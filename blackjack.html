@@ -167,7 +167,6 @@ padding-left:15px;padding-right:15px;font-size:13px;
 
 <script type="module">
 
-/* ===== FIREBASE ===== */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -186,8 +185,9 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 let currentUser = null;
+let authChecked = false;
 
-/* ===== SENİN OYUN KODUN (DEĞİŞMEDİ) ===== */
+/* ===== OYUN KODUN (DEĞİŞMEDİ) ===== */
 
 let shoe=[],player=[],dealer=[]
 let balance=0,currentBet=0,round=1
@@ -265,9 +265,11 @@ else{result="Kaybettin"}
 currentBet=0;
 updateUI();
 
+if(currentUser){
 await updateDoc(doc(db,"users",currentUser.uid),{
 balance: balance
 });
+}
 
 document.getElementById("ticker").innerText=result
 setTimeout(resetRound,2500)
@@ -293,18 +295,21 @@ document.getElementById("balance").innerText=balance
 document.getElementById("bet").innerText=currentBet
 }
 
-/* ===== FIREBASE GİRİŞ VE BAKİYE ÇEKME ===== */
+/* ===== AUTH DÜZELTİLDİ ===== */
 
 onAuthStateChanged(auth, async (user)=>{
-if(!user){
-window.location.href="index.html"
-return
-}
+authChecked = true;
+
+if(user){
 currentUser=user
 const snap=await getDoc(doc(db,"users",user.uid))
 if(snap.exists()){
 balance=snap.data().balance||0
 updateUI()
+}
+}else{
+console.log("Kullanıcı giriş yapmamış.")
+// ARTIK otomatik index'e atmıyor
 }
 })
 
