@@ -210,7 +210,6 @@ color:#ffb300;
 text-shadow:0 0 10px #ffb300;
 }
 
-/* Versiyon Yazısı */
 .version{
 color:#00eaff;
 font-weight:bold;
@@ -336,44 +335,14 @@ font-size:14px;
 
 </main>
 
-<!-- FOOTER SENİN ORİJİNALİN -->
 <footer class="footer">
-
-<div class="footer-links">
-<div class="footer-column">
-<h3>HAKKIMDA</h3>
-<ul>
-<li><a href="https://www.instagram.com/o6emirlx" target="_blank">İletişim</a></li>
-<li><a href="https://www.instagram.com/o6emirlx" target="_blank">Şikayet-Öneri</a></li>
-<li class="version">1.0.0. Güncel</li>
-<li>Liderlik Tablosu</li>
-</ul>
-</div>
-</div>
-
 <div class="footer-center">
 <div class="footer-logo">EMİRHAN EFE</div>
 <p class="footer-mail">o6emirv2@gmail.com</p>
-
-<div class="social-icons">
-<a href="https://www.instagram.com/o6emirlx" target="_blank">
-<div class="social-btn">
-<img src="https://cdn-icons-png.flaticon.com/512/2111/2111463.png">
 </div>
-</a>
-
-<a href="https://www.tiktok.com/@o6emirlx" target="_blank">
-<div class="social-btn">
-<img src="https://cdn-icons-png.flaticon.com/512/3046/3046121.png">
-</div>
-</a>
-</div>
-</div>
-
 <div class="footer-bottom">
 © 2026 EMİRHAN EFE Tüm Hakları Saklıdır.
 </div>
-
 </footer>
 
 <script>
@@ -440,6 +409,27 @@ requestAnimationFrame(animateSnow);
 animateSnow();
 window.addEventListener("resize",resizeCanvas);
 
+</script>
+
+<!-- Firebase Bağlantı -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
+  authDomain: "emirhan-site.firebaseapp.com",
+  projectId: "emirhan-site",
+  storageBucket: "emirhan-site.firebasestorage.app",
+  messagingSenderId: "668871888390",
+  appId: "1:668871888390:web:76568bda84cb1641f7bd87",
+  measurementId: "G-96ZVZX3DWH"
+};
+
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+
+console.log("Firebase Bağlandı ✅");
 </script>
 
 </body>
