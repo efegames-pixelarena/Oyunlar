@@ -38,6 +38,15 @@ padding:0 15px;
 z-index:10;
 }
 
+.soundBtn{
+background:#00ff88;
+border:none;
+padding:5px 10px;
+border-radius:5px;
+font-weight:bold;
+cursor:pointer;
+}
+
 .table{
 position:absolute;
 bottom:0;
@@ -53,23 +62,16 @@ padding-top:25px;
 padding-bottom:80px;
 }
 
-.hand{
-min-height:110px;
-margin-top:10px;
-position:relative;
-z-index:5;
-}
+.hand{min-height:110px;margin-top:10px;}
 
 .card{
-width:65px;
-height:95px;
+width:65px;height:95px;
 background-size:cover;
 background-position:center;
 border-radius:8px;
 display:inline-block;
 margin:4px;
 animation:deal .4s ease;
-z-index:6;
 }
 
 @keyframes deal{
@@ -90,10 +92,7 @@ font-weight:bold;
 cursor:pointer;
 }
 
-.controls button:disabled{
-background:#444;
-cursor:not-allowed;
-}
+.controls button:disabled{background:#444;}
 
 .betArea{
 position:absolute;
@@ -107,20 +106,16 @@ padding-bottom:var(--safe-bottom);
 }
 
 .betBtn{
-width:55px;
-height:55px;
+width:55px;height:55px;
 border-radius:50%;
 display:flex;
 align-items:center;
 justify-content:center;
 font-weight:bold;
 cursor:pointer;
-transition:.2s;
 color:black;
 font-size:14px;
 }
-
-.betBtn:active{transform:scale(.85)}
 
 .chip20{background:radial-gradient(circle,#00c3ff,#005c8a);}
 .chip50{background:radial-gradient(circle,#ffcc00,#b8860b);}
@@ -148,7 +143,10 @@ z-index:20;
 
 <div class="topBar">
 <div>Bakiye: ₺<span id="balance">1000</span></div>
-<div>Bahis: ₺<span id="bet">0</span></div>
+<div>
+Bahis: ₺<span id="bet">0</span>
+<button class="soundBtn" onclick="toggleSound()">🔊</button>
+</div>
 </div>
 
 <div class="countdown" id="countdown">5</div>
@@ -169,7 +167,7 @@ z-index:20;
 <button id="standBtn" disabled onclick="stand()">Stand</button>
 </div>
 
-<div class="betArea">
+<div class="betArea" id="betArea">
 <div class="betBtn chip20" onclick="placeBet(20)">20</div>
 <div class="betBtn chip50" onclick="placeBet(50)">50</div>
 <div class="betBtn chip100" onclick="placeBet(100)">100</div>
@@ -182,6 +180,17 @@ z-index:20;
 <script>
 let balance=1000, bet=0
 let player=[],dealer=[],deck=[]
+let soundOn=true
+
+const dealSound=new Audio("https://assets.mixkit.co/sfx/preview/mixkit-card-flip-1933.mp3")
+const winSound=new Audio("https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.mp3")
+const bustSound=new Audio("https://assets.mixkit.co/sfx/preview/mixkit-arcade-retro-game-over-213.mp3")
+
+function playSound(s){ if(soundOn){ s.currentTime=0; s.play(); } }
+function toggleSound(){
+soundOn=!soundOn
+document.querySelector(".soundBtn").innerText=soundOn?"🔊":"🔇"
+}
 
 const suits=["S","H","D","C"]
 const values=["A","2","3","4","5","6","7","8","9","0","J","Q","K"]
@@ -195,7 +204,7 @@ deck.sort(()=>Math.random()-0.5)
 }
 buildDeck()
 
-function draw(){return deck.pop()}
+function draw(){ playSound(dealSound); return deck.pop() }
 
 function cardHTML(code,hidden=false){
 if(hidden)
@@ -221,12 +230,18 @@ return total
 }
 
 function updateUI(){
-balanceEl.innerText=balance
-betEl.innerText=bet
+balance.innerText=balanceVal
+betSpan.innerText=bet
 }
 
+const balanceVal=balance
 const balanceEl=document.getElementById("balance")
-const betEl=document.getElementById("bet")
+const betSpan=document.getElementById("bet")
+
+function updateUI(){
+balanceEl.innerText=balance
+betSpan.innerText=bet
+}
 
 function placeBet(amount){
 if(balance>=amount){
@@ -238,14 +253,16 @@ dealBtn.disabled=false
 }
 
 async function startRound(){
+document.getElementById("betArea").style.display="none"
 dealBtn.style.display="none"
-await countdown()
+
 player=[];dealer=[]
-player.push(draw());await delay(600)
-dealer.push(draw());await delay(600)
-player.push(draw());await delay(600)
-dealer.push(draw())
-render(true)
+
+player.push(draw()); render(true); await delay(3000)
+dealer.push(draw()); render(true); await delay(3000)
+player.push(draw()); render(true); await delay(3000)
+dealer.push(draw()); render(true)
+
 hitBtn.disabled=false
 standBtn.disabled=false
 }
@@ -263,24 +280,28 @@ hideDealer?"Toplam: ?":"Toplam: "+score(dealer)
 function hit(){
 player.push(draw())
 render(true)
-if(score(player)>21) stand()
+if(score(player)>21){ playSound(bustSound); stand(); }
 }
 
 function stand(){
-while(score(dealer)<17)
-dealer.push(draw())
+while(score(dealer)<17) dealer.push(draw())
 render(false)
 endRound()
 }
 
 function endRound(){
 let p=score(player),d=score(dealer)
-if(p==21&&player.length==2){balance+=bet*4}
-else if((p<=21&&p>d)||d>21){balance+=bet*2}
+
+if(p>21){}
+else if(d>21||p>d){ balance+=bet*2; playSound(winSound); }
+else if(p==d){ balance+=bet } // PUSH
+
 bet=0
 updateUI()
+
 hitBtn.disabled=true
 standBtn.disabled=true
+
 setTimeout(resetTable,2500)
 }
 
@@ -291,19 +312,10 @@ playerScore.innerText=""
 dealerScore.innerText=""
 dealBtn.style.display="inline-block"
 dealBtn.disabled=true
+document.getElementById("betArea").style.display="flex"
 }
 
 function delay(ms){return new Promise(r=>setTimeout(r,ms))}
-
-async function countdown(){
-let cd=document.getElementById("countdown")
-cd.style.display="block"
-for(let i=5;i>0;i--){
-cd.innerText=i
-await delay(1000)
-}
-cd.style.display="none"
-}
 
 updateUI()
 </script>
