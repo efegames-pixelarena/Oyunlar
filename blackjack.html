@@ -31,14 +31,12 @@ font-weight:600;
 z-index:20;
 }
 
-/* Alanlar */
 .area{position:absolute;width:100%;text-align:center;}
 #dealerArea{top:130px;}
 #playerArea{bottom:260px;}
 
 .cards{display:flex;justify-content:center;gap:18px;perspective:1200px;}
 
-/* Kart */
 .card{
 width:78px;height:118px;
 position:relative;
@@ -83,7 +81,6 @@ font-size:20px;
 font-weight:600;
 }
 
-/* Butonlar */
 .controls{
 position:absolute;
 bottom:120px;
@@ -103,7 +100,6 @@ font-size:15px;
 #hit{background:#2ecc71;}
 #stand{background:#e74c3c;}
 
-/* Chips */
 .chips{
 position:absolute;
 bottom:25px;
@@ -161,6 +157,7 @@ const suits=["♥","♦","♣","♠"];
 let deck=[],player=[],dealer=[];
 let balance=1000,bet=0;
 let decisionTimer,betTimer;
+let insuranceBet=0;
 
 function createDeck(){
 deck=[];
@@ -241,8 +238,20 @@ setTimeout(()=>dealCard("dealer",false),500);
 setTimeout(()=>dealCard("player",false),1000);
 setTimeout(()=>{
 dealCard("dealer",true);
+checkInsurance();
 startDecisionCountdown();
 },1500);
+}
+
+function checkInsurance(){
+if(dealer[0].value==1){
+let take=confirm("Dealer As gösterdi. Sigorta almak ister misiniz?");
+if(take){
+insuranceBet=bet/2;
+balance-=insuranceBet;
+document.getElementById("balance").innerText=balance;
+}
+}
 }
 
 function startDecisionCountdown(){
@@ -254,7 +263,7 @@ time--;
 message.innerText="Karar İçin "+time+" Saniye";
 if(time==0){
 clearInterval(decisionTimer);
-stand();
+stand(true);
 }
 },1000);
 }
@@ -271,17 +280,19 @@ return t;
 }
 
 function hit(){
+message.innerText="Kart Çekiliyor...";
 dealCard("player",false);
 if(total(player)>21){
 endGame();
 }
 }
 
-function stand(){
+function stand(auto=false){
 clearInterval(decisionTimer);
 controls.style.display="none";
+message.innerText="Kart İstenmiyor";
 
-/* dealer kartı aç */
+/* dealer aç */
 dealerCards.innerHTML="";
 dealer.forEach(c=>dealerCards.appendChild(renderCard(c,false)));
 
@@ -296,12 +307,18 @@ function endGame(){
 let p=total(player);
 let d=total(dealer);
 let msg="";
-if(p>21) msg="Kaybettin!";
+
+if(dealer.length==2 && total(dealer)==21){
+if(insuranceBet>0) balance+=insuranceBet*3;
+msg="Dealer Blackjack!";
+}
+else if(p>21) msg="Kaybettin!";
 else if(d>21||p>d){balance+=bet*2;msg="Kazandın!";}
 else if(d>p) msg="Dealer Kazandı!";
 else{balance+=bet;msg="Berabere!";}
 
 bet=0;
+insuranceBet=0;
 document.getElementById("bet").innerText=bet;
 document.getElementById("balance").innerText=balance;
 message.innerText=msg;
