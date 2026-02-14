@@ -43,34 +43,41 @@ position:absolute;
 bottom:0;
 left:0;
 width:100%;
-height:60%;
+height:65%;
 background:radial-gradient(circle at center,#0b3d2e,#021a13);
 border-top-left-radius:50% 25%;
 border-top-right-radius:50% 25%;
 box-shadow:0 -40px 100px black;
 text-align:center;
 padding-top:25px;
-padding-bottom:var(--safe-bottom);
+padding-bottom:80px;
 }
 
-.hand{min-height:110px;margin-top:10px}
+.hand{
+min-height:110px;
+margin-top:10px;
+position:relative;
+z-index:5;
+}
 
 .card{
-width:70px;height:100px;
+width:65px;
+height:95px;
 background-size:cover;
 background-position:center;
 border-radius:8px;
 display:inline-block;
-margin:5px;
+margin:4px;
 animation:deal .4s ease;
+z-index:6;
 }
 
 @keyframes deal{
-from{transform:translateY(-80px) rotate(-8deg);opacity:0}
+from{transform:translateY(-60px);opacity:0}
 to{transform:translateY(0);opacity:1}
 }
 
-.controls{margin-top:10px;}
+.controls{margin-top:8px;}
 
 .controls button{
 padding:8px 15px;
@@ -88,35 +95,38 @@ background:#444;
 cursor:not-allowed;
 }
 
-.betArea{margin-top:15px;}
+.betArea{
+position:absolute;
+bottom:10px;
+left:0;
+width:100%;
+display:flex;
+justify-content:center;
+gap:12px;
+padding-bottom:var(--safe-bottom);
+}
 
 .betBtn{
-width:70px;height:70px;
+width:55px;
+height:55px;
 border-radius:50%;
-display:inline-flex;
+display:flex;
 align-items:center;
 justify-content:center;
 font-weight:bold;
 cursor:pointer;
-margin:8px;
 transition:.2s;
 color:black;
-animation:none;
+font-size:14px;
 }
 
-.betBtn:active{transform:scale(.8)}
+.betBtn:active{transform:scale(.85)}
 
 .chip20{background:radial-gradient(circle,#00c3ff,#005c8a);}
 .chip50{background:radial-gradient(circle,#ffcc00,#b8860b);}
 .chip100{background:radial-gradient(circle,#ff4444,#8b0000);}
 .chip500{background:radial-gradient(circle,#a855f7,#4c1d95);}
 .chip1000{background:radial-gradient(circle,#00ff88,#065f46);}
-
-@keyframes chipPulse{
-0%{transform:scale(1)}
-50%{transform:scale(1.15)}
-100%{transform:scale(1)}
-}
 
 .countdown{
 position:absolute;
@@ -160,11 +170,11 @@ z-index:20;
 </div>
 
 <div class="betArea">
-<div class="betBtn chip20" onclick="placeBet(20,this)">20</div>
-<div class="betBtn chip50" onclick="placeBet(50,this)">50</div>
-<div class="betBtn chip100" onclick="placeBet(100,this)">100</div>
-<div class="betBtn chip500" onclick="placeBet(500,this)">500</div>
-<div class="betBtn chip1000" onclick="placeBet(1000,this)">1K</div>
+<div class="betBtn chip20" onclick="placeBet(20)">20</div>
+<div class="betBtn chip50" onclick="placeBet(50)">50</div>
+<div class="betBtn chip100" onclick="placeBet(100)">100</div>
+<div class="betBtn chip500" onclick="placeBet(500)">500</div>
+<div class="betBtn chip1000" onclick="placeBet(1000)">1K</div>
 </div>
 
 </div>
@@ -172,20 +182,6 @@ z-index:20;
 <script>
 let balance=1000, bet=0
 let player=[],dealer=[],deck=[]
-let audioEnabled=false
-
-// CASINO SESLERİ
-const dealSound=new Audio("https://assets.mixkit.co/sfx/preview/mixkit-card-flip-1933.mp3")
-const winSound=new Audio("https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.mp3")
-const bustSound=new Audio("https://assets.mixkit.co/sfx/preview/mixkit-arcade-retro-game-over-213.mp3")
-
-function enableAudio(){
-if(!audioEnabled){
-dealSound.play().then(()=>{dealSound.pause();dealSound.currentTime=0})
-audioEnabled=true
-}
-}
-document.body.addEventListener("click",enableAudio,{once:true})
 
 const suits=["S","H","D","C"]
 const values=["A","2","3","4","5","6","7","8","9","0","J","Q","K"]
@@ -199,11 +195,7 @@ deck.sort(()=>Math.random()-0.5)
 }
 buildDeck()
 
-function draw(){
-dealSound.currentTime=0
-dealSound.play()
-return deck.pop()
-}
+function draw(){return deck.pop()}
 
 function cardHTML(code,hidden=false){
 if(hidden)
@@ -224,9 +216,7 @@ hand.forEach(c=>{
 total+=value(c)
 if(c[0]=="A")aces++
 })
-while(total>21&&aces>0){
-total-=10;aces--
-}
+while(total>21&&aces>0){total-=10;aces--}
 return total
 }
 
@@ -238,19 +228,17 @@ betEl.innerText=bet
 const balanceEl=document.getElementById("balance")
 const betEl=document.getElementById("bet")
 
-function placeBet(amount,el){
+function placeBet(amount){
 if(balance>=amount){
 balance-=amount
 bet+=amount
-el.style.animation="chipPulse .4s"
-setTimeout(()=>el.style.animation="none",400)
 updateUI()
-document.getElementById("dealBtn").disabled=false
+dealBtn.disabled=false
 }
 }
 
 async function startRound(){
-document.getElementById("dealBtn").style.display="none"
+dealBtn.style.display="none"
 await countdown()
 player=[];dealer=[]
 player.push(draw());await delay(600)
@@ -275,10 +263,7 @@ hideDealer?"Toplam: ?":"Toplam: "+score(dealer)
 function hit(){
 player.push(draw())
 render(true)
-if(score(player)>21){
-bustSound.play()
-stand()
-}
+if(score(player)>21) stand()
 }
 
 function stand(){
@@ -290,14 +275,8 @@ endRound()
 
 function endRound(){
 let p=score(player),d=score(dealer)
-if(p==21&&player.length==2){
-balance+=bet*4
-winSound.play()
-}
-else if((p<=21&&p>d)||d>21){
-balance+=bet*2
-winSound.play()
-}
+if(p==21&&player.length==2){balance+=bet*4}
+else if((p<=21&&p>d)||d>21){balance+=bet*2}
 bet=0
 updateUI()
 hitBtn.disabled=true
@@ -317,7 +296,7 @@ dealBtn.disabled=true
 function delay(ms){return new Promise(r=>setTimeout(r,ms))}
 
 async function countdown(){
-let cd=countdownEl
+let cd=document.getElementById("countdown")
 cd.style.display="block"
 for(let i=5;i>0;i--){
 cd.innerText=i
