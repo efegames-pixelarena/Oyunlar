@@ -2,331 +2,331 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Live Casino Blackjack Elite</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Live Blackjack</title>
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial, sans-serif;
+}
+
 html,body{
 height:100%;
 overflow:hidden;
-background:black;
 }
 
 body{
-background:
-linear-gradient(rgba(0,0,0,.6),rgba(0,0,0,.85)),
-url("https://images.unsplash.com/photo-1596838132731-3301c3fd4317?auto=format&fit=crop&w=1600&q=80");
-background-size:cover;
-background-position:center;
+background:url("https://images.unsplash.com/photo-1596838132731-3301c3fd4317?q=80&w=1400") no-repeat center center/cover;
+display:flex;
+flex-direction:column;
 color:white;
 }
 
-:root{
---safe-top: env(safe-area-inset-top);
---safe-bottom: env(safe-area-inset-bottom);
-}
-
-.topBar{
-position:absolute;
-top:0;
-left:0;
-width:100%;
-height:50px;
-padding-top:var(--safe-top);
-background:rgba(0,0,0,.7);
+/* ÜST BAR */
+.topbar{
 display:flex;
 justify-content:space-between;
-align-items:center;
-padding-left:15px;
-padding-right:15px;
-z-index:10;
+padding:15px;
+background:rgba(0,0,0,0.7);
+font-weight:bold;
 }
 
-.shoe{
-position:absolute;
-left:15px;
-top:40%;
-width:80px;
-height:120px;
-background:#111;
-border-radius:10px;
-box-shadow:0 0 20px black inset;
-z-index:5;
-}
-
+/* MASA */
 .table{
-position:absolute;
-bottom:0;
-left:0;
-width:100%;
-height:60%;
-background:radial-gradient(circle at center,#0b3d2e,#021a13);
-border-top-left-radius:50% 25%;
-border-top-right-radius:50% 25%;
-box-shadow:0 -40px 100px black;
-text-align:center;
-padding-top:25px;
-padding-bottom:var(--safe-bottom);
+flex:1;
+display:flex;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+position:relative;
 }
 
-.hand{min-height:110px;margin-top:10px}
+.felt{
+width:90%;
+max-width:500px;
+height:350px;
+background:radial-gradient(circle,#0a5c3a,#063d27);
+border-radius:200px 200px 50px 50px;
+display:flex;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+box-shadow:0 0 40px black inset;
+position:relative;
+padding:20px;
+}
+
+/* KARTLAR */
+.cards{
+display:flex;
+gap:10px;
+margin:10px 0;
+}
 
 .card{
-width:70px;
-height:100px;
-background-size:cover;
-background-position:center;
+width:60px;
+height:90px;
+background:white;
+color:black;
 border-radius:8px;
-display:inline-block;
-margin:5px;
-animation:deal .5s ease;
+display:flex;
+justify-content:center;
+align-items:center;
+font-size:20px;
+font-weight:bold;
+animation:deal 0.3s ease;
 }
 
 @keyframes deal{
-from{transform:translateX(-120px) rotate(-8deg);opacity:0}
-to{transform:translateX(0);opacity:1}
+from{transform:translateY(-50px);opacity:0;}
+to{transform:translateY(0);opacity:1;}
 }
 
-.controls{
+/* BUTONLAR */
+.buttons{
 margin-top:10px;
 }
 
-.controls button{
-padding:8px 15px;
-margin:5px;
+button{
+padding:8px 14px;
+margin:4px;
 border:none;
 border-radius:6px;
-background:#00ff88;
-color:black;
 font-weight:bold;
-cursor:pointer;
 }
 
-.controls button:disabled{
-background:#444;
-cursor:not-allowed;
+button:disabled{
+opacity:0.5;
 }
 
-.betArea{
-margin-top:15px;
-}
-
-.betBtn{
-width:65px;height:65px;
-border-radius:50%;
-background:radial-gradient(circle,#ffcc00,#b8860b);
-display:inline-flex;
-align-items:center;
+/* CHIPLER */
+.chips{
+display:flex;
 justify-content:center;
-font-weight:bold;
-cursor:pointer;
-margin:8px;
-transition:.2s;
+gap:15px;
+padding:15px;
 }
 
-.betBtn:active{transform:scale(.8)}
+.chip{
+width:70px;
+height:70px;
+border-radius:50%;
+background:gold;
+display:flex;
+justify-content:center;
+align-items:center;
+font-weight:bold;
+color:black;
+cursor:pointer;
+box-shadow:0 0 10px black;
+transition:0.2s;
+}
 
+.chip:active{
+transform:scale(0.9);
+}
+
+/* CHAT */
 .chat{
 position:absolute;
-top:120px;
-right:15px;
-width:180px;
-height:120px;
-background:rgba(0,0,0,.65);
-border-radius:12px;
+top:20px;
+right:20px;
+background:rgba(0,0,0,0.7);
 padding:10px;
-font-size:12px;
-overflow:hidden;
-z-index:9;
+border-radius:10px;
+font-size:14px;
+max-width:180px;
+min-height:30px;
 }
 
-.countdown{
+/* SONUÇ */
+.result{
 position:absolute;
-top:50%;
+top:10px;
 left:50%;
-transform:translate(-50%,-50%);
-font-size:70px;
-font-weight:bold;
-color:#00ffcc;
-display:none;
-z-index:20;
+transform:translateX(-50%);
+background:rgba(0,0,0,0.7);
+padding:8px 15px;
+border-radius:8px;
 }
-
-.score{font-size:14px;margin-top:5px}
 </style>
 </head>
-
 <body>
 
-<div class="topBar">
-<div>Bakiye: ₺<span id="balance">1000</span></div>
+<div class="topbar">
+<div>Bakiye: ₺<span id="balance">500</span></div>
 <div>Bahis: ₺<span id="bet">0</span></div>
 </div>
 
-<div class="shoe"></div>
-<div class="countdown" id="countdown">5</div>
-<div class="chat" id="chat">Canlı chat başlatıldı...</div>
-
 <div class="table">
+<div class="felt">
+
+<div class="result" id="result"></div>
 
 <h3>Dealer</h3>
-<div id="dealerHand" class="hand"></div>
-<div id="dealerScore" class="score"></div>
+<div class="cards" id="dealerCards"></div>
 
 <h3>Oyuncu</h3>
-<div id="playerHand" class="hand"></div>
-<div id="playerScore" class="score"></div>
+<div class="cards" id="playerCards"></div>
 
-<div class="controls">
-<button id="dealBtn" disabled onclick="startRound()">Dağıt</button>
-<button id="hitBtn" disabled onclick="hit()">Hit</button>
-<button id="standBtn" disabled onclick="stand()">Stand</button>
+<div class="buttons">
+<button id="hitBtn" disabled>Hit</button>
+<button id="standBtn" disabled>Stand</button>
 </div>
 
-<div class="betArea">
-<div class="betBtn" onclick="placeBet(50)">50₺</div>
-<div class="betBtn" onclick="placeBet(100)">100₺</div>
-<div class="betBtn" onclick="placeBet(250)">250₺</div>
 </div>
 
+<div class="chat" id="chat">Hoş geldin 👋</div>
+</div>
+
+<div class="chips">
+<div class="chip" onclick="placeBet(50)">50₺</div>
+<div class="chip" onclick="placeBet(100)">100₺</div>
+<div class="chip" onclick="placeBet(250)">250₺</div>
 </div>
 
 <script>
-let balance=1000
-let bet=0
-let player=[],dealer=[]
-let deck=[]
+let balance = localStorage.getItem("balance") 
+? parseInt(localStorage.getItem("balance")) 
+: 500;
 
-const suits=["S","H","D","C"]
-const values=["A","2","3","4","5","6","7","8","9","0","J","Q","K"]
+let bet = 0;
+let player = [];
+let dealer = [];
+let deck = [];
 
-function buildDeck(){
-deck=[]
-for(let s of suits)
-for(let v of values)
-deck.push(v+s)
-deck.sort(()=>Math.random()-0.5)
+document.getElementById("balance").innerText = balance;
+
+function createDeck(){
+let suits = ["♠","♥","♦","♣"];
+let values = ["A","2","3","4","5","6","7","8","9","10","J","Q","K"];
+deck=[];
+for(let s of suits){
+for(let v of values){
+deck.push(v+s);
 }
-buildDeck()
-
-function draw(){return deck.pop()}
-
-function cardHTML(code,hidden=false){
-if(hidden)
-return `<div class="card" style="background-image:url('https://deckofcardsapi.com/static/img/back.png')"></div>`
-return `<div class="card" style="background-image:url('https://deckofcardsapi.com/static/img/${code}.png')"></div>`
+}
+deck.sort(()=>Math.random()-0.5);
 }
 
-function value(c){
-let v=c[0]
-if(v=="A") return 11
-if(["K","Q","J","0"].includes(v)) return 10
-return parseInt(v)
+function getValue(card){
+let v = card.slice(0,-1);
+if(["J","Q","K"].includes(v)) return 10;
+if(v==="A") return 11;
+return parseInt(v);
 }
 
-function score(hand){
-let total=0,aces=0
-hand.forEach(c=>{
-total+=value(c)
-if(c[0]=="A")aces++
-})
-while(total>21&&aces>0){
-total-=10;aces--
+function total(cards){
+let sum=0;
+let aces=0;
+for(let c of cards){
+sum+=getValue(c);
+if(c.startsWith("A")) aces++;
 }
-return total
+while(sum>21 && aces>0){
+sum-=10;
+aces--;
 }
-
-function updateUI(){
-document.getElementById("balance").innerText=balance
-document.getElementById("bet").innerText=bet
+return sum;
 }
 
 function placeBet(amount){
-if(balance>=amount){
-balance-=amount
-bet+=amount
-updateUI()
-document.getElementById("dealBtn").disabled=false
+if(balance<amount) return;
+bet=amount;
+balance-=amount;
+updateUI();
+startRound();
+}
+
+function updateUI(){
+document.getElementById("balance").innerText=balance;
+document.getElementById("bet").innerText=bet;
+localStorage.setItem("balance",balance);
+}
+
+function startRound(){
+createDeck();
+player=[];
+dealer=[];
+clearCards();
+document.getElementById("result").innerText="";
+document.getElementById("chat").innerText="Kartlar dağıtılıyor...";
+
+document.getElementById("hitBtn").disabled=false;
+document.getElementById("standBtn").disabled=false;
+
+dealCard(player,"playerCards");
+setTimeout(()=>dealCard(dealer,"dealerCards"),500);
+setTimeout(()=>dealCard(player,"playerCards"),1000);
+setTimeout(()=>dealCard(dealer,"dealerCards"),1500);
+}
+
+function dealCard(hand,container){
+let card=deck.pop();
+hand.push(card);
+
+let div=document.createElement("div");
+div.className="card";
+div.innerText=card;
+document.getElementById(container).appendChild(div);
+}
+
+function clearCards(){
+document.getElementById("playerCards").innerHTML="";
+document.getElementById("dealerCards").innerHTML="";
+}
+
+document.getElementById("hitBtn").onclick=function(){
+dealCard(player,"playerCards");
+if(total(player)>21){
+endRound();
 }
 }
 
-async function startRound(){
-document.getElementById("dealBtn").style.display="none"
-await countdown()
-
-player=[];dealer=[]
-player.push(draw())
-await delay(1000)
-dealer.push(draw())
-await delay(1000)
-player.push(draw())
-await delay(1000)
-dealer.push(draw())
-
-render(true)
-
-document.getElementById("hitBtn").disabled=false
-document.getElementById("standBtn").disabled=false
+document.getElementById("standBtn").onclick=function(){
+while(total(dealer)<17){
+dealCard(dealer,"dealerCards");
 }
-
-function render(hideDealer=false){
-document.getElementById("playerHand").innerHTML=
-player.map(c=>cardHTML(c)).join("")
-document.getElementById("dealerHand").innerHTML=
-hideDealer?cardHTML(dealer[0])+cardHTML(dealer[1],true):
-dealer.map(c=>cardHTML(c)).join("")
-document.getElementById("playerScore").innerText="Toplam: "+score(player)
-document.getElementById("dealerScore").innerText=
-hideDealer?"Toplam: ?":"Toplam: "+score(dealer)
-}
-
-function hit(){
-player.push(draw())
-render(true)
-if(score(player)>21) stand()
-}
-
-function stand(){
-while(score(dealer)<17)
-dealer.push(draw())
-render(false)
-endRound()
+endRound();
 }
 
 function endRound(){
-let p=score(player),d=score(dealer)
-if(p==21&&player.length==2){
-balance+=bet*4
+document.getElementById("hitBtn").disabled=true;
+document.getElementById("standBtn").disabled=true;
+
+let p=total(player);
+let d=total(dealer);
+let resultText="";
+
+if(p>21){
+resultText="Kaybettin!";
 }
-else if((p<=21&&p>d)||d>21){
-balance+=bet*2
+else if(d>21 || p>d){
+resultText="Kazandın!";
+balance+=bet*2;
 }
-bet=0
-updateUI()
-document.getElementById("hitBtn").disabled=true
-document.getElementById("standBtn").disabled=true
+else if(p===d){
+resultText="Berabere!";
+balance+=bet;
+}
+else{
+resultText="Kaybettin!";
 }
 
-function delay(ms){return new Promise(r=>setTimeout(r,ms))}
+document.getElementById("result").innerText=resultText;
+updateUI();
+bet=0;
+document.getElementById("bet").innerText=0;
 
-async function countdown(){
-let cd=document.getElementById("countdown")
-cd.style.display="block"
-for(let i=5;i>0;i--){
-cd.innerText=i
-await delay(1000)
+setTimeout(()=>{
+clearCards();
+document.getElementById("result").innerText="";
+document.getElementById("chat").innerText="Yeni bahis bekleniyor...";
+},3000);
 }
-cd.style.display="none"
-}
-
-const messages=["Ali kazandı!","Büyük bahis geldi!","Jackpot artıyor!","Ayşe 21 yaptı!"]
-setInterval(()=>{
-let msg=messages[Math.floor(Math.random()*messages.length)]
-document.getElementById("chat").innerText=msg
-},3500)
-
-updateUI()
 </script>
 
 </body>
