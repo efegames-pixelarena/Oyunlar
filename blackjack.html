@@ -1,54 +1,263 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html>
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Live Blackjack</title>
-
-<link rel="stylesheet" href="css/style.css" />
+<meta charset="UTF-8">
+<title>Real Casino Blackjack</title>
+<style>
+body {
+    background: #075e1a;
+    color: white;
+    font-family: Arial;
+    text-align: center;
+}
+.table {
+    margin-top: 30px;
+}
+.cards {
+    margin: 10px;
+    font-size: 22px;
+}
+button {
+    padding: 10px 15px;
+    margin: 5px;
+    font-size: 16px;
+}
+.chips button {
+    background: gold;
+}
+</style>
 </head>
-
 <body>
-<div class="app">
 
-<div class="studio"></div>
+<h1>Blackjack</h1>
+<h2>Balance: $<span id="balance">1000</span></h2>
+<h3>Bet: $<span id="bet">0</span></h3>
 
-<div class="topBar">
-<div>Türkçe Blackjack • 8 Deck • S17</div>
-<div id="tableId">Masa ID: -</div>
+<div class="chips">
+    <button onclick="addBet(10)">+10</button>
+    <button onclick="addBet(50)">+50</button>
+    <button onclick="addBet(100)">+100</button>
 </div>
 
-<div>Bakiyeniz: ₺<span id="balance"></span></div>
-<div>Bahis: ₺<span id="bet"></span></div>
+<button onclick="startRound()">Deal</button>
 
-<div id="betOptions" class="betOptions"></div>
+<div class="table">
+    <h2>Dealer (<span id="dealerTotal">?</span>)</h2>
+    <div id="dealerCards" class="cards"></div>
 
-<div class="area">
-  <h2>Dealer (<span id="dealerScore"></span>)</h2>
-  <div id="dealerCards" class="cards"></div>
+    <h2>Player (<span id="playerTotal">0</span>)</h2>
+    <div id="playerCards" class="cards"></div>
 </div>
 
-<div class="area">
-  <h2>Oyuncu (<span id="playerScore"></span>)</h2>
-  <div id="playerCards" class="cards"></div>
+<div>
+    <button onclick="hit()">Hit</button>
+    <button onclick="stand()">Stand</button>
+    <button onclick="doubleDown()">Double</button>
+    <button onclick="split()">Split</button>
+    <button onclick="insurance()">Insurance</button>
 </div>
 
 <h2 id="message"></h2>
 
-<button id="dealBtn">Dağıt</button>
-<button id="hitBtn">Hit</button>
-<button id="standBtn">Stand</button>
+<script>
 
-<div class="bottomBar">
-<div>Bakiye: ₺<span id="balance">0</span></div>
-<div>Bahis: ₺<span id="bet">0</span></div>
-</div>
+let balance = 1000;
+let bet = 0;
+let insuranceBet = 0;
+let shoe;
+let playerHands = [[]];
+let currentHand = 0;
+let dealerHand = [];
+let gameActive = false;
+let splitCount = 0;
 
-</div>
+class Shoe {
+    constructor(decks = 8) {
+        this.decks = decks;
+        this.init();
+    }
+    init() {
+        const suits = ["♠","♥","♦","♣"];
+        const values = ["A","2","3","4","5","6","7","8","9","10","J","Q","K"];
+        this.cards = [];
+        for (let d=0; d<this.decks; d++){
+            for (let s of suits){
+                for (let v of values){
+                    this.cards.push({value:v, suit:s});
+                }
+            }
+        }
+        this.shuffle();
+        this.cut = Math.floor(this.cards.length*0.75);
+    }
+    shuffle() {
+        for (let i=this.cards.length-1;i>0;i--){
+            let j=Math.floor(Math.random()*(i+1));
+            [this.cards[i],this.cards[j]]=[this.cards[j],this.cards[i]];
+        }
+    }
+    draw() {
+        if(this.cards.length<=this.cut){this.init();}
+        return this.cards.pop();
+    }
+}
 
-<script type="module" src="js/game.js"></script>
-<script type="module" src="js/ui.js"></script>
-<script type="module" src="js/audio.js"></script>
+function calc(hand){
+    let total=0, aces=0;
+    for(let c of hand){
+        if(["J","Q","K"].includes(c.value)) total+=10;
+        else if(c.value==="A"){total+=11;aces++;}
+        else total+=parseInt(c.value);
+    }
+    while(total>21 && aces>0){total-=10;aces--;}
+    return total;
+}
 
+function render(){
+    document.getElementById("balance").innerText=balance;
+    document.getElementById("bet").innerText=bet;
+
+    document.getElementById("dealerCards").innerText=
+        dealerHand.map((c,i)=> (gameActive && i==1?"🂠":c.value+c.suit)).join(" ");
+
+    document.getElementById("playerCards").innerText=
+        playerHands[currentHand].map(c=>c.value+c.suit).join(" ");
+
+    document.getElementById("playerTotal").innerText=
+        calc(playerHands[currentHand]);
+
+    document.getElementById("dealerTotal").innerText=
+        gameActive?"?":calc(dealerHand);
+}
+
+function addBet(amount){
+    if(gameActive) return;
+    if(balance>=amount){
+        bet+=amount;
+        balance-=amount;
+    }
+    render();
+}
+
+function startRound(){
+    if(bet==0) return;
+    shoe = shoe || new Shoe();
+    playerHands=[[]];
+    dealerHand=[];
+    currentHand=0;
+    splitCount=0;
+    gameActive=true;
+
+    playerHands[0].push(shoe.draw());
+    dealerHand.push(shoe.draw());
+    playerHands[0].push(shoe.draw());
+    dealerHand.push(shoe.draw());
+
+    if(calc(playerHands[0])==21){
+        gameActive=false;
+        if(calc(dealerHand)==21){
+            message("Push");
+            balance+=bet;
+        }else{
+            message("Blackjack! 3:2");
+            balance+=bet*2.5;
+        }
+        bet=0;
+    }
+
+    render();
+}
+
+function hit(){
+    if(!gameActive) return;
+    playerHands[currentHand].push(shoe.draw());
+    if(calc(playerHands[currentHand])>21){
+        message("Bust!");
+        nextHand();
+    }
+    render();
+}
+
+function stand(){
+    nextHand();
+}
+
+function nextHand(){
+    if(currentHand<playerHands.length-1){
+        currentHand++;
+    }else{
+        dealerTurn();
+    }
+}
+
+function dealerTurn(){
+    gameActive=false;
+    while(calc(dealerHand)<17){
+        dealerHand.push(shoe.draw());
+    }
+    settle();
+    render();
+}
+
+function settle(){
+    for(let hand of playerHands){
+        let p=calc(hand);
+        let d=calc(dealerHand);
+
+        if(p>21) continue;
+        if(d>21 || p>d) balance+=bet*2;
+        else if(p==d) balance+=bet;
+    }
+    bet=0;
+}
+
+function doubleDown(){
+    if(!gameActive || playerHands[currentHand].length!=2) return;
+    if(balance<bet) return;
+    balance-=bet;
+    bet*=2;
+    hit();
+    stand();
+}
+
+function split(){
+    let hand=playerHands[currentHand];
+    if(!gameActive || hand.length!=2) return;
+    if(hand[0].value!=hand[1].value) return;
+    if(balance<bet || splitCount>=3) return;
+
+    balance-=bet;
+    splitCount++;
+
+    playerHands.push([hand.pop()]);
+    playerHands[currentHand].push(shoe.draw());
+    playerHands[playerHands.length-1].push(shoe.draw());
+    render();
+}
+
+function insurance(){
+    if(!gameActive) return;
+    if(dealerHand[0].value!="A") return;
+    let ins=bet/2;
+    if(balance<ins) return;
+    balance-=ins;
+    insuranceBet=ins;
+
+    if(calc(dealerHand)==21){
+        balance+=insuranceBet*3;
+        message("Insurance Won");
+    }else{
+        message("Insurance Lost");
+    }
+    render();
+}
+
+function message(text){
+    document.getElementById("message").innerText=text;
+}
+
+render();
+
+</script>
 </body>
 </html>
