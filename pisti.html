@@ -213,7 +213,7 @@ function check(owner){
 
     if(isJack && real.length===2) isPisti=false;
 
-    if(isMatch||isJack){
+    if(isMatch || (isJack && last[0] !== "J")){
         if(owner==="p") ps+=real.length;
         else cs+=real.length;
         table=[];
