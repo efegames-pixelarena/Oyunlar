@@ -1,319 +1,324 @@
 <!DOCTYPE html>
-<html>
+<html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Aviator</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SkyCrash</title>
 
 <style>
-body{
-margin:0;
-background:#050b16;
-font-family:Arial;
-color:white;
-overflow:hidden;
-}
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
+body{background:#0b0f14;color:white}
 
-.topbar{
+/* HEADER */
+.header{
+height:60px;
+background:#111418;
 display:flex;
 justify-content:space-between;
-padding:15px;
-font-size:22px;
+align-items:center;
+padding:0 15px;
 }
-
-.logo{
-color:#ff3b3b;
+.headerLeft{
+font-size:26px;
+font-weight:bold;
+color:#ff3b4d;
 font-style:italic;
-font-weight:bold;
 }
+.balanceTop{color:#4caf50;font-weight:bold;font-size:18px;}
 
-.balance{
-color:#35d07f;
-font-weight:bold;
-}
-
-.game{
-position:relative;
-height:300px;
-margin:10px;
-border-radius:20px;
-background:radial-gradient(circle at center,#3b0066,#070b1a);
+/* HISTORY */
+.historyBar{
+height:45px;
 display:flex;
 align-items:center;
-justify-content:center;
-flex-direction:column;
+padding:0 10px;
+border-top:1px solid #1f2633;
+border-bottom:1px solid #1f2633;
 overflow:hidden;
+}
+.historyList{
+display:flex;
+gap:15px;
+overflow-x:auto;
+scrollbar-width:none;
+}
+.historyList::-webkit-scrollbar{display:none;}
+.historyItem{font-weight:bold;font-size:18px;white-space:nowrap;}
+
+/* CRASH AREA */
+.crashContainer{
+position:relative;
+height:300px;
+margin:15px;
+border-radius:20px;
+overflow:hidden;
+background:radial-gradient(circle at center,#3a0066 0%,#0a0a0f 70%);
 }
 
 .multiplier{
-font-size:55px;
+position:absolute;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+font-size:65px;
 font-weight:bold;
 }
 
 .plane{
 position:absolute;
-left:20px;
-bottom:40px;
-font-size:40px;
+bottom:20px;
+left:0;
+width:60px;
+transition:transform .08s linear;
 }
 
-.controls{
+.crashMessage{
+position:absolute;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+text-align:center;
+display:none;
+}
+.crashMessage h1{font-size:48px;color:#ff3b4d;}
+.crashMessage p{margin-top:10px;font-size:22px;}
+
+/* BET */
+.betSection{
+display:flex;
+gap:15px;
 padding:15px;
 }
-
-.betbox{
-background:#111a2b;
-border-radius:20px;
-padding:20px;
-}
-
-.betrow{
-display:flex;
-align-items:center;
-justify-content:space-between;
-margin-bottom:15px;
-}
-
-.betbtn{
-width:50px;
-height:50px;
-border-radius:50%;
-background:#1d2a40;
-border:none;
-color:white;
-font-size:25px;
-}
-
-.betinput{
-width:120px;
-text-align:center;
-font-size:22px;
-background:transparent;
-border:none;
-color:white;
-outline:none;
-}
-
-.quick{
-display:flex;
-justify-content:space-between;
-margin-bottom:15px;
-}
-
-.quick button{
+.betCard{
 flex:1;
-margin:5px;
-background:#1d2a40;
+background:linear-gradient(145deg,#181c24,#0e1015);
+padding:15px;
+border-radius:20px;
+}
+.betControl{
+display:flex;
+justify-content:space-between;
+align-items:center;
+background:#11151c;
+padding:10px;
+border-radius:15px;
+margin-bottom:10px;
+}
+.betControl button{
+background:#1b1f27;
 border:none;
 color:white;
-padding:10px;
-border-radius:10px;
+font-size:18px;
+width:40px;height:40px;
+border-radius:50%;
 }
-
-.mainbtn{
-width:100%;
-padding:15px;
-border:none;
-border-radius:15px;
-font-size:20px;
+.betAmount{
+font-size:22px;
 font-weight:bold;
-background:#1ed760;
-color:black;
-}
-
-.cashout{
-background:#00c9d6 !important;
-}
-
-.message{
+background:none;
+border:none;
+color:white;
 text-align:center;
-margin-top:10px;
+width:100px;
+}
+.betButton{
+width:100%;
+background:#22b300;
+color:white;
+border:none;
+padding:15px;
+font-size:20px;
+border-radius:15px;
+}
+.betButton.cashout{
+background:#00eaff;
+color:black;
 }
 </style>
 </head>
-
 <body>
 
-<div class="topbar">
-<div class="logo">Aviator</div>
-<div class="balance" id="balance">0 TRY</div>
+<div class="header">
+<div class="headerLeft">Aviator</div>
+<div class="balanceTop"><span id="balanceTop">0</span> TRY</div>
 </div>
 
-<div class="game">
-<div class="multiplier" id="multiplier">1.00x</div>
-<div class="plane" id="plane">✈️</div>
-<div class="message" id="message"></div>
+<div class="historyBar">
+<div class="historyList" id="historyList"></div>
 </div>
 
-<div class="controls">
-<div class="betbox">
-
-<div class="betrow">
-<button class="betbtn" id="minus">-</button>
-<input type="number" id="betAmount" class="betinput" value="100">
-<button class="betbtn" id="plus">+</button>
+<div class="crashContainer">
+<div class="multiplier" id="multiplierDisplay">1.00x</div>
+<img class="plane" id="plane" src="https://i.imgur.com/7QbZ8Qk.gif">
+<div class="crashMessage" id="crashMessage">
+<h1>UZAKLAŞ !!</h1>
+<p id="crashX"></p>
+<p id="countdownText">Bahislerin Kapanmasına 5sn</p>
+</div>
 </div>
 
-<div class="quick">
-<button data-amount="1">1</button>
-<button data-amount="2">2</button>
-<button data-amount="5">5</button>
-<button data-amount="10">10</button>
+<div class="betSection">
+<div class="betCard">
+<div class="betControl">
+<button onclick="changeBet(-50)">−</button>
+<input class="betAmount" id="betDisplay" value="100">
+<button onclick="changeBet(100)">+</button>
 </div>
-
-<button class="mainbtn" id="betButton">Bahis Yap</button>
-
+<button class="betButton" id="betBtn">Bahis Yap</button>
 </div>
 </div>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, doc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth,onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore,doc,updateDoc,onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-/* 🔥 KENDİ CONFIGİNİ YAZ */
-const firebaseConfig = {
-apiKey: "APIKEY",
-authDomain: "PROJECT.firebaseapp.com",
-projectId: "PROJECT",
-storageBucket: "PROJECT.appspot.com",
-messagingSenderId: "XXXX",
-appId: "XXXX"
+/* ✅ GERÇEK CONFIG */
+const firebaseConfig={
+apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
+authDomain:"emirhan-site.firebaseapp.com",
+projectId:"emirhan-site",
+storageBucket:"emirhan-site.firebasestorage.app",
+messagingSenderId:"668871888390",
+appId:"1:668871888390:web:76568bda84cb1641f7bd87"
 };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getFirestore(app);
 
 let userRef=null;
 let balance=0;
 
-const balanceEl=document.getElementById("balance");
-const multiplierEl=document.getElementById("multiplier");
-const plane=document.getElementById("plane");
-const betInput=document.getElementById("betAmount");
-const betButton=document.getElementById("betButton");
-const message=document.getElementById("message");
-
-/* LOGIN BEKLE */
-onAuthStateChanged(auth,(user)=>{
-
+onAuthStateChanged(auth,user=>{
 if(!user){
-alert("Login gerekli!");
+alert("Giriş yapılmamış!");
+location.href="index.html";
 return;
 }
-
 userRef=doc(db,"users",user.uid);
-
-/* BAKİYE CANLI */
-onSnapshot(userRef,(snap)=>{
-if(!snap.exists()){
-alert("users/{uid} yok!");
-return;
-}
+onSnapshot(userRef,snap=>{
+if(snap.exists()){
 balance=snap.data().balance||0;
-balanceEl.innerText=balance+" TRY";
+document.getElementById("balanceTop").innerText=Math.floor(balance);
+}
+});
 });
 
-});
-
-/* + - */
-document.getElementById("minus").onclick=()=>{
-betInput.value=Math.max(0,Number(betInput.value)-50);
-};
-
-document.getElementById("plus").onclick=()=>{
-betInput.value=Number(betInput.value)+100;
-};
-
-/* QUICK */
-document.querySelectorAll(".quick button").forEach(btn=>{
-btn.onclick=()=>{
-betInput.value=Number(betInput.value)+Number(btn.dataset.amount);
-};
-});
-
-let interval;
-let multiplier=1;
-let crashed=false;
-let activeBet=0;
-let cashed=false;
+async function updateBalance(val){
+await updateDoc(userRef,{balance:Math.floor(val)});
+}
 
 /* GAME */
-function startGame(){
+let multiplier=1;
+let crashPoint=0;
+let hasBet=false;
+let cashedOut=false;
+let phase="betting";
+let animation;
 
+function startRound(){
+phase="betting";
 multiplier=1;
-crashed=false;
-cashed=false;
-message.innerText="";
-multiplierEl.innerText="1.00x";
-plane.style.left="20px";
-plane.style.bottom="40px";
+hasBet=false;
+cashedOut=false;
+document.getElementById("betBtn").innerText="Bahis Yap";
+document.getElementById("betBtn").classList.remove("cashout");
+document.getElementById("multiplierDisplay").innerText="1.00x";
+document.getElementById("plane").style.transform="translate(0,0)";
+document.getElementById("crashMessage").style.display="none";
 
-const crashPoint=(Math.random()*5+1.5).toFixed(2);
+crashPoint=(1/(1-Math.random()))*0.96;
 
-interval=setInterval(()=>{
-
-multiplier+=0.01;
-multiplierEl.innerText=multiplier.toFixed(2)+"x";
-plane.style.left=(20+multiplier*20)+"px";
-plane.style.bottom=(40+multiplier*15)+"px";
-
-if(multiplier>=crashPoint){
+let countdown=5;
+let interval=setInterval(()=>{
+document.getElementById("countdownText").innerText=
+"Bahislerin Kapanmasına "+countdown+"sn";
+countdown--;
+if(countdown<0){
 clearInterval(interval);
-crashed=true;
-multiplierEl.innerText="UZAKLAŞ !!";
-message.innerHTML=crashPoint+"x<br>Bahislerin Kapanmasına 5sn";
-
-activeBet=0;
-betButton.innerText="Bahis Yap";
-betButton.classList.remove("cashout");
-
-setTimeout(()=>{
-multiplierEl.innerText="1.00x";
-message.innerText="";
-},5000);
-
+startFlight();
+}
+},1000);
 }
 
-},100);
-
+function startFlight(){
+phase="flying";
+animate();
 }
 
-/* BUTON */
-betButton.onclick=async()=>{
-
-if(!userRef) return;
-
-if(activeBet===0){
-
-const bet=Number(betInput.value);
-if(bet<=0||bet>balance) return alert("Yetersiz bakiye");
-
-activeBet=bet;
-await updateDoc(userRef,{balance:balance-bet});
-betButton.innerText="Cashout";
-betButton.classList.add("cashout");
-startGame();
-
-}else{
-
-if(cashed||crashed) return;
-
-cashed=true;
-clearInterval(interval);
-
-const win=(activeBet*multiplier).toFixed(2);
-await updateDoc(userRef,{balance:balance+Number(win)});
-
-activeBet=0;
-betButton.innerText="Bahis Yap";
-betButton.classList.remove("cashout");
-
+function animate(){
+multiplier+=multiplier*0.004; // yavaş stabil
+updateVisual();
+if(multiplier>=crashPoint){triggerCrash();return;}
+animation=requestAnimationFrame(animate);
 }
 
+function updateVisual(){
+document.getElementById("multiplierDisplay").innerText=
+multiplier.toFixed(2)+"x";
+
+let percent=Math.min(multiplier*6,100);
+document.getElementById("plane").style.transform=
+"translate("+percent*4+"px,-"+percent*2+"px)";
+}
+
+function triggerCrash(){
+cancelAnimationFrame(animation);
+phase="crashed";
+document.getElementById("crashMessage").style.display="block";
+document.getElementById("crashX").innerText=
+multiplier.toFixed(2)+"x";
+addHistory(multiplier);
+setTimeout(startRound,5000);
+}
+
+function addHistory(val){
+let item=document.createElement("div");
+item.className="historyItem";
+item.innerText=val.toFixed(2)+"x";
+if(val<2)item.style.color="#4da6ff";
+else if(val<10)item.style.color="#b266ff";
+else item.style.color="#ff4d94";
+let list=document.getElementById("historyList");
+list.prepend(item);
+if(list.children.length>15)
+list.removeChild(list.lastChild);
+}
+
+/* BET */
+function changeBet(val){
+let input=document.getElementById("betDisplay");
+let newVal=Math.max(1,parseInt(input.value||0)+val);
+input.value=newVal;
+}
+
+document.getElementById("betBtn").onclick=async()=>{
+let bet=parseInt(document.getElementById("betDisplay").value);
+
+if(phase==="betting" && !hasBet){
+if(balance<bet) return alert("Yetersiz bakiye");
+balance-=bet;
+await updateBalance(balance);
+hasBet=true;
+this.innerText="İptal";
+}
+else if(phase==="betting" && hasBet){
+balance+=bet;
+await updateBalance(balance);
+hasBet=false;
+this.innerText="Bahis Yap";
+}
+else if(phase==="flying" && hasBet && !cashedOut){
+let payout=bet*multiplier;
+balance+=payout;
+await updateBalance(balance);
+cashedOut=true;
+this.innerText="Çekildi";
+}
 };
 
+startRound();
 </script>
 </body>
 </html>
