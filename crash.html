@@ -188,37 +188,45 @@ pointer-events:auto;
 <div class="historyBar" id="historyBar"></div>
 </div>
 
-<div class="main">
-<div class="graphArea">
-<div class="multiplier" id="multiplier">1.00x</div>
+<script type="module">
 
-<svg class="plane" id="plane" viewBox="0 0 24 24">
-<path d="M2 16l20-5-20-5v4l15 1-15 1z"/>
-</svg>
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-<div class="fakeLiveBar">
-<div class="fakeTrack" id="fakeTrack"></div>
-</div>
+/* FIREBASE CONFIG */
+const firebaseConfig = {
+  apiKey: "AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
+  authDomain: "emirhan-site.firebaseapp.com",
+  projectId: "emirhan-site",
+  storageBucket: "emirhan-site.firebasestorage.app",
+  messagingSenderId: "668871888390",
+  appId: "1:668871888390:web:76568bda84cb1641f7bd87"
+};
 
-</div>
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-<div class="crashScreen" id="crashScreen">
-<div class="crashTitle">CRASH!</div>
-<div class="crashValue" id="crashValue">2.00x</div>
-<div class="countdown" id="countdown"></div>
-</div>
-</div>
+let userRef = null;
+let balance = 0;
 
-<div class="bottom">
-<div class="betBox">
-<input type="number" id="bet1" value="100">
-<button id="btn1">Bahis Yap</button>
-</div>
-<div class="betBox">
-<input type="number" id="bet2" value="200">
-<button id="btn2">Bahis Yap</button>
-</div>
-</div>
+/* AUTH + BAKİYE */
+onAuthStateChanged(auth, user => {
+  if (!user) return;
 
-</</body>
+  userRef = doc(db, "users", user.uid);
+
+  onSnapshot(userRef, snap => {
+    if (!snap.exists()) return;
+    balance = snap.data().balance || 0;
+    updateBalance();
+  });
+});
+
+async function updateFirebaseBalance(){
+  if(userRef){
+    await updateDoc(userRef,{ balance });
+  }
+}</</body>
 </html>
