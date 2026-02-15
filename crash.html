@@ -9,6 +9,7 @@
 *{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
 body{background:#0b0f14;color:white}
 
+/* HEADER */
 .header{
 height:60px;
 background:#111418;
@@ -25,6 +26,7 @@ font-style:italic;
 }
 .balanceTop{color:#4caf50;font-weight:bold;font-size:18px;}
 
+/* HISTORY */
 .historyBar{
 height:45px;
 display:flex;
@@ -38,9 +40,12 @@ overflow:hidden;
 display:flex;
 gap:15px;
 overflow-x:auto;
+scrollbar-width:none;
 }
+.historyList::-webkit-scrollbar{display:none;}
 .historyItem{font-weight:bold;font-size:18px;white-space:nowrap;}
 
+/* CRASH AREA */
 .crashContainer{
 position:relative;
 height:300px;
@@ -49,6 +54,7 @@ border-radius:20px;
 overflow:hidden;
 background:radial-gradient(circle at center,#3a0066 0%,#0a0a0f 70%);
 }
+
 .multiplier{
 position:absolute;
 top:50%;
@@ -58,6 +64,37 @@ font-size:65px;
 font-weight:bold;
 }
 
+.plane{
+position:absolute;
+bottom:20px;
+left:0;
+font-size:40px;
+transition:transform .05s linear;
+}
+
+.redCurve{
+position:absolute;
+bottom:0;
+left:0;
+height:100%;
+width:0%;
+background:linear-gradient(to top right,#ff0022,#ff3355);
+opacity:.3;
+}
+
+/* CRASH MESSAGE */
+.crashMessage{
+position:absolute;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+text-align:center;
+display:none;
+}
+.crashMessage h1{font-size:48px;color:#ff3b4d;}
+.crashMessage p{margin-top:10px;font-size:22px;}
+
+/* BET SECTION */
 .betSection{
 display:flex;
 gap:15px;
@@ -87,18 +124,6 @@ width:40px;height:40px;
 border-radius:50%;
 }
 .betAmount{font-size:22px;font-weight:bold;}
-
-.quickAmounts{
-display:grid;
-grid-template-columns:repeat(4,1fr);
-gap:8px;margin-bottom:12px;
-}
-.quickAmounts button{
-background:#151922;
-border:none;padding:8px;
-border-radius:10px;color:#aaa;
-}
-
 .betButton{
 width:100%;
 background:#22b300;
@@ -127,48 +152,33 @@ color:black;
 
 <div class="crashContainer">
 <div class="multiplier" id="multiplierDisplay">1.00x</div>
+<div class="plane" id="plane">✈️</div>
+<div class="redCurve" id="redCurve"></div>
+
+<div class="crashMessage" id="crashMessage">
+<h1>UZAKLAŞ !!</h1>
+<p id="crashX"></p>
+<p>Bahislerin Kapanmasına 5sn</p>
+</div>
 </div>
 
 <div class="betSection">
-
 <div class="betCard">
 <div class="betControl">
-<button id="minus1">−</button>
-<div class="betAmount" id="betDisplay1">1.00</div>
-<button id="plus1">+</button>
+<button onclick="changeBet(-1)">−</button>
+<div class="betAmount" id="betDisplay">1.00</div>
+<button onclick="changeBet(1)">+</button>
 </div>
-<div class="quickAmounts">
-<button class="quick1" data-bet="1">1</button>
-<button class="quick1" data-bet="2">2</button>
-<button class="quick1" data-bet="5">5</button>
-<button class="quick1" data-bet="10">10</button>
+<button class="betButton" id="betBtn">Bahis Yap</button>
 </div>
-<button class="betButton" id="betBtn1">Bahis</button>
 </div>
 
-<div class="betCard">
-<div class="betControl">
-<button id="minus2">−</button>
-<div class="betAmount" id="betDisplay2">1.00</div>
-<button id="plus2">+</button>
-</div>
-<div class="quickAmounts">
-<button class="quick2" data-bet="1">1</button>
-<button class="quick2" data-bet="2">2</button>
-<button class="quick2" data-bet="5">5</button>
-<button class="quick2" data-bet="10">10</button>
-</div>
-<button class="betButton" id="betBtn2">Bahis</button>
-</div>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth,onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore,doc,updateDoc,onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-</div>
-
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-
-<script>
-const firebaseConfig = {
+const firebaseConfig={
 apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
 authDomain:"emirhan-site.firebaseapp.com",
 projectId:"emirhan-site",
@@ -177,27 +187,30 @@ messagingSenderId:"668871888390",
 appId:"1:668871888390:web:76568bda84cb1641f7bd87"
 };
 
-firebase.initializeApp(firebaseConfig);
-const auth=firebase.auth();
-const db=firebase.firestore();
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getFirestore(app);
 
-let balance=0;
 let userRef=null;
+let balance=0;
+let bet=1;
+let hasBet=false;
+let cashedOut=false;
 
-auth.onAuthStateChanged(user=>{
+onAuthStateChanged(auth,user=>{
 if(!user) return;
-userRef=db.collection("users").doc(user.uid);
-userRef.onSnapshot(doc=>{
-if(doc.exists){
-balance=doc.data().balance||0;
+userRef=doc(db,"users",user.uid);
+onSnapshot(userRef,snap=>{
+if(snap.exists()){
+balance=snap.data().balance||0;
 document.getElementById("balanceTop").innerText=Math.round(balance);
 }
 });
 });
 
-function updateBalance(val){
+async function updateBalance(val){
 if(!userRef) return;
-userRef.update({balance:Math.round(val)});
+await updateDoc(userRef,{balance:Math.round(val)});
 }
 
 /* GAME */
@@ -209,7 +222,14 @@ let animation;
 function startRound(){
 phase="betting";
 multiplier=1;
+hasBet=false;
+cashedOut=false;
+document.getElementById("betBtn").innerText="Bahis Yap";
+document.getElementById("betBtn").classList.remove("cashout");
 document.getElementById("multiplierDisplay").innerText="1.00x";
+document.getElementById("plane").style.transform="translate(0,0)";
+document.getElementById("redCurve").style.width="0%";
+document.getElementById("crashMessage").style.display="none";
 crashPoint=(1/(1-Math.random()))*0.97;
 setTimeout(startFlight,5000);
 }
@@ -220,68 +240,71 @@ animate();
 }
 
 function animate(){
-multiplier+=0.01; // SABİT %1 hız
-document.getElementById("multiplierDisplay").innerText=
-multiplier.toFixed(2)+"x";
-
-if(multiplier>=crashPoint){
-cancelAnimationFrame(animation);
-addHistory(multiplier);
-phase="crashed";
-setTimeout(startRound,3000);
-return;
+multiplier+=multiplier*0.01; // %1 hız
+updateVisual();
+if(multiplier>=crashPoint){triggerCrash();return;}
+animation=requestAnimationFrame(animate);
 }
 
-animation=requestAnimationFrame(animate);
+function updateVisual(){
+document.getElementById("multiplierDisplay").innerText=multiplier.toFixed(2)+"x";
+let percent=Math.min(multiplier*5,100);
+document.getElementById("redCurve").style.width=percent+"%";
+document.getElementById("plane").style.transform=
+"translate("+percent*3+"px,-"+percent*1.5+"px)";
+}
+
+function triggerCrash(){
+cancelAnimationFrame(animation);
+phase="crashed";
+document.getElementById("crashMessage").style.display="block";
+document.getElementById("crashX").innerText=multiplier.toFixed(2)+"x";
+addHistory(multiplier);
+setTimeout(startRound,5000);
 }
 
 function addHistory(val){
 let item=document.createElement("div");
 item.className="historyItem";
 item.innerText=val.toFixed(2)+"x";
-document.getElementById("historyList").prepend(item);
+if(val<2)item.style.color="#4da6ff";
+else if(val<10)item.style.color="#b266ff";
+else item.style.color="#ff4d94";
+let list=document.getElementById("historyList");
+list.prepend(item);
+if(list.children.length>15) list.removeChild(list.lastChild);
 }
 
 /* BET */
-let bet1=1,bet2=1;
-
-function updateUI(){
-document.getElementById("betDisplay1").innerText=bet1.toFixed(2);
-document.getElementById("betDisplay2").innerText=bet2.toFixed(2);
+function changeBet(v){
+bet=Math.max(0.1,bet+v);
+document.getElementById("betDisplay").innerText=bet.toFixed(2);
 }
-updateUI();
 
-document.getElementById("minus1").onclick=()=>{bet1=Math.max(0.1,bet1-0.1);updateUI();}
-document.getElementById("plus1").onclick=()=>{bet1+=0.1;updateUI();}
-document.getElementById("minus2").onclick=()=>{bet2=Math.max(0.1,bet2-0.1);updateUI();}
-document.getElementById("plus2").onclick=()=>{bet2+=0.1;updateUI();}
-
-document.querySelectorAll(".quick1").forEach(btn=>{
-btn.onclick=()=>{bet1=parseFloat(btn.dataset.bet);updateUI();}
-});
-document.querySelectorAll(".quick2").forEach(btn=>{
-btn.onclick=()=>{bet2=parseFloat(btn.dataset.bet);updateUI();}
-});
-
-document.getElementById("betBtn1").onclick=()=>handleBet(1);
-document.getElementById("betBtn2").onclick=()=>handleBet(2);
-
-function handleBet(i){
-let amt=i===1?bet1:bet2;
-
-if(phase==="betting"){
-if(balance<amt) return;
-balance-=amt;
-updateBalance(balance);
+document.getElementById("betBtn").onclick=async()=>{
+if(phase==="betting" && !hasBet){
+if(balance<bet) return;
+balance-=bet;
+await updateBalance(balance);
+hasBet=true;
+document.getElementById("betBtn").innerText="İptal";
 }
-else if(phase==="flying"){
-balance+=amt*multiplier;
-updateBalance(balance);
+else if(phase==="betting" && hasBet){
+balance+=bet;
+await updateBalance(balance);
+hasBet=false;
+document.getElementById("betBtn").innerText="Bahis Yap";
 }
+else if(phase==="flying" && hasBet && !cashedOut){
+let payout=bet*multiplier;
+balance+=payout;
+await updateBalance(balance);
+cashedOut=true;
+document.getElementById("betBtn").innerText="Çekildi";
 }
+};
 
 startRound();
 </script>
-
 </body>
 </html>
