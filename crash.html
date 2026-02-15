@@ -9,6 +9,8 @@
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;}
 body{height:100vh;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;background:#070b18;color:white;}
 
+/* ===== TOP BAR ===== */
+
 .top-bar{
 position:fixed;top:0;width:100%;height:55px;
 display:flex;align-items:center;justify-content:space-between;
@@ -36,39 +38,94 @@ min-width:95px;text-align:center;
 .balance-box{background:#273c8f;}
 .bet-box{background:linear-gradient(90deg,#ff8a00,#ff5f00);color:#000;}
 
+/* ===== HISTORY (ÜST BAR UYUMLU) ===== */
+
+.history{
+position:absolute;
+top:55px;
+width:100%;
+height:42px;
+display:flex;
+align-items:center;
+gap:8px;
+padding:0 12px;
+overflow-x:auto;
+background:linear-gradient(135deg,#16245c,#1a2a6c);
+box-shadow:0 3px 10px rgba(0,0,0,0.4);
+}
+
+.history span{
+padding:5px 12px;
+border-radius:14px;
+font-size:12px;
+font-weight:800;
+white-space:nowrap;
+box-shadow:0 0 10px rgba(0,0,0,0.4);
+}
+
+/* ===== GAME ===== */
+
 .main{
-position:absolute;top:55px;bottom:160px;width:100%;
-display:flex;align-items:center;justify-content:center;
+position:absolute;
+top:97px;
+bottom:130px;
+width:100%;
+display:flex;
+align-items:center;
+justify-content:center;
 background:radial-gradient(circle at center,#16204a,#070b18 70%);
 }
 
 .multiplier{
-font-size:70px;font-weight:bold;color:#00eaff;
+font-size:70px;
+font-weight:bold;
+color:#00eaff;
 text-shadow:0 0 25px #00eaff;
+transition:transform 0.1s linear;
 }
 
 .bottom{
-position:absolute;bottom:0;width:100%;height:160px;
-background:#121833;display:flex;justify-content:center;
-align-items:center;gap:15px;
+position:absolute;
+bottom:0;
+width:100%;
+height:130px;
+background:#121833;
+display:flex;
+justify-content:center;
+align-items:center;
+gap:15px;
 }
 
 .betBox{
-background:#1a2248;padding:12px;border-radius:10px;
-width:45%;max-width:220px;display:flex;flex-direction:column;gap:6px;
+background:#1a2248;
+padding:12px;
+border-radius:10px;
+width:45%;
+max-width:200px;
+display:flex;
+flex-direction:column;
+gap:6px;
 }
 
 .betBox input{
-padding:8px;border:none;border-radius:6px;text-align:center;font-weight:bold;
+padding:8px;
+border:none;
+border-radius:6px;
+text-align:center;
+font-weight:bold;
 }
 
 .betBox button{
-padding:10px;border:none;border-radius:6px;font-weight:bold;
-background:#6c5ce7;color:white;
+padding:10px;
+border:none;
+border-radius:6px;
+font-weight:bold;
+cursor:pointer;
+background:#6c5ce7;
+color:white;
 }
 
 .cancel{background:#ff2a4d !important;}
-.autoInput{font-size:12px;padding:6px;}
 </style>
 </head>
 <body>
@@ -81,6 +138,8 @@ background:#6c5ce7;color:white;
 </div>
 </div>
 
+<div class="history" id="history"></div>
+
 <div class="main">
 <div class="multiplier" id="multiplier">1.00x</div>
 </div>
@@ -88,12 +147,10 @@ background:#6c5ce7;color:white;
 <div class="bottom">
 <div class="betBox">
 <input type="number" id="bet1" value="100">
-<input type="number" id="auto1" class="autoInput" placeholder="Auto (örn 2.0)">
 <button id="btn1">Bahis Yap</button>
 </div>
 <div class="betBox">
 <input type="number" id="bet2" value="200">
-<input type="number" id="auto2" class="autoInput" placeholder="Auto (örn 3.0)">
 <button id="btn2">Bahis Yap</button>
 </div>
 </div>
@@ -102,14 +159,15 @@ background:#6c5ce7;color:white;
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth,onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore,doc,setDoc,getDoc,updateDoc,onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-/* ================= FIREBASE ================= */
+import { getFirestore,doc,updateDoc,onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig={
-apiKey:"BURAYA_API_KEY",
-authDomain:"BURAYA_AUTH_DOMAIN",
-projectId:"BURAYA_PROJECT_ID"
+apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
+authDomain:"emirhan-site.firebaseapp.com",
+projectId:"emirhan-site",
+storageBucket:"emirhan-site.firebasestorage.app",
+messagingSenderId:"668871888390",
+appId:"1:668871888390:web:76568bda84cb1641f7bd87"
 };
 
 const app=initializeApp(firebaseConfig);
@@ -121,73 +179,50 @@ let userRef=null;
 
 const balanceEl=document.getElementById("balance");
 const betEl=document.getElementById("bet");
+const historyEl=document.getElementById("history");
 
-onAuthStateChanged(auth,async user=>{
-if(!user){
-window.location.href="index.html";
-return;
-}
-
+onAuthStateChanged(auth,user=>{
+if(!user){window.location.href="index.html";return;}
 userRef=doc(db,"users",user.uid);
 
-try{
-const snap=await getDoc(userRef);
-if(!snap.exists()){
-await setDoc(userRef,{balance:0});
-}
-}catch(e){console.log(e);}
-
-onSnapshot(userRef,(snap)=>{
+onSnapshot(userRef,snap=>{
 if(!snap.exists()) return;
-let data=snap.data();
-balance=typeof data.balance==="number"?data.balance:0;
-balanceEl.innerText=Math.floor(balance);
+balance=Math.floor(snap.data().balance||0);
+balanceEl.innerText=balance;
 });
 });
 
-async function safeUpdate(){
-balanceEl.innerText=Math.floor(balance);
-if(!userRef) return;
-try{
-await updateDoc(userRef,{balance});
-}catch(e){
-console.log("Firebase error:",e);
-}
-}
-
-/* ================= AUDIO ================= */
-
-let audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-document.body.addEventListener("touchstart",()=>audioCtx.resume(),{once:true});
-
-function beep(freq,dur){
-let osc=audioCtx.createOscillator();
-let gain=audioCtx.createGain();
-osc.frequency.value=freq;
-osc.connect(gain);
-gain.connect(audioCtx.destination);
-gain.gain.value=0.1;
-osc.start();
-osc.stop(audioCtx.currentTime+dur);
-}
-
-/* ================= GAME ENGINE ================= */
+/* ===== CRASH ENGINE ===== */
 
 let phase="betting";
 let multiplier=1;
 let crashPoint=0;
-let anim;
+let animation;
 let lastTime=0;
 
 let bet1=0,bet2=0;
 let active1=false,active2=false;
-let auto1=0,auto2=0;
+let win1=0,win2=0;
 
 function updateBetUI(){
 let total=0;
 if(active1) total+=bet1;
 if(active2) total+=bet2;
 betEl.innerText=Math.floor(total);
+}
+
+function addHistory(value){
+let span=document.createElement("span");
+span.innerText=value.toFixed(2)+"x";
+
+if(value<2) span.style.background="#00bcd4";
+else if(value<10) span.style.background="#ff9800";
+else span.style.background="#ff2a4d";
+
+historyEl.prepend(span);
+
+if(historyEl.children.length>20)
+historyEl.removeChild(historyEl.lastChild);
 }
 
 function startRound(){
@@ -202,27 +237,30 @@ function startFlight(){
 phase="flying";
 crashPoint=Math.max(1.1,(1/(1-Math.random()))*0.97);
 lastTime=performance.now();
-anim=requestAnimationFrame(loop);
+animate(lastTime);
 }
 
-function loop(time){
+function animate(time){
 let delta=(time-lastTime)/1000;
 lastTime=time;
 
 multiplier*=1+delta*0.9;
-document.getElementById("multiplier").innerText=multiplier.toFixed(2)+"x";
 
-if(active1 && auto1>0 && multiplier>=auto1) cashout(1);
-if(active2 && auto2>0 && multiplier>=auto2) cashout(2);
+document.getElementById("multiplier").innerText=multiplier.toFixed(2)+"x";
+document.getElementById("multiplier").style.transform="scale("+(1+multiplier/50)+")";
+
+if(active1){win1=bet1*multiplier;btn1.innerText="Çek "+Math.floor(win1);}
+if(active2){win2=bet2*multiplier;btn2.innerText="Çek "+Math.floor(win2);}
 
 if(multiplier>=crashPoint){crash();return;}
 
-anim=requestAnimationFrame(loop);
+animation=requestAnimationFrame(animate);
 }
 
 function crash(){
-cancelAnimationFrame(anim);
-beep(120,0.3);
+cancelAnimationFrame(animation);
+addHistory(crashPoint);
+phase="crashed";
 active1=false;
 active2=false;
 updateBetUI();
@@ -238,43 +276,37 @@ btn1.classList.remove("cancel");
 btn2.classList.remove("cancel");
 }
 
-async function cashout(i){
-if(i===1 && active1){
-let win=Math.floor(bet1*multiplier);
-balance+=win;
-active1=false;
-btn1.disabled=true;
-beep(600,0.1);
-}
-if(i===2 && active2){
-let win=Math.floor(bet2*multiplier);
-balance+=win;
-active2=false;
-btn2.disabled=true;
-beep(600,0.1);
-}
-updateBetUI();
-await safeUpdate();
-}
-
-async function bet(btn,input,autoInput,index){
+async function betHandler(btn,input,index){
 btn.onclick=async()=>{
 if(phase==="betting"){
-let amt=parseFloat(input.value);
-if(!amt || amt<=0 || balance<amt) return;
+let amount=parseFloat(input.value);
+if(amount<=0||balance<amount) return;
 
-balance-=amt;
-await safeUpdate();
+balance-=amount;
+await updateDoc(userRef,{balance});
 
-if(index===1){bet1=amt;active1=true;auto1=parseFloat(autoInput.value)||0;}
-else{bet2=amt;active2=true;auto2=parseFloat(autoInput.value)||0;}
+if(index===1){bet1=amount;active1=true;}
+else{bet2=amount;active2=true;}
 
-btn.innerText="Hazır";
+btn.innerText="İptal";
 btn.classList.add("cancel");
 updateBetUI();
 }
 else if(phase==="flying"){
-cashout(index);
+if(index===1&&active1){
+balance+=Math.floor(win1);
+await updateDoc(userRef,{balance});
+active1=false;
+btn.disabled=true;
+updateBetUI();
+}
+if(index===2&&active2){
+balance+=Math.floor(win2);
+await updateDoc(userRef,{balance});
+active2=false;
+btn.disabled=true;
+updateBetUI();
+}
 }
 };
 }
@@ -282,8 +314,8 @@ cashout(index);
 const btn1=document.getElementById("btn1");
 const btn2=document.getElementById("btn2");
 
-bet(btn1,document.getElementById("bet1"),document.getElementById("auto1"),1);
-bet(btn2,document.getElementById("bet2"),document.getElementById("auto2"),2);
+betHandler(btn1,document.getElementById("bet1"),1);
+betHandler(btn2,document.getElementById("bet2"),2);
 
 startRound();
 
