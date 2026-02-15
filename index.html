@@ -29,7 +29,7 @@ height:100%;
 z-index:-1;
 }
 
-/* ===== BLACKJACK TOP BAR TASARIMI ===== */
+/* ===== TOP BAR ===== */
 .top-bar{
 position:fixed;
 top:0;
@@ -75,7 +75,7 @@ text-align:center;
 
 .balance-box{
 background:#273c8f;
-display:none; /* BAŞLANGIÇTA GİZLİ */
+display:none; /* GİRİŞ YOKSA GÖRÜNMEZ */
 }
 
 .btn{
@@ -181,128 +181,6 @@ border:1px solid #ffb300;
 font-size:45px;
 margin-bottom:15px;
 }
-
-/* FOOTER */
-.footer{
-background:linear-gradient(180deg,#0a0f1f,#0c1328);
-padding:50px 20px 20px;
-margin-top:60px;
-border-top:1px solid #1e2a5a;
-}
-
-.footer-links{
-display:flex;
-justify-content:space-between;
-max-width:900px;
-margin:auto;
-flex-wrap:wrap;
-margin-bottom:40px;
-}
-
-.footer-column h3{
-margin-bottom:15px;
-transition:0.4s;
-cursor:pointer;
-}
-
-.footer-column h3:hover{
-color:#ffb300;
-text-shadow:0 0 15px #ffb300;
-transform:translateX(5px);
-}
-
-.footer-column ul{
-list-style:none;
-}
-
-.footer-column li{
-margin-bottom:12px;
-transition:0.4s;
-}
-
-.footer-column a{
-color:#aaa;
-text-decoration:none;
-transition:0.4s;
-}
-
-.footer-column li:hover{
-transform:translateX(8px);
-}
-
-.footer-column li:hover a{
-color:#ffb300;
-text-shadow:0 0 10px #ffb300;
-}
-
-.version{
-color:#00eaff;
-font-weight:bold;
-animation:pulse 2s infinite;
-}
-
-@keyframes pulse{
-0%{text-shadow:0 0 5px #00eaff;}
-50%{text-shadow:0 0 20px #00eaff;}
-100%{text-shadow:0 0 5px #00eaff;}
-}
-
-.footer-logo{
-font-size:28px;
-font-weight:bold;
-background:linear-gradient(90deg,#00eaff,#4cc3ff,#00eaff);
-background-size:200% auto;
--webkit-background-clip:text;
-color:transparent;
-animation:shine 3s linear infinite;
-margin-bottom:15px;
-}
-
-.footer-mail{
-color:#ccc;
-margin-bottom:20px;
-}
-
-.social-icons{
-display:flex;
-justify-content:center;
-gap:20px;
-}
-
-.social-btn{
-width:55px;
-height:55px;
-background:linear-gradient(145deg,#1c2455,#12183c);
-border-radius:15px;
-display:flex;
-align-items:center;
-justify-content:center;
-cursor:pointer;
-transition:0.4s;
-box-shadow:5px 5px 15px #000, -3px -3px 10px #1f2a6a;
-}
-
-.social-btn img{
-width:28px;
-}
-
-.social-btn:hover{
-transform:translateY(-5px) scale(1.1);
-box-shadow:0 0 20px #ffb300;
-}
-
-.footer-center{
-text-align:center;
-}
-
-.footer-bottom{
-text-align:center;
-margin-top:40px;
-padding-top:20px;
-border-top:1px solid #1e2a5a;
-color:#aaa;
-font-size:14px;
-}
 </style>
 </head>
 <body>
@@ -317,39 +195,45 @@ Bakiye: <span id="userBalance">0</span>₺
 </div>
 <button class="btn login-btn">Giriş</button>
 <button class="btn register-btn">Kayıt</button>
-<button class="btn logout-btn" style="display:none;">Çıkış</button>
+<button class="btn logout-btn">Çıkış</button>
 </div>
 </div>
 
-<!-- SAYFANIN TAMAMI AYNI DEVAM EDİYOR (ARAMA, OYUNLAR, FOOTER, KAR EFEKTİ JS) -->
+<div class="search-bar">
+<input type="text" id="searchInput" placeholder="🕹️ Oyun Ara">
+</div>
+
+<main>
+<div class="games-grid">
+<div class="game-card" onclick="checkLogin('blackjack.html')"><div class="game-icon">♠️</div>PixelArena BJ</div>
+<div class="game-card" onclick="checkLogin('crash.html')"><div class="game-icon">✈️</div>PixelArena Crash</div>
+</div>
+</main>
+
+<script>
+const searchInput=document.getElementById("searchInput");
+const cards=document.querySelectorAll(".game-card");
+
+searchInput.addEventListener("input",function(){
+let value=this.value.toLowerCase();
+cards.forEach(card=>{
+card.style.display=card.innerText.toLowerCase().includes(value)?"block":"none";
+});
+});
+</script>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { 
-  getAuth, 
-  createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-
-import { 
-  getFirestore, 
-  doc, 
-  setDoc, 
-  getDoc,
-  updateDoc,
-  onSnapshot
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
-  authDomain: "emirhan-site.firebaseapp.com",
-  projectId: "emirhan-site",
-  storageBucket: "emirhan-site.firebasestorage.app",
-  messagingSenderId: "668871888390",
-  appId: "1:668871888390:web:76568bda84cb1641f7bd87",
-  measurementId: "G-96ZVZX3DWH"
+apiKey: "AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
+authDomain: "emirhan-site.firebaseapp.com",
+projectId: "emirhan-site",
+storageBucket: "emirhan-site.firebasestorage.app",
+messagingSenderId: "668871888390",
+appId: "1:668871888390:web:76568bda84cb1641f7bd87"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -362,29 +246,25 @@ const logoutBtn = document.querySelector(".logout-btn");
 const balanceText = document.getElementById("userBalance");
 const balanceBox = document.getElementById("balanceBox");
 
-onAuthStateChanged(auth, async (user)=>{
-  if(user){
-    loginBtn.style.display="none";
-    registerBtn.style.display="none";
-    logoutBtn.style.display="inline-block";
-    balanceBox.style.display="inline-block";
+onAuthStateChanged(auth,(user)=>{
+if(user){
+loginBtn.style.display="none";
+registerBtn.style.display="none";
+logoutBtn.style.display="inline-block";
+balanceBox.style.display="inline-block";
 
-    const userRef = doc(db,"users",user.uid);
-
-    onSnapshot(userRef,(docSnap)=>{
-      if(docSnap.exists()){
-        const data = docSnap.data();
-        balanceText.innerText = data.balance;
-      }
-    });
-
-  } else {
-    loginBtn.style.display="inline-block";
-    registerBtn.style.display="inline-block";
-    logoutBtn.style.display="none";
-    balanceBox.style.display="none";
-    balanceText.innerText="";
-  }
+const userRef = doc(db,"users",user.uid);
+onSnapshot(userRef,(docSnap)=>{
+if(docSnap.exists()){
+balanceText.innerText = docSnap.data().balance;
+}
+});
+}else{
+loginBtn.style.display="inline-block";
+registerBtn.style.display="inline-block";
+logoutBtn.style.display="none";
+balanceBox.style.display="none";
+}
 });
 </script>
 
