@@ -42,7 +42,7 @@ gap:15px;
 overflow-x:auto;
 scrollbar-width:none;
 }
-.historyItem{font-weight:bold;font-size:18px;white-space:nowrap;}
+.historyItem{font-weight:bold;font-size:18px;white-space:nowrap}
 
 /* GAME AREA */
 .crashContainer{
@@ -68,7 +68,6 @@ position:absolute;
 bottom:20px;
 left:0;
 width:50px;
-transition:transform .05s linear;
 }
 
 .redCurve{
@@ -179,15 +178,16 @@ pointer-events:none;
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth,onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore,doc,updateDoc,onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore,doc,onSnapshot,updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+/* FIREBASE CONFIG */
 const firebaseConfig={
-apiKey:"YOUR_API",
-authDomain:"YOUR_AUTH",
-projectId:"YOUR_PROJECT",
-storageBucket:"YOUR_BUCKET",
-messagingSenderId:"YOUR_MSG",
-appId:"YOUR_APP"
+apiKey:"API_KEY",
+authDomain:"PROJECT.firebaseapp.com",
+projectId:"PROJECT_ID",
+storageBucket:"PROJECT.appspot.com",
+messagingSenderId:"MSG_ID",
+appId:"APP_ID"
 };
 
 const app=initializeApp(firebaseConfig);
@@ -199,7 +199,13 @@ let balance=0;
 let bet=1;
 let hasBet=false;
 let cashedOut=false;
+let multiplier=1;
+let crashPoint=0;
+let phase="betting";
+let animation;
+let countdownInterval;
 
+/* AUTH */
 onAuthStateChanged(auth,user=>{
 if(!user) return;
 userRef=doc(db,"users",user.uid);
@@ -217,21 +223,13 @@ await updateDoc(userRef,{balance:Math.round(val)});
 }
 
 /* GAME */
-let multiplier=1;
-let crashPoint=0;
-let phase="betting";
-let animation;
-let countdownInterval;
-
 function startRound(){
 phase="betting";
 multiplier=1;
 hasBet=false;
 cashedOut=false;
 betBtn.innerText="Bahis Yap";
-betBtn.classList.remove("cashout");
-betBtn.classList.remove("disabled");
-multiplierDisplay.innerText="5";
+betBtn.classList.remove("cashout","disabled");
 plane.style.transform="translate(0,0)";
 redCurve.style.width="0%";
 crashMessage.style.display="none";
@@ -260,7 +258,7 @@ animate();
 }
 
 function animate(){
-multiplier+=0.005; // YAVAŞ STABİL
+multiplier+=0.004;
 updateVisual();
 if(multiplier>=crashPoint){triggerCrash();return;}
 animation=requestAnimationFrame(animate);
@@ -303,6 +301,8 @@ betDisplay.innerText=bet.toFixed(2);
 }
 
 betBtn.onclick=async()=>{
+if(!userRef) return;
+
 if(phase==="betting" && !hasBet){
 if(balance<bet) return;
 balance-=bet;
