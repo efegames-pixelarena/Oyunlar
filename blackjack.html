@@ -237,7 +237,7 @@ document.getElementById("dealerScore").innerText=
 dealerHidden ? total(dealer,true) : total(dealer,false);
 }
 
-/* BET */
+/* ================== GÜNCELLENMİŞ BET ================== */
 
 async function addBet(amount){
 if(gameState!=="betting") return;
@@ -248,22 +248,31 @@ bet+=amount;
 await updateDoc(userRef,{balance});
 betEl.innerText=bet;
 
-if(!betTimer) startBetTimer();
+/* SADECE İLK BAHİS TIMER BAŞLATIR */
+if(!betTimer){
+startBetTimer();
+}
 }
 window.addBet=addBet;
 
 function startBetTimer(){
-disableChips();
-let time=5;
-message.innerText="Bahisler Kapanıyor "+time;
+let time=6; // 6 saniye
+message.innerText="Bahisler Kapanıyor "+time+" SN";
 
 betTimer=setInterval(()=>{
 time--;
+
+/* 1 SN KALA ÇİPLER KAPANIR */
+if(time===1){
+disableChips();
+}
+
 if(time<=0){
 clearInterval(betTimer);
+betTimer=null;
 startGame();
 }else{
-message.innerText="Bahisler Kapanıyor "+time;
+message.innerText="Bahisler Kapanıyor "+time+" SN";
 }
 },1000);
 }
