@@ -176,16 +176,22 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-let userRef;
+let userRef = null;
 let balance = 0;
+let authReady = false;
+
+const btn1 = document.getElementById("btn1");
+const btn2 = document.getElementById("btn2");
 
 onAuthStateChanged(auth,(user)=>{
+
 if(!user){
-alert("Giriş yapmadan oynayamazsın.");
-window.location.href="index.html";
+console.log("Auth bekleniyor...");
 return;
 }
+
 userRef = doc(db,"users",user.uid);
+authReady = true;
 
 onSnapshot(userRef,(snap)=>{
 if(snap.exists()){
@@ -193,6 +199,7 @@ balance = snap.data().balance || 0;
 document.getElementById("balance").innerText = Math.round(balance);
 }
 });
+
 });
 
 let phase="betting";
@@ -206,12 +213,12 @@ let active1=false, active2=false;
 let cashed1=false, cashed2=false;
 
 async function updateBalanceFirestore(newBalance){
+if(!userRef) return;
 await updateDoc(userRef,{balance:Math.round(newBalance)});
 }
 
 function resetButtons(){
-["btn1","btn2"].forEach(id=>{
-let btn=document.getElementById(id);
+[btn1,btn2].forEach(btn=>{
 btn.innerText="Bahis Yap";
 btn.classList.remove("cancel","cashout");
 btn.disabled=false;
@@ -281,12 +288,14 @@ document.getElementById("crashScreen").classList.add("active");
 setTimeout(()=>{startRoundCountdown();},2000);
 }
 
-function handleBet(btnId, betInputId, index){
-let btn=document.getElementById(btnId);
+function handleBet(btn, betInputId, index){
+
 let betInput=document.getElementById(betInputId);
 let box=document.getElementById("box"+index);
 
 btn.onclick=async function(){
+
+if(!authReady) return;
 
 if(phase==="betting"){
 
@@ -338,8 +347,8 @@ btn.disabled=true;
 };
 }
 
-handleBet("btn1","bet1",1);
-handleBet("btn2","bet2",2);
+handleBet(btn1,"bet1",1);
+handleBet(btn2,"bet2",2);
 
 startRoundCountdown();
 
