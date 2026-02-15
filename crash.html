@@ -111,10 +111,19 @@ top:0;
 
 .multiplier{
 position:relative;
-font-size:65px;
 font-weight:bold;
 color:#00eaff;
 z-index:2;
+}
+
+/* Flying sırasında büyük */
+.multiplier.big{
+font-size:65px;
+}
+
+/* Betting sırasında küçük */
+.multiplier.small{
+font-size:28px;
 }
 
 .bottom{
@@ -185,7 +194,9 @@ Bahis: <span id="bet">0</span>₺
 
 <div class="main">
 <canvas id="graph"></canvas>
-<div class="multiplier" id="multiplier">Bahislerin Kapanmasına 5 Saniye</div>
+<div class="multiplier small" id="multiplier">
+Bahislerin Kapanmasına 5 Saniye
+</div>
 </div>
 
 <div class="bottom">
@@ -242,6 +253,7 @@ let activeBet2=0;
 
 const canvas=document.getElementById("graph");
 const ctx=canvas.getContext("2d");
+const multiplierEl=document.getElementById("multiplier");
 
 function resize(){
 canvas.width=canvas.offsetWidth;
@@ -251,6 +263,8 @@ window.addEventListener("resize",resize);
 resize();
 
 function drawGraph(){
+if(phase==="betting") return; // betting sırasında çizgi yok
+
 ctx.clearRect(0,0,canvas.width,canvas.height);
 let progress=Math.min(multiplier/10,1);
 let x=progress*canvas.width;
@@ -281,7 +295,9 @@ updateUI();
 function animate(){
 multiplier+=0.002 + multiplier*0.0006;
 
-document.getElementById("multiplier").innerText=multiplier.toFixed(2)+"x";
+multiplierEl.className="multiplier big";
+multiplierEl.innerText=multiplier.toFixed(2)+"x";
+
 drawGraph();
 updateUI();
 
@@ -316,7 +332,11 @@ setTimeout(startCountdown,3000);
 function startCountdown(){
 phase="betting";
 let count=5;
-document.getElementById("multiplier").innerText="Bahislerin Kapanmasına "+count+" Saniye";
+
+multiplierEl.className="multiplier small";
+multiplierEl.innerText="Bahislerin Kapanmasına "+count+" Saniye";
+
+ctx.clearRect(0,0,canvas.width,canvas.height);
 
 let interval=setInterval(()=>{
 count--;
@@ -324,7 +344,7 @@ if(count<=0){
 clearInterval(interval);
 startFlight();
 }else{
-document.getElementById("multiplier").innerText="Bahislerin Kapanmasına "+count+" Saniye";
+multiplierEl.innerText="Bahislerin Kapanmasına "+count+" Saniye";
 }
 },1000);
 
