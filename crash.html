@@ -6,7 +6,6 @@
 <title>SkyCrash V1</title>
 
 <style>
-/* CSS AYNEN KORUNDU */
 *{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
 html,body{height:100%;overflow:hidden;background:#070b18;}
 body{display:flex;flex-direction:column;height:100dvh;}
@@ -22,8 +21,7 @@ body{display:flex;flex-direction:column;height:100dvh;}
 .plane{position:absolute;width:40px;height:40px;fill:#00eaff;}
 .fakeLiveBar{position:absolute;bottom:15px;left:0;width:100%;display:flex;justify-content:center;pointer-events:none;}
 .fakeTrack{display:flex;gap:10px;overflow:hidden;max-width:90%;}
-.fakeItem{background:rgba(0,255,200,0.12);color:#00ffcc;padding:6px 12px;border-radius:20px;white-space:nowrap;animation:fadeIn 0.25s ease;}
-@keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.fakeItem{background:rgba(0,255,200,0.12);color:#00ffcc;padding:6px 12px;border-radius:20px;white-space:nowrap;}
 .bottom{height:130px;background:#121833;display:flex;justify-content:center;align-items:center;gap:15px;}
 .betBox{background:#1a2248;padding:12px;border-radius:10px;width:45%;max-width:200px;display:flex;flex-direction:column;gap:6px;}
 .betBox input{padding:8px;border:none;border-radius:6px;text-align:center;font-weight:bold;}
@@ -73,11 +71,9 @@ body{display:flex;flex-direction:column;height:100dvh;}
 
 <script type="module">
 
-/* ================= FIREBASE ================= */
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, getDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, doc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
@@ -85,8 +81,7 @@ const firebaseConfig = {
   projectId: "emirhan-site",
   storageBucket: "emirhan-site.firebasestorage.app",
   messagingSenderId: "668871888390",
-  appId: "1:668871888390:web:76568bda84cb1641f7bd87",
-  measurementId: "G-96ZVZX3DWH"
+  appId: "1:668871888390:web:76568bda84cb1641f7bd87"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -112,8 +107,6 @@ document.getElementById("balance").innerText = balance.toFixed(2);
 });
 });
 
-/* ===== OYUN SİSTEMİ (MEKANİK AYNI) ===== */
-
 let phase="betting";
 let multiplier=1;
 let crashPoint=0;
@@ -123,7 +116,6 @@ let lastTime=0;
 let bet1=0, bet2=0;
 let active1=false, active2=false;
 let cashed1=false, cashed2=false;
-let currentWin1=0, currentWin2=0;
 
 async function updateBalanceFirestore(newBalance){
 await updateDoc(userRef,{balance:newBalance});
@@ -151,7 +143,6 @@ function startFlight(){
 phase="flying";
 multiplier=1;
 cashed1=false; cashed2=false;
-currentWin1=0; currentWin2=0;
 lastTime=performance.now();
 crashPoint=(1/(1-Math.random()))*0.97;
 animate(performance.now());
@@ -184,6 +175,7 @@ let btn=document.getElementById(btnId);
 let betInput=document.getElementById(betInputId);
 
 btn.onclick=async function(){
+
 if(phase==="betting"){
 let amount=parseFloat(betInput.value);
 if(amount<=0 || balance<amount) return;
@@ -197,22 +189,29 @@ else{bet2=amount; active2=true;}
 btn.innerText="İptal Et";
 btn.classList.add("cancel");
 }
+
 else if(phase==="flying"){
+
+let roundedMultiplier = Math.round(multiplier * 10) / 10;
+
 if(index===1 && active1 && !cashed1){
-let win=bet1*multiplier;
-balance+=win;
+let win = bet1 * roundedMultiplier;
+balance += win;
 await updateBalanceFirestore(balance);
 cashed1=true;
 btn.disabled=true;
 }
+
 if(index===2 && active2 && !cashed2){
-let win=bet2*multiplier;
-balance+=win;
+let win = bet2 * roundedMultiplier;
+balance += win;
 await updateBalanceFirestore(balance);
 cashed2=true;
 btn.disabled=true;
 }
+
 }
+
 };
 }
 
