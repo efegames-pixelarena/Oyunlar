@@ -156,238 +156,221 @@ Oyuncu: <span id="ps">0</span> | ChatGPT: <span id="cs">0</span>
 
 <button class="start-btn" id="startBtn" onclick="startGame()">BAŞLA</button>
 
-<audio id="cardSound" src="https://assets.mixkit.co/sfx/preview/mixkit-card-flip-1938.mp3"></audio>
-<audio id="winSound" src="https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.mp3"></audio>
-<audio id="pistiSound" src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-explosion-2759.mp3"></audio>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth,onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore,doc,onSnapshot,updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-<script>
-// Firebase yapılandırması
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+const firebaseConfig={
+apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
+authDomain:"emirhan-site.firebaseapp.com",
+projectId:"emirhan-site",
+storageBucket:"emirhan-site.firebasestorage.app",
+messagingSenderId:"668871888390",
+appId:"1:668871888390:web:76568bda84cb1641f7bd87"
 };
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-const auth = firebase.auth();
 
-// Ses Fonksiyonları
-function playCardSound() {
-    document.getElementById('cardSound').play();
-}
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getFirestore(app);
 
-function playWinSound() {
-    document.getElementById('winSound').play();
-}
-
-function playPistiSound() {
-    document.getElementById('pistiSound').play();
-}
-
-// Kartları Üst Üste Dizme
-function renderTable(){
-    const tc=document.getElementById("tableCards");
-    tc.innerHTML="";
-    table.forEach((c,i)=>{
-        let im=document.createElement("img");
-        im.src="https://deckofcardsapi.com/static/img/"+c+".png";
-        im.className="stack-card";
-        im.style.zIndex=i;
-        tc.appendChild(im);
-    });
-}
-
-// Kart Kontrolleri ve Puanlama
-function check(owner){
-    let real=table.filter(x=>x!=="BACK");
-    if(real.length<2) return;
-    let last=real[real.length-1];
-    let prev=real[real.length-2];
-
-    let isMatch=(last[0]===prev[0]);
-    let isJack=(last[0]==="J");
-    let isPisti = isMatch && real.length===2;
-
-    if(isJack && real.length===2) isPisti=false;
-
-    if(isMatch || (isJack && last[0] !== "J")){
-        if(owner==="p") ps+=real.length;
-        else cs+=real.length;
-        table=[];
-        renderTable();
-
-        if(isPisti){
-            playPistiSound();
-            let div=document.createElement("div");
-            div.className="pisti-anim";
-            div.innerText="🔥 PİŞTİ!";
-            document.body.appendChild(div);
-            setTimeout(()=>div.remove(),700);
-        }
-    }
-    document.getElementById("ps").innerText=ps;
-    document.getElementById("cs").innerText=cs;
-}
-
-// Oyun Başlatma ve Bahis Ekleme
 let balance=0,bet=0,lastBet=0,userRef=null;
 let gameStarted=false;
 
 const startBtn=document.getElementById("startBtn");
 
 function updateStartButton(){
-    if(bet>0){
-        startBtn.classList.add("active");
-    }else{
-        startBtn.classList.remove("active");
-    }
+if(bet>0){
+startBtn.classList.add("active");
+}else{
+startBtn.classList.remove("active");
+}
 }
 
+onAuthStateChanged(auth,user=>{
+if(!user) return;
+userRef=doc(db,"users",user.uid);
+onSnapshot(userRef,snap=>{
+balance=snap.data().balance||0;
+document.getElementById("balance").innerText=balance;
+});
+});
+
 window.addBet=async function(amount){
-    if(gameStarted) return;
-    if(balance<amount) return;
-    balance-=amount;
-    bet+=amount;
-    lastBet=bet;
-    await updateDoc(userRef,{balance});
-    document.getElementById("balance").innerText=balance;
-    document.getElementById("bet").innerText=bet;
-    updateStartButton();
+if(gameStarted) return;
+if(balance<amount) return;
+balance-=amount;
+bet+=amount;
+lastBet=bet;
+await updateDoc(userRef,{balance});
+document.getElementById("balance").innerText=balance;
+document.getElementById("bet").innerText=bet;
+updateStartButton();
 }
 
 window.repeatBet=async function(){
-    if(gameStarted) return;
-    if(lastBet<=0) return;
-    if(balance<lastBet) return;
-    balance-=lastBet;
-    bet+=lastBet;
-    await updateDoc(userRef,{balance});
-    document.getElementById("balance").innerText=balance;
-    document.getElementById("bet").innerText=bet;
-    updateStartButton();
+if(gameStarted) return;
+if(lastBet<=0) return;
+if(balance<lastBet) return;
+balance-=lastBet;
+bet+=lastBet;
+await updateDoc(userRef,{balance});
+document.getElementById("balance").innerText=balance;
+document.getElementById("bet").innerText=bet;
+updateStartButton();
 }
 
 window.undoBet=async function(){
-    if(gameStarted) return;
-    if(bet<=0) return;
-    balance+=bet;
-    bet=0;
-    await updateDoc(userRef,{balance});
-    document.getElementById("balance").innerText=balance;
-    document.getElementById("bet").innerText=bet;
-    updateStartButton();
+if(gameStarted) return;
+if(bet<=0) return;
+balance+=bet;
+bet=0;
+await updateDoc(userRef,{balance});
+document.getElementById("balance").innerText=balance;
+document.getElementById("bet").innerText=bet;
+updateStartButton();
 }
 
 window.startGame=function(){
-    if(bet<=0) return;
-    gameStarted=true;
-    document.getElementById("tableArea").classList.add("active");
-    document.getElementById("chipsArea").style.display="none";
-    startBtn.style.display="none";
-    createDeck(); dealInitial();
+if(bet<=0) return;
+gameStarted=true;
+document.getElementById("tableArea").classList.add("active");
+document.getElementById("chipsArea").style.display="none";
+startBtn.style.display="none";
+createDeck(); dealInitial();
 }
 
-/* Kendi Mantığı */
+/* GAME LOGIC DEVAM EDİYOR (DEĞİŞMEDİ) */
+
 const suits=["H","D","C","S"];
 const values=["A","2","3","4","5","6","7","8","9","0","J","Q","K"];
 let deck=[],player=[],computer=[],table=[];
 let ps=0,cs=0,round=0,totalRounds=6;
 
 function createDeck(){
-    deck=[];
-    for(let s of suits)
-    for(let v of values) deck.push(v+s);
-    deck.sort(()=>Math.random()-0.5);
+deck=[];
+for(let s of suits)
+for(let v of values) deck.push(v+s);
+deck.sort(()=>Math.random()-0.5);
 }
 
 function dealInitial(){
-    table=[];
-    for(let i=0;i<3;i++) table.push("BACK");
-    table.push(deck.shift());
-    renderTable();
-    setTimeout(dealRound,500);
+table=[];
+for(let i=0;i<3;i++) table.push("BACK");
+table.push(deck.shift());
+renderTable();
+setTimeout(dealRound,500);
 }
 
 function dealRound(){
-    if(round>=totalRounds){ endGame(); return; }
-    player=[]; computer=[];
-    for(let i=0;i<4;i++){
-        player.push(deck.shift());
-        computer.push(deck.shift());
-    }
-    round++; render();
+if(round>=totalRounds){ endGame(); return; }
+player=[]; computer=[];
+for(let i=0;i<4;i++){
+player.push(deck.shift());
+computer.push(deck.shift());
+}
+round++; render();
 }
 
 function img(card){
-    return "https://deckofcardsapi.com/static/img/"+card+".png";
+return "https://deckofcardsapi.com/static/img/"+card+".png";
 }
 
 function render(){
-    if(!gameStarted) return;
-    const ph=document.getElementById("playerHand");
-    const ch=document.getElementById("computerHand");
-    ph.innerHTML=""; ch.innerHTML="";
-    player.forEach((c,i)=>{
-        let im=document.createElement("img");
-        im.src=img(c); im.className="card";
-        im.onclick=()=>play(i);
-        ph.appendChild(im);
-    });
-    computer.forEach(()=>{
-        let im=document.createElement("img");
-        im.src="https://deckofcardsapi.com/static/img/back.png";
-        im.className="card";
-        ch.appendChild(im);
-    });
-    document.getElementById("ps").innerText=ps;
-    document.getElementById("cs").innerText=cs;
-    renderTable();
+if(!gameStarted) return;
+const ph=document.getElementById("playerHand");
+const ch=document.getElementById("computerHand");
+ph.innerHTML=""; ch.innerHTML="";
+player.forEach((c,i)=>{
+let im=document.createElement("img");
+im.src=img(c); im.className="card";
+im.onclick=()=>play(i);
+ph.appendChild(im);
+});
+computer.forEach(()=>{
+let im=document.createElement("img");
+im.src="https://deckofcardsapi.com/static/img/back.png";
+im.className="card";
+ch.appendChild(im);
+});
+document.getElementById("ps").innerText=ps;
+document.getElementById("cs").innerText=cs;
+renderTable();
+}
+
+function renderTable(){
+const tc=document.getElementById("tableCards");
+tc.innerHTML="";
+table.filter(c=>c!=="BACK").forEach(c=>{
+let im=document.createElement("img");
+im.src=img(c); im.className="stack-card";
+tc.appendChild(im);
+});
 }
 
 function play(i){
-    let c=player.splice(i,1)[0];
-    table.push(c);
-    playCardSound();
-    check("p");
-    render();
-    setTimeout(compPlay,500);
+let c=player.splice(i,1)[0];
+table.push(c);
+check("p");
+render();
+setTimeout(compPlay,500);
 }
 
 function compPlay(){
-    if(computer.length===0){
-        if(player.length===0) dealRound();
-        return;
-    }
-    let chosen=computer.splice(0,1)[0];
-    table.push(chosen);
-    playCardSound();
-    check("c");
-    render();
-    if(player.length===0 && computer.length===0)
-        setTimeout(dealRound,500);
+if(computer.length===0){
+if(player.length===0) dealRound();
+return;
+}
+let chosen=computer.splice(0,1)[0];
+table.push(chosen);
+check("c");
+render();
+if(player.length===0 && computer.length===0)
+setTimeout(dealRound,500);
+}
+
+function check(owner){
+let real=table.filter(x=>x!=="BACK");
+if(real.length<2) return;
+let last=real[real.length-1];
+let prev=real[real.length-2];
+let isMatch=(last[0]===prev[0]);
+let isJack=(last[0]==="J");
+let isPisti = isMatch && real.length===2;
+if(isJack && real.length===2) isPisti=false;
+
+if(isMatch||isJack){
+if(owner==="p") ps+=real.length;
+else cs+=real.length;
+table=[];
+if(isPisti){
+let div=document.createElement("div");
+div.className="pisti-anim";
+div.innerText="🔥 PİŞTİ!";
+document.body.appendChild(div);
+setTimeout(()=>div.remove(),700);
+}
+}
 }
 
 async function endGame(){
-    if(ps>cs){
-        balance+=bet*5;
-        await updateDoc(userRef,{balance});
-        let div=document.createElement("div");
-        div.className="win-anim";
-        div.innerText="🎉 BÜYÜK KAZANÇ!";
-        document.body.appendChild(div);
-        setTimeout(()=>div.remove(),1500);
-    }
-    bet=0;
-    document.getElementById("bet").innerText=0;
-    gameStarted=false;
-    document.getElementById("tableArea").classList.remove("active");
-    round=0;ps=0;cs=0;
-    document.getElementById("chipsArea").style.display="flex";
-    startBtn.style.display="block";
-    updateStartButton();
+if(ps>cs){
+balance+=bet*5;
+await updateDoc(userRef,{balance});
+let div=document.createElement("div");
+div.className="win-anim";
+div.innerText="🎉 BÜYÜK KAZANÇ!";
+document.body.appendChild(div);
+setTimeout(()=>div.remove(),1500);
+}
+bet=0;
+document.getElementById("bet").innerText=0;
+gameStarted=false;
+document.getElementById("tableArea").classList.remove("active");
+round=0;ps=0;cs=0;
+document.getElementById("chipsArea").style.display="flex";
+startBtn.style.display="block";
+updateStartButton();
 }
 </script>
 </body>
