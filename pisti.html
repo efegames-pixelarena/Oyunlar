@@ -8,17 +8,13 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;}
 body{
-height:100vh;
-overflow:hidden;
+height:100vh;overflow:hidden;
 font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
-background:#0b1023;
-color:white;
-display:flex;
-flex-direction:column;
-align-items:center;
+background:#0b1023;color:white;
+display:flex;flex-direction:column;align-items:center;
 }
 
-/* TOP BAR */
+/* TOP */
 .top-bar{
 position:fixed;top:0;width:100%;height:55px;
 display:flex;align-items:center;justify-content:space-between;
@@ -31,34 +27,42 @@ z-index:100;
 font-size:18px;font-weight:800;
 background:linear-gradient(90deg,#4fd1ff,#fff,#4fd1ff);
 background-size:200% auto;
--webkit-background-clip:text;
--webkit-text-fill-color:transparent;
+-webkit-background-clip:text;-webkit-text-fill-color:transparent;
 animation:shine 3s linear infinite;
 }
 @keyframes shine{to{background-position:200% center;}}
 .nav-box{
 padding:6px 14px;border-radius:14px;
-font-weight:700;font-size:13px;min-width:95px;text-align:center;
+font-weight:700;font-size:13px;min-width:110px;text-align:center;
 background:#273c8f;
 }
 
-/* GAME */
 h1{margin-top:70px;margin-bottom:5px;}
 .score-board{margin-bottom:10px;}
+
 .table{
 width:95%;max-width:900px;height:520px;border-radius:40px;
 position:relative;
 background:radial-gradient(circle at center,#136f3a,#083d18 70%);
 box-shadow:inset 0 0 120px #000,0 0 80px #00ff99,0 20px 60px rgba(0,0,0,0.6);
 overflow:hidden;
+opacity:0.2;
+pointer-events:none;
+transition:0.4s;
 }
+.table.active{
+opacity:1;
+pointer-events:auto;
+}
+
 .table-cards{
 position:absolute;top:50%;left:50%;
 transform:translate(-50%,-50%);
-display:flex;justify-content:center;align-items:center;
+display:flex;
 }
 .stack-card{width:95px;margin-left:-65px;}
 .stack-card:first-child{margin-left:0;}
+
 .hand{
 position:absolute;bottom:15px;left:50%;
 transform:translateX(-50%);
@@ -74,19 +78,45 @@ display:flex;gap:10px;
 
 /* CHIPS */
 .chips{
-position:fixed;bottom:10px;left:50%;
+position:fixed;bottom:70px;left:50%;
 transform:translateX(-50%);
+display:flex;gap:10px; /* YAN YANA */
 }
 .chip{
-display:inline-block;width:60px;height:60px;border-radius:50%;
-line-height:60px;text-align:center;
-margin:6px;font-weight:bold;cursor:pointer;
+width:60px;height:60px;border-radius:50%;
+display:flex;align-items:center;justify-content:center;
+font-weight:bold;cursor:pointer;
 box-shadow:0 6px 15px rgba(0,0,0,0.6);
 }
 .c1{background:#f0f0f0;color:black;}
 .c2{background:#1eaa00;}
 .c3{background:#ff1c1c;}
 .c4{background:black;color:white;}
+
+.start-btn{
+position:fixed;bottom:10px;left:50%;
+transform:translateX(-50%);
+padding:12px 30px;
+background:linear-gradient(90deg,#ffb300,#ff5e00);
+border:none;border-radius:20px;
+font-weight:bold;font-size:16px;
+cursor:pointer;
+}
+
+/* WIN ANIMATION */
+.win-anim{
+position:fixed;top:0;left:0;width:100%;height:100%;
+display:flex;align-items:center;justify-content:center;
+background:rgba(0,0,0,0.85);
+font-size:40px;font-weight:900;
+color:#00ff99;
+z-index:999;
+animation:zoom 1s ease forwards;
+}
+@keyframes zoom{
+0%{transform:scale(0.5);opacity:0;}
+100%{transform:scale(1);opacity:1;}
+}
 </style>
 </head>
 <body>
@@ -103,7 +133,7 @@ Bakiye: <span id="balance">0</span>₺ | Bahis: <span id="bet">0</span>₺
 Oyuncu: <span id="ps">0</span> | ChatGPT: <span id="cs">0</span>
 </div>
 
-<div class="table">
+<div class="table" id="tableArea">
 <div class="computer" id="computerHand"></div>
 <div class="table-cards" id="tableCards"></div>
 <div class="hand" id="playerHand"></div>
@@ -115,6 +145,8 @@ Oyuncu: <span id="ps">0</span> | ChatGPT: <span id="cs">0</span>
 <div class="chip c3" onclick="addBet(1000)">1K</div>
 <div class="chip c4" onclick="addBet(5000)">5K</div>
 </div>
+
+<button class="start-btn" onclick="startGame()">BAŞLA</button>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -135,6 +167,7 @@ const auth=getAuth(app);
 const db=getFirestore(app);
 
 let balance=0,bet=0,userRef=null;
+let gameStarted=false;
 
 onAuthStateChanged(auth,user=>{
 if(!user) return;
@@ -146,6 +179,7 @@ document.getElementById("balance").innerText=balance;
 });
 
 window.addBet=async function(amount){
+if(gameStarted) return;
 if(balance<amount) return;
 balance-=amount;
 bet+=amount;
@@ -154,7 +188,15 @@ document.getElementById("balance").innerText=balance;
 document.getElementById("bet").innerText=bet;
 }
 
-/* ==== GAME ==== */
+window.startGame=function(){
+if(bet<=0) return alert("Bahis koymadan oyun başlamaz!");
+gameStarted=true;
+document.getElementById("tableArea").classList.add("active");
+createDeck();
+dealInitial();
+}
+
+/* GAME */
 
 const suits=["H","D","C","S"];
 const values=["A","2","3","4","5","6","7","8","9","0","J","Q","K"];
@@ -194,6 +236,7 @@ return "https://deckofcardsapi.com/static/img/"+card+".png";
 }
 
 function render(){
+if(!gameStarted) return;
 const ph=document.getElementById("playerHand");
 const ch=document.getElementById("computerHand");
 ph.innerHTML=""; ch.innerHTML="";
@@ -205,14 +248,12 @@ im.className="card";
 im.onclick=()=>play(i);
 ph.appendChild(im);
 });
-
 computer.forEach(()=>{
 let im=document.createElement("img");
 im.src="https://deckofcardsapi.com/static/img/back.png";
 im.className="card";
 ch.appendChild(im);
 });
-
 document.getElementById("ps").innerText=ps;
 document.getElementById("cs").innerText=cs;
 renderTable();
@@ -226,13 +267,11 @@ real.forEach((c,i)=>{
 let im=document.createElement("img");
 im.src=img(c);
 im.className="stack-card";
-im.style.zIndex=i;
 tc.appendChild(im);
 });
 }
 
 function play(i){
-if(bet<=0) return;
 let c=player.splice(i,1)[0];
 table.push(c);
 check("p");
@@ -251,13 +290,6 @@ if(top){
 for(let i=0;i<computer.length;i++)
 if(computer[i][0]===top[0]) return i;
 }
-
-let counts={};
-computer.forEach(c=>counts[c[0]]=(counts[c[0]]||0)+1);
-
-for(let i=0;i<computer.length;i++)
-if(counts[computer[i][0]]===1) return i;
-
 return 0;
 }
 
@@ -279,43 +311,41 @@ setTimeout(dealRound,500);
 function check(owner){
 let real=table.filter(x=>x!=="BACK");
 if(real.length<2) return;
-
 let last=real[real.length-1];
 let prev=real[real.length-2];
-
 if(last[0]==="J"||last[0]===prev[0]){
-take(owner);
-}
-}
-
-function take(owner){
-let real=table.filter(x=>x!=="BACK");
 if(owner==="p") ps+=real.length;
 else cs+=real.length;
 lastWinner=owner;
 table=[];
 }
+}
 
 async function endGame(){
 
-if(ps<=cs){ // BERABERE YOK → AI kazanır
-cs++;
-}
+if(ps<=cs) cs++;
 
 if(ps>cs){
 balance+=bet*5;
 await updateDoc(userRef,{balance});
+showWin();
 }
+
 bet=0;
 document.getElementById("bet").innerText=0;
+gameStarted=false;
+document.getElementById("tableArea").classList.remove("active");
 round=0;ps=0;cs=0;
-createDeck();
-dealInitial();
 }
 
-createDeck();
-dealInitial();
-</script>
+function showWin(){
+let div=document.createElement("div");
+div.className="win-anim";
+div.innerText="🎉 BÜYÜK KAZANÇ!";
+document.body.appendChild(div);
+setTimeout(()=>div.remove(),1500);
+}
 
+</script>
 </body>
 </html>
