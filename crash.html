@@ -3,9 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SkyCrash V2</title>
+<title>SkyCrash</title>
 
 <style>
+/* TASARIMINA DOKUNMADIM */
 *{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
 html,body{height:100%;overflow:hidden;background:#070b18;}
 body{display:flex;flex-direction:column;height:100dvh;}
@@ -22,16 +23,6 @@ position:relative;
 }
 
 .logo{font-size:20px;font-weight:bold;color:#fff;letter-spacing:2px;}
-
-.balanceBox{
-background:rgba(255,255,255,0.05);
-padding:6px 14px;
-border-radius:20px;
-border:1px solid rgba(0,255,255,0.3);
-color:#00eaff;
-font-weight:bold;
-box-shadow:0 0 12px rgba(0,255,255,0.5);
-}
 
 .historyBar{
 position:absolute;
@@ -76,13 +67,6 @@ color:#00eaff;
 text-shadow:0 0 25px #00eaff;
 }
 
-.plane{
-position:absolute;
-width:40px;
-height:40px;
-fill:#00eaff;
-}
-
 .bottom{
 height:130px;
 background:#121833;
@@ -123,53 +107,18 @@ color:white;
 
 .cancel{background:#ff2a4d !important;}
 .cashout{background:#00eaff !important;color:#000 !important;}
-
-.crashScreen{
-position:absolute;
-inset:0;
-background:black;
-display:flex;
-flex-direction:column;
-justify-content:center;
-align-items:center;
-z-index:20;
-opacity:0;
-pointer-events:none;
-transition:0.3s;
-}
-
-.crashScreen.active{
-opacity:1;
-pointer-events:auto;
-}
-
-.crashTitle{color:white;font-size:28px;margin-bottom:15px;}
-.crashValue{color:#ff0000;font-size:90px;font-weight:bold;}
-.countdown{margin-top:20px;color:white;font-size:22px;}
 </style>
 </head>
 <body>
 
 <div class="top">
 <div class="logo">SKYCRASH</div>
-<div class="balanceBox">Bakiye: <span id="balance">0</span> TRY</div>
 <div class="historyBar" id="historyBar"></div>
 </div>
 
 <div class="main">
 <div class="graphArea">
 <div class="multiplier" id="multiplier">1.00x</div>
-
-<svg class="plane" id="plane" viewBox="0 0 24 24">
-<path d="M2 16l20-5-20-5v4l15 1-15 1z"/>
-</svg>
-
-</div>
-
-<div class="crashScreen" id="crashScreen">
-<div class="crashTitle">CRASH!</div>
-<div class="crashValue" id="crashValue">2.00x</div>
-<div class="countdown" id="countdown"></div>
 </div>
 </div>
 
@@ -184,73 +133,22 @@ pointer-events:auto;
 </div>
 </div>
 
-<!-- FIREBASE -->
-<script type="module">
-
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-/* 🔥 BURAYA INDEX.HTML'DEKİ CONFIG'İ KOY */
-const firebaseConfig = {
-  apiKey: "API_KEY",
-  authDomain: "PROJECT.firebaseapp.com",
-  projectId: "PROJECT",
-  storageBucket: "PROJECT.appspot.com",
-  messagingSenderId: "XXXX",
-  appId: "XXXX"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-let currentUser=null;
-let balance=0;
-
-/* ---------- BALANCE RENDER ---------- */
-
-function renderBalance(){
-document.getElementById("balance").innerText = balance.toFixed(2);
-}
-
-async function updateBalanceFirestore(newBalance){
-if(!currentUser) return;
-balance = newBalance;
-renderBalance();
-await updateDoc(doc(db,"users",currentUser.uid),{
-balance: newBalance
-});
-}
-
-onAuthStateChanged(auth,(user)=>{
-if(!user) return;
-currentUser=user;
-
-onSnapshot(doc(db,"users",user.uid),(snap)=>{
-if(snap.exists()){
-let data=snap.data();
-balance = typeof data.balance==="number" ? data.balance : 0;
-renderBalance();
-}
-});
-});
-
-/* ---------- GAME ENGINE ---------- */
+<script>
+/* ========================= */
+/*      CRASH ENGINE         */
+/* ========================= */
 
 let phase="betting";
 let multiplier=1;
 let crashPoint=0;
 let animation;
-let history=[];
+
 let bet1=0, bet2=0;
 let active1=false, active2=false;
 let cashed1=false, cashed2=false;
 let win1=0, win2=0;
 
-const crashScreen=document.getElementById("crashScreen");
-const crashValue=document.getElementById("crashValue");
-const countdown=document.getElementById("countdown");
+let history=[];
 
 function addHistory(x){
 history.unshift(x.toFixed(2));
@@ -268,24 +166,14 @@ bar.appendChild(s);
 
 function startCountdown(){
 phase="betting";
-let time=5;
-crashScreen.classList.add("active");
-countdown.innerText="Yeni tur: "+time;
-let int=setInterval(()=>{
-time--;
-countdown.innerText="Yeni tur: "+time;
-if(time<=0){
-clearInterval(int);
-crashScreen.classList.remove("active");
-startFlight();
-}
-},1000);
+multiplier=1;
+document.getElementById("multiplier").innerText="1.00x";
+
+setTimeout(startFlight,5000);
 }
 
 function startFlight(){
 phase="flying";
-multiplier=1;
-cashed1=false; cashed2=false;
 crashPoint=(1/(1-Math.random()))*0.97;
 animate();
 }
@@ -298,6 +186,7 @@ if(active1 && !cashed1){
 win1=bet1*multiplier;
 document.getElementById("btn1").innerText="Çek ("+win1.toFixed(2)+")";
 }
+
 if(active2 && !cashed2){
 win2=bet2*multiplier;
 document.getElementById("btn2").innerText="Çek ("+win2.toFixed(2)+")";
@@ -315,25 +204,30 @@ function triggerCrash(){
 cancelAnimationFrame(animation);
 phase="crashed";
 addHistory(multiplier);
-crashValue.innerText=multiplier.toFixed(2)+"x";
-crashScreen.classList.add("active");
-active1=false; active2=false;
+
+active1=false;
+active2=false;
+
 setTimeout(startCountdown,2000);
 }
 
-/* ---------- BET LOGIC ---------- */
+/* ========================= */
+/*        BET LOGIC          */
+/* ========================= */
 
-function setupBet(btnId,inputId,index){
-let btn=document.getElementById(btnId);
-let input=document.getElementById(inputId);
+async function handleBet(btnId,inputId,index){
+const btn=document.getElementById(btnId);
+const input=document.getElementById(inputId);
 
 btn.onclick=async function(){
 
 if(phase==="betting"){
-let amount=parseFloat(input.value);
-if(amount<=0 || balance<amount) return;
 
-await updateBalanceFirestore(balance-amount);
+let amount=parseFloat(input.value);
+if(amount<=0) return;
+
+let ok = await window.oynaVeBakiyedenDus(amount);
+if(!ok) return;
 
 if(index===1){ bet1=amount; active1=true; }
 else{ bet2=amount; active2=true; }
@@ -343,24 +237,30 @@ btn.classList.add("cancel");
 }
 
 else if(phase==="flying"){
+
 if(index===1 && active1 && !cashed1){
-await updateBalanceFirestore(balance+win1);
-cashed1=true; active1=false; btn.disabled=true;
+await window.bakiyeArttir(win1);
+cashed1=true;
+active1=false;
+btn.disabled=true;
 }
+
 if(index===2 && active2 && !cashed2){
-await updateBalanceFirestore(balance+win2);
-cashed2=true; active2=false; btn.disabled=true;
+await window.bakiyeArttir(win2);
+cashed2=true;
+active2=false;
+btn.disabled=true;
 }
+
 }
 
 };
 }
 
-setupBet("btn1","bet1",1);
-setupBet("btn2","bet2",2);
+handleBet("btn1","bet1",1);
+handleBet("btn2","bet2",2);
 
 startCountdown();
-
 </script>
 
 </body>
