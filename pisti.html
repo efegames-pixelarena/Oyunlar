@@ -161,7 +161,20 @@ Oyuncu: <span id="ps">0</span> | ChatGPT: <span id="cs">0</span>
 <audio id="pistiSound" src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-explosion-2759.mp3"></audio>
 
 <script>
-/* Ses Fonksiyonları */
+// Firebase yapılandırma kodu eksikti. Lütfen kendi Firebase yapılandırmanızı ekleyin.
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const auth = firebase.auth();
+
+// Ses Fonksiyonları
 function playCardSound() {
     document.getElementById('cardSound').play();
 }
@@ -174,7 +187,7 @@ function playPistiSound() {
     document.getElementById('pistiSound').play();
 }
 
-/* Kartları Üst Üste Dizme */
+// Kartları Üst Üste Dizme
 function renderTable(){
     const tc=document.getElementById("tableCards");
     tc.innerHTML="";
@@ -187,7 +200,7 @@ function renderTable(){
     });
 }
 
-/* Kart Kontrolleri ve Puanlama */
+// Kart Kontrolleri ve Puanlama
 function check(owner){
     let real=table.filter(x=>x!=="BACK");
     if(real.length<2) return;
@@ -219,7 +232,7 @@ function check(owner){
     document.getElementById("cs").innerText=cs;
 }
 
-/* Oyun Başlatma ve Bahis Ekleme */
+// Oyun Başlatma ve Bahis Ekleme
 let balance=0,bet=0,lastBet=0,userRef=null;
 let gameStarted=false;
 
