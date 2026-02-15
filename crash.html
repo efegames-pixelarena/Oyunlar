@@ -2,76 +2,49 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport"
+content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>SkyCrash</title>
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;}
-body{height:100vh;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;background:#070b18;color:white;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;background:#070b18;color:white;touch-action:manipulation;}
 
-/* TOP BAR */
+input{font-size:16px;} /* iOS zoom engel */
+
 .top-bar{
 position:fixed;top:0;width:100%;height:55px;
 display:flex;align-items:center;justify-content:space-between;
-padding:0 16px;
-background:linear-gradient(135deg,#1a2a6c,#16245c);
-box-shadow:0 4px 15px rgba(0,0,0,0.45);
+padding:0 16px;background:linear-gradient(135deg,#1a2a6c,#16245c);
 z-index:100;
 }
-.brand{
-font-size:18px;font-weight:800;
-background:linear-gradient(90deg,#4fd1ff,#fff,#4fd1ff);
-background-size:200% auto;
--webkit-background-clip:text;
--webkit-text-fill-color:transparent;
-animation:shine 3s linear infinite;
-}
-@keyframes shine{to{background-position:200% center;}}
 .right-menu{display:flex;gap:10px;}
-.nav-box{padding:6px 14px;border-radius:14px;font-weight:700;font-size:13px;min-width:95px;text-align:center;}
+.nav-box{padding:6px 14px;border-radius:14px;font-weight:700;font-size:13px;}
 .balance-box{background:#273c8f;}
 .bet-box{background:linear-gradient(90deg,#ff8a00,#ff5f00);color:#000;}
 
-/* HISTORY */
 .history{
 position:absolute;top:55px;width:100%;height:42px;
 display:flex;align-items:center;gap:8px;
 padding:0 12px;overflow-x:auto;
-background:linear-gradient(135deg,#16245c,#1a2a6c);
+background:#16245c;
 }
 .history span{
-padding:5px 12px;border-radius:14px;
-font-size:12px;font-weight:800;white-space:nowrap;
+padding:5px 12px;border-radius:14px;font-size:12px;font-weight:800;
 }
 
-/* GAME */
 .main{
 position:absolute;top:97px;bottom:150px;width:100%;
-display:flex;flex-direction:column;
-align-items:center;justify-content:center;
-background:radial-gradient(circle at center,#16204a,#070b18 70%);
+display:flex;flex-direction:column;align-items:center;justify-content:center;
 }
-.multiplier{
-font-size:65px;font-weight:bold;
-color:#00eaff;text-shadow:0 0 25px #00eaff;
-}
-.status{
-margin-top:10px;
-font-size:16px;
-font-weight:700;
-color:#ff2a4d;
-}
+.multiplier{font-size:65px;font-weight:bold;color:#00eaff;}
+.status{margin-top:10px;font-size:16px;font-weight:700;color:#ff2a4d;}
 
-/* BOTTOM */
 .bottom{
 position:absolute;bottom:0;width:100%;height:150px;
-background:#121833;
-display:flex;justify-content:center;align-items:center;gap:15px;
+background:#121833;display:flex;justify-content:center;align-items:center;gap:15px;
 }
-.betBox{
-background:#1a2248;padding:12px;border-radius:10px;
-width:45%;max-width:200px;display:flex;flex-direction:column;gap:6px;
-}
+.betBox{background:#1a2248;padding:12px;border-radius:10px;width:45%;max-width:200px;display:flex;flex-direction:column;gap:6px;}
 .betBox input{padding:8px;border:none;border-radius:6px;text-align:center;font-weight:bold;}
 .betBox button{padding:10px;border:none;border-radius:6px;font-weight:bold;cursor:pointer;background:#6c5ce7;color:white;}
 .cancel{background:#ff2a4d !important;}
@@ -81,7 +54,7 @@ width:45%;max-width:200px;display:flex;flex-direction:column;gap:6px;
 <body>
 
 <div class="top-bar">
-<div class="brand">SkyCrash</div>
+<div>SkyCrash</div>
 <div class="right-menu">
 <div class="nav-box balance-box">Bakiye: <span id="balance">0</span>₺</div>
 <div class="nav-box bet-box">Bahis: <span id="bet">0</span>₺</div>
@@ -98,12 +71,12 @@ width:45%;max-width:200px;display:flex;flex-direction:column;gap:6px;
 <div class="bottom">
 <div class="betBox">
 <input type="number" id="bet1" value="100">
-<input type="number" id="auto1" class="autoInput" placeholder="Auto X (örn 2)">
+<input type="number" id="auto1" class="autoInput" placeholder="Auto X">
 <button id="btn1">Bahis Yap</button>
 </div>
 <div class="betBox">
 <input type="number" id="bet2" value="200">
-<input type="number" id="auto2" class="autoInput" placeholder="Auto X (örn 3)">
+<input type="number" id="auto2" class="autoInput" placeholder="Auto X">
 <button id="btn2">Bahis Yap</button>
 </div>
 </div>
@@ -127,7 +100,6 @@ const auth=getAuth(app);
 const db=getFirestore(app);
 
 let balance=0,userRef=null;
-
 const balanceEl=document.getElementById("balance");
 const betEl=document.getElementById("bet");
 const statusEl=document.getElementById("status");
@@ -143,36 +115,43 @@ balanceEl.innerText=balance;
 });
 });
 
-/* IOS AUDIO UNLOCK */
-let audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-document.body.addEventListener("touchstart",()=>{if(audioCtx.state==="suspended")audioCtx.resume();},{once:true});
+/* ===== iOS AUDIO FIX ===== */
+let audioCtx;
+function unlockAudio(){
+if(!audioCtx){
+audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+}
+if(audioCtx.state==="suspended")audioCtx.resume();
+}
+document.addEventListener("touchstart",unlockAudio,{once:true});
+
 function beep(freq){
+if(!audioCtx) return;
 let o=audioCtx.createOscillator();
 let g=audioCtx.createGain();
 o.connect(g);g.connect(audioCtx.destination);
-o.frequency.value=freq;o.start();
-g.gain.setValueAtTime(0.1,audioCtx.currentTime);
-g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+0.2);
-o.stop(audioCtx.currentTime+0.2);
+o.frequency.value=freq;
+o.start();
+g.gain.setValueAtTime(0.15,audioCtx.currentTime);
+g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+0.25);
+o.stop(audioCtx.currentTime+0.25);
 }
 
-/* ENGINE */
+/* ===== ENGINE ===== */
 let phase="betting";
 let multiplier=1;
 let crashPoint=0;
 let animation;
 let lastTime=0;
-let countdown=5;
-
-let bet1=0,bet2=0,active1=false,active2=false;
-let win1=0,win2=0;
+let bet1=0,bet2=0,active1=false,active2=false,win1=0,win2=0;
 
 function addHistory(val){
 let span=document.createElement("span");
 span.innerText=val.toFixed(2)+"x";
 span.style.background=val<2?"#00bcd4":val<10?"#ff9800":"#ff2a4d";
 historyEl.prepend(span);
-if(historyEl.children.length>20)historyEl.removeChild(historyEl.lastChild);
+if(historyEl.children.length>20)
+historyEl.removeChild(historyEl.lastChild);
 }
 
 function startRound(){
@@ -180,13 +159,14 @@ phase="betting";
 multiplier=1;
 statusEl.innerText="";
 document.getElementById("multiplier").innerText="1.00x";
-setTimeout(startFlight,4000);
+setTimeout(()=>startFlight(),100);
 }
 
 function startFlight(){
 phase="flying";
-crashPoint=Math.max(1.1,(1/(1-Math.random()))*0.97);
+crashPoint=(1/(1-Math.random()))*0.97;
 lastTime=performance.now();
+beep(600);
 animate(lastTime);
 }
 
@@ -194,57 +174,66 @@ function animate(t){
 let delta=(t-lastTime)/1000;
 lastTime=t;
 
-/* STABIL HIZ */
-multiplier+=delta*(0.6+multiplier*0.15);
+/* %1 tabanlı exponential artış */
+multiplier*=1+(0.01+multiplier*0.002)*delta*60;
 
 document.getElementById("multiplier").innerText=multiplier.toFixed(2)+"x";
 
-/* AUTO CASHOUT */
-let auto1=parseFloat(document.getElementById("auto1").value);
-let auto2=parseFloat(document.getElementById("auto2").value);
+let auto1=parseFloat(auto1Input.value);
+let auto2=parseFloat(auto2Input.value);
 
 if(active1){
 win1=bet1*multiplier;
 btn1.innerText="Çek "+Math.floor(win1);
-if(auto1>1&&multiplier>=auto1)cashout(1);
+if(auto1>1 && multiplier>=auto1) cashout(1);
 }
 if(active2){
 win2=bet2*multiplier;
 btn2.innerText="Çek "+Math.floor(win2);
-if(auto2>1&&multiplier>=auto2)cashout(2);
+if(auto2>1 && multiplier>=auto2) cashout(2);
 }
 
-if(multiplier>=crashPoint){crash();return;}
+if(multiplier>=crashPoint){
+crash();
+return;
+}
+
 animation=requestAnimationFrame(animate);
 }
 
 function crash(){
 cancelAnimationFrame(animation);
-beep(120);
-addHistory(crashPoint);
 phase="crashed";
-statusEl.innerText="PATLADI "+crashPoint.toFixed(2)+"x";
-active1=false;active2=false;
+beep(150);
 
-countdown=5;
-let int=setInterval(()=>{
-statusEl.innerText="Bahislerin Kapanmasına: "+countdown;
+multiplier=crashPoint;
+document.getElementById("multiplier").innerText=crashPoint.toFixed(2)+"x";
+addHistory(crashPoint);
+
+active1=false;
+active2=false;
+
+let countdown=5;
+statusEl.innerText="Bahislerin Kapanmasına: 5";
+
+let interval=setInterval(()=>{
 countdown--;
-if(countdown<0){
-clearInterval(int);
+statusEl.innerText="Bahislerin Kapanmasına: "+countdown;
+if(countdown<=0){
+clearInterval(interval);
 startRound();
 }
 },1000);
 }
 
 async function cashout(i){
-if(i===1&&active1){
+if(i===1 && active1){
 balance+=Math.floor(win1);
 await updateDoc(userRef,{balance});
 active1=false;
 btn1.disabled=true;
 }
-if(i===2&&active2){
+if(i===2 && active2){
 balance+=Math.floor(win2);
 await updateDoc(userRef,{balance});
 active2=false;
@@ -254,6 +243,8 @@ btn2.disabled=true;
 
 const btn1=document.getElementById("btn1");
 const btn2=document.getElementById("btn2");
+const auto1Input=document.getElementById("auto1");
+const auto2Input=document.getElementById("auto2");
 
 btn1.onclick=()=>placeBet(1);
 btn2.onclick=()=>placeBet(2);
@@ -268,7 +259,6 @@ await updateDoc(userRef,{balance});
 
 if(i===1){bet1=amount;active1=true;}
 else{bet2=amount;active2=true;}
-
 }
 
 startRound();
