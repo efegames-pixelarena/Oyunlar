@@ -2,251 +2,328 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Crash Game</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>SkyCrash</title>
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,Helvetica,sans-serif}
-body{
-    background:#0f1c26;
-    color:#fff;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-}
-.header{
-    width:100%;
-    padding:15px;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    background:#122534;
-}
-.balance{
-    background:linear-gradient(135deg,#ff7b00,#ff3d3d);
-    padding:10px 20px;
-    border-radius:12px;
-    font-weight:bold;
-}
-.history{
-    display:flex;
-    gap:8px;
-    overflow-x:auto;
-    padding:10px;
-    width:100%;
-}
-.pill{
-    padding:6px 12px;
-    border-radius:20px;
-    font-weight:bold;
-    font-size:14px;
-    white-space:nowrap;
-}
-.low{background:#1e3a5f;color:#3ea6ff}
-.mid{background:#35255c;color:#b366ff}
-.high{background:#5c1f1f;color:#ff5c5c}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;background:#070b18;color:white;}
+input{font-size:16px;}
 
-.game-area{
-    width:95%;
-    max-width:900px;
-    background:#1a1f27;
-    margin-top:10px;
-    border-radius:16px;
-    padding:20px;
-    position:relative;
+.top-bar{
+position:fixed;top:0;width:100%;height:55px;
+display:flex;align-items:center;justify-content:space-between;
+padding:0 12px;background:linear-gradient(135deg,#1a2a6c,#16245c);
+z-index:100;
 }
-#multiplier{
-    font-size:60px;
-    text-align:center;
-    margin-bottom:10px;
+
+.right-menu{display:flex;gap:8px;}
+.nav-box{padding:6px 12px;border-radius:16px;font-weight:700;font-size:13px;}
+.balance-box{background:#273c8f;}
+.bet-box{background:linear-gradient(90deg,#ff8a00,#ff5f00);color:#000;}
+
+.history{
+position:absolute;top:55px;width:100%;height:42px;
+display:flex;align-items:center;gap:8px;
+padding:0 12px;overflow-x:auto;background:#16245c;
 }
-.status{
-    text-align:center;
-    margin-bottom:10px;
+
+.history span{
+padding:5px 12px;border-radius:14px;font-size:12px;font-weight:800;
+white-space:nowrap;
 }
-canvas{
-    width:100%;
-    height:300px;
-    background:#141a20;
-    border-radius:12px;
+
+.main{
+position:absolute;top:97px;bottom:150px;width:100%;
+display:flex;flex-direction:column;align-items:center;justify-content:center;
 }
-.controls{
-    margin-top:20px;
-    display:flex;
-    gap:20px;
-    flex-wrap:wrap;
+
+.multiplier{font-size:65px;font-weight:bold;color:#00eaff;}
+.status{margin-top:10px;font-size:16px;font-weight:700;color:#ff2a4d;}
+
+.rocket{
+position:absolute;
+font-size:28px;
+transform:translate(-50%,-50%);
+pointer-events:none;
+display:none;
 }
-.bet-box{
-    background:#1c232c;
-    padding:15px;
-    border-radius:12px;
-    flex:1;
-    min-width:250px;
+
+.bottom{
+position:absolute;bottom:0;width:100%;height:150px;
+background:#121833;display:flex;justify-content:center;align-items:center;gap:15px;
 }
-.bet-box input{
-    width:100%;
-    padding:10px;
-    border:none;
-    border-radius:8px;
-    margin-bottom:10px;
+
+.betBox{
+background:#1a2248;padding:12px;border-radius:10px;width:45%;max-width:200px;
+display:flex;flex-direction:column;gap:6px;
 }
-.btn{
-    padding:10px;
-    width:100%;
-    border:none;
-    border-radius:8px;
-    font-weight:bold;
-    cursor:pointer;
+
+.betBox input{
+padding:8px;border:none;border-radius:6px;text-align:center;font-weight:bold;
 }
-.bet-btn{
-    background:#2e3a48;
-    color:#fff;
+
+.betBox button{
+padding:10px;border:none;border-radius:6px;font-weight:bold;cursor:pointer;
+background:#6c5ce7;color:white;
 }
-.cashout-btn{
-    background:#00c853;
-    color:#fff;
-}
-.crashed{
-    color:#ff3d3d;
-}
-.running{
-    color:#00e5ff;
-}
-.network{
-    position:absolute;
-    top:15px;
-    right:20px;
-    font-size:14px;
-}
-.dot{
-    height:10px;
-    width:10px;
-    background:#00ff6a;
-    border-radius:50%;
-    display:inline-block;
-    margin-right:5px;
-}
+
+.cancel{background:#ff2a4d !important;}
+.cashout{background:#00c853 !important;}
 </style>
 </head>
-
 <body>
 
-<div class="header">
-    <div>CRASH GAME</div>
-    <div class="balance">Bakiye: ₺<span id="balance">1000</span></div>
+<div class="top-bar">
+<div>SkyCrash</div>
+<div class="right-menu">
+<div class="nav-box balance-box">Bakiye: <span id="balance">0</span>₺</div>
+<div class="nav-box bet-box">Bahis: <span id="bet">0</span>₺</div>
+</div>
 </div>
 
 <div class="history" id="history"></div>
 
-<div class="game-area">
-    <div class="network"><span class="dot"></span>Network Status</div>
-    <div id="multiplier">1.00x</div>
-    <div class="status running" id="status">Bekleniyor...</div>
-    <canvas id="chart"></canvas>
-
-    <div class="controls">
-        <div class="bet-box">
-            <input type="number" id="betAmount" value="10">
-            <button class="btn bet-btn" onclick="placeBet()">BAHİS YAP</button>
-            <button class="btn cashout-btn" onclick="cashout()">CASHOUT</button>
-            <br><br>
-            Auto Cashout: <input type="number" id="autoCash" value="2">
-        </div>
-    </div>
+<div class="main" id="gameArea">
+<div class="multiplier" id="multiplier">1.00x</div>
+<div class="status" id="status"></div>
+<div class="rocket" id="rocket">🚀</div>
 </div>
 
-<script>
-let balance = 1000;
-let multiplier = 1;
-let crashPoint = 0;
-let running = false;
-let betPlaced = false;
-let betAmount = 0;
-let autoCash = 0;
-let ctx = document.getElementById("chart").getContext("2d");
-let x = 0;
+<div class="bottom">
+<div class="betBox">
+<input type="number" id="bet1" value="100">
+<input type="number" id="auto1" placeholder="Auto X">
+<button id="btn1">Bahis Yap</button>
+</div>
+<div class="betBox">
+<input type="number" id="bet2" value="200">
+<input type="number" id="auto2" placeholder="Auto X">
+<button id="btn2">Bahis Yap</button>
+</div>
+</div>
 
-function randomCrash(){
-    let r = Math.random();
-    return (1/(1-r)).toFixed(2);
+<audio id="flySound" preload="auto" src="https://assets.mixkit.co/sfx/preview/mixkit-airplane-take-off-1740.mp3" loop></audio>
+<audio id="explodeSound" preload="auto" src="https://assets.mixkit.co/sfx/preview/mixkit-explosion-impact-1684.mp3"></audio>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth,onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore,doc,updateDoc,onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig={
+apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
+authDomain:"emirhan-site.firebaseapp.com",
+projectId:"emirhan-site",
+storageBucket:"emirhan-site.firebasestorage.app",
+messagingSenderId:"668871888390",
+appId:"1:668871888390:web:76568bda84cb1641f7bd87"
+};
+
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getFirestore(app);
+
+let balance=0,userRef=null;
+let phase="betting";
+let multiplier=1;
+let crashPoint=0;
+let animationId=null;
+let startTime=0;
+let countdownInterval=null;
+
+let bet1=0,bet2=0,active1=false,active2=false;
+
+const balanceEl=document.getElementById("balance");
+const betEl=document.getElementById("bet");
+const historyEl=document.getElementById("history");
+const multiplierEl=document.getElementById("multiplier");
+const statusEl=document.getElementById("status");
+const rocket=document.getElementById("rocket");
+const flySound=document.getElementById("flySound");
+const explodeSound=document.getElementById("explodeSound");
+
+const btn1=document.getElementById("btn1");
+const btn2=document.getElementById("btn2");
+
+document.body.addEventListener("click",()=>{
+flySound.play().then(()=>flySound.pause()).catch(()=>{});
+explodeSound.play().then(()=>explodeSound.pause()).catch(()=>{});
+},{once:true});
+
+onAuthStateChanged(auth,user=>{
+if(!user){location.href="index.html";return;}
+userRef=doc(db,"users",user.uid);
+onSnapshot(userRef,snap=>{
+if(!snap.exists()) return;
+balance=Math.floor(snap.data().balance||0);
+balanceEl.innerText=balance;
+});
+});
+
+function updateTopBet(){
+betEl.innerText=bet1+bet2;
 }
 
-function startGame(){
-    multiplier = 1;
-    x = 0;
-    crashPoint = randomCrash();
-    running = true;
-    betPlaced = false;
-    document.getElementById("status").innerText="Oyun Başladı";
-    document.getElementById("status").className="status running";
-    drawLoop();
+function safeUpdateBalance(){
+if(userRef) updateDoc(userRef,{balance});
 }
 
-function drawLoop(){
-    if(!running) return;
-
-    multiplier += 0.01;
-    x += 2;
-
-    document.getElementById("multiplier").innerText = multiplier.toFixed(2)+"x";
-
-    ctx.fillStyle="#141a20";
-    ctx.fillRect(0,0,900,300);
-
-    ctx.beginPath();
-    ctx.moveTo(0,300);
-    ctx.lineTo(x,300-multiplier*20);
-    ctx.strokeStyle="#00e5ff";
-    ctx.lineWidth=3;
-    ctx.stroke();
-
-    if(betPlaced && multiplier>=autoCash && autoCash>0){
-        cashout();
-    }
-
-    if(multiplier>=crashPoint){
-        running=false;
-        document.getElementById("status").innerText="CRASHED at "+crashPoint+"x";
-        document.getElementById("status").className="status crashed";
-        addHistory(crashPoint);
-        setTimeout(startGame,3000);
-        return;
-    }
-
-    requestAnimationFrame(drawLoop);
+function addHistory(val){
+let span=document.createElement("span");
+span.innerText=val.toFixed(2)+"x";
+span.style.background=val<2?"#00bcd4":val<10?"#ff9800":"#ff2a4d";
+historyEl.prepend(span);
+if(historyEl.children.length>20)
+historyEl.removeChild(historyEl.lastChild);
 }
 
-function placeBet(){
-    if(running) return alert("Round başladı!");
-    betAmount = parseFloat(document.getElementById("betAmount").value);
-    autoCash = parseFloat(document.getElementById("autoCash").value);
-    if(balance>=betAmount){
-        balance -= betAmount;
-        document.getElementById("balance").innerText=balance.toFixed(2);
-        betPlaced=true;
-    }
+btn1.onclick=()=>handleBet(1);
+btn2.onclick=()=>handleBet(2);
+
+function handleBet(slot){
+if(phase!=="betting") return;
+let amount=parseInt(document.getElementById("bet"+slot).value);
+if(!amount || amount<=0 || amount>balance) return;
+
+balance-=amount;
+safeUpdateBalance();
+
+if(slot===1){bet1=amount;active1=true;}
+if(slot===2){bet2=amount;active2=true;}
+
+updateTopBet();
+updateButton(slot,"cancel");
 }
 
-function cashout(){
-    if(!running || !betPlaced) return;
-    let win = betAmount*multiplier;
-    balance += win;
-    document.getElementById("balance").innerText=balance.toFixed(2);
-    betPlaced=false;
+function updateButton(slot,type,value){
+let btn=document.getElementById("btn"+slot);
+btn.className="";
+if(type==="cancel"){
+btn.innerText="İptal";
+btn.classList.add("cancel");
+btn.onclick=()=>cancelBet(slot);
+}
+if(type==="cashout"){
+btn.innerText="Çek "+Math.floor(value);
+btn.classList.add("cashout");
+btn.onclick=()=>cashout(slot,value);
+}
+if(type==="reset"){
+btn.innerText="Bahis Yap";
+btn.onclick=()=>handleBet(slot);
+}
 }
 
-function addHistory(value){
-    let div=document.createElement("div");
-    div.classList.add("pill");
-    if(value<2) div.classList.add("low");
-    else if(value<5) div.classList.add("mid");
-    else div.classList.add("high");
-    div.innerText=value+"x";
-    document.getElementById("history").prepend(div);
+function cancelBet(slot){
+if(phase!=="betting") return;
+if(slot===1 && active1){balance+=bet1;bet1=0;active1=false;}
+if(slot===2 && active2){balance+=bet2;bet2=0;active2=false;}
+safeUpdateBalance();
+updateTopBet();
+updateButton(slot,"reset");
 }
 
-setTimeout(startGame,2000);
+function cashout(slot,value){
+if(phase!=="flying") return;
+balance+=Math.floor(value);
+safeUpdateBalance();
+if(slot===1){active1=false;bet1=0;}
+if(slot===2){active2=false;bet2=0;}
+updateTopBet();
+updateButton(slot,"reset");
+}
+
+function startRound(){
+phase="betting";
+multiplier=1;
+multiplierEl.innerText="1.00x";
+statusEl.innerText="";
+rocket.style.display="none";
+updateButton(1,"reset");
+updateButton(2,"reset");
+setTimeout(startFlight,2000);
+}
+
+function startFlight(){
+phase="flying";
+rocket.style.display="block";
+crashPoint=(1/(1-Math.random()))*0.98;
+startTime=performance.now();
+flySound.currentTime=0;
+flySound.volume=0.4;
+flySound.play();
+if(animationId) cancelAnimationFrame(animationId);
+animationId=requestAnimationFrame(animate);
+}
+
+function animate(now){
+let elapsed=(now-startTime)/1000;
+multiplier = 1 + (Math.exp(elapsed*0.55)-1);
+multiplierEl.innerText=multiplier.toFixed(2)+"x";
+
+/* GELİŞTİRİLMİŞ ROKET FİZİĞİ */
+let startX=60;
+let startY=window.innerHeight-190;
+let maxX=window.innerWidth-60;
+
+let progress;
+if(multiplier<3){
+progress=(multiplier-1)/10;
+}else{
+progress=0.2+((multiplier-3)/6);
+}
+progress=Math.max(0,progress);
+
+let x=startX+(maxX-startX)*Math.min(progress,1);
+if(x>=maxX) x=maxX;
+
+let y=startY-(progress*window.innerHeight*0.8);
+
+rocket.style.left=x+"px";
+rocket.style.top=y+"px";
+
+if(active1) updateButton(1,"cashout",bet1*multiplier);
+if(active2) updateButton(2,"cashout",bet2*multiplier);
+
+if(multiplier>=crashPoint){crash();return;}
+animationId=requestAnimationFrame(animate);
+}
+
+function crash(){
+if(animationId) cancelAnimationFrame(animationId);
+phase="crashed";
+
+flySound.pause();
+explodeSound.currentTime=0;
+explodeSound.play();
+
+multiplier=crashPoint;
+multiplierEl.innerText=crashPoint.toFixed(2)+"x";
+
+addHistory(crashPoint);
+
+active1=false;active2=false;
+bet1=0;bet2=0;
+updateTopBet();
+updateButton(1,"reset");
+updateButton(2,"reset");
+
+let timeLeft=5;
+statusEl.innerText="Yeni Tur : 5";
+
+countdownInterval=setInterval(()=>{
+timeLeft--;
+if(timeLeft>0){
+statusEl.innerText="Yeni Tur : "+timeLeft;
+}else{
+clearInterval(countdownInterval);
+startRound();
+}
+},1000);
+}
+
+startRound();
 </script>
-
 </body>
 </html>
