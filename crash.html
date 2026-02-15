@@ -5,11 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SkyCrash V1</title>
 
-<!-- FIREBASE -->
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js"></script>
-
 <style>
 /* CSS AYNEN KORUNDU */
 *{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
@@ -25,16 +20,21 @@ body{display:flex;flex-direction:column;height:100dvh;}
 .graphArea{width:100%;height:100%;position:relative;background:radial-gradient(circle at center,#16204a,#070b18 70%);}
 .multiplier{position:absolute;top:45%;left:50%;transform:translate(-50%,-50%);font-size:70px;font-weight:bold;color:#00eaff;text-shadow:0 0 25px #00eaff;}
 .plane{position:absolute;width:40px;height:40px;fill:#00eaff;}
+.fakeLiveBar{position:absolute;bottom:15px;left:0;width:100%;display:flex;justify-content:center;pointer-events:none;}
+.fakeTrack{display:flex;gap:10px;overflow:hidden;max-width:90%;}
+.fakeItem{background:rgba(0,255,200,0.12);color:#00ffcc;padding:6px 12px;border-radius:20px;white-space:nowrap;animation:fadeIn 0.25s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
 .bottom{height:130px;background:#121833;display:flex;justify-content:center;align-items:center;gap:15px;}
 .betBox{background:#1a2248;padding:12px;border-radius:10px;width:45%;max-width:200px;display:flex;flex-direction:column;gap:6px;}
 .betBox input{padding:8px;border:none;border-radius:6px;text-align:center;font-weight:bold;}
 .betBox button{padding:10px;border:none;border-radius:6px;font-weight:bold;cursor:pointer;background:#6c5ce7;color:white;}
 .cancel{background:#ff2a4d !important;}
 .cashout{background:#00eaff !important;color:#000 !important;}
-.winAnim{animation:winFlash 0.6s ease;}
-.loseAnim{animation:loseFlash 0.6s ease;}
-@keyframes winFlash{0%{background:#00eaff;}100%{background:#1a2248;}}
-@keyframes loseFlash{0%{background:#ff2a4d;}100%{background:#1a2248;}}
+.crashScreen{position:absolute;inset:0;background:black;display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:20;opacity:0;pointer-events:none;transition:0.3s;}
+.crashScreen.active{opacity:1;pointer-events:auto;}
+.crashTitle{color:white;font-size:28px;margin-bottom:15px;}
+.crashValue{color:#ff0000;font-size:90px;font-weight:bold;}
+.countdown{margin-top:20px;color:white;font-size:22px;}
 </style>
 </head>
 <body>
@@ -51,6 +51,12 @@ body{display:flex;flex-direction:column;height:100dvh;}
 <svg class="plane" id="plane" viewBox="0 0 24 24">
 <path d="M2 16l20-5-20-5v4l15 1-15 1z"/>
 </svg>
+<div class="fakeLiveBar"><div class="fakeTrack" id="fakeTrack"></div></div>
+</div>
+<div class="crashScreen" id="crashScreen">
+<div class="crashTitle">CRASH!</div>
+<div class="crashValue" id="crashValue">2.00x</div>
+<div class="countdown" id="countdown"></div>
 </div>
 </div>
 
@@ -67,123 +73,155 @@ body{display:flex;flex-direction:column;height:100dvh;}
 
 <script type="module">
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+/* ================= FIREBASE ================= */
 
-/* FIREBASE CONFIG */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, getDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
 const firebaseConfig = {
-  apiKey: "BURAYA",
-  authDomain: "BURAYA",
-  projectId: "BURAYA",
-  storageBucket: "BURAYA",
-  messagingSenderId: "BURAYA",
-  appId: "BURAYA"
+  apiKey: "AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
+  authDomain: "emirhan-site.firebaseapp.com",
+  projectId: "emirhan-site",
+  storageBucket: "emirhan-site.firebasestorage.app",
+  messagingSenderId: "668871888390",
+  appId: "1:668871888390:web:76568bda84cb1641f7bd87",
+  measurementId: "G-96ZVZX3DWH"
 };
 
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
 const auth = getAuth(app);
+const db = getFirestore(app);
 
-/* GLOBAL ROUND */
-const roundRef = doc(db,"crash","currentRound");
+let userRef;
+let balance = 0;
 
-let uid=null;
-let balance=0;
-let isHost=false;
-let animation;
-
-/* AUTH */
-onAuthStateChanged(auth, async(user)=>{
-if(!user) return;
-uid=user.uid;
-listenBalance();
-await ensureRound();
-listenRound();
-});
-
-/* BALANCE */
-function listenBalance(){
-const userRef=doc(db,"users",uid);
-onSnapshot(userRef,(snap)=>{
-if(snap.exists()){
-balance=snap.data().balance || 0;
-document.getElementById("balance").innerText=balance.toFixed(2);
-}
-});
-}
-
-/* ROUND VAR MI KONTROL */
-async function ensureRound(){
-const snap=await getDoc(roundRef);
-if(!snap.exists()){
-isHost=true;
-await createRound();
-}
-}
-
-/* ROUND OLUŞTUR */
-async function createRound(){
-const crashPoint=(1/(1-Math.random()))*0.97;
-
-await setDoc(roundRef,{
-phase:"betting",
-multiplier:1,
-crashPoint:crashPoint,
-createdAt:Date.now()
-});
-
-setTimeout(()=>{
-startFlight();
-},5000);
-}
-
-/* ROUND DİNLE */
-function listenRound(){
-onSnapshot(roundRef,(snap)=>{
-if(!snap.exists()) return;
-const data=snap.data();
-
-document.getElementById("multiplier").innerText =
-data.multiplier.toFixed(2)+"x";
-
-if(data.phase==="crashed"){
-cancelAnimationFrame(animation);
-}
-});
-}
-
-/* FLIGHT */
-function startFlight(){
-if(!isHost) return;
-
-updateDoc(roundRef,{phase:"flying"});
-let multiplier=1;
-let last=performance.now();
-
-function animate(time){
-let delta=(time-last)/1000;
-last=time;
-
-multiplier+=0.12*delta*multiplier;
-
-updateDoc(roundRef,{multiplier:multiplier});
-
-getDoc(roundRef).then(snap=>{
-const crashPoint=snap.data().crashPoint;
-if(multiplier>=crashPoint){
-updateDoc(roundRef,{phase:"crashed"});
-setTimeout(createRound,4000);
+onAuthStateChanged(auth,(user)=>{
+if(!user){
+alert("Giriş yapmadan oynayamazsın.");
+window.location.href="index.html";
 return;
 }
+userRef = doc(db,"users",user.uid);
+
+onSnapshot(userRef,(snap)=>{
+if(snap.exists()){
+balance = snap.data().balance || 0;
+document.getElementById("balance").innerText = balance.toFixed(2);
+}
+});
 });
 
+/* ===== OYUN SİSTEMİ (MEKANİK AYNI) ===== */
+
+let phase="betting";
+let multiplier=1;
+let crashPoint=0;
+let animation;
+let lastTime=0;
+
+let bet1=0, bet2=0;
+let active1=false, active2=false;
+let cashed1=false, cashed2=false;
+let currentWin1=0, currentWin2=0;
+
+async function updateBalanceFirestore(newBalance){
+await updateDoc(userRef,{balance:newBalance});
+}
+
+function startRoundCountdown(){
+phase="betting";
+let time=5;
+document.getElementById("countdown").innerText="Yeni tur: "+time;
+document.getElementById("crashScreen").classList.add("active");
+active1=false; active2=false;
+
+let interval=setInterval(()=>{
+time--;
+document.getElementById("countdown").innerText="Yeni tur: "+time;
+if(time<=0){
+clearInterval(interval);
+document.getElementById("crashScreen").classList.remove("active");
+startFlight();
+}
+},1000);
+}
+
+function startFlight(){
+phase="flying";
+multiplier=1;
+cashed1=false; cashed2=false;
+currentWin1=0; currentWin2=0;
+lastTime=performance.now();
+crashPoint=(1/(1-Math.random()))*0.97;
+animate(performance.now());
+}
+
+function animate(timestamp){
+let delta=(timestamp-lastTime)/1000;
+lastTime=timestamp;
+multiplier+=0.1*delta*multiplier;
+document.getElementById("multiplier").innerText=multiplier.toFixed(2)+"x";
+
+if(multiplier>=crashPoint){
+triggerCrash();
+return;
+}
 animation=requestAnimationFrame(animate);
 }
 
-animation=requestAnimationFrame(animate);
+function triggerCrash(){
+cancelAnimationFrame(animation);
+phase="crashed";
+document.getElementById("crashValue").innerText=multiplier.toFixed(2)+"x";
+document.getElementById("crashScreen").classList.add("active");
+active1=false; active2=false;
+setTimeout(()=>{startRoundCountdown();},2000);
 }
+
+async function handleBet(btnId, betInputId, index){
+let btn=document.getElementById(btnId);
+let betInput=document.getElementById(betInputId);
+
+btn.onclick=async function(){
+if(phase==="betting"){
+let amount=parseFloat(betInput.value);
+if(amount<=0 || balance<amount) return;
+
+balance-=amount;
+await updateBalanceFirestore(balance);
+
+if(index===1){bet1=amount; active1=true;}
+else{bet2=amount; active2=true;}
+
+btn.innerText="İptal Et";
+btn.classList.add("cancel");
+}
+else if(phase==="flying"){
+if(index===1 && active1 && !cashed1){
+let win=bet1*multiplier;
+balance+=win;
+await updateBalanceFirestore(balance);
+cashed1=true;
+btn.disabled=true;
+}
+if(index===2 && active2 && !cashed2){
+let win=bet2*multiplier;
+balance+=win;
+await updateBalanceFirestore(balance);
+cashed2=true;
+btn.disabled=true;
+}
+}
+};
+}
+
+handleBet("btn1","bet1",1);
+handleBet("btn2","bet2",2);
+
+startRoundCountdown();
 
 </script>
+
 </body>
 </html>
