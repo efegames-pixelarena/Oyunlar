@@ -7,7 +7,6 @@
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;}
-
 body{
 height:100vh;
 overflow:hidden;
@@ -17,156 +16,85 @@ color:white;
 display:flex;
 flex-direction:column;
 align-items:center;
-justify-content:flex-start;
 }
 
-/* ===== BLACKJACK TOP BAR ===== */
-
+/* TOP BAR */
 .top-bar{
-position:fixed;
-top:0;
-width:100%;
-height:55px;
-display:flex;
-align-items:center;
-justify-content:space-between;
+position:fixed;top:0;width:100%;height:55px;
+display:flex;align-items:center;justify-content:space-between;
 padding:0 16px;
 background:linear-gradient(135deg,#1a2a6c,#16245c);
 box-shadow:0 4px 15px rgba(0,0,0,0.45);
 z-index:100;
 }
-
 .brand{
-font-size:18px;
-font-weight:800;
+font-size:18px;font-weight:800;
 background:linear-gradient(90deg,#4fd1ff,#fff,#4fd1ff);
 background-size:200% auto;
 -webkit-background-clip:text;
 -webkit-text-fill-color:transparent;
 animation:shine 3s linear infinite;
 }
-
-@keyframes shine{
-to{background-position:200% center;}
-}
-
-.right-menu{display:flex;gap:10px;}
+@keyframes shine{to{background-position:200% center;}}
 .nav-box{
-padding:6px 14px;
-border-radius:14px;
-font-weight:700;
-font-size:13px;
-min-width:95px;
-text-align:center;
+padding:6px 14px;border-radius:14px;
+font-weight:700;font-size:13px;min-width:95px;text-align:center;
+background:#273c8f;
 }
-.balance-box{background:#273c8f;}
 
-/* ===== GAME AREA ===== */
-
+/* GAME */
 h1{margin-top:70px;margin-bottom:5px;}
-
-.score-board{
-margin-bottom:10px;
-}
-
+.score-board{margin-bottom:10px;}
 .table{
-width:95%;
-max-width:900px;
-height:520px;
-border-radius:40px;
+width:95%;max-width:900px;height:520px;border-radius:40px;
 position:relative;
 background:radial-gradient(circle at center,#136f3a,#083d18 70%);
-box-shadow:
-inset 0 0 120px #000,
-0 0 80px #00ff99,
-0 20px 60px rgba(0,0,0,0.6);
+box-shadow:inset 0 0 120px #000,0 0 80px #00ff99,0 20px 60px rgba(0,0,0,0.6);
 overflow:hidden;
 }
-
 .table-cards{
-position:absolute;
-top:50%;
-left:50%;
+position:absolute;top:50%;left:50%;
 transform:translate(-50%,-50%);
-display:flex;
-justify-content:center;
-align-items:center;
+display:flex;justify-content:center;align-items:center;
 }
-
-.stack-card{
-width:95px;
-margin-left:-65px;
-}
+.stack-card{width:95px;margin-left:-65px;}
 .stack-card:first-child{margin-left:0;}
-
 .hand{
-position:absolute;
-bottom:15px;
-left:50%;
+position:absolute;bottom:15px;left:50%;
 transform:translateX(-50%);
-display:flex;
-gap:10px;
+display:flex;gap:10px;
 }
-
 .computer{
-position:absolute;
-top:15px;
-left:50%;
+position:absolute;top:15px;left:50%;
 transform:translateX(-50%);
-display:flex;
-gap:10px;
+display:flex;gap:10px;
 }
+.card{width:80px;cursor:pointer;transition:0.3s;}
+.card:hover{transform:translateY(-10px);}
 
-.card{
-width:80px;
-cursor:pointer;
-transition:0.3s;
+/* CHIPS */
+.chips{
+position:fixed;bottom:10px;left:50%;
+transform:translateX(-50%);
 }
-.card:hover{ transform:translateY(-10px); }
-
-.popup{
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-background:rgba(0,0,0,0.85);
-display:flex;
-justify-content:center;
-align-items:center;
-flex-direction:column;
-z-index:999;
+.chip{
+display:inline-block;width:60px;height:60px;border-radius:50%;
+line-height:60px;text-align:center;
+margin:6px;font-weight:bold;cursor:pointer;
+box-shadow:0 6px 15px rgba(0,0,0,0.6);
 }
-.hidden{display:none;}
-
-.popup-box{
-background:#111;
-padding:30px;
-border-radius:20px;
-box-shadow:0 0 30px #00ff99;
-}
-
-button{
-padding:10px 20px;
-border:none;
-border-radius:10px;
-cursor:pointer;
-margin:5px;
-background:#ffb300;
-font-weight:bold;
-}
+.c1{background:#f0f0f0;color:black;}
+.c2{background:#1eaa00;}
+.c3{background:#ff1c1c;}
+.c4{background:black;color:white;}
 </style>
 </head>
-
 <body>
 
-<!-- TOP BAR -->
 <div class="top-bar">
 <div class="brand">Pişti Casino PRO</div>
-<div class="right-menu">
-<div class="nav-box balance-box">
-Bakiye: <span id="balance">0</span>₺
-</div>
+<div class="nav-box">
+Bakiye: <span id="balance">0</span>₺ | Bahis: <span id="bet">0</span>₺
 </div>
 </div>
 
@@ -175,30 +103,24 @@ Bakiye: <span id="balance">0</span>₺
 Oyuncu: <span id="ps">0</span> | ChatGPT: <span id="cs">0</span>
 </div>
 
-<div class="table" id="tableArea">
+<div class="table">
 <div class="computer" id="computerHand"></div>
 <div class="table-cards" id="tableCards"></div>
 <div class="hand" id="playerHand"></div>
 </div>
 
-<audio id="winSound" src="https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3"></audio>
-<audio id="sadSound" src="https://assets.mixkit.co/active_storage/sfx/2581/2581-preview.mp3"></audio>
-<audio id="cardSound" src="https://assets.mixkit.co/active_storage/sfx/3441/3441-preview.mp3"></audio>
-
-<div class="popup hidden" id="endPopup">
-<div class="popup-box">
-<h2 id="resultText"></h2>
-<button onclick="location.reload()">⌛ Yeni Oyun</button>
-<button onclick="location.href='index.html'">🏠 AnaSayfa</button>
-</div>
+<div class="chips">
+<div class="chip c1" onclick="addBet(100)">100</div>
+<div class="chip c2" onclick="addBet(500)">500</div>
+<div class="chip c3" onclick="addBet(1000)">1K</div>
+<div class="chip c4" onclick="addBet(5000)">5K</div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth,onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore,doc,onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore,doc,onSnapshot,updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-/* FIREBASE CONFIG */
 const firebaseConfig={
 apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
 authDomain:"emirhan-site.firebaseapp.com",
@@ -212,37 +134,33 @@ const app=initializeApp(firebaseConfig);
 const auth=getAuth(app);
 const db=getFirestore(app);
 
-let balance=0;
-let userRef=null;
+let balance=0,bet=0,userRef=null;
 
-/* AUTH */
 onAuthStateChanged(auth,user=>{
 if(!user) return;
-
 userRef=doc(db,"users",user.uid);
 onSnapshot(userRef,snap=>{
-if(!snap.exists()) return;
 balance=snap.data().balance||0;
 document.getElementById("balance").innerText=balance;
 });
 });
 
-/* ===== PİŞTİ OYUNU (DEĞİŞTİRİLMEDİ) ===== */
+window.addBet=async function(amount){
+if(balance<amount) return;
+balance-=amount;
+bet+=amount;
+await updateDoc(userRef,{balance});
+document.getElementById("balance").innerText=balance;
+document.getElementById("bet").innerText=bet;
+}
+
+/* ==== GAME ==== */
 
 const suits=["H","D","C","S"];
 const values=["A","2","3","4","5","6","7","8","9","0","J","Q","K"];
 
 let deck=[],player=[],computer=[],table=[];
 let ps=0,cs=0,lastWinner=null,round=0,totalRounds=6;
-
-const winSound=document.getElementById("winSound");
-const sadSound=document.getElementById("sadSound");
-const cardSound=document.getElementById("cardSound");
-
-function playSound(sound){
-let clone=sound.cloneNode(true);
-clone.play().catch(()=>{});
-}
 
 function createDeck(){
 deck=[];
@@ -278,8 +196,7 @@ return "https://deckofcardsapi.com/static/img/"+card+".png";
 function render(){
 const ph=document.getElementById("playerHand");
 const ch=document.getElementById("computerHand");
-ph.innerHTML="";
-ch.innerHTML="";
+ph.innerHTML=""; ch.innerHTML="";
 
 player.forEach((c,i)=>{
 let im=document.createElement("img");
@@ -305,7 +222,6 @@ function renderTable(){
 const tc=document.getElementById("tableCards");
 tc.innerHTML="";
 let real=table.filter(c=>c!=="BACK");
-
 real.forEach((c,i)=>{
 let im=document.createElement("img");
 im.src=img(c);
@@ -316,17 +232,17 @@ tc.appendChild(im);
 }
 
 function play(i){
+if(bet<=0) return;
 let c=player.splice(i,1)[0];
 table.push(c);
-playSound(cardSound);
 check("p");
 render();
-setTimeout(compPlay,600);
+setTimeout(compPlay,500);
 }
 
 function chooseSmartCard(){
 let real=table.filter(x=>x!=="BACK");
-let top=real.length ? real[real.length-1] : null;
+let top=real.length?real[real.length-1]:null;
 
 for(let i=0;i<computer.length;i++)
 if(computer[i][0]==="J") return i;
@@ -337,14 +253,10 @@ if(computer[i][0]===top[0]) return i;
 }
 
 let counts={};
-computer.forEach(c=>{
-counts[c[0]]=(counts[c[0]]||0)+1;
-});
+computer.forEach(c=>counts[c[0]]=(counts[c[0]]||0)+1);
 
-for(let i=0;i<computer.length;i++){
-if(counts[computer[i][0]]===1)
-return i;
-}
+for(let i=0;i<computer.length;i++)
+if(counts[computer[i][0]]===1) return i;
 
 return 0;
 }
@@ -354,17 +266,14 @@ if(computer.length===0){
 if(player.length===0) dealRound();
 return;
 }
-
 let index=chooseSmartCard();
 let chosen=computer.splice(index,1)[0];
-
 table.push(chosen);
-playSound(cardSound);
 check("c");
 render();
 
 if(player.length===0 && computer.length===0)
-setTimeout(dealRound,600);
+setTimeout(dealRound,500);
 }
 
 function check(owner){
@@ -374,44 +283,34 @@ if(real.length<2) return;
 let last=real[real.length-1];
 let prev=real[real.length-2];
 
-if(last[0]==="J" || last[0]===prev[0]){
-let isRealPisti = (real.length===2 && last[0]==="J" && prev[0]==="J");
-
-if(isRealPisti){
-if(owner==="p") ps+=20;
-else cs+=20;
-}
-else if(real.length===2){
-if(owner==="p") ps+=10;
-else cs+=10;
-}
+if(last[0]==="J"||last[0]===prev[0]){
 take(owner);
 }
 }
 
 function take(owner){
 let real=table.filter(x=>x!=="BACK");
-let pts=real.length;
-if(owner==="p") ps+=pts;
-else cs+=pts;
+if(owner==="p") ps+=real.length;
+else cs+=real.length;
 lastWinner=owner;
 table=[];
 }
 
-function endGame(){
-if(table.length && lastWinner){
-let real=table.filter(x=>x!=="BACK");
-if(lastWinner==="p") ps+=real.length;
-else cs+=real.length;
+async function endGame(){
+
+if(ps<=cs){ // BERABERE YOK → AI kazanır
+cs++;
 }
 
-document.getElementById("resultText").innerText=
-ps>cs?"🎉 Tebrikler Kazandın!":"😂 ChatGPT Kazandı!";
-
-if(ps>cs) playSound(winSound);
-else playSound(sadSound);
-
-document.getElementById("endPopup").classList.remove("hidden");
+if(ps>cs){
+balance+=bet*5;
+await updateDoc(userRef,{balance});
+}
+bet=0;
+document.getElementById("bet").innerText=0;
+round=0;ps=0;cs=0;
+createDeck();
+dealInitial();
 }
 
 createDeck();
