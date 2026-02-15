@@ -138,13 +138,13 @@ const splitBtn=document.getElementById("split");
 const suits=["H","D","C","S"];
 let deck=[],player=[],dealer=[];
 let dealerHidden=true;
-let doubled=false;
 
 /* AUTH */
 
 onAuthStateChanged(auth,user=>{
 if(!user){message.innerText="Giriş yapmalısın";return;}
 userRef=doc(db,"users",user.uid);
+
 onSnapshot(userRef,snap=>{
 if(!snap.exists()) return;
 balance=snap.data().balance||0;
@@ -238,7 +238,7 @@ playerDiv.appendChild(createCard(c,false));
 
 document.getElementById("playerScore").innerText=total(player);
 document.getElementById("dealerScore").innerText=
-dealerHidden ? cardVal(dealer[0].value) : total(dealer);
+dealerHidden && dealer.length>0 ? cardVal(dealer[0].value) : total(dealer);
 }
 
 /* BET */
@@ -262,9 +262,12 @@ message.innerText="Bahisler Kapanıyor "+time;
 
 betTimer=setInterval(()=>{
 time--;
+
 if(time===1) disableChips();
+
 if(time<=0){
 clearInterval(betTimer);
+betTimer=null;
 startGame();
 }else{
 message.innerText="Bahisler Kapanıyor "+time;
@@ -275,16 +278,34 @@ message.innerText="Bahisler Kapanıyor "+time;
 /* GAME */
 
 async function startGame(){
-player=[];dealer=[];
-dealerHidden=true;
-doubled=false;
-createDeck();
+
+if(gameState!=="betting") return;
+
+gameState="dealing";
+disableChips();
 controls.style.display="none";
 
-player.push(deck.pop()); render(); await delay(3000);
-dealer.push(deck.pop()); render(); await delay(3000);
-player.push(deck.pop()); render(); await delay(3000);
-dealer.push(deck.pop()); render();
+player=[];
+dealer=[];
+dealerHidden=true;
+createDeck();
+
+/* 4 KART DAĞITIMI - 3 SANİYE ARALI */
+
+player.push(deck.pop());
+render();
+await delay(3000);
+
+dealer.push(deck.pop());
+render();
+await delay(3000);
+
+player.push(deck.pop());
+render();
+await delay(3000);
+
+dealer.push(deck.pop());
+render();
 
 gameState="playing";
 startDecision();
@@ -312,13 +333,16 @@ message.innerText="Karar "+time;
 
 async function hit(){
 clearInterval(decisionTimer);
+
 player.push(deck.pop());
 render();
 await delay(3000);
 
 if(total(player)>=21){
-await stand();
-}else startDecision();
+await dealerTurn();
+}else{
+startDecision();
+}
 }
 
 async function stand(){
@@ -364,6 +388,8 @@ controls.style.display="none";
 dealerHidden=false;
 render();
 
+await delay(3000);
+
 while(total(dealer)<17){
 dealer.push(deck.pop());
 render();
@@ -374,11 +400,13 @@ let p=total(player);
 let d=total(dealer);
 
 if(p>21) return endGame("Kaybettin");
+
 if(d>21||p>d){
 balance+=bet*2;
 await updateDoc(userRef,{balance});
 return endGame("Kazandın");
 }
+
 if(d>p) return endGame("Dealer Kazandı");
 
 balance+=bet;
@@ -392,7 +420,8 @@ bet=0;
 betEl.innerText=0;
 
 setTimeout(()=>{
-player=[];dealer=[];
+player=[];
+dealer=[];
 render();
 gameState="betting";
 enableChips();
@@ -400,7 +429,9 @@ message.innerText="Bahis Yapın";
 },4000);
 }
 
-function delay(ms){return new Promise(r=>setTimeout(r,ms));}
+function delay(ms){
+return new Promise(r=>setTimeout(r,ms));
+}
 
 hitBtn.onclick=hit;
 standBtn.onclick=stand;
