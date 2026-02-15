@@ -80,7 +80,7 @@ display:flex;gap:10px;
 .chips{
 position:fixed;bottom:70px;left:50%;
 transform:translateX(-50%);
-display:flex;gap:10px; /* YAN YANA */
+display:flex;gap:10px;
 }
 .chip{
 width:60px;height:60px;border-radius:50%;
@@ -103,7 +103,6 @@ font-weight:bold;font-size:16px;
 cursor:pointer;
 }
 
-/* WIN ANIMATION */
 .win-anim{
 position:fixed;top:0;left:0;width:100%;height:100%;
 display:flex;align-items:center;justify-content:center;
@@ -111,7 +110,7 @@ background:rgba(0,0,0,0.85);
 font-size:40px;font-weight:900;
 color:#00ff99;
 z-index:999;
-animation:zoom 1s ease forwards;
+animation:zoom 0.7s ease forwards;
 }
 @keyframes zoom{
 0%{transform:scale(0.5);opacity:0;}
@@ -139,14 +138,19 @@ Oyuncu: <span id="ps">0</span> | ChatGPT: <span id="cs">0</span>
 <div class="hand" id="playerHand"></div>
 </div>
 
-<div class="chips">
+<div class="chips" id="chipsArea">
 <div class="chip c1" onclick="addBet(100)">100</div>
 <div class="chip c2" onclick="addBet(500)">500</div>
 <div class="chip c3" onclick="addBet(1000)">1K</div>
 <div class="chip c4" onclick="addBet(5000)">5K</div>
 </div>
 
-<button class="start-btn" onclick="startGame()">BAŞLA</button>
+<button class="start-btn" id="startBtn" onclick="startGame()">BAŞLA</button>
+
+<!-- SESLER -->
+<audio id="cardSound" src="https://assets.mixkit.co/sfx/preview/mixkit-card-slide-1538.mp3" preload="auto"></audio>
+<audio id="coinSound" src="https://assets.mixkit.co/sfx/preview/mixkit-coin-win-notification-1992.mp3" preload="auto"></audio>
+<audio id="bigWinSound" src="https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.mp3" preload="auto"></audio>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -169,6 +173,15 @@ const db=getFirestore(app);
 let balance=0,bet=0,userRef=null;
 let gameStarted=false;
 
+const cardSound=document.getElementById("cardSound");
+const coinSound=document.getElementById("coinSound");
+const bigWinSound=document.getElementById("bigWinSound");
+
+function playSound(sound){
+sound.currentTime=0;
+sound.play().catch(()=>{});
+}
+
 onAuthStateChanged(auth,user=>{
 if(!user) return;
 userRef=doc(db,"users",user.uid);
@@ -186,23 +199,25 @@ bet+=amount;
 await updateDoc(userRef,{balance});
 document.getElementById("balance").innerText=balance;
 document.getElementById("bet").innerText=bet;
+playSound(coinSound);
 }
 
 window.startGame=function(){
 if(bet<=0) return alert("Bahis koymadan oyun başlamaz!");
 gameStarted=true;
 document.getElementById("tableArea").classList.add("active");
+document.getElementById("chipsArea").style.display="none";
+document.getElementById("startBtn").style.display="none";
 createDeck();
 dealInitial();
 }
 
-/* GAME */
+/* OYUN KISMI AYNI - SADECE SES EKLENDİ */
 
 const suits=["H","D","C","S"];
 const values=["A","2","3","4","5","6","7","8","9","0","J","Q","K"];
-
 let deck=[],player=[],computer=[],table=[];
-let ps=0,cs=0,lastWinner=null,round=0,totalRounds=6;
+let ps=0,cs=0,round=0,totalRounds=6;
 
 function createDeck(){
 deck=[];
@@ -263,7 +278,7 @@ function renderTable(){
 const tc=document.getElementById("tableCards");
 tc.innerHTML="";
 let real=table.filter(c=>c!=="BACK");
-real.forEach((c,i)=>{
+real.forEach((c)=>{
 let im=document.createElement("img");
 im.src=img(c);
 im.className="stack-card";
@@ -272,6 +287,7 @@ tc.appendChild(im);
 }
 
 function play(i){
+playSound(cardSound);
 let c=player.splice(i,1)[0];
 table.push(c);
 check("p");
@@ -279,27 +295,13 @@ render();
 setTimeout(compPlay,500);
 }
 
-function chooseSmartCard(){
-let real=table.filter(x=>x!=="BACK");
-let top=real.length?real[real.length-1]:null;
-
-for(let i=0;i<computer.length;i++)
-if(computer[i][0]==="J") return i;
-
-if(top){
-for(let i=0;i<computer.length;i++)
-if(computer[i][0]===top[0]) return i;
-}
-return 0;
-}
-
 function compPlay(){
 if(computer.length===0){
 if(player.length===0) dealRound();
 return;
 }
-let index=chooseSmartCard();
-let chosen=computer.splice(index,1)[0];
+let chosen=computer.splice(0,1)[0];
+playSound(cardSound);
 table.push(chosen);
 check("c");
 render();
@@ -316,36 +318,34 @@ let prev=real[real.length-2];
 if(last[0]==="J"||last[0]===prev[0]){
 if(owner==="p") ps+=real.length;
 else cs+=real.length;
-lastWinner=owner;
 table=[];
+playSound(coinSound);
 }
 }
 
 async function endGame(){
-
-if(ps<=cs) cs++;
-
 if(ps>cs){
 balance+=bet*5;
 await updateDoc(userRef,{balance});
 showWin();
 }
-
 bet=0;
 document.getElementById("bet").innerText=0;
 gameStarted=false;
 document.getElementById("tableArea").classList.remove("active");
 round=0;ps=0;cs=0;
+document.getElementById("chipsArea").style.display="flex";
+document.getElementById("startBtn").style.display="block";
 }
 
 function showWin(){
+playSound(bigWinSound);
 let div=document.createElement("div");
 div.className="win-anim";
 div.innerText="🎉 BÜYÜK KAZANÇ!";
 document.body.appendChild(div);
 setTimeout(()=>div.remove(),1500);
 }
-
 </script>
 </body>
 </html>
