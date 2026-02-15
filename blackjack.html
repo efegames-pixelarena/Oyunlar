@@ -118,7 +118,7 @@ const auth=getAuth(app);
 const db=getFirestore(app);
 
 let balance=0,bet=0,userRef=null;
-let gameState="loading"; 
+let gameState="loading";
 let betTimer=null,decisionTimer=null;
 
 const balanceEl=document.getElementById("balance");
@@ -128,8 +128,8 @@ const controls=document.getElementById("controls");
 const dealerDiv=document.getElementById("dealerCards");
 const playerDiv=document.getElementById("playerCards");
 
-let dealerHiddenCardElement=null;
-let dealerHiddenCardData=null;
+dealerDiv.style.minHeight="110px";
+playerDiv.style.minHeight="110px";
 
 function disableChips(){
 document.querySelectorAll(".chip").forEach(c=>{
@@ -161,6 +161,7 @@ enableChips();
 
 const suits=["♥","♦","♣","♠"];
 let deck=[],player=[],dealer=[];
+let dealerHiddenIndex=null;
 
 function delay(ms){return new Promise(r=>setTimeout(r,ms));}
 
@@ -184,66 +185,101 @@ while(t>21&&a>0){t-=10;a--;}
 return t;
 }
 
-/* ✅ GÖRÜNÜR KART TASARIMI */
-function cardImage(card,hidden=false){
-let div=document.createElement("div");
-div.className="card-img";
-div.style.width="60px";
-div.style.height="90px";
-div.style.display="inline-flex";
-div.style.alignItems="center";
-div.style.justifyContent="center";
-div.style.margin="4px";
-div.style.borderRadius="8px";
-div.style.background="white";
-div.style.color="black";
-div.style.fontWeight="bold";
-div.style.fontSize="20px";
+function renderCards(){
+dealerDiv.innerHTML="";
+playerDiv.innerHTML="";
 
-if(hidden){
+dealer.forEach((card,i)=>{
+let div=document.createElement("div");
+div.style.cssText=`
+width:60px;
+height:90px;
+display:inline-flex;
+align-items:center;
+justify-content:center;
+margin:4px;
+border-radius:8px;
+background:white;
+font-weight:bold;
+font-size:20px;
+position:relative;
+z-index:10;
+`;
+if(i===dealerHiddenIndex && gameState==="playing"){
 div.innerHTML="🂠";
 }else{
-let v=
-card.value===1?"A":
+let v=card.value===1?"A":
 card.value===11?"J":
 card.value===12?"Q":
-card.value===13?"K":
-card.value;
-div.innerHTML=`${v}${card.suit}`;
-}
+card.value===13?"K":card.value;
 
-return div;
+div.innerHTML=v+card.suit;
+div.style.color=(card.suit==="♥"||card.suit==="♦")?"red":"black";
+}
+dealerDiv.appendChild(div);
+});
+
+player.forEach(card=>{
+let div=document.createElement("div");
+div.style.cssText=`
+width:60px;
+height:90px;
+display:inline-flex;
+align-items:center;
+justify-content:center;
+margin:4px;
+border-radius:8px;
+background:white;
+font-weight:bold;
+font-size:20px;
+position:relative;
+z-index:10;
+`;
+let v=card.value===1?"A":
+card.value===11?"J":
+card.value===12?"Q":
+card.value===13?"K":card.value;
+
+div.innerHTML=v+card.suit;
+div.style.color=(card.suit==="♥"||card.suit==="♦")?"red":"black";
+playerDiv.appendChild(div);
+});
+
+document.getElementById("playerScore").innerText=total(player);
+document.getElementById("dealerScore").innerText=
+(gameState==="playing") ? total([dealer[0]]) : total(dealer);
 }
 
 async function addBet(amount){
-if(gameState!=="betting")return;
-if(balance<amount)return;
+if(gameState!=="betting") return;
+if(balance<amount) return;
 
 balance-=amount;
 bet+=amount;
 await updateDoc(userRef,{balance});
 betEl.innerText=bet;
 
-if(!betTimer){
-startBetTimer();
-}
+if(!betTimer) startBetTimer();
 }
 window.addBet=addBet;
 
 function startBetTimer(){
 let time=5;
-gameState="countdown"; // 🔥 artık betting değil
 message.innerText="Bahisler Kapanıyor: "+time+" SN";
 
 betTimer=setInterval(()=>{
 time--;
+
+if(time===1){
+disableChips(); // 🔥 son 1 saniye kilit
+}
+
 if(time>0){
 message.innerText="Bahisler Kapanıyor: "+time+" SN";
 }else{
 clearInterval(betTimer);
 betTimer=null;
-gameState="locked";
-disableChips();
+gameState="dealing";
 message.innerText="";
 startGame();
 }
@@ -251,59 +287,24 @@ startGame();
 }
 
 async function startGame(){
-gameState="dealing";
 player=[]; dealer=[];
-dealerHiddenCardElement=null;
-dealerHiddenCardData=null;
-
-playerDiv.innerHTML="";
-dealerDiv.innerHTML="";
-document.getElementById("playerScore").innerText="0";
-document.getElementById("dealerScore").innerText="0";
+dealerHiddenIndex=null;
 controls.style.display="none";
 
 createDeck();
 
-await deal("player",false);
-await deal("dealer",false);
-await deal("player",false);
-await deal("dealer",true);
+player.push(deck.pop());
+dealer.push(deck.pop());
+player.push(deck.pop());
+dealer.push(deck.pop());
+
+dealerHiddenIndex=1;
+
+renderCards();
+await delay(500);
 
 gameState="playing";
 startDecisionTimer();
-}
-
-async function deal(to,hidden){
-let card=deck.pop();
-if(to==="player") hidden=false;
-
-if(to==="player"){
-player.push(card);
-playerDiv.appendChild(cardImage(card,false));
-}else{
-dealer.push(card);
-if(hidden){
-dealerHiddenCardData=card;
-dealerHiddenCardElement=cardImage(card,true);
-dealerDiv.appendChild(dealerHiddenCardElement);
-}else{
-dealerDiv.appendChild(cardImage(card,false));
-}
-}
-
-updateScores();
-await delay(400);
-}
-
-function updateScores(){
-document.getElementById("playerScore").innerText=total(player);
-
-if(gameState==="playing"||gameState==="dealing"){
-document.getElementById("dealerScore").innerText=
-dealer.length? total([dealer[0]]):0;
-}else{
-document.getElementById("dealerScore").innerText=total(dealer);
-}
 }
 
 function startDecisionTimer(){
@@ -324,40 +325,30 @@ stand();
 }
 
 async function hit(){
-if(gameState!=="playing")return;
-await deal("player",false);
-if(total(player)>21){
-await dealerTurn();
-}
+if(gameState!=="playing") return;
+player.push(deck.pop());
+renderCards();
+if(total(player)>21) await dealerTurn();
 }
 
 async function stand(){
-if(gameState!=="playing")return;
+if(gameState!=="playing") return;
 clearInterval(decisionTimer);
 decisionTimer=null;
-message.innerText="";
 await dealerTurn();
 }
 
 async function dealerTurn(){
 gameState="finished";
 controls.style.display="none";
-
-if(dealerHiddenCardElement){
-dealerHiddenCardElement.innerHTML=
-`${dealerHiddenCardData.value===1?"A":
-dealerHiddenCardData.value===11?"J":
-dealerHiddenCardData.value===12?"Q":
-dealerHiddenCardData.value===13?"K":
-dealerHiddenCardData.value}${dealerHiddenCardData.suit}`;
-}
-
-updateScores();
-await delay(800);
+dealerHiddenIndex=null;
+renderCards();
+await delay(700);
 
 while(total(dealer)<17){
-await deal("dealer",false);
-await delay(800);
+dealer.push(deck.pop());
+renderCards();
+await delay(700);
 }
 
 let p=total(player);
@@ -389,10 +380,9 @@ bet=0;
 betEl.innerText=0;
 
 setTimeout(()=>{
-playerDiv.innerHTML="";
-dealerDiv.innerHTML="";
-document.getElementById("playerScore").innerText="0";
-document.getElementById("dealerScore").innerText="0";
+player=[];
+dealer=[];
+renderCards();
 gameState="betting";
 message.innerText="Bahis Yapın";
 enableChips();
