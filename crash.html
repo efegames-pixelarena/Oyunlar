@@ -1,305 +1,310 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SkyCrash Pro</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Aviator</title>
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
-body{background:#0b0f14;color:white}
+body{
+margin:0;
+background:#050b16;
+font-family:Arial;
+color:white;
+overflow:hidden;
+}
 
-/* HEADER */
-.header{
-height:60px;
-background:#111418;
+.topbar{
 display:flex;
 justify-content:space-between;
-align-items:center;
-padding:0 15px;
+padding:15px;
+font-size:22px;
 }
-.headerLeft{
-font-size:26px;
-font-weight:bold;
-color:#ff3b4d;
-font-style:italic;
-}
-.balanceTop{color:#4caf50;font-weight:bold;font-size:18px;}
 
-/* GAME AREA */
-.crashContainer{
+.logo{
+color:#ff3b3b;
+font-style:italic;
+font-weight:bold;
+}
+
+.balance{
+color:#35d07f;
+font-weight:bold;
+}
+
+.game{
 position:relative;
-height:320px;
-margin:15px;
+height:300px;
+margin:10px;
 border-radius:20px;
+background:radial-gradient(circle at center,#3b0066,#070b1a);
+display:flex;
+align-items:center;
+justify-content:center;
+flex-direction:column;
 overflow:hidden;
-background:radial-gradient(circle at center,#2a003f 0%,#0a0a0f 70%);
 }
 
 .multiplier{
-position:absolute;
-top:50%;
-left:50%;
-transform:translate(-50%,-50%);
-font-size:60px;
+font-size:55px;
 font-weight:bold;
 }
 
 .plane{
 position:absolute;
-bottom:20px;
-left:0;
+left:20px;
+bottom:40px;
 font-size:40px;
+transition:all linear;
 }
 
-.redCurve{
-position:absolute;
-bottom:0;
-left:0;
-height:100%;
-width:0%;
-background:linear-gradient(to top right,#ff0022,#ff3355);
-opacity:.25;
-}
-
-.crashMessage{
-position:absolute;
-top:50%;
-left:50%;
-transform:translate(-50%,-50%);
-text-align:center;
-display:none;
-}
-.crashMessage h1{font-size:50px;color:#ff3b4d;}
-.crashMessage h2{font-size:40px;margin-top:10px;}
-.crashMessage p{margin-top:10px;font-size:20px;}
-
-/* BET */
-.betSection{padding:15px;}
-.betCard{
-background:linear-gradient(145deg,#181c24,#0e1015);
+.controls{
 padding:15px;
-border-radius:20px;
 }
-.betControl{
+
+.betbox{
+background:#111a2b;
+border-radius:20px;
+padding:20px;
+}
+
+.betrow{
+display:flex;
+align-items:center;
+justify-content:space-between;
+margin-bottom:15px;
+}
+
+.betbtn{
+width:50px;
+height:50px;
+border-radius:50%;
+background:#1d2a40;
+border:none;
+color:white;
+font-size:25px;
+}
+
+.betinput{
+width:120px;
+text-align:center;
+font-size:22px;
+background:transparent;
+border:none;
+color:white;
+outline:none;
+}
+
+.quick{
 display:flex;
 justify-content:space-between;
-align-items:center;
-background:#11151c;
+margin-bottom:15px;
+}
+
+.quick button{
+flex:1;
+margin:5px;
+background:#1d2a40;
+border:none;
+color:white;
 padding:10px;
-border-radius:15px;
-margin-bottom:10px;
+border-radius:10px;
 }
-.betControl button{
-background:#1b1f27;
-border:none;
-color:white;
-font-size:20px;
-width:45px;height:45px;
-border-radius:50%;
-}
-.betAmount{font-size:22px;font-weight:bold;}
-.betButton{
+
+.mainbtn{
 width:100%;
-background:#22b300;
-color:white;
-border:none;
 padding:15px;
-font-size:20px;
+border:none;
 border-radius:15px;
-}
-.betButton.cashout{
-background:#00eaff;
+font-size:20px;
+font-weight:bold;
+background:#1ed760;
 color:black;
 }
-.betButton.disabled{
-opacity:.5;
-pointer-events:none;
+
+.cashout{
+background:#00c9d6 !important;
+}
+
+.message{
+text-align:center;
+margin-top:10px;
 }
 </style>
 </head>
+
 <body>
 
-<div class="header">
-<div class="headerLeft">Aviator</div>
-<div class="balanceTop"><span id="balanceTop">Yükleniyor...</span> TRY</div>
+<div class="topbar">
+<div class="logo">Aviator</div>
+<div class="balance" id="balance">0 TRY</div>
 </div>
 
-<div class="crashContainer">
-<div class="multiplier" id="multiplierDisplay">5</div>
+<div class="game">
+<div class="multiplier" id="multiplier">1.00x</div>
 <div class="plane" id="plane">✈️</div>
-<div class="redCurve" id="redCurve"></div>
-
-<div class="crashMessage" id="crashMessage">
-<h1>UZAKLAŞ !!</h1>
-<h2 id="crashX"></h2>
-<p id="crashCountdown"></p>
-</div>
+<div class="message" id="message"></div>
 </div>
 
-<div class="betSection">
-<div class="betCard">
-<div class="betControl">
-<button onclick="changeBet(-1)">−</button>
-<div class="betAmount" id="betDisplay">1.00</div>
-<button onclick="changeBet(1)">+</button>
+<div class="controls">
+<div class="betbox">
+
+<div class="betrow">
+<button class="betbtn" id="minus">-</button>
+<input type="number" id="betAmount" class="betinput" value="100">
+<button class="betbtn" id="plus">+</button>
 </div>
-<button class="betButton" id="betBtn">Bahis Yap</button>
+
+<div class="quick">
+<button data-amount="1">1</button>
+<button data-amount="2">2</button>
+<button data-amount="5">5</button>
+<button data-amount="10">10</button>
+</div>
+
+<button class="mainbtn" id="betButton">Bahis Yap</button>
+
 </div>
 </div>
 
+<!-- Firebase -->
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, doc, onSnapshot, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-/* FIREBASE CONFIG */
-const firebaseConfig={
-apiKey:"API_KEY",
-authDomain:"PROJECT.firebaseapp.com",
-projectId:"PROJECT_ID",
-storageBucket:"PROJECT.appspot.com",
-messagingSenderId:"MSG_ID",
-appId:"APP_ID"
+/* KENDİ FIREBASE CONFIGİNİ BURAYA KOY */
+const firebaseConfig = {
+apiKey: "APIKEY",
+authDomain: "PROJECT.firebaseapp.com",
+projectId: "PROJECT",
+storageBucket: "PROJECT.appspot.com",
+messagingSenderId: "XXXX",
+appId: "XXXX"
 };
 
-const app=initializeApp(firebaseConfig);
-const auth=getAuth(app);
-const db=getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-let userRef=null;
-let balance=0;
-let bet=1;
-let hasBet=false;
-let cashedOut=false;
-let multiplier=1;
-let crashPoint=0;
-let phase="betting";
-let animation;
+let user = auth.currentUser;
 
-/* AUTO LOGIN */
-signInAnonymously(auth);
+if(!user){
+alert("Kullanıcı login değil!");
+throw new Error("Login gerekli");
+}
 
-onAuthStateChanged(auth, async(user)=>{
-if(!user) return;
+const userRef = doc(db,"users",user.uid);
 
-userRef=doc(db,"users",user.uid);
-let snap=await getDoc(userRef);
+let balance = 0;
 
+const balanceEl = document.getElementById("balance");
+const multiplierEl = document.getElementById("multiplier");
+const plane = document.getElementById("plane");
+const betInput = document.getElementById("betAmount");
+const betButton = document.getElementById("betButton");
+const message = document.getElementById("message");
+
+/* BAKİYE DİNLE */
+onSnapshot(userRef,(snap)=>{
 if(!snap.exists()){
-await setDoc(userRef,{balance:1000});
+alert("users/{uid} belgesi yok!");
+return;
 }
-
-onSnapshot(userRef,(docSnap)=>{
-if(docSnap.exists()){
-balance=docSnap.data().balance||0;
-balanceTop.innerText=Math.floor(balance);
-}
-});
+balance = snap.data().balance || 0;
+balanceEl.innerText = balance + " TRY";
 });
 
-/* UPDATE BALANCE */
-async function updateBalance(val){
-if(!userRef) return;
-await updateDoc(userRef,{balance:Math.floor(val)});
-}
+/* + - BUTON */
+document.getElementById("minus").onclick=()=>{
+betInput.value=Math.max(0,Number(betInput.value)-50);
+};
+document.getElementById("plus").onclick=()=>{
+betInput.value=Number(betInput.value)+100;
+};
 
-/* GAME */
-function startRound(){
-phase="betting";
+/* QUICK */
+document.querySelectorAll(".quick button").forEach(btn=>{
+btn.onclick=()=>{
+betInput.value=Number(betInput.value)+Number(btn.dataset.amount);
+};
+});
+
+let gameInterval;
+let multiplier=1;
+let crashed=false;
+let activeBet=0;
+let cashed=false;
+
+/* OYUN BAŞLAT */
+function startGame(){
 multiplier=1;
-hasBet=false;
-cashedOut=false;
-betBtn.innerText="Bahis Yap";
-betBtn.classList.remove("cashout","disabled");
-plane.style.transform="translate(0,0)";
-redCurve.style.width="0%";
-crashMessage.style.display="none";
-startCountdown();
+crashed=false;
+cashed=false;
+message.innerText="";
+multiplierEl.innerText="1.00x";
+plane.style.left="20px";
+plane.style.bottom="40px";
+
+const crashPoint=(Math.random()*5+1.5).toFixed(2);
+
+gameInterval=setInterval(()=>{
+if(crashed) return;
+
+multiplier+=0.01;
+multiplierEl.innerText=multiplier.toFixed(2)+"x";
+plane.style.left=(20+multiplier*20)+"px";
+plane.style.bottom=(40+multiplier*15)+"px";
+
+if(multiplier>=crashPoint){
+crashed=true;
+clearInterval(gameInterval);
+multiplierEl.innerText="UZAKLAŞ !!";
+message.innerHTML=crashPoint+"x<br>Bahislerin Kapanmasına 5sn";
+
+setTimeout(()=>{
+message.innerText="";
+multiplierEl.innerText="1.00x";
+betButton.innerText="Bahis Yap";
+betButton.classList.remove("cashout");
+},5000);
 }
 
-function startCountdown(){
-let time=5;
-multiplierDisplay.innerText=time;
-let interval=setInterval(()=>{
-time--;
-multiplierDisplay.innerText=time;
-if(time<=0){
-clearInterval(interval);
-startFlight();
-}
-},1000);
+},100);
 }
 
-function startFlight(){
-phase="flying";
-if(hasBet){
-betBtn.innerText="Cashout";
-betBtn.classList.add("cashout");
-}
-crashPoint=(1/(1-Math.random()))*0.96;
-animate();
-}
+/* BUTON */
+betButton.onclick=async ()=>{
 
-function animate(){
-multiplier+=0.004;
-updateVisual();
-if(multiplier>=crashPoint){triggerCrash();return;}
-animation=requestAnimationFrame(animate);
-}
+if(crashed) return;
 
-function updateVisual(){
-multiplierDisplay.innerText=multiplier.toFixed(2)+"x";
-let percent=Math.min(multiplier*4,100);
-redCurve.style.width=percent+"%";
-plane.style.transform=
-"translate("+percent*3+"px,-"+percent*1.6+"px)";
-}
+if(activeBet===0){
 
-function triggerCrash(){
-cancelAnimationFrame(animation);
-phase="crashed";
-betBtn.classList.add("disabled");
-crashMessage.style.display="block";
-crashX.innerText=multiplier.toFixed(2)+"x";
-crashCountdown.innerText="Bahislerin Kapanmasına 5sn";
-setTimeout(startRound,5000);
-}
+const bet=Number(betInput.value);
+if(bet<=0 || bet>balance) return alert("Yetersiz bakiye");
 
-/* BET */
-function changeBet(v){
-if(phase!=="betting") return;
-bet=Math.max(1,bet+v);
-betDisplay.innerText=bet.toFixed(2);
-}
+activeBet=bet;
+await updateDoc(userRef,{balance:balance-bet});
+betButton.innerText="Cashout";
+betButton.classList.add("cashout");
+startGame();
 
-betBtn.onclick=async()=>{
-if(!userRef) return;
+}else{
 
-if(phase==="betting" && !hasBet){
-if(balance<bet) return;
-balance-=bet;
-await updateBalance(balance);
-hasBet=true;
-betBtn.innerText="İptal";
-}
-else if(phase==="betting" && hasBet){
-balance+=bet;
-await updateBalance(balance);
-hasBet=false;
-betBtn.innerText="Bahis Yap";
-}
-else if(phase==="flying" && hasBet && !cashedOut){
-let payout=bet*multiplier;
-balance+=payout;
-await updateBalance(balance);
-cashedOut=true;
-betBtn.innerText="Çekildi";
-betBtn.classList.add("disabled");
+if(cashed) return;
+
+cashed=true;
+clearInterval(gameInterval);
+
+const win=(activeBet*multiplier).toFixed(2);
+await updateDoc(userRef,{balance:balance+Number(win)});
+betButton.innerText="Bahis Yap";
+betButton.classList.remove("cashout");
+activeBet=0;
+
 }
 };
 
-startRound();
 </script>
 </body>
 </html>
