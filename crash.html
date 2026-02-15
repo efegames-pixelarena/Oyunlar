@@ -55,7 +55,6 @@ position:absolute;
 left:20px;
 bottom:40px;
 font-size:40px;
-transition:all linear;
 }
 
 .controls{
@@ -167,13 +166,12 @@ margin-top:10px;
 </div>
 </div>
 
-<!-- Firebase -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, doc, onSnapshot, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, doc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-/* KENDİ FIREBASE CONFIGİNİ BURAYA KOY */
+/* 🔥 KENDİ CONFIGİNİ YAZ */
 const firebaseConfig = {
 apiKey: "APIKEY",
 authDomain: "PROJECT.firebaseapp.com",
@@ -187,38 +185,43 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-let user = auth.currentUser;
+let userRef=null;
+let balance=0;
+
+const balanceEl=document.getElementById("balance");
+const multiplierEl=document.getElementById("multiplier");
+const plane=document.getElementById("plane");
+const betInput=document.getElementById("betAmount");
+const betButton=document.getElementById("betButton");
+const message=document.getElementById("message");
+
+/* LOGIN BEKLE */
+onAuthStateChanged(auth,(user)=>{
 
 if(!user){
-alert("Kullanıcı login değil!");
-throw new Error("Login gerekli");
-}
-
-const userRef = doc(db,"users",user.uid);
-
-let balance = 0;
-
-const balanceEl = document.getElementById("balance");
-const multiplierEl = document.getElementById("multiplier");
-const plane = document.getElementById("plane");
-const betInput = document.getElementById("betAmount");
-const betButton = document.getElementById("betButton");
-const message = document.getElementById("message");
-
-/* BAKİYE DİNLE */
-onSnapshot(userRef,(snap)=>{
-if(!snap.exists()){
-alert("users/{uid} belgesi yok!");
+alert("Login gerekli!");
 return;
 }
-balance = snap.data().balance || 0;
-balanceEl.innerText = balance + " TRY";
+
+userRef=doc(db,"users",user.uid);
+
+/* BAKİYE CANLI */
+onSnapshot(userRef,(snap)=>{
+if(!snap.exists()){
+alert("users/{uid} yok!");
+return;
+}
+balance=snap.data().balance||0;
+balanceEl.innerText=balance+" TRY";
 });
 
-/* + - BUTON */
+});
+
+/* + - */
 document.getElementById("minus").onclick=()=>{
 betInput.value=Math.max(0,Number(betInput.value)-50);
 };
+
 document.getElementById("plus").onclick=()=>{
 betInput.value=Number(betInput.value)+100;
 };
@@ -230,14 +233,15 @@ betInput.value=Number(betInput.value)+Number(btn.dataset.amount);
 };
 });
 
-let gameInterval;
+let interval;
 let multiplier=1;
 let crashed=false;
 let activeBet=0;
 let cashed=false;
 
-/* OYUN BAŞLAT */
+/* GAME */
 function startGame(){
+
 multiplier=1;
 crashed=false;
 cashed=false;
@@ -248,8 +252,7 @@ plane.style.bottom="40px";
 
 const crashPoint=(Math.random()*5+1.5).toFixed(2);
 
-gameInterval=setInterval(()=>{
-if(crashed) return;
+interval=setInterval(()=>{
 
 multiplier+=0.01;
 multiplierEl.innerText=multiplier.toFixed(2)+"x";
@@ -257,31 +260,35 @@ plane.style.left=(20+multiplier*20)+"px";
 plane.style.bottom=(40+multiplier*15)+"px";
 
 if(multiplier>=crashPoint){
+clearInterval(interval);
 crashed=true;
-clearInterval(gameInterval);
 multiplierEl.innerText="UZAKLAŞ !!";
 message.innerHTML=crashPoint+"x<br>Bahislerin Kapanmasına 5sn";
 
-setTimeout(()=>{
-message.innerText="";
-multiplierEl.innerText="1.00x";
+activeBet=0;
 betButton.innerText="Bahis Yap";
 betButton.classList.remove("cashout");
+
+setTimeout(()=>{
+multiplierEl.innerText="1.00x";
+message.innerText="";
 },5000);
+
 }
 
 },100);
+
 }
 
 /* BUTON */
-betButton.onclick=async ()=>{
+betButton.onclick=async()=>{
 
-if(crashed) return;
+if(!userRef) return;
 
 if(activeBet===0){
 
 const bet=Number(betInput.value);
-if(bet<=0 || bet>balance) return alert("Yetersiz bakiye");
+if(bet<=0||bet>balance) return alert("Yetersiz bakiye");
 
 activeBet=bet;
 await updateDoc(userRef,{balance:balance-bet});
@@ -291,18 +298,20 @@ startGame();
 
 }else{
 
-if(cashed) return;
+if(cashed||crashed) return;
 
 cashed=true;
-clearInterval(gameInterval);
+clearInterval(interval);
 
 const win=(activeBet*multiplier).toFixed(2);
 await updateDoc(userRef,{balance:balance+Number(win)});
+
+activeBet=0;
 betButton.innerText="Bahis Yap";
 betButton.classList.remove("cashout");
-activeBet=0;
 
 }
+
 };
 
 </script>
