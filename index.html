@@ -7,282 +7,334 @@
 
 <style>
 *{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:Arial, sans-serif;
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:Arial, sans-serif;
 }
 
 body{
-background:linear-gradient(180deg,#0b1023,#0d1333,#0a0f1f);
-color:white;
-overflow-x:hidden;
+  background:linear-gradient(180deg,#0b1023,#0d1333,#0a0f1f);
+  color:white;
+  overflow-x:hidden;
 }
 
 /* KAR */
 #snow{
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-z-index:-1;
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  z-index:-1;
 }
 
 /* HEADER */
 header{
-position:fixed;
-top:0;
-width:100%;
-height:70px;
-display:flex;
-align-items:center;
-justify-content:space-between;
-padding:0 15px;
-background:linear-gradient(90deg,#11193a,#1a2255);
-backdrop-filter:blur(10px);
-box-shadow:0 4px 20px #00000080;
-z-index:1000;
+  position:fixed;
+  top:0;
+  width:100%;
+  height:70px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 15px;
+  background:linear-gradient(90deg,#11193a,#1a2255);
+  backdrop-filter:blur(10px);
+  box-shadow:0 4px 20px #00000080;
+  z-index:1000;
 }
 
 .logo{
-font-size:22px;
-font-weight:bold;
-background:linear-gradient(45deg,#00c6ff,#0072ff);
--webkit-background-clip:text;
-color:transparent;
+  font-size:22px;
+  font-weight:bold;
+  background:linear-gradient(45deg,#00c6ff,#0072ff);
+  -webkit-background-clip:text;
+  color:transparent;
 }
 
 .header-buttons{
-display:flex;
-gap:10px;
+  display:flex;
+  gap:10px;
 }
 
 .btn{
-padding:8px 15px;
-border-radius:10px;
-border:none;
-cursor:pointer;
-font-weight:bold;
-font-size:14px;
+  padding:8px 15px;
+  border-radius:10px;
+  border:none;
+  cursor:pointer;
+  font-weight:bold;
+  font-size:14px;
 }
 
 .login-btn{
-background:#1e2a5a;
-color:white;
-border:1px solid #2f3a80;
+  background:#1e2a5a;
+  color:white;
+  border:1px solid #2f3a80;
 }
 
 .register-btn{
-background:linear-gradient(45deg,#ffb300,#ff8800);
-color:black;
+  background:linear-gradient(45deg,#ffb300,#ff8800);
+  color:black;
+}
+
+/* BRAND HEADER (from blackjack.html) */
+.top-bar {
+  position:fixed;
+  top:0;
+  width:100%;
+  height:55px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 16px;
+  background:linear-gradient(135deg,#1a2a6c,#16245c);
+  box-shadow:0 4px 15px rgba(0,0,0,0.45);
+  z-index:100;
+}
+
+.brand{
+  font-size:18px;
+  font-weight:800;
+  background:linear-gradient(90deg,#4fd1ff,#fff,#4fd1ff);
+  background-size:200% auto;
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  animation:shine 3s linear infinite;
+}
+
+@keyframes shine{
+  to{background-position:200% center;}
+}
+
+.right-menu{
+  display:flex;
+  gap:10px;
+}
+
+.nav-box{
+  padding:6px 14px;
+  border-radius:14px;
+  font-weight:700;
+  font-size:13px;
+  min-width:95px;
+  text-align:center;
+}
+
+.balance-box{
+  background:#273c8f;
+}
+
+.bet-box{
+  background:linear-gradient(90deg,#ff8a00,#ff5f00);
+  color:#000;
 }
 
 /* SEARCH */
 .search-bar{
-margin-top:90px;
-padding:0 15px;
+  margin-top:90px;
+  padding:0 15px;
 }
 
 .search-bar input{
-width:100%;
-padding:15px;
-border-radius:15px;
-border:none;
-background:#151c3f;
-color:white;
-font-size:16px;
-outline:none;
+  width:100%;
+  padding:15px;
+  border-radius:15px;
+  border:none;
+  background:#151c3f;
+  color:white;
+  font-size:16px;
+  outline:none;
 }
 
 /* MAIN */
 main{
-padding-top:30px;
+  padding-top:30px;
 }
 
 .section-title{
-padding-left:20px;
-margin-top:30px;
-font-size:22px;
-font-weight:bold;
+  padding-left:20px;
+  margin-top:30px;
+  font-size:22px;
+  font-weight:bold;
 }
 
 /* GRID */
 .games-grid{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
-gap:20px;
-padding:20px;
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+  gap:20px;
+  padding:20px;
 }
 
 /* CARD */
 .game-card{
-background:linear-gradient(145deg,#141b3f,#1b2252);
-border-radius:18px;
-padding:25px;
-text-align:center;
-cursor:pointer;
-transition:0.4s;
-border:1px solid #2a3577;
-box-shadow:0 0 15px #ffb30030;
-position:relative;
-overflow:hidden;
+  background:linear-gradient(145deg,#141b3f,#1b2252);
+  border-radius:18px;
+  padding:25px;
+  text-align:center;
+  cursor:pointer;
+  transition:0.4s;
+  border:1px solid #2a3577;
+  box-shadow:0 0 15px #ffb30030;
+  position:relative;
+  overflow:hidden;
 }
 
 .game-card::after{
-content:"";
-position:absolute;
-top:-100%;
-left:-100%;
-width:200%;
-height:200%;
-background:linear-gradient(120deg,transparent,rgba(255,255,255,0.15),transparent);
-transform:rotate(25deg);
-transition:0.7s;
+  content:"";
+  position:absolute;
+  top:-100%;
+  left:-100%;
+  width:200%;
+  height:200%;
+  background:linear-gradient(120deg,transparent,rgba(255,255,255,0.15),transparent);
+  transform:rotate(25deg);
+  transition:0.7s;
 }
 
 .game-card:hover::after{
-top:0;
-left:0;
+  top:0;
+  left:0;
 }
 
 .game-card:hover{
-transform:translateY(-10px) scale(1.03);
-box-shadow:0 0 30px #ffb300;
-border:1px solid #ffb300;
+  transform:translateY(-10px) scale(1.03);
+  box-shadow:0 0 30px #ffb300;
+  border:1px solid #ffb300;
 }
 
 .game-icon{
-font-size:45px;
-margin-bottom:15px;
+  font-size:45px;
+  margin-bottom:15px;
 }
 
 /* FOOTER */
 .footer{
-background:linear-gradient(180deg,#0a0f1f,#0c1328);
-padding:50px 20px 20px;
-margin-top:60px;
-border-top:1px solid #1e2a5a;
+  background:linear-gradient(180deg,#0a0f1f,#0c1328);
+  padding:50px 20px 20px;
+  margin-top:60px;
+  border-top:1px solid #1e2a5a;
 }
 
 .footer-links{
-display:flex;
-justify-content:space-between;
-max-width:900px;
-margin:auto;
-flex-wrap:wrap;
-margin-bottom:40px;
+  display:flex;
+  justify-content:space-between;
+  max-width:900px;
+  margin:auto;
+  flex-wrap:wrap;
+  margin-bottom:40px;
 }
 
 .footer-column h3{
-margin-bottom:15px;
-transition:0.4s;
-cursor:pointer;
+  margin-bottom:15px;
+  transition:0.4s;
+  cursor:pointer;
 }
 
 .footer-column h3:hover{
-color:#ffb300;
-text-shadow:0 0 15px #ffb300;
-transform:translateX(5px);
+  color:#ffb300;
+  text-shadow:0 0 15px #ffb300;
+  transform:translateX(5px);
 }
 
 .footer-column ul{
-list-style:none;
+  list-style:none;
 }
 
 .footer-column li{
-margin-bottom:12px;
-transition:0.4s;
+  margin-bottom:12px;
+  transition:0.4s;
 }
 
 .footer-column a{
-color:#aaa;
-text-decoration:none;
-transition:0.4s;
+  color:#aaa;
+  text-decoration:none;
+  transition:0.4s;
 }
 
 .footer-column li:hover{
-transform:translateX(8px);
+  transform:translateX(8px);
 }
 
 .footer-column li:hover a{
-color:#ffb300;
-text-shadow:0 0 10px #ffb300;
+  color:#ffb300;
+  text-shadow:0 0 10px #ffb300;
 }
 
 /* Versiyon Yazısı */
 .version{
-color:#00eaff;
-font-weight:bold;
-animation:pulse 2s infinite;
+  color:#00eaff;
+  font-weight:bold;
+  animation:pulse 2s infinite;
 }
 
 @keyframes pulse{
-0%{text-shadow:0 0 5px #00eaff;}
-50%{text-shadow:0 0 20px #00eaff;}
-100%{text-shadow:0 0 5px #00eaff;}
+  0%{text-shadow:0 0 5px #00eaff;}
+  50%{text-shadow:0 0 20px #00eaff;}
+  100%{text-shadow:0 0 5px #00eaff;}
 }
 
 /* LOGO */
 .footer-logo{
-font-size:28px;
-font-weight:bold;
-background:linear-gradient(90deg,#00eaff,#4cc3ff,#00eaff);
-background-size:200% auto;
--webkit-background-clip:text;
-color:transparent;
-animation:shine 3s linear infinite;
-margin-bottom:15px;
+  font-size:28px;
+  font-weight:bold;
+  background:linear-gradient(90deg,#00eaff,#4cc3ff,#00eaff);
+  background-size:200% auto;
+  -webkit-background-clip:text;
+  color:transparent;
+  animation:shine 3s linear infinite;
+  margin-bottom:15px;
 }
 
 @keyframes shine{
-to{background-position:200% center;}
+  to{background-position:200% center;}
 }
 
 .footer-mail{
-color:#ccc;
-margin-bottom:20px;
+  color:#ccc;
+  margin-bottom:20px;
 }
 
 .social-icons{
-display:flex;
-justify-content:center;
-gap:20px;
+  display:flex;
+  justify-content:center;
+  gap:20px;
 }
 
 .social-btn{
-width:55px;
-height:55px;
-background:linear-gradient(145deg,#1c2455,#12183c);
-border-radius:15px;
-display:flex;
-align-items:center;
-justify-content:center;
-cursor:pointer;
-transition:0.4s;
-box-shadow:5px 5px 15px #000, -3px -3px 10px #1f2a6a;
+  width:55px;
+  height:55px;
+  background:linear-gradient(145deg,#1c2455,#12183c);
+  border-radius:15px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  transition:0.4s;
+  box-shadow:5px 5px 15px #000, -3px -3px 10px #1f2a6a;
 }
 
 .social-btn img{
-width:28px;
+  width:28px;
 }
 
 .social-btn:hover{
-transform:translateY(-5px) scale(1.1);
-box-shadow:0 0 20px #ffb300;
+  transform:translateY(-5px) scale(1.1);
+  box-shadow:0 0 20px #ffb300;
 }
 
 .footer-center{
-text-align:center;
+  text-align:center;
 }
 
 .footer-bottom{
-text-align:center;
-margin-top:40px;
-padding-top:20px;
-border-top:1px solid #1e2a5a;
-color:#aaa;
-font-size:14px;
+  text-align:center;
+  margin-top:40px;
+  padding-top:20px;
+  border-top:1px solid #1e2a5a;
+  color:#aaa;
+  font-size:14px;
 }
 </style>
 </head>
@@ -291,189 +343,235 @@ font-size:14px;
 <canvas id="snow"></canvas>
 
 <header>
-<div class="logo">PixelArena</div>
-<div class="header-buttons">
-<span id="userBalance" style="margin-right:10px;font-weight:bold;color:#00ffcc;"></span>
-<button class="btn login-btn">Giriş</button>
-<button class="btn register-btn">Kayıt</button>
-<button class="btn logout-btn" style="display:none;background:#ff3b3b;color:white;">Çıkış</button>
-</div>
+  <div class="logo">PixelArena</div>
+  <div class="header-buttons">
+    <span id="userBalance" style="margin-right:10px;font-weight:bold;color:#00ffcc;"></span>
+    <button class="btn login-btn">Giriş</button>
+    <button class="btn register-btn">Kayıt</button>
+    <button class="btn logout-btn" style="display:none;background:#ff3b3b;color:white;">Çıkış</button>
+  </div>
 </header>
 
 <div class="search-bar">
-<input type="text" id="searchInput" placeholder="🕹️ Oyun Ara">
+  <input type="text" id="searchInput" placeholder="🕹️ Oyun Ara">
 </div>
 
 <main>
-<div class="section-title">Güncel Oyunlar</div>
-<div class="games-grid">
-<div class="game-card" data-name="blackjack" onclick="checkLogin('blackjack.html')"><div class="game-icon">♠️</div>PixelArena BJ</div>
-<div class="game-card" data-name="skycrash" onclick="checkLogin('crash.html')"><div class="game-icon">✈️</div>PixelArena Crash</div>
-<div class="game-card" data-name="pişt" onclick="checkLogin('pisti.html')"><div class="game-icon">🃏</div>PixelArena Pişti</div>
-<div class="game-card" data-name="yılan" onclick="checkLogin('snake.html')"><div class="game-icon">🐍</div>PixelArena Yılan</div>
-<div class="game-card" data-name="fruit ninja" onclick="checkLogin('reflex.html')"><div class="game-icon">🥕</div>PixelArena Fruit</div>
-<div class="game-card" data-name="roket" onclick="checkLogin('rocket.html')"><div class="game-icon">🚀</div>PixelArena Roket</div>
-</div>
+  <div class="section-title">Güncel Oyunlar</div>
+  <div class="games-grid">
+    <div class="game-card" data-name="blackjack" onclick="checkLogin('blackjack.html')">
+      <div class="game-icon">♠️</div>PixelArena BJ
+    </div>
+    <div class="game-card" data-name="skycrash" onclick="checkLogin('crash.html')">
+      <div class="game-icon">✈️</div>PixelArena Crash
+    </div>
+    <div class="game-card" data-name="pişt" onclick="checkLogin('pisti.html')">
+      <div class="game-icon">🃏</div>PixelArena Pişti
+    </div>
+    <div class="game-card" data-name="yılan" onclick="checkLogin('snake.html')">
+      <div class="game-icon">🐍</div>PixelArena Yılan
+    </div>
+    <div class="game-card" data-name="fruit ninja" onclick="checkLogin('reflex.html')">
+      <div class="game-icon">🥕</div>PixelArena Fruit
+    </div>
+    <div class="game-card" data-name="roket" onclick="checkLogin('rocket.html')">
+      <div class="game-icon">🚀</div>PixelArena Roket
+    </div>
+  </div>
 </main>
 
 <footer class="footer">
-<div class="footer-links">
-<div class="footer-column">
-<h3>HAKKIMDA</h3>
-<ul>
-<li><a href="https://www.instagram.com/o6emirlx" target="_blank">İletişim</a></li>
-<li><a href="https://www.instagram.com/o6emirlx" target="_blank">Şikayet-Öneri</a></li>
-<li class="version">1.0.0. Güncel</li>
-<li>Liderlik Tablosu</li>
-</ul>
-</div>
-</div>
-<div class="footer-center">
-<div class="footer-logo">PixelArena</div>
-<p class="footer-mail">PixelArena@gmail.com</p>
-<div class="social-icons">
-<a href="https://www.instagram.com/o6emirlx" target="_blank"><div class="social-btn"><img src="https://cdn-icons-png.flaticon.com/512/2111/2111463.png"></div></a>
-<a href="https://www.tiktok.com/@o6emirlx" target="_blank"><div class="social-btn"><img src="https://cdn-icons-png.flaticon.com/512/3046/3046121.png"></div></a>
-</div>
-</div>
-<div class="footer-bottom">© 2026 PixelArena Tüm Hakları Saklıdır.</div>
+  <div class="footer-links">
+    <div class="footer-column">
+      <h3>HAKKIMDA</h3>
+      <ul>
+        <li><a href="https://www.instagram.com/o6emirlx" target="_blank">İletişim</a></li>
+        <li><a href="https://www.instagram.com/o6emirlx" target="_blank">Şikayet-Öneri</a></li>
+        <li class="version">1.0.0. Güncel</li>
+        <li>Liderlik Tablosu</li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-center">
+    <div class="footer-logo">PixelArena</div>
+    <p class="footer-mail">PixelArena@gmail.com</p>
+    <div class="social-icons">
+      <a href="https://www.instagram.com/o6emirlx" target="_blank">
+        <div class="social-btn"><img src="https://cdn-icons-png.flaticon.com/512/2111/2111463.png"></div>
+      </a>
+      <a href="https://www.tiktok.com/@o6emirlx" target="_blank">
+        <div class="social-btn"><img src="https://cdn-icons-png.flaticon.com/512/3046/3046121.png"></div>
+      </a>
+    </div>
+  </div>
+  <div class="footer-bottom">© 2026 PixelArena Tüm Hakları Saklıdır.</div>
 </footer>
 
 <script>
-const searchInput=document.getElementById("searchInput");
-const cards=document.querySelectorAll(".game-card");
-searchInput.addEventListener("input",function(){
-let value=this.value.toLowerCase();
-cards.forEach(card=>{
-let name=card.getAttribute("data-name");
-card.style.display=name.includes(value)?"block":"none";
-});
-});
+  const searchInput = document.getElementById("searchInput");
+  const cards = document.querySelectorAll(".game-card");
+  searchInput.addEventListener("input", function(){
+    let value = this.value.toLowerCase();
+    cards.forEach(card => {
+      let name = card.getAttribute("data-name");
+      card.style.display = name.includes(value) ? "block" : "none";
+    });
+  });
 
-const canvas=document.getElementById("snow");
-const ctx=canvas.getContext("2d");
-function resizeCanvas(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;}
-resizeCanvas();
-let snowflakes=[];
-for(let i=0;i<150;i++){snowflakes.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*3+1,d:Math.random()*1+0.5});}
-function drawSnow(){ctx.clearRect(0,0,canvas.width,canvas.height);ctx.fillStyle="rgba(255,255,255,0.8)";ctx.beginPath();for(let s of snowflakes){ctx.moveTo(s.x,s.y);ctx.arc(s.x,s.y,s.r,0,Math.PI*2,true);}ctx.fill();updateSnow();}
-function updateSnow(){for(let s of snowflakes){s.y+=s.d;if(s.y>canvas.height){s.y=0;s.x=Math.random()*canvas.width;}}}
-function animateSnow(){drawSnow();requestAnimationFrame(animateSnow);}
-animateSnow();
-window.addEventListener("resize",resizeCanvas);
+  const canvas = document.getElementById("snow");
+  const ctx = canvas.getContext("2d");
+  function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resizeCanvas();
+  let snowflakes = [];
+  for (let i = 0; i < 150; i++) {
+    snowflakes.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      r: Math.random() * 3 + 1,
+      d: Math.random() * 1 + 0.5
+    });
+  }
+  function drawSnow() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "rgba(255,255,255,0.8)";
+    ctx.beginPath();
+    for (let s of snowflakes) {
+      ctx.moveTo(s.x, s.y);
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2, true);
+    }
+    ctx.fill();
+    updateSnow();
+  }
+  function updateSnow() {
+    for (let s of snowflakes) {
+      s.y += s.d;
+      if (s.y > canvas.height) {
+        s.y = 0;
+        s.x = Math.random() * canvas.width;
+      }
+    }
+  }
+  function animateSnow() {
+    drawSnow();
+    requestAnimationFrame(animateSnow);
+  }
+  animateSnow();
+  window.addEventListener("resize", resizeCanvas);
 </script>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { 
-  getAuth, 
-  createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import {
+    getAuth,
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword,
+    signOut,
+    onAuthStateChanged
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import {
+    getFirestore,
+    doc,
+    setDoc,
+    getDoc,
+    updateDoc,
+    onSnapshot
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-import { 
-  getFirestore, 
-  doc, 
-  setDoc, 
-  getDoc,
-  updateDoc,
-  onSnapshot
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  const firebaseConfig = {
+    apiKey: "AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
+    authDomain: "emirhan-site.firebaseapp.com",
+    projectId: "emirhan-site",
+    storageBucket: "emirhan-site.firebasestorage.app",
+    messagingSenderId: "668871888390",
+    appId: "1:668871888390:web:76568bda84cb1641f7bd87",
+    measurementId: "G-96ZVZX3DWH"
+  };
 
-const firebaseConfig = {
-  apiKey: "AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
-  authDomain: "emirhan-site.firebaseapp.com",
-  projectId: "emirhan-site",
-  storageBucket: "emirhan-site.firebasestorage.app",
-  messagingSenderId: "668871888390",
-  appId: "1:668871888390:web:76568bda84cb1641f7bd87",
-  measurementId: "G-96ZVZX3DWH"
-};
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+  const loginBtn = document.querySelector(".login-btn");
+  const registerBtn = document.querySelector(".register-btn");
+  const logoutBtn = document.querySelector(".logout-btn");
+  const balanceText = document.getElementById("userBalance");
 
-const loginBtn = document.querySelector(".login-btn");
-const registerBtn = document.querySelector(".register-btn");
-const logoutBtn = document.querySelector(".logout-btn");
-const balanceText = document.getElementById("userBalance");
+  /* PROFİL + CANLI BAKİYE */
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      loginBtn.style.display = "none";
+      registerBtn.style.display = "none";
+      logoutBtn.style.display = "inline-block";
 
-/* PROFİL + CANLI BAKİYE */
-onAuthStateChanged(auth, async (user)=>{
-  if(user){
-    loginBtn.style.display="none";
-    registerBtn.style.display="none";
-    logoutBtn.style.display="inline-block";
+      const userRef = doc(db, "users", user.uid);
 
-    const userRef = doc(db,"users",user.uid);
+      onSnapshot(userRef, (docSnap) => {
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          balanceText.innerText = "💵 " + data.balance + "₺";
+        }
+      });
 
-    onSnapshot(userRef,(docSnap)=>{
-      if(docSnap.exists()){
-        const data = docSnap.data();
-        balanceText.innerText = "💵 " + data.balance + "₺";
-      }
-    });
+    } else {
+      loginBtn.style.display = "inline-block";
+      registerBtn.style.display = "inline-block";
+      logoutBtn.style.display = "none";
+      balanceText.innerText = "";
+    }
+  });
 
-  } else {
-    loginBtn.style.display="inline-block";
-    registerBtn.style.display="inline-block";
-    logoutBtn.style.display="none";
-    balanceText.innerText="";
-  }
-});
+  /* KAYIT */
+  registerBtn.addEventListener("click", async () => {
+    const email = prompt("Email:");
+    const password = prompt("Şifre:");
+    if (!email || !password) return alert("Bilgileri doldur.");
 
-/* KAYIT */
-registerBtn.addEventListener("click", async ()=>{
-  const email = prompt("Email:");
-  const password = prompt("Şifre:");
-  if(!email || !password) return alert("Bilgileri doldur.");
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      await setDoc(doc(db, "users", userCredential.user.uid), {
+        balance: 10000,
+        email: email,
+        createdAt: new Date()
+      });
+      alert("Kayıt başarılı. 10.000₺ yüklendi.");
+    } catch (e) {
+      alert(e.message);
+    }
+  });
 
-  try{
-    const userCredential = await createUserWithEmailAndPassword(auth,email,password);
-    await setDoc(doc(db,"users",userCredential.user.uid),{
-      balance:10000,
-      email:email,
-      createdAt:new Date()
-    });
-    alert("Kayıt başarılı. 10.000₺ yüklendi.");
-  } catch(e){
-    alert(e.message);
-  }
-});
+  /* GİRİŞ */
+  loginBtn.addEventListener("click", async () => {
+    const email = prompt("Email:");
+    const password = prompt("Şifre:");
+    if (!email || !password) return alert("Bilgileri doldur.");
 
-/* GİRİŞ */
-loginBtn.addEventListener("click", async ()=>{
-  const email = prompt("Email:");
-  const password = prompt("Şifre:");
-  if(!email || !password) return alert("Bilgileri doldur.");
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      alert("Giriş başarılı.");
+    } catch (e) {
+      alert("Hatalı giriş.");
+    }
+  });
 
-  try{
-    await signInWithEmailAndPassword(auth,email,password);
-    alert("Giriş başarılı.");
-  } catch(e){
-    alert("Hatalı giriş.");
-  }
-});
+  /* ÇIKIŞ */
+  logoutBtn.addEventListener("click", async () => {
+    await signOut(auth);
+    alert("Çıkış yapıldı.");
+  });
 
-/* ÇIKIŞ */
-logoutBtn.addEventListener("click", async ()=>{
-  await signOut(auth);
-  alert("Çıkış yapıldı.");
-});
-
-/* OYUNDA BAKİYE DÜŞME */
-window.checkLogin = function(gamePage){
-  const user = auth.currentUser;
-  if(!user){
-    alert("Lütfen giriş yapın. Hesabınız yoksa kayıt olun.");
-    window.location.href = "index.html";
-    return;
-  }
-  window.location.href = gamePage;
-};
+  /* OYUNDA BAKİYE DÜŞME */
+  window.checkLogin = function (gamePage) {
+    const user = auth.currentUser;
+    if (!user) {
+      alert("Lütfen giriş yapın. Hesabınız yoksa kayıt olun.");
+      window.location.href = "index.html";
+      return;
+    }
+    window.location.href = gamePage;
+  };
 </script>
 
 </body>
