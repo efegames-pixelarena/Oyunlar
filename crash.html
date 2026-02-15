@@ -141,6 +141,11 @@ font-weight:bold;
 cursor:pointer;
 background:#6c5ce7;
 color:white;
+transition:0.2s;
+}
+
+.betBox button:active{
+transform:scale(0.97);
 }
 
 .cancel{background:#ff2a4d !important;}
@@ -165,7 +170,7 @@ Aktif: <span id="bet">0</span>₺
 
 <div class="main">
 <canvas id="graph"></canvas>
-<div class="multiplier" id="multiplier">1.00x</div>
+<div class="multiplier" id="multiplier">5 saniye</div>
 </div>
 
 <div class="bottom">
@@ -234,7 +239,6 @@ resize();
 
 function drawGraph(){
 ctx.clearRect(0,0,canvas.width,canvas.height);
-
 let progress=Math.min(multiplier/10,1);
 let x=progress*canvas.width;
 let y=canvas.height-(Math.log(multiplier+1)/Math.log(11))*canvas.height;
@@ -245,23 +249,15 @@ ctx.lineTo(x,y);
 ctx.strokeStyle=phase==="crashed"?"#ff2a4d":"#b366ff";
 ctx.lineWidth=4;
 ctx.stroke();
-
-ctx.lineTo(x,canvas.height);
-ctx.closePath();
-ctx.fillStyle=phase==="crashed"?"rgba(255,42,77,0.3)":"rgba(179,102,255,0.3)";
-ctx.fill();
-
-ctx.beginPath();
-ctx.arc(x,y,7,0,Math.PI*2);
-ctx.fillStyle=phase==="crashed"?"#ff2a4d":"#b366ff";
-ctx.fill();
 }
 
 function animate(){
-multiplier+=0.003 + multiplier*0.0008; // DAHA YAVAŞ
+multiplier+=0.002 + multiplier*0.0006; // DAHA YAVAŞ
 
 document.getElementById("multiplier").innerText=multiplier.toFixed(2)+"x";
 drawGraph();
+
+updateUI(); // canlı kazanç güncelle
 
 if(multiplier>=crashPoint){
 crash();
@@ -284,16 +280,15 @@ phase="crashed";
 cancelAnimationFrame(animationId);
 addHistory(multiplier);
 
-document.getElementById("multiplier").innerText=multiplier.toFixed(2)+"x";
-
 activeBet1=0;
 activeBet2=0;
 updateUI();
 
-setTimeout(startCountdown,3000); // 3 saniye X göster
+setTimeout(startCountdown,3000);
 }
 
 function startCountdown(){
+phase="betting";
 let count=5;
 document.getElementById("multiplier").innerText=count+" saniye";
 
@@ -306,6 +301,8 @@ startFlight();
 document.getElementById("multiplier").innerText=count+" saniye";
 }
 },1000);
+
+updateUI();
 }
 
 function addHistory(val){
@@ -329,16 +326,25 @@ let btn=document.getElementById(id);
 if(phase==="betting" && bet===0){
 btn.innerText="Bahis Yap";
 btn.className="";
-}else if(phase==="betting" && bet>0){
+}
+else if(phase==="betting" && bet>0){
 btn.innerText="İptal";
 btn.className="cancel";
-}else if(phase==="flying" && bet>0){
-btn.innerText="Çek";
+}
+else if(phase==="flying" && bet>0){
+let live=Math.floor(bet*multiplier);
+btn.innerText="Çek (₺"+live+")";
 btn.className="cashout";
+}
+else{
+btn.innerText="Bahis Yap";
+btn.className="";
 }
 }
 
 async function handleBet(box){
+if(phase!=="betting" && phase!=="flying") return;
+
 let amount=parseInt(document.getElementById("bet"+box).value);
 let active=box===1?activeBet1:activeBet2;
 
@@ -349,12 +355,14 @@ await updateDoc(userRef,{balance});
 if(box===1) activeBet1=amount;
 else activeBet2=amount;
 }
-}else if(phase==="betting" && active>0){
+}
+else if(phase==="betting" && active>0){
 balance+=active;
 await updateDoc(userRef,{balance});
 if(box===1) activeBet1=0;
 else activeBet2=0;
-}else if(phase==="flying" && active>0){
+}
+else if(phase==="flying" && active>0){
 let win=Math.floor(active*multiplier);
 balance+=win;
 await updateDoc(userRef,{balance});
