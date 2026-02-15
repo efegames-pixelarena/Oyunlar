@@ -237,7 +237,7 @@ document.getElementById("dealerScore").innerText=
 dealerHidden ? total(dealer,true) : total(dealer,false);
 }
 
-/* ================== GÜNCELLENMİŞ BET ================== */
+/* ================== BET ================== */
 
 async function addBet(amount){
 if(gameState!=="betting") return;
@@ -248,7 +248,6 @@ bet+=amount;
 await updateDoc(userRef,{balance});
 betEl.innerText=bet;
 
-/* SADECE İLK BAHİS TIMER BAŞLATIR */
 if(!betTimer){
 startBetTimer();
 }
@@ -256,13 +255,12 @@ startBetTimer();
 window.addBet=addBet;
 
 function startBetTimer(){
-let time=6; // 6 saniye
+let time=6;
 message.innerText="Bahisler Kapanıyor "+time+" SN";
 
 betTimer=setInterval(()=>{
 time--;
 
-/* 1 SN KALA ÇİPLER KAPANIR */
 if(time===1){
 disableChips();
 }
@@ -286,25 +284,22 @@ insuranceBet=0;
 createDeck();
 controls.style.display="none";
 
-/* ANİMASYONLU DAĞITIM */
-
 player.push(deck.pop());
 render();
-await delay(3000);
+await delay(1000);
 
 dealer.push(deck.pop());
 render();
-await delay(3000);
+await delay(1000);
 
 player.push(deck.pop());
 render();
-await delay(3000);
+await delay(1000);
 
 dealer.push(deck.pop());
 render();
 
 /* BLACKJACK */
-
 if(isBJ(player)){
 dealerHidden=false;
 render();
@@ -317,8 +312,13 @@ return endGame("BLACKJACK 3:2");
 }
 }
 
-/* SİGORTA */
+/* 🔥 YENİ EKLENDİ: 21 OLURSA OTOMATİK STAND */
+if(total(player,false)===21){
+await dealerTurn();
+return;
+}
 
+/* SİGORTA */
 if(dealer[0].value===1){
 message.innerHTML="Sigorta? <button onclick='insYes()'>Evet</button> <button onclick='insNo()'>Hayır</button>";
 setTimeout(checkDealerBJ,15000);
@@ -371,9 +371,18 @@ async function hit(){
 clearInterval(decisionTimer);
 player.push(deck.pop());
 render();
+
+/* 🔥 21 OLURSA OTOMATİK STAND */
+if(total(player,false)===21){
+await dealerTurn();
+return;
+}
+
 if(total(player,false)>21){
 await dealerTurn();
-}else startDecision();
+}else{
+startDecision();
+}
 }
 
 async function stand(){
