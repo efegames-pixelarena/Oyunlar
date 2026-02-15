@@ -128,8 +128,8 @@ const controls=document.getElementById("controls");
 const dealerDiv=document.getElementById("dealerCards");
 const playerDiv=document.getElementById("playerCards");
 
-dealerDiv.style.minHeight="120px";
-playerDiv.style.minHeight="120px";
+dealerDiv.style.minHeight="140px";
+playerDiv.style.minHeight="140px";
 
 function disableChips(){
 document.querySelectorAll(".chip").forEach(c=>{
@@ -159,7 +159,7 @@ enableChips();
 });
 });
 
-const suits=["♥","♦","♣","♠"];
+const suits=["H","D","C","S"]; // Hearts, Diamonds, Clubs, Spades
 let deck=[],player=[],dealer=[];
 let dealerHiddenIndex=null;
 
@@ -185,74 +185,31 @@ while(t>21&&a>0){t-=10;a--;}
 return t;
 }
 
-/* 🎴 GERÇEK KART TASARIMI */
+/* 🎴 GERÇEK PNG KART */
 function createCardElement(card,hidden=false){
-let div=document.createElement("div");
-div.style.cssText=`
-width:70px;
-height:100px;
-background:${hidden?"#1e3a8a":"white"};
-border-radius:10px;
-margin:6px;
-position:relative;
-box-shadow:0 4px 10px rgba(0,0,0,0.4);
-display:flex;
-align-items:center;
-justify-content:center;
-font-family:Arial;
-`;
+
+let img=document.createElement("img");
+img.style.width="80px";
+img.style.margin="6px";
+img.style.borderRadius="8px";
+img.style.boxShadow="0 4px 10px rgba(0,0,0,0.5)";
 
 if(hidden){
-div.style.background="linear-gradient(135deg,#1e3a8a,#2563eb)";
-return div;
+img.src="https://deckofcardsapi.com/static/img/back.png";
+return img;
 }
 
-let color=(card.suit==="♥"||card.suit==="♦")?"#dc2626":"#111";
-let value=
-card.value===1?"A":
-card.value===11?"J":
-card.value===12?"Q":
-card.value===13?"K":card.value;
+let valueMap={
+1:"A",
+11:"J",
+12:"Q",
+13:"K"
+};
 
-/* sol üst */
-let top=document.createElement("div");
-top.innerHTML=value+"<br>"+card.suit;
-top.style.cssText=`
-position:absolute;
-top:6px;
-left:8px;
-font-size:14px;
-color:${color};
-font-weight:bold;
-text-align:center;
-`;
-div.appendChild(top);
+let val=valueMap[card.value] || card.value;
+img.src=`https://deckofcardsapi.com/static/img/${val}${card.suit}.png`;
 
-/* orta suit */
-let center=document.createElement("div");
-center.innerHTML=card.suit;
-center.style.cssText=`
-font-size:28px;
-color:${color};
-`;
-div.appendChild(center);
-
-/* sağ alt */
-let bottom=document.createElement("div");
-bottom.innerHTML=value+"<br>"+card.suit;
-bottom.style.cssText=`
-position:absolute;
-bottom:6px;
-right:8px;
-font-size:14px;
-color:${color};
-font-weight:bold;
-transform:rotate(180deg);
-text-align:center;
-`;
-div.appendChild(bottom);
-
-return div;
+return img;
 }
 
 function renderCards(){
@@ -360,7 +317,7 @@ renderCards();
 if(total(player)>21){
 await dealerTurn();
 }else{
-startDecisionTimer(); // yeni karttan sonra süre reset
+startDecisionTimer();
 }
 }
 
