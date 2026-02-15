@@ -118,7 +118,7 @@ const auth=getAuth(app);
 const db=getFirestore(app);
 
 let balance=0,bet=0,userRef=null;
-let gameState="loading"; // loading, betting, locked, dealing, playing, finished
+let gameState="loading"; 
 let betTimer=null,decisionTimer=null;
 
 const balanceEl=document.getElementById("balance");
@@ -184,10 +184,21 @@ while(t>21&&a>0){t-=10;a--;}
 return t;
 }
 
-/* 🔥 ARTIK API YOK — %100 LOCAL KART */
+/* ✅ GÖRÜNÜR KART TASARIMI */
 function cardImage(card,hidden=false){
 let div=document.createElement("div");
 div.className="card-img";
+div.style.width="60px";
+div.style.height="90px";
+div.style.display="inline-flex";
+div.style.alignItems="center";
+div.style.justifyContent="center";
+div.style.margin="4px";
+div.style.borderRadius="8px";
+div.style.background="white";
+div.style.color="black";
+div.style.fontWeight="bold";
+div.style.fontSize="20px";
 
 if(hidden){
 div.innerHTML="🂠";
@@ -198,7 +209,6 @@ card.value===11?"J":
 card.value===12?"Q":
 card.value===13?"K":
 card.value;
-
 div.innerHTML=`${v}${card.suit}`;
 }
 
@@ -214,13 +224,15 @@ bet+=amount;
 await updateDoc(userRef,{balance});
 betEl.innerText=bet;
 
-if(!betTimer)startBetTimer();
+if(!betTimer){
+startBetTimer();
+}
 }
 window.addBet=addBet;
 
 function startBetTimer(){
 let time=5;
-gameState="betting";
+gameState="countdown"; // 🔥 artık betting değil
 message.innerText="Bahisler Kapanıyor: "+time+" SN";
 
 betTimer=setInterval(()=>{
@@ -248,7 +260,6 @@ playerDiv.innerHTML="";
 dealerDiv.innerHTML="";
 document.getElementById("playerScore").innerText="0";
 document.getElementById("dealerScore").innerText="0";
-
 controls.style.display="none";
 
 createDeck();
@@ -281,7 +292,7 @@ dealerDiv.appendChild(cardImage(card,false));
 }
 
 updateScores();
-await delay(500);
+await delay(400);
 }
 
 function updateScores(){
@@ -332,7 +343,6 @@ async function dealerTurn(){
 gameState="finished";
 controls.style.display="none";
 
-/* 🔥 Kapalı kartı zorunlu aç */
 if(dealerHiddenCardElement){
 dealerHiddenCardElement.innerHTML=
 `${dealerHiddenCardData.value===1?"A":
@@ -343,11 +353,11 @@ dealerHiddenCardData.value}${dealerHiddenCardData.suit}`;
 }
 
 updateScores();
-await delay(1500);
+await delay(800);
 
 while(total(dealer)<17){
 await deal("dealer",false);
-await delay(1500);
+await delay(800);
 }
 
 let p=total(player);
