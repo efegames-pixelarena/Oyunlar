@@ -40,6 +40,13 @@ display:flex;flex-direction:column;align-items:center;justify-content:center;
 .multiplier{font-size:65px;font-weight:bold;color:#00eaff;}
 .status{margin-top:10px;font-size:16px;font-weight:700;color:#ff2a4d;}
 
+.rocket{
+position:absolute;
+font-size:28px;
+transform:translate(-50%,-50%);
+pointer-events:none;
+}
+
 .bottom{
 position:absolute;bottom:0;width:100%;height:150px;
 background:#121833;display:flex;justify-content:center;align-items:center;gap:15px;
@@ -75,9 +82,10 @@ background:#6c5ce7;color:white;
 
 <div class="history" id="history"></div>
 
-<div class="main">
+<div class="main" id="gameArea">
 <div class="multiplier" id="multiplier">1.00x</div>
 <div class="status" id="status"></div>
+<div class="rocket" id="rocket">🚀</div>
 </div>
 
 <div class="bottom">
@@ -93,9 +101,9 @@ background:#6c5ce7;color:white;
 </div>
 </div>
 
-<!-- SESLER -->
-<audio id="flySound" src="https://actions.google.com/sounds/v1/transportation/airplane_flyby.ogg" loop></audio>
-<audio id="explodeSound" src="https://actions.google.com/sounds/v1/explosions/explosion.ogg"></audio>
+<!-- SESLER (iOS uyumlu mp3) -->
+<audio id="flySound" preload="auto" src="https://assets.mixkit.co/sfx/preview/mixkit-airplane-take-off-1740.mp3" loop></audio>
+<audio id="explodeSound" preload="auto" src="https://assets.mixkit.co/sfx/preview/mixkit-explosion-impact-1684.mp3"></audio>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -130,12 +138,20 @@ const betEl=document.getElementById("bet");
 const historyEl=document.getElementById("history");
 const multiplierEl=document.getElementById("multiplier");
 const statusEl=document.getElementById("status");
+const rocket=document.getElementById("rocket");
+const gameArea=document.getElementById("gameArea");
 
 const flySound=document.getElementById("flySound");
 const explodeSound=document.getElementById("explodeSound");
 
 const btn1=document.getElementById("btn1");
 const btn2=document.getElementById("btn2");
+
+/* iOS SES UNLOCK */
+document.body.addEventListener("click",()=>{
+flySound.play().then(()=>flySound.pause()).catch(()=>{});
+explodeSound.play().then(()=>explodeSound.pause()).catch(()=>{});
+},{once:true});
 
 onAuthStateChanged(auth,user=>{
 if(!user){location.href="index.html";return;}
@@ -221,19 +237,20 @@ phase="betting";
 multiplier=1;
 multiplierEl.innerText="1.00x";
 statusEl.innerText="";
+rocket.style.display="none";
 updateButton(1,"reset");
 updateButton(2,"reset");
-setTimeout(startFlight,5000);
+setTimeout(startFlight,2000);
 }
 
 function startFlight(){
 phase="flying";
+rocket.style.display="block";
 crashPoint=(1/(1-Math.random()))*0.98;
 startTime=performance.now();
 
-/* UÇUŞ SESİ */
 flySound.currentTime=0;
-flySound.volume=0.3;
+flySound.volume=0.4;
 flySound.play();
 
 if(animationId) cancelAnimationFrame(animationId);
@@ -244,6 +261,13 @@ function animate(now){
 let elapsed=(now-startTime)/1000;
 multiplier = 1 + (Math.exp(elapsed*0.55)-1);
 multiplierEl.innerText=multiplier.toFixed(2)+"x";
+
+/* ROKET HAREKETİ */
+let percent=Math.min(multiplier/crashPoint,1);
+let x=percent*window.innerWidth;
+let y=window.innerHeight-(percent*window.innerHeight*0.7);
+rocket.style.left=x+"px";
+rocket.style.top=y+"px";
 
 if(active1) updateButton(1,"cashout",bet1*multiplier);
 if(active2) updateButton(2,"cashout",bet2*multiplier);
@@ -256,16 +280,14 @@ function crash(){
 if(animationId) cancelAnimationFrame(animationId);
 phase="crashed";
 
-multiplier=crashPoint;
-multiplierEl.innerText=crashPoint.toFixed(2)+"x";
-
-/* UÇUŞ SESİ DUR */
 flySound.pause();
 flySound.currentTime=0;
 
-/* PATLAMA SESİ */
 explodeSound.currentTime=0;
 explodeSound.play();
+
+multiplier=crashPoint;
+multiplierEl.innerText=crashPoint.toFixed(2)+"x";
 
 addHistory(crashPoint);
 
@@ -275,7 +297,6 @@ updateTopBet();
 updateButton(1,"reset");
 updateButton(2,"reset");
 
-/* GERİ SAYIM */
 let timeLeft=5;
 statusEl.innerText="Bahislerin Kapanmasına : 5 Saniye";
 
@@ -285,21 +306,11 @@ if(timeLeft>0){
 statusEl.innerText="Bahislerin Kapanmasına : "+timeLeft+" Saniye";
 }else{
 clearInterval(countdownInterval);
-startRound();
+startRound(); // BEKLEME YOK
 }
 },1000);
 }
 
-const roundRef=doc(db,"round","current");
-
-async function syncRound(){
-let snap=await getDoc(roundRef);
-if(!snap.exists()){
-await setDoc(roundRef,{started:Date.now()});
-}
-}
-
-syncRound();
 startRound();
 </script>
 </body>
