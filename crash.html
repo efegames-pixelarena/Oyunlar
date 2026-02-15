@@ -10,16 +10,12 @@
 body{height:100vh;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
 background:#070b18;color:white;touch-action:manipulation;}
 
-/* =====  ÜST BAR ===== */
+/* ===== TOP BAR ===== */
 
 .top-bar{
 position:fixed;
-top:0;
-width:100%;
-height:55px;
-display:flex;
-align-items:center;
-justify-content:space-between;
+top:0;width:100%;height:55px;
+display:flex;align-items:center;justify-content:space-between;
 padding:0 16px;
 background:linear-gradient(135deg,#1a2a6c,#16245c);
 box-shadow:0 4px 15px rgba(0,0,0,0.45);
@@ -27,8 +23,7 @@ z-index:100;
 }
 
 .brand{
-font-size:18px;
-font-weight:800;
+font-size:18px;font-weight:800;
 background:linear-gradient(90deg,#4fd1ff,#fff,#4fd1ff);
 background-size:200% auto;
 -webkit-background-clip:text;
@@ -39,75 +34,74 @@ animation:shine 3s linear infinite;
 
 .right-menu{display:flex;gap:10px;}
 .nav-box{
-padding:6px 14px;
-border-radius:14px;
-font-weight:700;
-font-size:13px;
-min-width:95px;
-text-align:center;
+padding:6px 14px;border-radius:14px;font-weight:700;font-size:13px;
+min-width:95px;text-align:center;
 }
 .balance-box{background:#273c8f;}
 .bet-box{background:linear-gradient(90deg,#ff8a00,#ff5f00);color:#000;}
 
-/* ===== OYUN ===== */
+/* ===== HISTORY BAR ===== */
+
+.history{
+position:absolute;
+top:55px;
+width:100%;
+height:40px;
+display:flex;
+align-items:center;
+gap:8px;
+padding:0 10px;
+overflow-x:auto;
+background:#0e1530;
+border-bottom:1px solid rgba(255,255,255,0.05);
+}
+
+.history span{
+background:#1a2248;
+padding:4px 10px;
+border-radius:12px;
+font-size:12px;
+font-weight:700;
+white-space:nowrap;
+}
+
+/* ===== GAME ===== */
 
 .main{
 position:absolute;
-top:55px;
+top:95px;
 bottom:130px;
 width:100%;
 background:radial-gradient(circle at center,#16204a,#070b18 70%);
-display:flex;
-align-items:center;
-justify-content:center;
+display:flex;align-items:center;justify-content:center;
 }
 
 .multiplier{
-font-size:70px;
-font-weight:bold;
+font-size:70px;font-weight:bold;
 color:#00eaff;
 text-shadow:0 0 25px #00eaff;
+transition:transform 0.1s linear;
 }
 
 .bottom{
-position:absolute;
-bottom:0;
-width:100%;
-height:130px;
+position:absolute;bottom:0;width:100%;height:130px;
 background:#121833;
-display:flex;
-justify-content:center;
-align-items:center;
-gap:15px;
+display:flex;justify-content:center;align-items:center;gap:15px;
 }
 
 .betBox{
-background:#1a2248;
-padding:12px;
-border-radius:10px;
-width:45%;
-max-width:200px;
-display:flex;
-flex-direction:column;
-gap:6px;
+background:#1a2248;padding:12px;border-radius:10px;
+width:45%;max-width:200px;
+display:flex;flex-direction:column;gap:6px;
 }
 
 .betBox input{
-padding:8px;
-border:none;
-border-radius:6px;
-text-align:center;
-font-weight:bold;
+padding:8px;border:none;border-radius:6px;text-align:center;font-weight:bold;
 }
 
 .betBox button{
-padding:10px;
-border:none;
-border-radius:6px;
-font-weight:bold;
-cursor:pointer;
-background:#6c5ce7;
-color:white;
+padding:10px;border:none;border-radius:6px;font-weight:bold;
+cursor:pointer;background:#6c5ce7;color:white;
 }
 
 .cancel{background:#ff2a4d !important;}
@@ -122,6 +116,8 @@ color:white;
 <div class="nav-box bet-box">Bahis: <span id="bet">0</span>₺</div>
 </div>
 </div>
+
+<div class="history" id="history"></div>
 
 <div class="main">
 <div class="multiplier" id="multiplier">1.00x</div>
@@ -158,11 +154,11 @@ const auth=getAuth(app);
 const db=getFirestore(app);
 
 let balance=0;
-let totalBet=0;
 let userRef=null;
 
 const balanceEl=document.getElementById("balance");
 const betEl=document.getElementById("bet");
+const historyEl=document.getElementById("history");
 
 onAuthStateChanged(auth,user=>{
 if(!user){window.location.href="index.html";return;}
@@ -181,48 +177,77 @@ let phase="betting";
 let multiplier=1;
 let crashPoint=0;
 let animation;
+let lastTime=0;
+
 let bet1=0,bet2=0;
 let active1=false,active2=false;
 let win1=0,win2=0;
 
-function updateBetBox(){
+function updateBetUI(){
 let total=0;
 if(active1) total+=bet1;
 if(active2) total+=bet2;
 betEl.innerText=total.toFixed(2);
 }
 
+function addHistory(value){
+let span=document.createElement("span");
+span.innerText=value.toFixed(2)+"x";
+historyEl.prepend(span);
+if(historyEl.children.length>20)
+historyEl.removeChild(historyEl.lastChild);
+}
+
 function startRound(){
 phase="betting";
 multiplier=1;
 document.getElementById("multiplier").innerText="1.00x";
+resetButtons();
 setTimeout(startFlight,5000);
 }
 
 function startFlight(){
 phase="flying";
-crashPoint=(1/(1-Math.random()))*0.97;
-animate();
+crashPoint=Math.max(1.1,(1/(1-Math.random()))*0.97);
+lastTime=performance.now();
+animate(lastTime);
 }
 
-function animate(){
-multiplier+=0.01*multiplier;
+function animate(time){
+let delta=(time-lastTime)/1000;
+lastTime=time;
+
+/* Smooth exponential growth */
+multiplier*=1+delta*0.9;
+
 document.getElementById("multiplier").innerText=multiplier.toFixed(2)+"x";
+document.getElementById("multiplier").style.transform="scale("+(1+multiplier/50)+")";
 
 if(active1){win1=bet1*multiplier;btn1.innerText="Çek "+win1.toFixed(2);}
 if(active2){win2=bet2*multiplier;btn2.innerText="Çek "+win2.toFixed(2);}
 
 if(multiplier>=crashPoint){crash();return;}
+
 animation=requestAnimationFrame(animate);
 }
 
 function crash(){
 cancelAnimationFrame(animation);
+addHistory(crashPoint);
 phase="crashed";
 active1=false;
 active2=false;
-updateBetBox();
+updateBetUI();
 setTimeout(startRound,2000);
+}
+
+function resetButtons(){
+btn1.disabled=false;
+btn2.disabled=false;
+btn1.innerText="Bahis Yap";
+btn2.innerText="Bahis Yap";
+btn1.classList.remove("cancel");
+btn2.classList.remove("cancel");
 }
 
 async function betHandler(btn,input,index){
@@ -230,13 +255,16 @@ btn.onclick=async()=>{
 if(phase==="betting"){
 let amount=parseFloat(input.value);
 if(amount<=0||balance<amount) return;
+
 balance-=amount;
 await updateDoc(userRef,{balance});
+
 if(index===1){bet1=amount;active1=true;}
 else{bet2=amount;active2=true;}
-updateBetBox();
+
 btn.innerText="İptal";
 btn.classList.add("cancel");
+updateBetUI();
 }
 else if(phase==="flying"){
 if(index===1&&active1){
@@ -244,14 +272,14 @@ balance+=win1;
 await updateDoc(userRef,{balance});
 active1=false;
 btn.disabled=true;
-updateBetBox();
+updateBetUI();
 }
 if(index===2&&active2){
 balance+=win2;
 await updateDoc(userRef,{balance});
 active2=false;
 btn.disabled=true;
-updateBetBox();
+updateBetUI();
 }
 }
 };
