@@ -27,7 +27,7 @@ background:#070b18;
 color:white;
 }
 
-input{font-size:16px;}
+/* ===== BLACKJACK ÜSTBAR ENTEGRE ===== */
 
 .top-bar{
 position:fixed;
@@ -37,22 +37,41 @@ height:55px;
 display:flex;
 align-items:center;
 justify-content:space-between;
-padding:0 12px;
+padding:0 16px;
 background:linear-gradient(135deg,#1a2a6c,#16245c);
+box-shadow:0 4px 15px rgba(0,0,0,0.45);
 z-index:100;
 }
 
-.right-menu{display:flex;gap:8px;}
+.brand{
+font-size:18px;
+font-weight:800;
+background:linear-gradient(90deg,#4fd1ff,#fff,#4fd1ff);
+background-size:200% auto;
+-webkit-background-clip:text;
+-webkit-text-fill-color:transparent;
+animation:shine 3s linear infinite;
+}
+
+@keyframes shine{
+to{background-position:200% center;}
+}
+
+.right-menu{display:flex;gap:10px;}
 
 .nav-box{
-padding:6px 12px;
-border-radius:16px;
+padding:6px 14px;
+border-radius:14px;
 font-weight:700;
 font-size:13px;
+min-width:95px;
+text-align:center;
 }
 
 .balance-box{background:#273c8f;}
 .bet-box{background:linear-gradient(90deg,#ff8a00,#ff5f00);color:#000;}
+
+/* ===== CRASH TASARIM DEVAM ===== */
 
 .history{
 position:absolute;
@@ -155,13 +174,13 @@ transform:scale(0.97);
 <body>
 
 <div class="top-bar">
-<div>SkyCrash</div>
+<div class="brand">PixelArena Crash</div>
 <div class="right-menu">
 <div class="nav-box balance-box">
 Bakiye: <span id="balance">0</span>₺
 </div>
 <div class="nav-box bet-box">
-Aktif: <span id="bet">0</span>₺
+Bahis: <span id="bet">0</span>₺
 </div>
 </div>
 </div>
@@ -253,7 +272,6 @@ ctx.stroke();
 
 function autoCashoutCheck(){
 if(phase!=="flying") return;
-
 checkAuto(1);
 checkAuto(2);
 }
