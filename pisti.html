@@ -14,7 +14,6 @@ background:#0b1023;color:white;
 display:flex;flex-direction:column;align-items:center;
 }
 
-/* TOP */
 .top-bar{
 position:fixed;top:0;width:100%;height:55px;
 display:flex;align-items:center;justify-content:space-between;
@@ -76,7 +75,6 @@ display:flex;gap:10px;
 .card{width:80px;cursor:pointer;transition:0.3s;}
 .card:hover{transform:translateY(-10px);}
 
-/* CHIPS */
 .chips{
 position:fixed;bottom:70px;left:50%;
 transform:translateX(-50%);
@@ -147,16 +145,12 @@ Oyuncu: <span id="ps">0</span> | ChatGPT: <span id="cs">0</span>
 
 <button class="start-btn" id="startBtn" onclick="startGame()">BAŞLA</button>
 
-<!-- SESLER -->
-<audio id="cardSound" src="https://assets.mixkit.co/sfx/preview/mixkit-card-slide-1538.mp3" preload="auto"></audio>
-<audio id="coinSound" src="https://assets.mixkit.co/sfx/preview/mixkit-coin-win-notification-1992.mp3" preload="auto"></audio>
-<audio id="bigWinSound" src="https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.mp3" preload="auto"></audio>
-
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth,onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore,doc,onSnapshot,updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+/* FIREBASE */
 const firebaseConfig={
 apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
 authDomain:"emirhan-site.firebaseapp.com",
@@ -170,17 +164,61 @@ const app=initializeApp(firebaseConfig);
 const auth=getAuth(app);
 const db=getFirestore(app);
 
+/* AUDIO ENGINE (iOS SAFE) */
+let audioCtx;
+function initAudio(){
+if(!audioCtx){
+audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+}
+if(audioCtx.state==="suspended"){
+audioCtx.resume();
+}
+}
+document.body.addEventListener("touchstart",initAudio,{once:true});
+document.body.addEventListener("click",initAudio,{once:true});
+
+function playCardSound(){
+const o=audioCtx.createOscillator();
+const g=audioCtx.createGain();
+o.type="triangle";
+o.frequency.value=300;
+g.gain.value=0.2;
+o.connect(g); g.connect(audioCtx.destination);
+o.start();
+o.stop(audioCtx.currentTime+0.08);
+}
+
+function playCoinSound(){
+const o=audioCtx.createOscillator();
+const g=audioCtx.createGain();
+o.type="square";
+o.frequency.setValueAtTime(800,audioCtx.currentTime);
+o.frequency.exponentialRampToValueAtTime(1200,audioCtx.currentTime+0.1);
+g.gain.value=0.3;
+o.connect(g); g.connect(audioCtx.destination);
+o.start();
+o.stop(audioCtx.currentTime+0.15);
+}
+
+function playBigWin(){
+for(let i=0;i<3;i++){
+setTimeout(()=>{
+const o=audioCtx.createOscillator();
+const g=audioCtx.createGain();
+o.type="sawtooth";
+o.frequency.value=600+(i*200);
+g.gain.value=0.25;
+o.connect(g); g.connect(audioCtx.destination);
+o.start();
+o.stop(audioCtx.currentTime+0.2);
+},i*150);
+}
+}
+
+/* GAME LOGIC AYNI */
+
 let balance=0,bet=0,userRef=null;
 let gameStarted=false;
-
-const cardSound=document.getElementById("cardSound");
-const coinSound=document.getElementById("coinSound");
-const bigWinSound=document.getElementById("bigWinSound");
-
-function playSound(sound){
-sound.currentTime=0;
-sound.play().catch(()=>{});
-}
 
 onAuthStateChanged(auth,user=>{
 if(!user) return;
@@ -199,7 +237,7 @@ bet+=amount;
 await updateDoc(userRef,{balance});
 document.getElementById("balance").innerText=balance;
 document.getElementById("bet").innerText=bet;
-playSound(coinSound);
+playCoinSound();
 }
 
 window.startGame=function(){
@@ -211,8 +249,6 @@ document.getElementById("startBtn").style.display="none";
 createDeck();
 dealInitial();
 }
-
-/* OYUN KISMI AYNI - SADECE SES EKLENDİ */
 
 const suits=["H","D","C","S"];
 const values=["A","2","3","4","5","6","7","8","9","0","J","Q","K"];
@@ -255,7 +291,6 @@ if(!gameStarted) return;
 const ph=document.getElementById("playerHand");
 const ch=document.getElementById("computerHand");
 ph.innerHTML=""; ch.innerHTML="";
-
 player.forEach((c,i)=>{
 let im=document.createElement("img");
 im.src=img(c);
@@ -277,8 +312,7 @@ renderTable();
 function renderTable(){
 const tc=document.getElementById("tableCards");
 tc.innerHTML="";
-let real=table.filter(c=>c!=="BACK");
-real.forEach((c)=>{
+table.filter(c=>c!=="BACK").forEach(c=>{
 let im=document.createElement("img");
 im.src=img(c);
 im.className="stack-card";
@@ -287,7 +321,7 @@ tc.appendChild(im);
 }
 
 function play(i){
-playSound(cardSound);
+playCardSound();
 let c=player.splice(i,1)[0];
 table.push(c);
 check("p");
@@ -301,11 +335,10 @@ if(player.length===0) dealRound();
 return;
 }
 let chosen=computer.splice(0,1)[0];
-playSound(cardSound);
+playCardSound();
 table.push(chosen);
 check("c");
 render();
-
 if(player.length===0 && computer.length===0)
 setTimeout(dealRound,500);
 }
@@ -319,7 +352,7 @@ if(last[0]==="J"||last[0]===prev[0]){
 if(owner==="p") ps+=real.length;
 else cs+=real.length;
 table=[];
-playSound(coinSound);
+playCoinSound();
 }
 }
 
@@ -339,7 +372,7 @@ document.getElementById("startBtn").style.display="block";
 }
 
 function showWin(){
-playSound(bigWinSound);
+playBigWin();
 let div=document.createElement("div");
 div.className="win-anim";
 div.innerText="🎉 BÜYÜK KAZANÇ!";
