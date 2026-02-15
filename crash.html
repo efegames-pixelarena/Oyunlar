@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Aviator</title>
+<title>SkyCrash</title>
 
 <style>
 body{
@@ -21,10 +21,7 @@ justify-content:space-between;
 padding:15px;
 font-size:22px;
 font-weight:bold;
-}
-
-#balance{
-color:#4caf50;
+background:#0f1724;
 }
 
 .crashArea{
@@ -41,15 +38,16 @@ overflow:hidden;
 font-size:70px;
 font-weight:bold;
 z-index:2;
+transition:0.1s;
 }
 
 #plane{
 position:absolute;
-width:90px;
+width:95px;
 bottom:40px;
 left:10%;
 transition:transform 0.05s linear;
-filter:drop-shadow(0 0 10px red);
+filter:drop-shadow(0 0 15px red);
 }
 
 #countdown{
@@ -104,14 +102,14 @@ background:#4caf50;
 font-size:22px;
 font-weight:bold;
 color:white;
+transition:0.2s;
 }
 </style>
 </head>
 <body>
 
 <header>
-<div>Aviator</div>
-<div id="balance">0 TRY</div>
+<div>✈️ SkyCrash</div>
 </header>
 
 <div class="crashArea">
@@ -150,33 +148,43 @@ let newVal = Math.max(10, parseInt(input.value) + val)
 input.value = newVal
 }
 
-betBtn.onclick = function(){
+betBtn.onclick = async function(){
+
 if(!bettingOpen) return
 
+// BAHİS YAP
 if(!hasBet){
+
 betAmount = parseInt(document.getElementById("betAmount").value)
 
-if(typeof oynaVeBakiyedenDus !== "function"){
-alert("Firebase hazır değil")
-return
-}
+let result = await window.oynaVeBakiyedenDus(betAmount)
 
-oynaVeBakiyedenDus(betAmount)
+if(!result) return
+
 hasBet = true
 cashedOut = false
+
 betBtn.innerText = "Cash Out"
 betBtn.style.background = "#ff9800"
-}else{
+
+}
+// CASHOUT
+else{
+
 if(cashedOut) return
 
 let win = Math.floor(betAmount * currentMultiplier)
-bakiyeArttir(win)
+
+await window.bakiyeArttir(win)
 
 cashedOut = true
 hasBet = false
+
 betBtn.innerText = "Bahis Yap"
 betBtn.style.background = "#4caf50"
+
 }
+
 }
 
 function startRound(){
@@ -194,18 +202,22 @@ currentMultiplier += 0.03 + (currentMultiplier*0.002)
 
 multiplierEl.innerText = currentMultiplier.toFixed(2) + "x"
 
-let moveX = currentMultiplier * 20
-let moveY = currentMultiplier * 10
+let moveX = currentMultiplier * 22
+let moveY = currentMultiplier * 12
 
 plane.style.transform =
-`translate(${moveX}px,-${moveY}px) rotate(25deg)`
+`translate(${moveX}px,-${moveY}px) rotate(25deg) scale(${1 + currentMultiplier/25})`
 
 if(currentMultiplier >= crashPoint){
+
 clearInterval(interval)
+
 hasBet = false
 betBtn.innerText = "Bahis Yap"
 betBtn.style.background = "#4caf50"
+
 setTimeout(startCountdown,1000)
+
 }
 
 },100)
@@ -213,6 +225,7 @@ setTimeout(startCountdown,1000)
 }
 
 function startCountdown(){
+
 let time = 5
 bettingOpen = false
 countdownEl.innerText = time + " SN"
@@ -220,13 +233,16 @@ countdownEl.innerText = time + " SN"
 let cd = setInterval(()=>{
 time--
 countdownEl.innerText = time + " SN"
+
 if(time <= 0){
 clearInterval(cd)
 countdownEl.innerText = ""
 bettingOpen = true
 startRound()
 }
+
 },1000)
+
 }
 
 startCountdown()
