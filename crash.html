@@ -2,14 +2,13 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SkyCrash</title>
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
 body{background:#0b0f14;color:white}
 
-/* HEADER */
 .header{
 height:60px;
 background:#111418;
@@ -26,7 +25,6 @@ font-style:italic;
 }
 .balanceTop{color:#4caf50;font-weight:bold;font-size:18px;}
 
-/* HISTORY */
 .historyBar{
 height:45px;
 display:flex;
@@ -40,12 +38,9 @@ overflow:hidden;
 display:flex;
 gap:15px;
 overflow-x:auto;
-scrollbar-width:none;
 }
-.historyList::-webkit-scrollbar{display:none;}
 .historyItem{font-weight:bold;font-size:18px;white-space:nowrap;}
 
-/* CRASH AREA */
 .crashContainer{
 position:relative;
 height:300px;
@@ -63,7 +58,6 @@ font-size:65px;
 font-weight:bold;
 }
 
-/* BET SECTION */
 .betSection{
 display:flex;
 gap:15px;
@@ -88,20 +82,12 @@ margin-bottom:10px;
 background:#1b1f27;
 border:none;
 color:white;
-font-size:20px;
-width:45px;height:45px;
+font-size:18px;
+width:40px;height:40px;
 border-radius:50%;
 }
-.betInput{
-width:100%;
-text-align:center;
-background:transparent;
-border:none;
-color:white;
-font-size:22px;
-font-weight:bold;
-outline:none;
-}
+.betAmount{font-size:22px;font-weight:bold;}
+
 .quickAmounts{
 display:grid;
 grid-template-columns:repeat(4,1fr);
@@ -112,6 +98,7 @@ background:#151922;
 border:none;padding:8px;
 border-radius:10px;color:#aaa;
 }
+
 .betButton{
 width:100%;
 background:#22b300;
@@ -146,41 +133,41 @@ color:black;
 
 <div class="betCard">
 <div class="betControl">
-<button onclick="changeBet(1,-50)">−</button>
-<input type="number" id="bet1" class="betInput" value="100" min="0">
-<button onclick="changeBet(1,100)">+</button>
+<button id="minus1">−</button>
+<div class="betAmount" id="betDisplay1">1.00</div>
+<button id="plus1">+</button>
 </div>
 <div class="quickAmounts">
-<button onclick="setBet(1,1)">1</button>
-<button onclick="setBet(1,2)">2</button>
-<button onclick="setBet(1,5)">5</button>
-<button onclick="setBet(1,10)">10</button>
+<button class="quick1" data-bet="1">1</button>
+<button class="quick1" data-bet="2">2</button>
+<button class="quick1" data-bet="5">5</button>
+<button class="quick1" data-bet="10">10</button>
 </div>
 <button class="betButton" id="betBtn1">Bahis</button>
 </div>
 
 <div class="betCard">
 <div class="betControl">
-<button onclick="changeBet(2,-50)">−</button>
-<input type="number" id="bet2" class="betInput" value="100" min="0">
-<button onclick="changeBet(2,100)">+</button>
+<button id="minus2">−</button>
+<div class="betAmount" id="betDisplay2">1.00</div>
+<button id="plus2">+</button>
 </div>
 <div class="quickAmounts">
-<button onclick="setBet(2,1)">1</button>
-<button onclick="setBet(2,2)">2</button>
-<button onclick="setBet(2,5)">5</button>
-<button onclick="setBet(2,10)">10</button>
+<button class="quick2" data-bet="1">1</button>
+<button class="quick2" data-bet="2">2</button>
+<button class="quick2" data-bet="5">5</button>
+<button class="quick2" data-bet="10">10</button>
 </div>
 <button class="betButton" id="betBtn2">Bahis</button>
 </div>
 
 </div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth,onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore,doc,updateDoc,onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
+<script>
 const firebaseConfig = {
 apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
 authDomain:"emirhan-site.firebaseapp.com",
@@ -190,29 +177,27 @@ messagingSenderId:"668871888390",
 appId:"1:668871888390:web:76568bda84cb1641f7bd87"
 };
 
-const app=initializeApp(firebaseConfig);
-const auth=getAuth(app);
-const db=getFirestore(app);
+firebase.initializeApp(firebaseConfig);
+const auth=firebase.auth();
+const db=firebase.firestore();
 
-let userRef=null;
 let balance=0;
-let authReady=false;
+let userRef=null;
 
-onAuthStateChanged(auth,user=>{
+auth.onAuthStateChanged(user=>{
 if(!user) return;
-userRef=doc(db,"users",user.uid);
-authReady=true;
-onSnapshot(userRef,snap=>{
-if(snap.exists()){
-balance=snap.data().balance||0;
+userRef=db.collection("users").doc(user.uid);
+userRef.onSnapshot(doc=>{
+if(doc.exists){
+balance=doc.data().balance||0;
 document.getElementById("balanceTop").innerText=Math.round(balance);
 }
 });
 });
 
-async function updateBalance(val){
+function updateBalance(val){
 if(!userRef) return;
-await updateDoc(userRef,{balance:Math.round(val)});
+userRef.update({balance:Math.round(val)});
 }
 
 /* GAME */
@@ -220,22 +205,12 @@ let multiplier=1;
 let crashPoint=0;
 let phase="betting";
 let animation;
-let activeBets={1:null,2:null};
-
-function getSpeedRate(mult){
-if(mult < 5) return 4;
-if(mult < 15) return 6;
-if(mult < 50) return 9;
-return 9;
-}
 
 function startRound(){
 phase="betting";
 multiplier=1;
 document.getElementById("multiplierDisplay").innerText="1.00x";
 crashPoint=(1/(1-Math.random()))*0.97;
-activeBets={1:null,2:null};
-resetButtons();
 setTimeout(startFlight,5000);
 }
 
@@ -245,84 +220,68 @@ animate();
 }
 
 function animate(){
-let rate=getSpeedRate(multiplier);
-multiplier+=multiplier*(rate/100);
+multiplier+=0.01; // SABİT %1 hız
 document.getElementById("multiplierDisplay").innerText=
 multiplier.toFixed(2)+"x";
-if(multiplier>=crashPoint){triggerCrash();return;}
-animation=requestAnimationFrame(animate);
-}
 
-function triggerCrash(){
+if(multiplier>=crashPoint){
 cancelAnimationFrame(animation);
 addHistory(multiplier);
 phase="crashed";
-resetButtons();
 setTimeout(startRound,3000);
+return;
+}
+
+animation=requestAnimationFrame(animate);
 }
 
 function addHistory(val){
 let item=document.createElement("div");
 item.className="historyItem";
 item.innerText=val.toFixed(2)+"x";
-if(val<2)item.style.color="#4da6ff";
-else if(val<10)item.style.color="#b266ff";
-else item.style.color="#ff4d94";
-let list=document.getElementById("historyList");
-list.prepend(item);
-if(list.children.length>15) list.removeChild(list.lastChild);
+document.getElementById("historyList").prepend(item);
 }
 
-/* BET FUNCTIONS */
-function changeBet(i,amount){
-let input=document.getElementById("bet"+i);
-let val=parseInt(input.value)||0;
-val+=amount;
-if(val<0) val=0;
-input.value=val;
-}
+/* BET */
+let bet1=1,bet2=1;
 
-function setBet(i,value){
-document.getElementById("bet"+i).value=value;
+function updateUI(){
+document.getElementById("betDisplay1").innerText=bet1.toFixed(2);
+document.getElementById("betDisplay2").innerText=bet2.toFixed(2);
 }
+updateUI();
 
-function resetButtons(){
-[1,2].forEach(i=>{
-let btn=document.getElementById("betBtn"+i);
-btn.classList.remove("cashout");
-btn.innerText="Bahis";
+document.getElementById("minus1").onclick=()=>{bet1=Math.max(0.1,bet1-0.1);updateUI();}
+document.getElementById("plus1").onclick=()=>{bet1+=0.1;updateUI();}
+document.getElementById("minus2").onclick=()=>{bet2=Math.max(0.1,bet2-0.1);updateUI();}
+document.getElementById("plus2").onclick=()=>{bet2+=0.1;updateUI();}
+
+document.querySelectorAll(".quick1").forEach(btn=>{
+btn.onclick=()=>{bet1=parseFloat(btn.dataset.bet);updateUI();}
 });
-}
+document.querySelectorAll(".quick2").forEach(btn=>{
+btn.onclick=()=>{bet2=parseFloat(btn.dataset.bet);updateUI();}
+});
 
 document.getElementById("betBtn1").onclick=()=>handleBet(1);
 document.getElementById("betBtn2").onclick=()=>handleBet(2);
 
-async function handleBet(i){
-if(!authReady) return;
-
-let amt=parseInt(document.getElementById("bet"+i).value)||0;
+function handleBet(i){
+let amt=i===1?bet1:bet2;
 
 if(phase==="betting"){
-if(balance<amt || amt<=0) return;
+if(balance<amt) return;
 balance-=amt;
-await updateBalance(balance);
-activeBets[i]=amt;
-let btn=document.getElementById("betBtn"+i);
-btn.classList.add("cashout");
-btn.innerText="Cashout";
+updateBalance(balance);
 }
-else if(phase==="flying" && activeBets[i]){
-let payout=activeBets[i]*multiplier;
-balance+=payout;
-await updateBalance(balance);
-activeBets[i]=null;
-let btn=document.getElementById("betBtn"+i);
-btn.classList.remove("cashout");
-btn.innerText="Bahis";
+else if(phase==="flying"){
+balance+=amt*multiplier;
+updateBalance(balance);
 }
 }
 
 startRound();
 </script>
+
 </body>
 </html>
