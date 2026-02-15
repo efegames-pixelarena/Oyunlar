@@ -6,7 +6,6 @@
 <title>SkyCrash</title>
 
 <style>
-/* TASARIMINA DOKUNMADIM */
 *{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
 html,body{height:100%;overflow:hidden;background:#070b18;}
 body{display:flex;flex-direction:column;height:100dvh;}
@@ -23,6 +22,16 @@ position:relative;
 }
 
 .logo{font-size:20px;font-weight:bold;color:#fff;letter-spacing:2px;}
+
+.balanceBox{
+background:rgba(255,255,255,0.05);
+padding:6px 14px;
+border-radius:20px;
+border:1px solid rgba(0,255,255,0.3);
+color:#00eaff;
+font-weight:bold;
+box-shadow:0 0 12px rgba(0,255,255,0.5);
+}
 
 .historyBar{
 position:absolute;
@@ -113,6 +122,7 @@ color:white;
 
 <div class="top">
 <div class="logo">SKYCRASH</div>
+<div class="balanceBox">Bakiye: <span id="balance">0</span> ₺</div>
 <div class="historyBar" id="historyBar"></div>
 </div>
 
@@ -133,22 +143,61 @@ color:white;
 </div>
 </div>
 
-<script>
-/* ========================= */
-/*      CRASH ENGINE         */
-/* ========================= */
+<script type="module">
+
+/* ================= FIREBASE ================= */
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, getDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
+  authDomain: "emirhan-site.firebaseapp.com",
+  projectId: "emirhan-site",
+  storageBucket: "emirhan-site.firebasestorage.app",
+  messagingSenderId: "668871888390",
+  appId: "1:668871888390:web:76568bda84cb1641f7bd87",
+  measurementId: "G-96ZVZX3DWH"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+let currentUser=null;
+let balance=0;
+
+/* ====== AUTH + CANLI BAKİYE ====== */
+
+onAuthStateChanged(auth,(user)=>{
+if(!user){
+alert("Giriş yapmalısın.");
+window.location.href="index.html";
+return;
+}
+
+currentUser=user;
+
+onSnapshot(doc(db,"users",user.uid),(snap)=>{
+if(snap.exists()){
+balance = snap.data().balance || 0;
+document.getElementById("balance").innerText = balance.toFixed(2);
+}
+});
+});
+
+/* ====== GAME ENGINE ====== */
 
 let phase="betting";
 let multiplier=1;
 let crashPoint=0;
 let animation;
-
+let history=[];
 let bet1=0, bet2=0;
 let active1=false, active2=false;
 let cashed1=false, cashed2=false;
 let win1=0, win2=0;
-
-let history=[];
 
 function addHistory(x){
 history.unshift(x.toFixed(2));
@@ -168,7 +217,7 @@ function startCountdown(){
 phase="betting";
 multiplier=1;
 document.getElementById("multiplier").innerText="1.00x";
-
+resetButtons();
 setTimeout(startFlight,5000);
 }
 
@@ -204,30 +253,35 @@ function triggerCrash(){
 cancelAnimationFrame(animation);
 phase="crashed";
 addHistory(multiplier);
-
 active1=false;
 active2=false;
-
 setTimeout(startCountdown,2000);
 }
 
-/* ========================= */
-/*        BET LOGIC          */
-/* ========================= */
+function resetButtons(){
+["btn1","btn2"].forEach(id=>{
+let b=document.getElementById(id);
+b.disabled=false;
+b.innerText="Bahis Yap";
+b.classList.remove("cancel","cashout");
+});
+}
+
+/* ====== BET LOGIC ====== */
 
 async function handleBet(btnId,inputId,index){
-const btn=document.getElementById(btnId);
-const input=document.getElementById(inputId);
+let btn=document.getElementById(btnId);
+let input=document.getElementById(inputId);
 
 btn.onclick=async function(){
 
 if(phase==="betting"){
-
 let amount=parseFloat(input.value);
-if(amount<=0) return;
+if(amount<=0 || balance<amount) return;
 
-let ok = await window.oynaVeBakiyedenDus(amount);
-if(!ok) return;
+await updateDoc(doc(db,"users",currentUser.uid),{
+balance: balance-amount
+});
 
 if(index===1){ bet1=amount; active1=true; }
 else{ bet2=amount; active2=true; }
@@ -239,16 +293,18 @@ btn.classList.add("cancel");
 else if(phase==="flying"){
 
 if(index===1 && active1 && !cashed1){
-await window.bakiyeArttir(win1);
+await updateDoc(doc(db,"users",currentUser.uid),{
+balance: balance+win1
+});
 cashed1=true;
-active1=false;
 btn.disabled=true;
 }
 
 if(index===2 && active2 && !cashed2){
-await window.bakiyeArttir(win2);
+await updateDoc(doc(db,"users",currentUser.uid),{
+balance: balance+win2
+});
 cashed2=true;
-active2=false;
 btn.disabled=true;
 }
 
@@ -261,6 +317,7 @@ handleBet("btn1","bet1",1);
 handleBet("btn2","bet2",2);
 
 startCountdown();
+
 </script>
 
 </body>
