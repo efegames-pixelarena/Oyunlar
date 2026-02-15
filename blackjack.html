@@ -118,7 +118,7 @@ const auth=getAuth(app);
 const db=getFirestore(app);
 
 let balance=0,bet=0,userRef=null;
-let gameState="betting"; // betting, locked, dealing, playing, finished
+let gameState="loading"; // loading, betting, locked, dealing, playing, finished
 let betTimer=null,decisionTimer=null;
 
 const balanceEl=document.getElementById("balance");
@@ -132,10 +132,16 @@ let dealerHiddenCardElement=null;
 let dealerHiddenCardData=null;
 
 function disableChips(){
-document.querySelectorAll(".chip").forEach(c=>c.style.pointerEvents="none");
+document.querySelectorAll(".chip").forEach(c=>{
+c.style.pointerEvents="none";
+c.style.opacity="0.4";
+});
 }
 function enableChips(){
-document.querySelectorAll(".chip").forEach(c=>c.style.pointerEvents="auto");
+document.querySelectorAll(".chip").forEach(c=>{
+c.style.pointerEvents="auto";
+c.style.opacity="1";
+});
 }
 
 onAuthStateChanged(auth,user=>{
@@ -144,10 +150,16 @@ userRef=doc(db,"users",user.uid);
 onSnapshot(userRef,snap=>{
 balance=snap.data()?.balance||0;
 balanceEl.innerText=balance;
+
+if(gameState==="loading"){
+gameState="betting";
+message.innerText="Bahis Yapın";
+enableChips();
+}
 });
 });
 
-const suits=["H","D","C","S"];
+const suits=["♥","♦","♣","♠"];
 let deck=[],player=[],dealer=[];
 
 function delay(ms){return new Promise(r=>setTimeout(r,ms));}
@@ -172,45 +184,33 @@ while(t>21&&a>0){t-=10;a--;}
 return t;
 }
 
-function getCardUrl(card){
-let v;
-if(card.value===1) v="A";
-else if(card.value===11) v="J";
-else if(card.value===12) v="Q";
-else if(card.value===13) v="K";
-else if(card.value===10) v="10";
-else v=String(card.value);
-return `https://deckofcardsapi.com/static/img/${v}${card.suit}.png`;
+/* 🔥 ARTIK API YOK — %100 LOCAL KART */
+function cardImage(card,hidden=false){
+let div=document.createElement("div");
+div.className="card-img";
+
+if(hidden){
+div.innerHTML="🂠";
+}else{
+let v=
+card.value===1?"A":
+card.value===11?"J":
+card.value===12?"Q":
+card.value===13?"K":
+card.value;
+
+div.innerHTML=`${v}${card.suit}`;
 }
 
-function cardImage(card,hidden=false){
-let img=document.createElement("img");
-img.className="card-img";
-
-let url = hidden
-?"https://deckofcardsapi.com/static/img/back.png"
-:getCardUrl(card);
-
-img.src=url;
-
-/* 🔥 Güçlü retry sistemi */
-img.onerror=function(){
-img.onerror=null;
-img.src=url+"?retry="+Date.now();
-};
-
-setTimeout(()=>img.classList.add("show"),30);
-return img;
+return div;
 }
 
 async function addBet(amount){
 if(gameState!=="betting")return;
 if(balance<amount)return;
-if(betTimer===null && bet>0) return; // 🔥 ekstra güvenlik
 
 balance-=amount;
 bet+=amount;
-
 await updateDoc(userRef,{balance});
 betEl.innerText=bet;
 
@@ -230,7 +230,7 @@ message.innerText="Bahisler Kapanıyor: "+time+" SN";
 }else{
 clearInterval(betTimer);
 betTimer=null;
-gameState="locked"; // 🔥 bahis tamamen kilitlendi
+gameState="locked";
 disableChips();
 message.innerText="";
 startGame();
@@ -244,10 +244,14 @@ player=[]; dealer=[];
 dealerHiddenCardElement=null;
 dealerHiddenCardData=null;
 
-createDeck();
 playerDiv.innerHTML="";
 dealerDiv.innerHTML="";
+document.getElementById("playerScore").innerText="0";
+document.getElementById("dealerScore").innerText="0";
+
 controls.style.display="none";
+
+createDeck();
 
 await deal("player",false);
 await deal("dealer",false);
@@ -277,7 +281,7 @@ dealerDiv.appendChild(cardImage(card,false));
 }
 
 updateScores();
-await delay(600);
+await delay(500);
 }
 
 function updateScores(){
@@ -328,16 +332,22 @@ async function dealerTurn(){
 gameState="finished";
 controls.style.display="none";
 
-if(dealerHiddenCardElement && dealerHiddenCardData){
-dealerHiddenCardElement.src=getCardUrl(dealerHiddenCardData);
+/* 🔥 Kapalı kartı zorunlu aç */
+if(dealerHiddenCardElement){
+dealerHiddenCardElement.innerHTML=
+`${dealerHiddenCardData.value===1?"A":
+dealerHiddenCardData.value===11?"J":
+dealerHiddenCardData.value===12?"Q":
+dealerHiddenCardData.value===13?"K":
+dealerHiddenCardData.value}${dealerHiddenCardData.suit}`;
 }
 
 updateScores();
-await delay(3000);
+await delay(1500);
 
 while(total(dealer)<17){
 await deal("dealer",false);
-await delay(3000);
+await delay(1500);
 }
 
 let p=total(player);
@@ -371,6 +381,8 @@ betEl.innerText=0;
 setTimeout(()=>{
 playerDiv.innerHTML="";
 dealerDiv.innerHTML="";
+document.getElementById("playerScore").innerText="0";
+document.getElementById("dealerScore").innerText="0";
 gameState="betting";
 message.innerText="Bahis Yapın";
 enableChips();
