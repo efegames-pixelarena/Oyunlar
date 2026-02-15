@@ -61,7 +61,6 @@ background:#6c5ce7;color:white;
 
 .cancel{background:#ff2a4d !important;}
 .cashout{background:#00c853 !important;}
-.disabled{opacity:0.5;pointer-events:none;}
 </style>
 </head>
 <body>
@@ -94,7 +93,9 @@ background:#6c5ce7;color:white;
 </div>
 </div>
 
-<audio id="crashSound" src="https://actions.google.com/sounds/v1/explosions/explosion.ogg"></audio>
+<!-- SESLER -->
+<audio id="flySound" src="https://actions.google.com/sounds/v1/transportation/airplane_flyby.ogg" loop></audio>
+<audio id="explodeSound" src="https://actions.google.com/sounds/v1/explosions/explosion.ogg"></audio>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -120,6 +121,7 @@ let multiplier=1;
 let crashPoint=0;
 let animationId=null;
 let startTime=0;
+let countdownInterval=null;
 
 let bet1=0,bet2=0,active1=false,active2=false;
 
@@ -127,7 +129,10 @@ const balanceEl=document.getElementById("balance");
 const betEl=document.getElementById("bet");
 const historyEl=document.getElementById("history");
 const multiplierEl=document.getElementById("multiplier");
-const crashSound=document.getElementById("crashSound");
+const statusEl=document.getElementById("status");
+
+const flySound=document.getElementById("flySound");
+const explodeSound=document.getElementById("explodeSound");
 
 const btn1=document.getElementById("btn1");
 const btn2=document.getElementById("btn2");
@@ -160,10 +165,7 @@ btn2.onclick=()=>handleBet(2);
 
 function handleBet(slot){
 if(phase!=="betting") return;
-
-let betInput=document.getElementById("bet"+slot);
-let amount=parseInt(betInput.value);
-
+let amount=parseInt(document.getElementById("bet"+slot).value);
 if(!amount || amount<=0 || amount>balance) return;
 
 balance-=amount;
@@ -197,13 +199,8 @@ btn.onclick=()=>handleBet(slot);
 
 function cancelBet(slot){
 if(phase!=="betting") return;
-
-if(slot===1 && active1){
-balance+=bet1; bet1=0; active1=false;
-}
-if(slot===2 && active2){
-balance+=bet2; bet2=0; active2=false;
-}
+if(slot===1 && active1){balance+=bet1;bet1=0;active1=false;}
+if(slot===2 && active2){balance+=bet2;bet2=0;active2=false;}
 updateDoc(userRef,{balance});
 updateTopBet();
 updateButton(slot,"reset");
@@ -211,13 +208,10 @@ updateButton(slot,"reset");
 
 function cashout(slot,value){
 if(phase!=="flying") return;
-
 balance+=Math.floor(value);
 updateDoc(userRef,{balance});
-
 if(slot===1){active1=false;bet1=0;}
 if(slot===2){active2=false;bet2=0;}
-
 updateTopBet();
 updateButton(slot,"reset");
 }
@@ -225,6 +219,8 @@ updateButton(slot,"reset");
 function startRound(){
 phase="betting";
 multiplier=1;
+multiplierEl.innerText="1.00x";
+statusEl.innerText="";
 updateButton(1,"reset");
 updateButton(2,"reset");
 setTimeout(startFlight,5000);
@@ -234,6 +230,12 @@ function startFlight(){
 phase="flying";
 crashPoint=(1/(1-Math.random()))*0.98;
 startTime=performance.now();
+
+/* UÇUŞ SESİ */
+flySound.currentTime=0;
+flySound.volume=0.3;
+flySound.play();
+
 if(animationId) cancelAnimationFrame(animationId);
 animationId=requestAnimationFrame(animate);
 }
@@ -246,29 +248,48 @@ multiplierEl.innerText=multiplier.toFixed(2)+"x";
 if(active1) updateButton(1,"cashout",bet1*multiplier);
 if(active2) updateButton(2,"cashout",bet2*multiplier);
 
-if(multiplier>=crashPoint){
-crash();
-return;
-}
+if(multiplier>=crashPoint){crash();return;}
 animationId=requestAnimationFrame(animate);
 }
 
 function crash(){
 if(animationId) cancelAnimationFrame(animationId);
 phase="crashed";
+
 multiplier=crashPoint;
 multiplierEl.innerText=crashPoint.toFixed(2)+"x";
-crashSound.play();
+
+/* UÇUŞ SESİ DUR */
+flySound.pause();
+flySound.currentTime=0;
+
+/* PATLAMA SESİ */
+explodeSound.currentTime=0;
+explodeSound.play();
+
 addHistory(crashPoint);
-active1=false; active2=false;
-bet1=0; bet2=0;
+
+active1=false;active2=false;
+bet1=0;bet2=0;
 updateTopBet();
 updateButton(1,"reset");
 updateButton(2,"reset");
-setTimeout(startRound,5000);
+
+/* GERİ SAYIM */
+let timeLeft=5;
+statusEl.innerText="Bahislerin Kapanmasına : 5 Saniye";
+
+countdownInterval=setInterval(()=>{
+timeLeft--;
+if(timeLeft>0){
+statusEl.innerText="Bahislerin Kapanmasına : "+timeLeft+" Saniye";
+}else{
+clearInterval(countdownInterval);
+startRound();
+}
+},1000);
 }
 
-/* MULTIPLAYER ROUND SENKRON */
 const roundRef=doc(db,"round","current");
 
 async function syncRound(){
