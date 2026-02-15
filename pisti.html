@@ -44,13 +44,19 @@ box-shadow:inset 0 0 120px #000,0 0 80px #00ff99,0 20px 60px rgba(0,0,0,0.6);
 overflow:hidden;opacity:0.2;pointer-events:none;transition:0.4s;
 }
 .table.active{opacity:1;pointer-events:auto;}
+
 .table-cards{
 position:absolute;top:50%;left:50%;
 transform:translate(-50%,-50%);
-display:flex;
+width:120px;height:160px;
 }
-.stack-card{width:95px;margin-left:-65px;}
-.stack-card:first-child{margin-left:0;}
+
+.stack-card{
+position:absolute;
+width:95px;
+left:0;top:0;
+}
+
 .hand{
 position:absolute;bottom:15px;left:50%;
 transform:translateX(-50%);
@@ -86,13 +92,13 @@ background:linear-gradient(90deg,#ffb300,#ff5e00);
 border:none;border-radius:20px;
 font-weight:bold;font-size:16px;cursor:pointer;
 }
-.win-anim,.pisti-anim{
+.win-anim{
 position:fixed;top:0;left:0;width:100%;height:100%;
 display:flex;align-items:center;justify-content:center;
-font-weight:900;z-index:999;animation:zoom 0.4s ease forwards;
+background:rgba(0,0,0,0.85);
+font-size:40px;font-weight:900;color:#00ff99;
+z-index:999;animation:zoom 0.4s ease forwards;
 }
-.win-anim{background:rgba(0,0,0,0.85);font-size:40px;color:#00ff99;}
-.pisti-anim{background:rgba(255,0,0,0.85);font-size:55px;color:#fff;}
 @keyframes zoom{
 0%{transform:scale(0.5);opacity:0;}
 100%{transform:scale(1);opacity:1;}
@@ -155,42 +161,47 @@ if(audioCtx.state==="suspended") audioCtx.resume();
 document.body.addEventListener("touchstart",unlockAudio,{once:true});
 document.body.addEventListener("click",unlockAudio,{once:true});
 
-function noise(duration,volume){
-const buffer=audioCtx.createBuffer(1,audioCtx.sampleRate*duration,audioCtx.sampleRate);
-const data=buffer.getChannelData(0);
-for(let i=0;i<data.length;i++) data[i]=Math.random()*2-1;
-const src=audioCtx.createBufferSource();
+/* GERÇEKÇİ KART SESİ */
+function cardRealSound(){
+const noiseBuffer=audioCtx.createBuffer(1,audioCtx.sampleRate*0.06,audioCtx.sampleRate);
+const data=noiseBuffer.getChannelData(0);
+for(let i=0;i<data.length;i++) data[i]=(Math.random()*2-1)*0.6;
+const noise=audioCtx.createBufferSource();
+noise.buffer=noiseBuffer;
+
+const low=audioCtx.createOscillator();
+low.type="sine";
+low.frequency.value=120;
+
 const gain=audioCtx.createGain();
-src.buffer=buffer;
-gain.gain.value=volume;
-src.connect(gain);
+gain.gain.value=0.3;
+
+noise.connect(gain);
+low.connect(gain);
 gain.connect(audioCtx.destination);
-src.start();
+
+noise.start();
+low.start();
+low.stop(audioCtx.currentTime+0.05);
 }
 
-function cardSlide(){noise(0.05,0.15);}
-function cardDrop(){noise(0.08,0.25);}
-function moneySound(){
+/* BOZUK PARA SESİ */
+function coinClink(){
+for(let i=0;i<6;i++){
+setTimeout(()=>{
 const o=audioCtx.createOscillator();
 const g=audioCtx.createGain();
-o.type="square";
-o.frequency.setValueAtTime(600,audioCtx.currentTime);
-o.frequency.exponentialRampToValueAtTime(1400,audioCtx.currentTime+0.2);
-g.gain.value=0.3;
+o.type="triangle";
+o.frequency.value=800+Math.random()*400;
+g.gain.value=0.2;
 o.connect(g);g.connect(audioCtx.destination);
-o.start();o.stop(audioCtx.currentTime+0.2);
+o.start();
+o.stop(audioCtx.currentTime+0.08);
+},i*60);
 }
-function pistiBoom(){
-moneySound();
-if(navigator.vibrate) navigator.vibrate([100,50,100]);
-let div=document.createElement("div");
-div.className="pisti-anim";
-div.innerText="🔥 PİŞTİ!";
-document.body.appendChild(div);
-setTimeout(()=>div.remove(),700);
 }
 
-/* GAME LOGIC SAME */
+/* GAME */
 
 let balance=0,bet=0,userRef=null;
 let gameStarted=false;
@@ -211,7 +222,7 @@ balance-=amount; bet+=amount;
 await updateDoc(userRef,{balance});
 document.getElementById("balance").innerText=balance;
 document.getElementById("bet").innerText=bet;
-moneySound();
+coinClink();
 }
 
 window.startGame=function(){
@@ -279,21 +290,25 @@ document.getElementById("cs").innerText=cs;
 renderTable();
 }
 
+/* ÜST ÜSTE DİZİM */
 function renderTable(){
 const tc=document.getElementById("tableCards");
 tc.innerHTML="";
-table.filter(c=>c!=="BACK").forEach(c=>{
+table.filter(c=>c!=="BACK").forEach((c,i)=>{
 let im=document.createElement("img");
-im.src=img(c); im.className="stack-card";
+im.src=img(c);
+im.className="stack-card";
+im.style.top=i*2+"px";
+im.style.left=i*2+"px";
+im.style.zIndex=i;
 tc.appendChild(im);
 });
 }
 
 function play(i){
-cardSlide();
+cardRealSound();
 let c=player.splice(i,1)[0];
 table.push(c);
-cardDrop();
 check("p");
 render();
 setTimeout(compPlay,500);
@@ -305,14 +320,14 @@ if(player.length===0) dealRound();
 return;
 }
 let chosen=computer.splice(0,1)[0];
-cardSlide(); table.push(chosen); cardDrop();
+cardRealSound();
+table.push(chosen);
 check("c");
 render();
 if(player.length===0 && computer.length===0)
 setTimeout(dealRound,500);
 }
 
-/* PİŞTİ FIX */
 function check(owner){
 let real=table.filter(x=>x!=="BACK");
 if(real.length<2) return;
@@ -323,16 +338,13 @@ let prev=real[real.length-2];
 let isMatch=(last[0]===prev[0]);
 let isJack=(last[0]==="J");
 let isPisti = isMatch && real.length===2;
-
-// J ile tek kart alma PİŞTİ DEĞİL
 if(isJack && real.length===2) isPisti=false;
 
 if(isMatch||isJack){
 if(owner==="p") ps+=real.length;
 else cs+=real.length;
 table=[];
-moneySound();
-if(isPisti) pistiBoom();
+coinClink();
 }
 }
 
@@ -340,6 +352,7 @@ async function endGame(){
 if(ps>cs){
 balance+=bet*5;
 await updateDoc(userRef,{balance});
+coinClink();
 let div=document.createElement("div");
 div.className="win-anim";
 div.innerText="🎉 BÜYÜK KAZANÇ!";
