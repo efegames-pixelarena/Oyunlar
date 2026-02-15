@@ -174,25 +174,46 @@ Aktif: <span id="bet">0</span>₺
 <input type="number" id="auto1" placeholder="Auto X">
 <button id="btn1">Bahis Yap</button>
 </div>
-
-<div class="betBox">
-<input type="number" id="bet2" value="200">
-<input type="number" id="auto2" placeholder="Auto X">
-<button id="btn2">Bahis Yap</button>
-</div>
 </div>
 
-<script>
-document.addEventListener("gesturestart",e=>e.preventDefault());
-document.addEventListener("dblclick",e=>e.preventDefault());
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth,onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore,doc,onSnapshot,updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-let balance=10000;
-let activeBet=0;
+const firebaseConfig={
+apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
+authDomain:"emirhan-site.firebaseapp.com",
+projectId:"emirhan-site",
+storageBucket:"emirhan-site.firebasestorage.app",
+messagingSenderId:"668871888390",
+appId:"1:668871888390:web:76568bda84cb1641f7bd87"
+};
+
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getFirestore(app);
+
+let userRef=null;
+let balance=0;
+
+onAuthStateChanged(auth,user=>{
+if(user){
+userRef=doc(db,"users",user.uid);
+onSnapshot(userRef,snap=>{
+if(snap.exists()){
+balance=snap.data().balance||0;
+updateUI();
+}
+});
+}
+});
 
 let phase="betting";
 let multiplier=1;
 let crashPoint=0;
 let animationId;
+let activeBet=0;
 
 const canvas=document.getElementById("graph");
 const ctx=canvas.getContext("2d");
@@ -230,7 +251,7 @@ ctx.fill();
 }
 
 function animate(){
-multiplier+=0.01+multiplier*0.002; // yavaş doğal artış
+multiplier+=0.005 + multiplier*0.001; // daha yavaş
 
 document.getElementById("multiplier").innerText=multiplier.toFixed(2)+"x";
 drawGraph();
@@ -253,21 +274,23 @@ animationId=requestAnimationFrame(animate);
 function startFlight(){
 phase="flying";
 multiplier=1;
-crashPoint=1.2+Math.random()*5;
+crashPoint=1.5+Math.random()*4;
 animationId=requestAnimationFrame(animate);
+updateUI();
 }
 
 function crash(){
 phase="crashed";
 cancelAnimationFrame(animationId);
 addHistory(multiplier);
+activeBet=0;
+updateUI();
 setTimeout(startRound,4000);
 }
 
 function startRound(){
 phase="betting";
 multiplier=1;
-activeBet=0;
 updateUI();
 setTimeout(startFlight,3000);
 }
@@ -297,32 +320,35 @@ btn.className="cashout";
 }
 }
 
-function cashout(){
+async function cashout(){
 if(activeBet>0){
-balance+=Math.floor(activeBet*multiplier);
+let win=Math.floor(activeBet*multiplier);
+balance+=win;
+await updateDoc(userRef,{balance});
 activeBet=0;
 updateUI();
 }
 }
 
-document.getElementById("btn1").onclick=()=>{
+document.getElementById("btn1").onclick=async()=>{
 let amount=parseInt(document.getElementById("bet1").value);
 
 if(phase==="betting" && activeBet===0){
 if(balance>=amount){
 balance-=amount;
+await updateDoc(userRef,{balance});
 activeBet=amount;
 }
 }else if(phase==="betting" && activeBet>0){
 balance+=activeBet;
+await updateDoc(userRef,{balance});
 activeBet=0;
 }else if(phase==="flying" && activeBet>0){
-cashout();
+await cashout();
 }
 updateUI();
 };
 
-updateUI();
 startRound();
 </script>
 
