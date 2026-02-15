@@ -12,20 +12,13 @@ body{display:flex;flex-direction:column;height:100dvh;}
 .top{height:90px;background:linear-gradient(180deg,#1b2247,#0e1330);display:flex;justify-content:space-between;align-items:flex-start;padding:15px 20px 0 20px;border-bottom:1px solid #2a356b;position:relative;}
 .logo{font-size:20px;font-weight:bold;color:#fff;letter-spacing:2px;}
 .balanceBox{background:rgba(255,255,255,0.05);padding:6px 14px;border-radius:20px;border:1px solid rgba(0,255,255,0.3);color:#00eaff;font-weight:bold;box-shadow:0 0 12px rgba(0,255,255,0.5);}
-.historyBar{position:absolute;bottom:8px;left:0;width:100%;display:flex;gap:10px;padding:0 15px;font-size:13px;}
-.historyItem{padding:3px 8px;border-radius:10px;background:rgba(0,255,200,0.1);color:#00eaff;}
-.historyCrash{background:rgba(255,0,60,0.2);color:#ff2a4d;}
 .main{flex:1;position:relative;overflow:hidden;}
 .graphArea{width:100%;height:100%;position:relative;background:radial-gradient(circle at center,#16204a,#070b18 70%);}
 .multiplier{position:absolute;top:45%;left:50%;transform:translate(-50%,-50%);font-size:70px;font-weight:bold;color:#00eaff;text-shadow:0 0 25px #00eaff;}
-.plane{position:absolute;width:40px;height:40px;fill:#00eaff;}
-.fakeLiveBar{position:absolute;bottom:15px;left:0;width:100%;display:flex;justify-content:center;pointer-events:none;}
-.fakeTrack{display:flex;gap:10px;overflow:hidden;max-width:90%;}
-.fakeItem{background:rgba(0,255,200,0.12);color:#00ffcc;padding:6px 12px;border-radius:20px;white-space:nowrap;}
-.bottom{height:130px;background:#121833;display:flex;justify-content:center;align-items:center;gap:15px;}
+.bottom{height:220px;background:#121833;display:flex;justify-content:center;align-items:center;gap:15px;padding-bottom:20px;}
 .betBox{background:#1a2248;padding:12px;border-radius:10px;width:45%;max-width:200px;display:flex;flex-direction:column;gap:6px;}
 .betBox input{padding:8px;border:none;border-radius:6px;text-align:center;font-weight:bold;}
-.betBox button{padding:10px;border:none;border-radius:6px;font-weight:bold;cursor:pointer;background:#6c5ce7;color:white;}
+.betBox button{padding:10px;border:none;border-radius:6px;font-weight:bold;cursor:pointer;background:#6c5ce7;color:white;transition:0.2s;}
 .cancel{background:#ff2a4d !important;}
 .cashout{background:#00eaff !important;color:#000 !important;}
 .crashScreen{position:absolute;inset:0;background:black;display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:20;opacity:0;pointer-events:none;transition:0.3s;}
@@ -40,17 +33,13 @@ body{display:flex;flex-direction:column;height:100dvh;}
 <div class="top">
 <div class="logo">SKYCRASH</div>
 <div class="balanceBox">Bakiye: <span id="balance">0</span> TRY</div>
-<div class="historyBar" id="historyBar"></div>
 </div>
 
 <div class="main">
 <div class="graphArea">
 <div class="multiplier" id="multiplier">1.00x</div>
-<svg class="plane" id="plane" viewBox="0 0 24 24">
-<path d="M2 16l20-5-20-5v4l15 1-15 1z"/>
-</svg>
-<div class="fakeLiveBar"><div class="fakeTrack" id="fakeTrack"></div></div>
 </div>
+
 <div class="crashScreen" id="crashScreen">
 <div class="crashTitle">CRASH!</div>
 <div class="crashValue" id="crashValue">2.00x</div>
@@ -76,12 +65,9 @@ import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/
 import { getFirestore, doc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
-  authDomain: "emirhan-site.firebaseapp.com",
-  projectId: "emirhan-site",
-  storageBucket: "emirhan-site.firebasestorage.app",
-  messagingSenderId: "668871888390",
-  appId: "1:668871888390:web:76568bda84cb1641f7bd87"
+  apiKey: "API_KEY",
+  authDomain: "PROJECT.firebaseapp.com",
+  projectId: "PROJECT_ID"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -89,20 +75,15 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 let userRef;
-let balance = 0;
+let balance=0;
 
 onAuthStateChanged(auth,(user)=>{
-if(!user){
-alert("Giriş yapmadan oynayamazsın.");
-window.location.href="index.html";
-return;
-}
-userRef = doc(db,"users",user.uid);
-
+if(!user){ window.location.href="index.html"; return; }
+userRef=doc(db,"users",user.uid);
 onSnapshot(userRef,(snap)=>{
 if(snap.exists()){
-balance = snap.data().balance || 0;
-document.getElementById("balance").innerText = balance.toFixed(2);
+balance=snap.data().balance||0;
+document.getElementById("balance").innerText=balance.toFixed(2);
 }
 });
 });
@@ -113,20 +94,30 @@ let crashPoint=0;
 let animation;
 let lastTime=0;
 
-let bet1=0, bet2=0;
-let active1=false, active2=false;
-let cashed1=false, cashed2=false;
+let bet1=0,bet2=0;
+let active1=false,active2=false;
+let cashed1=false,cashed2=false;
 
 async function updateBalanceFirestore(newBalance){
 await updateDoc(userRef,{balance:newBalance});
 }
 
+function resetButtons(){
+["btn1","btn2"].forEach(id=>{
+let b=document.getElementById(id);
+b.innerText="Bahis Yap";
+b.disabled=false;
+b.classList.remove("cancel","cashout");
+});
+}
+
 function startRoundCountdown(){
 phase="betting";
+resetButtons();
+active1=false;active2=false;
 let time=5;
 document.getElementById("countdown").innerText="Yeni tur: "+time;
 document.getElementById("crashScreen").classList.add("active");
-active1=false; active2=false;
 
 let interval=setInterval(()=>{
 time--;
@@ -142,7 +133,7 @@ startFlight();
 function startFlight(){
 phase="flying";
 multiplier=1;
-cashed1=false; cashed2=false;
+cashed1=false;cashed2=false;
 lastTime=performance.now();
 crashPoint=(1/(1-Math.random()))*0.97;
 animate(performance.now());
@@ -154,10 +145,7 @@ lastTime=timestamp;
 multiplier+=0.1*delta*multiplier;
 document.getElementById("multiplier").innerText=multiplier.toFixed(2)+"x";
 
-if(multiplier>=crashPoint){
-triggerCrash();
-return;
-}
+if(multiplier>=crashPoint){ triggerCrash(); return; }
 animation=requestAnimationFrame(animate);
 }
 
@@ -166,52 +154,67 @@ cancelAnimationFrame(animation);
 phase="crashed";
 document.getElementById("crashValue").innerText=multiplier.toFixed(2)+"x";
 document.getElementById("crashScreen").classList.add("active");
-active1=false; active2=false;
 setTimeout(()=>{startRoundCountdown();},2000);
 }
 
-async function handleBet(btnId, betInputId, index){
+async function handleBet(btnId,betInputId,index){
 let btn=document.getElementById(btnId);
-let betInput=document.getElementById(betInputId);
+let input=document.getElementById(betInputId);
 
 btn.onclick=async function(){
 
+// BETTING
 if(phase==="betting"){
-let amount=parseFloat(betInput.value);
-if(amount<=0 || balance<amount) return;
+
+if((index===1&&!active1)||(index===2&&!active2)){
+let amount=parseFloat(input.value);
+if(amount<=0||balance<amount)return;
 
 balance-=amount;
 await updateBalanceFirestore(balance);
 
-if(index===1){bet1=amount; active1=true;}
-else{bet2=amount; active2=true;}
+if(index===1){bet1=amount;active1=true;}
+else{bet2=amount;active2=true;}
 
-btn.innerText="İptal Et";
+btn.innerText="İptal";
 btn.classList.add("cancel");
 }
+else{
+if(index===1&&active1){balance+=bet1;bet1=0;active1=false;}
+if(index===2&&active2){balance+=bet2;bet2=0;active2=false;}
+await updateBalanceFirestore(balance);
+btn.innerText="Bahis Yap";
+btn.classList.remove("cancel");
+}
+}
 
+// FLYING
 else if(phase==="flying"){
 
-let roundedMultiplier = Math.round(multiplier * 10) / 10;
+let roundedMultiplier=Math.round(multiplier*10)/10;
 
-if(index===1 && active1 && !cashed1){
-let win = bet1 * roundedMultiplier;
-balance += win;
+if(index===1&&active1&&!cashed1){
+let win=bet1*roundedMultiplier;
+balance+=win;
 await updateBalanceFirestore(balance);
 cashed1=true;
+btn.innerText="Kazanç "+win.toFixed(2);
+btn.classList.remove("cancel");
+btn.classList.add("cashout");
 btn.disabled=true;
 }
 
-if(index===2 && active2 && !cashed2){
-let win = bet2 * roundedMultiplier;
-balance += win;
+if(index===2&&active2&&!cashed2){
+let win=bet2*roundedMultiplier;
+balance+=win;
 await updateBalanceFirestore(balance);
 cashed2=true;
+btn.innerText="Kazanç "+win.toFixed(2);
+btn.classList.remove("cancel");
+btn.classList.add("cashout");
 btn.disabled=true;
 }
-
 }
-
 };
 }
 
@@ -221,6 +224,5 @@ handleBet("btn2","bet2",2);
 startRoundCountdown();
 
 </script>
-
 </body>
 </html>
