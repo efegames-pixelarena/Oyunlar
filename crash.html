@@ -45,17 +45,18 @@ z-index:2;
 
 #plane{
 position:absolute;
-width:80px;
+width:90px;
 bottom:40px;
 left:10%;
-transition:transform 0.1s linear;
+transition:transform 0.05s linear;
+filter:drop-shadow(0 0 10px red);
 }
 
 #countdown{
 position:absolute;
-top:10px;
-font-size:18px;
-opacity:0.8;
+top:15px;
+font-size:22px;
+opacity:0.9;
 }
 
 .betSection{
@@ -104,7 +105,6 @@ font-size:22px;
 font-weight:bold;
 color:white;
 }
-
 </style>
 </head>
 <body>
@@ -126,116 +126,110 @@ color:white;
 <input id="betAmount" value="100">
 <button onclick="changeBet(10)">+</button>
 </div>
-<button id="betBtn" onclick="placeBet()">Bahis Yap</button>
+<button id="betBtn">Bahis Yap</button>
 </div>
 
-<script type="module">
+<script>
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+let currentMultiplier = 1
+let crashPoint = 0
+let interval = null
+let bettingOpen = false
+let hasBet = false
+let betAmount = 0
+let cashedOut = false
 
-const firebaseConfig = {
-  apiKey: "APIKEY",
-  authDomain: "PROJECT.firebaseapp.com",
-  projectId: "PROJECT",
-  storageBucket: "PROJECT.appspot.com",
-  messagingSenderId: "ID",
-  appId: "APPID"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth(app);
-
-let userRef;
-let balance = 0;
-let currentMultiplier = 1;
-let interval;
-let crashPoint;
-let bettingOpen = false;
-let hasBet = false;
-let betAmount = 0;
-
-onAuthStateChanged(auth, (user) => {
-if(user){
-userRef = doc(db,"users",user.uid);
-onSnapshot(userRef,(snap)=>{
-balance = snap.data().balance;
-document.getElementById("balance").innerText = balance+" TRY";
-});
-}
-});
+const multiplierEl = document.getElementById("multiplier")
+const plane = document.getElementById("plane")
+const countdownEl = document.getElementById("countdown")
+const betBtn = document.getElementById("betBtn")
 
 function changeBet(val){
-let input = document.getElementById("betAmount");
-let newVal = Math.max(10, parseInt(input.value)+val);
-input.value = newVal;
+let input = document.getElementById("betAmount")
+let newVal = Math.max(10, parseInt(input.value) + val)
+input.value = newVal
 }
 
-function placeBet(){
-if(!bettingOpen) return;
-betAmount = parseInt(document.getElementById("betAmount").value);
-if(balance < betAmount) return alert("Yetersiz bakiye");
-updateDoc(userRef,{balance:balance-betAmount});
-hasBet = true;
-document.getElementById("betBtn").innerText="Cash Out";
-document.getElementById("betBtn").onclick = cashOut;
+betBtn.onclick = function(){
+if(!bettingOpen) return
+
+if(!hasBet){
+betAmount = parseInt(document.getElementById("betAmount").value)
+
+if(typeof oynaVeBakiyedenDus !== "function"){
+alert("Firebase hazır değil")
+return
 }
 
-function cashOut(){
-if(!hasBet) return;
-let win = Math.floor(betAmount * currentMultiplier);
-updateDoc(userRef,{balance:balance+win});
-resetBet();
-}
+oynaVeBakiyedenDus(betAmount)
+hasBet = true
+cashedOut = false
+betBtn.innerText = "Cash Out"
+betBtn.style.background = "#ff9800"
+}else{
+if(cashedOut) return
 
-function resetBet(){
-hasBet=false;
-document.getElementById("betBtn").innerText="Bahis Yap";
-document.getElementById("betBtn").onclick = placeBet;
+let win = Math.floor(betAmount * currentMultiplier)
+bakiyeArttir(win)
+
+cashedOut = true
+hasBet = false
+betBtn.innerText = "Bahis Yap"
+betBtn.style.background = "#4caf50"
+}
 }
 
 function startRound(){
-bettingOpen=false;
-currentMultiplier=1;
-crashPoint=(Math.random()*5+1).toFixed(2);
 
-interval=setInterval(()=>{
-currentMultiplier+=0.02;
-document.getElementById("multiplier").innerText=currentMultiplier.toFixed(2)+"x";
+bettingOpen = false
+currentMultiplier = 1
+multiplierEl.innerText = "1.00x"
+plane.style.transform = "translate(0px,0px) rotate(0deg)"
 
-let moveX=currentMultiplier*15;
-let moveY=currentMultiplier*8;
-document.getElementById("plane").style.transform=
-`translate(${moveX}px,-${moveY}px)`;
+crashPoint = (Math.random()*4 + 1).toFixed(2)
 
-if(currentMultiplier>=crashPoint){
-clearInterval(interval);
-resetBet();
-setTimeout(countdownNext,1000);
-}
-},100);
-}
+interval = setInterval(()=>{
 
-function countdownNext(){
-let time=5;
-document.getElementById("countdown").innerText="Yeni Tur: "+time;
+currentMultiplier += 0.03 + (currentMultiplier*0.002)
 
-let cd=setInterval(()=>{
-time--;
-document.getElementById("countdown").innerText="Yeni Tur: "+time;
-if(time<=0){
-clearInterval(cd);
-document.getElementById("countdown").innerText="";
-bettingOpen=true;
-startRound();
-}
-},1000);
+multiplierEl.innerText = currentMultiplier.toFixed(2) + "x"
+
+let moveX = currentMultiplier * 20
+let moveY = currentMultiplier * 10
+
+plane.style.transform =
+`translate(${moveX}px,-${moveY}px) rotate(25deg)`
+
+if(currentMultiplier >= crashPoint){
+clearInterval(interval)
+hasBet = false
+betBtn.innerText = "Bahis Yap"
+betBtn.style.background = "#4caf50"
+setTimeout(startCountdown,1000)
 }
 
-bettingOpen=true;
-countdownNext();
+},100)
+
+}
+
+function startCountdown(){
+let time = 5
+bettingOpen = false
+countdownEl.innerText = time + " SN"
+
+let cd = setInterval(()=>{
+time--
+countdownEl.innerText = time + " SN"
+if(time <= 0){
+clearInterval(cd)
+countdownEl.innerText = ""
+bettingOpen = true
+startRound()
+}
+},1000)
+}
+
+startCountdown()
 
 </script>
 </body>
