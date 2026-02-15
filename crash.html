@@ -120,7 +120,7 @@ background:#6c5ce7;color:white;
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth,onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore,doc,updateDoc,onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore,doc,onSnapshot,updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig={
 apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
@@ -135,7 +135,21 @@ const app=initializeApp(firebaseConfig);
 const auth=getAuth(app);
 const db=getFirestore(app);
 
-let balance=0,userRef=null;
+let userRef=null;
+let balance=0;
+
+onAuthStateChanged(auth,user=>{
+if(user){
+userRef=doc(db,"users",user.uid);
+onSnapshot(userRef,snap=>{
+if(snap.exists()){
+balance=snap.data().balance||0;
+document.getElementById("balance").innerText=balance;
+}
+});
+}
+});
+
 let phase="betting";
 let multiplier=1;
 let crashPoint=0;
@@ -154,46 +168,39 @@ canvas.height=canvas.offsetHeight;
 window.addEventListener("resize",resize);
 resize();
 
-function drawGraph(){
+function drawGraph(x,y,crashed=false){
 ctx.clearRect(0,0,canvas.width,canvas.height);
-
-let progress=Math.min(multiplier/crashPoint,1);
-let x=progress*canvas.width;
-let y=canvas.height-(Math.log(multiplier)/Math.log(crashPoint))*canvas.height;
-
-let gradient=ctx.createLinearGradient(0,0,canvas.width,canvas.height);
-gradient.addColorStop(0,"#b366ff");
-gradient.addColorStop(1,"#6c5ce7");
 
 ctx.beginPath();
 ctx.moveTo(0,canvas.height);
 ctx.lineTo(x,y);
-ctx.strokeStyle=phase==="crashed"?"#ff2a4d":gradient;
+ctx.strokeStyle=crashed?"#ff2a4d":"#b366ff";
 ctx.lineWidth=4;
 ctx.stroke();
 
 ctx.lineTo(x,canvas.height);
 ctx.closePath();
-
-let fillGrad=ctx.createLinearGradient(0,0,0,canvas.height);
-fillGrad.addColorStop(0,"rgba(179,102,255,0.3)");
-fillGrad.addColorStop(1,"rgba(0,0,0,0)");
-ctx.fillStyle=phase==="crashed"?"rgba(255,42,77,0.3)":fillGrad;
+ctx.fillStyle=crashed?"rgba(255,42,77,0.3)":"rgba(179,102,255,0.3)";
 ctx.fill();
 
 ctx.beginPath();
-ctx.arc(x,y,6,0,Math.PI*2);
-ctx.fillStyle=phase==="crashed"?"#ff2a4d":"#b366ff";
+ctx.arc(x,y,8,0,Math.PI*2);
+ctx.fillStyle=crashed?"#ff2a4d":"#b366ff";
 ctx.fill();
 }
 
 function animate(now){
 let elapsed=(now-startTime)/1000;
-multiplier=1+ (Math.exp(elapsed*0.6)-1);
+
+multiplier=1+(Math.exp(elapsed*0.35)-1); // yavaşlatıldı
+
+let progress=Math.min(multiplier/crashPoint,1);
+let x=progress*canvas.width;
+let y=canvas.height-(Math.log(multiplier)/Math.log(crashPoint))*canvas.height;
 
 document.getElementById("multiplier").innerText=multiplier.toFixed(2)+"x";
 
-drawGraph();
+drawGraph(x,y,false);
 
 if(active1){
 let auto=parseFloat(document.getElementById("auto1").value);
@@ -204,7 +211,10 @@ let auto=parseFloat(document.getElementById("auto2").value);
 if(auto && multiplier>=auto) cashout(2,bet2*multiplier);
 }
 
-if(multiplier>=crashPoint){crash();return;}
+if(multiplier>=crashPoint){
+crash(x,y);
+return;
+}
 
 animationId=requestAnimationFrame(animate);
 }
@@ -216,11 +226,13 @@ startTime=performance.now();
 animationId=requestAnimationFrame(animate);
 }
 
-function crash(){
+function crash(x,y){
 phase="crashed";
-multiplier=crashPoint;
-drawGraph();
 cancelAnimationFrame(animationId);
+multiplier=crashPoint;
+document.getElementById("multiplier").innerText=crashPoint.toFixed(2)+"x";
+drawGraph(x,y,true);
+addHistory(crashPoint);
 setTimeout(startRound,4000);
 }
 
@@ -228,14 +240,23 @@ function startRound(){
 phase="betting";
 multiplier=1;
 document.getElementById("multiplier").innerText="1.00x";
-setTimeout(startFlight,2000);
+active1=false;
+active2=false;
+setTimeout(startFlight,3000);
+}
+
+function addHistory(val){
+let span=document.createElement("span");
+span.innerText=val.toFixed(2)+"x";
+span.style.background=val<2?"#ff2a4d":"#00c853";
+document.getElementById("history").prepend(span);
 }
 
 function cashout(slot,value){
 balance+=Math.floor(value);
 updateDoc(userRef,{balance});
-if(slot===1){active1=false;bet1=0;}
-if(slot===2){active2=false;bet2=0;}
+if(slot===1){active1=false;}
+if(slot===2){active2=false;}
 }
 
 startRound();
