@@ -38,15 +38,29 @@ position:absolute;top:97px;bottom:150px;width:100%;
 display:flex;flex-direction:column;align-items:center;justify-content:center;
 }
 
-.multiplier{font-size:65px;font-weight:bold;color:#00eaff;}
-.status{margin-top:10px;font-size:16px;font-weight:700;color:#ff2a4d;}
-
-.rocket{
+canvas{
 position:absolute;
-font-size:28px;
-transform:translate(-50%,-50%);
-pointer-events:none;
-display:none;
+width:100%;
+height:100%;
+left:0;
+top:0;
+}
+
+.multiplier{
+position:relative;
+font-size:65px;
+font-weight:bold;
+color:#00eaff;
+z-index:2;
+}
+
+.status{
+position:relative;
+margin-top:10px;
+font-size:16px;
+font-weight:700;
+color:#ff2a4d;
+z-index:2;
 }
 
 .bottom{
@@ -84,10 +98,10 @@ background:#6c5ce7;color:white;
 
 <div class="history" id="history"></div>
 
-<div class="main" id="gameArea">
+<div class="main">
+<canvas id="graph"></canvas>
 <div class="multiplier" id="multiplier">1.00x</div>
 <div class="status" id="status"></div>
-<div class="rocket" id="rocket">🚀</div>
 </div>
 
 <div class="bottom">
@@ -102,9 +116,6 @@ background:#6c5ce7;color:white;
 <button id="btn2">Bahis Yap</button>
 </div>
 </div>
-
-<audio id="flySound" preload="auto" src="https://assets.mixkit.co/sfx/preview/mixkit-airplane-take-off-1740.mp3" loop></audio>
-<audio id="explodeSound" preload="auto" src="https://assets.mixkit.co/sfx/preview/mixkit-explosion-impact-1684.mp3"></audio>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -130,197 +141,101 @@ let multiplier=1;
 let crashPoint=0;
 let animationId=null;
 let startTime=0;
-let countdownInterval=null;
 
 let bet1=0,bet2=0,active1=false,active2=false;
 
-const balanceEl=document.getElementById("balance");
-const betEl=document.getElementById("bet");
-const historyEl=document.getElementById("history");
-const multiplierEl=document.getElementById("multiplier");
-const statusEl=document.getElementById("status");
-const rocket=document.getElementById("rocket");
-const flySound=document.getElementById("flySound");
-const explodeSound=document.getElementById("explodeSound");
+const canvas=document.getElementById("graph");
+const ctx=canvas.getContext("2d");
 
-const btn1=document.getElementById("btn1");
-const btn2=document.getElementById("btn2");
+function resize(){
+canvas.width=canvas.offsetWidth;
+canvas.height=canvas.offsetHeight;
+}
+window.addEventListener("resize",resize);
+resize();
 
-document.body.addEventListener("click",()=>{
-flySound.play().then(()=>flySound.pause()).catch(()=>{});
-explodeSound.play().then(()=>explodeSound.pause()).catch(()=>{});
-},{once:true});
+function drawGraph(){
+ctx.clearRect(0,0,canvas.width,canvas.height);
 
-onAuthStateChanged(auth,user=>{
-if(!user){location.href="index.html";return;}
-userRef=doc(db,"users",user.uid);
-onSnapshot(userRef,snap=>{
-if(!snap.exists()) return;
-balance=Math.floor(snap.data().balance||0);
-balanceEl.innerText=balance;
-});
-});
+let progress=Math.min(multiplier/crashPoint,1);
+let x=progress*canvas.width;
+let y=canvas.height-(Math.log(multiplier)/Math.log(crashPoint))*canvas.height;
 
-function updateTopBet(){
-betEl.innerText=bet1+bet2;
+let gradient=ctx.createLinearGradient(0,0,canvas.width,canvas.height);
+gradient.addColorStop(0,"#b366ff");
+gradient.addColorStop(1,"#6c5ce7");
+
+ctx.beginPath();
+ctx.moveTo(0,canvas.height);
+ctx.lineTo(x,y);
+ctx.strokeStyle=phase==="crashed"?"#ff2a4d":gradient;
+ctx.lineWidth=4;
+ctx.stroke();
+
+ctx.lineTo(x,canvas.height);
+ctx.closePath();
+
+let fillGrad=ctx.createLinearGradient(0,0,0,canvas.height);
+fillGrad.addColorStop(0,"rgba(179,102,255,0.3)");
+fillGrad.addColorStop(1,"rgba(0,0,0,0)");
+ctx.fillStyle=phase==="crashed"?"rgba(255,42,77,0.3)":fillGrad;
+ctx.fill();
+
+ctx.beginPath();
+ctx.arc(x,y,6,0,Math.PI*2);
+ctx.fillStyle=phase==="crashed"?"#ff2a4d":"#b366ff";
+ctx.fill();
 }
 
-function safeUpdateBalance(){
-if(userRef) updateDoc(userRef,{balance});
+function animate(now){
+let elapsed=(now-startTime)/1000;
+multiplier=1+ (Math.exp(elapsed*0.6)-1);
+
+document.getElementById("multiplier").innerText=multiplier.toFixed(2)+"x";
+
+drawGraph();
+
+if(active1){
+let auto=parseFloat(document.getElementById("auto1").value);
+if(auto && multiplier>=auto) cashout(1,bet1*multiplier);
+}
+if(active2){
+let auto=parseFloat(document.getElementById("auto2").value);
+if(auto && multiplier>=auto) cashout(2,bet2*multiplier);
 }
 
-function addHistory(val){
-let span=document.createElement("span");
-span.innerText=val.toFixed(2)+"x";
-span.style.background=val<2?"#00bcd4":val<10?"#ff9800":"#ff2a4d";
-historyEl.prepend(span);
-if(historyEl.children.length>20)
-historyEl.removeChild(historyEl.lastChild);
+if(multiplier>=crashPoint){crash();return;}
+
+animationId=requestAnimationFrame(animate);
 }
 
-btn1.onclick=()=>handleBet(1);
-btn2.onclick=()=>handleBet(2);
-
-function handleBet(slot){
-if(phase!=="betting") return;
-let amount=parseInt(document.getElementById("bet"+slot).value);
-if(!amount || amount<=0 || amount>balance) return;
-
-balance-=amount;
-safeUpdateBalance();
-
-if(slot===1){bet1=amount;active1=true;}
-if(slot===2){bet2=amount;active2=true;}
-
-updateTopBet();
-updateButton(slot,"cancel");
+function startFlight(){
+phase="flying";
+crashPoint=(1/(1-Math.random()))*0.99;
+startTime=performance.now();
+animationId=requestAnimationFrame(animate);
 }
 
-function updateButton(slot,type,value){
-let btn=document.getElementById("btn"+slot);
-btn.className="";
-if(type==="cancel"){
-btn.innerText="İptal";
-btn.classList.add("cancel");
-btn.onclick=()=>cancelBet(slot);
-}
-if(type==="cashout"){
-btn.innerText="Çek "+Math.floor(value);
-btn.classList.add("cashout");
-btn.onclick=()=>cashout(slot,value);
-}
-if(type==="reset"){
-btn.innerText="Bahis Yap";
-btn.onclick=()=>handleBet(slot);
-}
-}
-
-function cancelBet(slot){
-if(phase!=="betting") return;
-if(slot===1 && active1){balance+=bet1;bet1=0;active1=false;}
-if(slot===2 && active2){balance+=bet2;bet2=0;active2=false;}
-safeUpdateBalance();
-updateTopBet();
-updateButton(slot,"reset");
-}
-
-function cashout(slot,value){
-if(phase!=="flying") return;
-balance+=Math.floor(value);
-safeUpdateBalance();
-if(slot===1){active1=false;bet1=0;}
-if(slot===2){active2=false;bet2=0;}
-updateTopBet();
-updateButton(slot,"reset");
+function crash(){
+phase="crashed";
+multiplier=crashPoint;
+drawGraph();
+cancelAnimationFrame(animationId);
+setTimeout(startRound,4000);
 }
 
 function startRound(){
 phase="betting";
 multiplier=1;
-multiplierEl.innerText="1.00x";
-statusEl.innerText="";
-rocket.style.display="none";
-updateButton(1,"reset");
-updateButton(2,"reset");
+document.getElementById("multiplier").innerText="1.00x";
 setTimeout(startFlight,2000);
 }
 
-function startFlight(){
-phase="flying";
-rocket.style.display="block";
-crashPoint=(1/(1-Math.random()))*0.98;
-startTime=performance.now();
-flySound.currentTime=0;
-flySound.volume=0.4;
-flySound.play();
-if(animationId) cancelAnimationFrame(animationId);
-animationId=requestAnimationFrame(animate);
-}
-
-function animate(now){
-let elapsed=(now-startTime)/1000;
-multiplier = 1 + (Math.exp(elapsed*0.55)-1);
-multiplierEl.innerText=multiplier.toFixed(2)+"x";
-
-/* GELİŞTİRİLMİŞ ROKET FİZİĞİ */
-let startX=60;
-let startY=window.innerHeight-190;
-let maxX=window.innerWidth-60;
-
-let progress;
-if(multiplier<3){
-progress=(multiplier-1)/10;
-}else{
-progress=0.2+((multiplier-3)/6);
-}
-progress=Math.max(0,progress);
-
-let x=startX+(maxX-startX)*Math.min(progress,1);
-if(x>=maxX) x=maxX;
-
-let y=startY-(progress*window.innerHeight*0.8);
-
-rocket.style.left=x+"px";
-rocket.style.top=y+"px";
-
-if(active1) updateButton(1,"cashout",bet1*multiplier);
-if(active2) updateButton(2,"cashout",bet2*multiplier);
-
-if(multiplier>=crashPoint){crash();return;}
-animationId=requestAnimationFrame(animate);
-}
-
-function crash(){
-if(animationId) cancelAnimationFrame(animationId);
-phase="crashed";
-
-flySound.pause();
-explodeSound.currentTime=0;
-explodeSound.play();
-
-multiplier=crashPoint;
-multiplierEl.innerText=crashPoint.toFixed(2)+"x";
-
-addHistory(crashPoint);
-
-active1=false;active2=false;
-bet1=0;bet2=0;
-updateTopBet();
-updateButton(1,"reset");
-updateButton(2,"reset");
-
-let timeLeft=5;
-statusEl.innerText="Yeni Tur : 5";
-
-countdownInterval=setInterval(()=>{
-timeLeft--;
-if(timeLeft>0){
-statusEl.innerText="Yeni Tur : "+timeLeft;
-}else{
-clearInterval(countdownInterval);
-startRound();
-}
-},1000);
+function cashout(slot,value){
+balance+=Math.floor(value);
+updateDoc(userRef,{balance});
+if(slot===1){active1=false;bet1=0;}
+if(slot===2){active2=false;bet2=0;}
 }
 
 startRound();
