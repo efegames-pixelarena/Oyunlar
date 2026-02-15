@@ -27,8 +27,6 @@ background:#070b18;
 color:white;
 }
 
-/* ===== BLACKJACK ÜSTBAR ENTEGRE ===== */
-
 .top-bar{
 position:fixed;
 top:0;
@@ -70,8 +68,6 @@ text-align:center;
 
 .balance-box{background:#273c8f;}
 .bet-box{background:linear-gradient(90deg,#ff8a00,#ff5f00);color:#000;}
-
-/* ===== CRASH TASARIM DEVAM ===== */
 
 .history{
 position:absolute;
@@ -195,13 +191,11 @@ Bahis: <span id="bet">0</span>₺
 <div class="bottom">
 <div class="betBox">
 <input type="number" id="bet1" value="100">
-<input type="number" id="auto1" placeholder="Auto X">
 <button id="btn1">Bahis Yap</button>
 </div>
 
 <div class="betBox">
 <input type="number" id="bet2" value="200">
-<input type="number" id="auto2" placeholder="Auto X">
 <button id="btn2">Bahis Yap</button>
 </div>
 </div>
@@ -270,24 +264,6 @@ ctx.lineWidth=4;
 ctx.stroke();
 }
 
-function autoCashoutCheck(){
-if(phase!=="flying") return;
-checkAuto(1);
-checkAuto(2);
-}
-
-function checkAuto(box){
-let active=box===1?activeBet1:activeBet2;
-if(!active) return;
-
-let auto=parseFloat(document.getElementById("auto"+box).value);
-if(!auto || auto<=1) return;
-
-if(multiplier>=auto){
-cashout(box);
-}
-}
-
 async function cashout(box){
 let active=box===1?activeBet1:activeBet2;
 if(!active) return;
@@ -307,8 +283,6 @@ multiplier+=0.002 + multiplier*0.0006;
 
 document.getElementById("multiplier").innerText=multiplier.toFixed(2)+"x";
 drawGraph();
-
-autoCashoutCheck();
 updateUI();
 
 if(multiplier>=crashPoint){
@@ -342,7 +316,7 @@ setTimeout(startCountdown,3000);
 function startCountdown(){
 phase="betting";
 let count=5;
-document.getElementById("multiplier").innerText=count+" saniye";
+document.getElementById("multiplier").innerText="Bahislerin Kapanmasına "+count+" Saniye";
 
 let interval=setInterval(()=>{
 count--;
@@ -350,7 +324,7 @@ if(count<=0){
 clearInterval(interval);
 startFlight();
 }else{
-document.getElementById("multiplier").innerText=count+" saniye";
+document.getElementById("multiplier").innerText="Bahislerin Kapanmasına "+count+" Saniye";
 }
 },1000);
 
