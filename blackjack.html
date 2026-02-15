@@ -268,6 +268,7 @@ if(time===1) disableChips();
 if(time<=0){
 clearInterval(betTimer);
 betTimer=null;
+message.innerText="Kart Dağıtılıyor...";
 startGame();
 }else{
 message.innerText="Bahisler Kapanıyor "+time;
@@ -282,7 +283,6 @@ async function startGame(){
 if(gameState!=="betting") return;
 
 gameState="dealing";
-disableChips();
 controls.style.display="none";
 
 player=[];
@@ -290,28 +290,32 @@ dealer=[];
 dealerHidden=true;
 createDeck();
 
-/* 4 KART DAĞITIMI - 3 SANİYE ARALI */
+message.innerText="Kart Dağıtılıyor...";
 
-player.push(deck.pop());
-render();
-await delay(3000);
-
-dealer.push(deck.pop());
-render();
-await delay(3000);
-
-player.push(deck.pop());
-render();
-await delay(3000);
-
-dealer.push(deck.pop());
-render();
+player.push(deck.pop()); render(); await delay(3000);
+dealer.push(deck.pop()); render(); await delay(3000);
+player.push(deck.pop()); render(); await delay(3000);
+dealer.push(deck.pop()); render();
 
 gameState="playing";
+
+/* 21 ise direkt dealer */
+if(total(player)===21){
+await delay(1000);
+await dealerTurn();
+return;
+}
+
 startDecision();
 }
 
 function startDecision(){
+
+if(total(player)===21){
+dealerTurn();
+return;
+}
+
 controls.style.display="block";
 
 splitBtn.style.display=canSplit()?"inline-block":"none";
@@ -334,9 +338,11 @@ message.innerText="Karar "+time;
 async function hit(){
 clearInterval(decisionTimer);
 
+message.innerText="Kart Çekiliyor...";
+await delay(3000);
+
 player.push(deck.pop());
 render();
-await delay(3000);
 
 if(total(player)>=21){
 await dealerTurn();
@@ -351,17 +357,22 @@ await dealerTurn();
 }
 
 async function doubleDown(){
+
 if(balance<bet) return;
+
 clearInterval(decisionTimer);
+controls.style.display="none";
 
 balance-=bet;
 bet*=2;
 await updateDoc(userRef,{balance});
 betEl.innerText=bet;
 
+message.innerText="2X Kart Çekiliyor...";
+await delay(4000);
+
 player.push(deck.pop());
 render();
-await delay(3000);
 
 await dealerTurn();
 }
@@ -375,14 +386,17 @@ await updateDoc(userRef,{balance});
 bet*=2;
 betEl.innerText=bet;
 
+message.innerText="Kart Çekiliyor...";
+await delay(3000);
+
 player.push(deck.pop());
 render();
-await delay(3000);
 
 startDecision();
 }
 
 async function dealerTurn(){
+
 gameState="finished";
 controls.style.display="none";
 dealerHidden=false;
@@ -391,9 +405,10 @@ render();
 await delay(3000);
 
 while(total(dealer)<17){
+message.innerText="Kurupier Kart Çekiyor...";
+await delay(3000);
 dealer.push(deck.pop());
 render();
-await delay(3000);
 }
 
 let p=total(player);
