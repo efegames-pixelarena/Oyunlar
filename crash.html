@@ -174,6 +174,12 @@ Aktif: <span id="bet">0</span>₺
 <input type="number" id="auto1" placeholder="Auto X">
 <button id="btn1">Bahis Yap</button>
 </div>
+
+<div class="betBox">
+<input type="number" id="bet2" value="200">
+<input type="number" id="auto2" placeholder="Auto X">
+<button id="btn2">Bahis Yap</button>
+</div>
 </div>
 
 <script type="module">
@@ -213,7 +219,8 @@ let phase="betting";
 let multiplier=1;
 let crashPoint=0;
 let animationId;
-let activeBet=0;
+let activeBet1=0;
+let activeBet2=0;
 
 const canvas=document.getElementById("graph");
 const ctx=canvas.getContext("2d");
@@ -251,17 +258,10 @@ ctx.fill();
 }
 
 function animate(){
-multiplier+=0.005 + multiplier*0.001; // daha yavaş
+multiplier+=0.003 + multiplier*0.0008; // DAHA YAVAŞ
 
 document.getElementById("multiplier").innerText=multiplier.toFixed(2)+"x";
 drawGraph();
-
-if(activeBet>0){
-let auto=parseFloat(document.getElementById("auto1").value);
-if(auto && multiplier>=auto){
-cashout();
-}
-}
 
 if(multiplier>=crashPoint){
 crash();
@@ -283,16 +283,29 @@ function crash(){
 phase="crashed";
 cancelAnimationFrame(animationId);
 addHistory(multiplier);
-activeBet=0;
+
+document.getElementById("multiplier").innerText=multiplier.toFixed(2)+"x";
+
+activeBet1=0;
+activeBet2=0;
 updateUI();
-setTimeout(startRound,4000);
+
+setTimeout(startCountdown,3000); // 3 saniye X göster
 }
 
-function startRound(){
-phase="betting";
-multiplier=1;
-updateUI();
-setTimeout(startFlight,3000);
+function startCountdown(){
+let count=5;
+document.getElementById("multiplier").innerText=count+" saniye";
+
+let interval=setInterval(()=>{
+count--;
+if(count<=0){
+clearInterval(interval);
+startFlight();
+}else{
+document.getElementById("multiplier").innerText=count+" saniye";
+}
+},1000);
 }
 
 function addHistory(val){
@@ -304,52 +317,59 @@ document.getElementById("history").prepend(span);
 
 function updateUI(){
 document.getElementById("balance").innerText=balance;
-document.getElementById("bet").innerText=activeBet;
+document.getElementById("bet").innerText=activeBet1+activeBet2;
 
-let btn=document.getElementById("btn1");
+updateButton("btn1",activeBet1);
+updateButton("btn2",activeBet2);
+}
 
-if(phase==="betting" && activeBet===0){
+function updateButton(id,bet){
+let btn=document.getElementById(id);
+
+if(phase==="betting" && bet===0){
 btn.innerText="Bahis Yap";
 btn.className="";
-}else if(phase==="betting" && activeBet>0){
+}else if(phase==="betting" && bet>0){
 btn.innerText="İptal";
 btn.className="cancel";
-}else if(phase==="flying" && activeBet>0){
+}else if(phase==="flying" && bet>0){
 btn.innerText="Çek";
 btn.className="cashout";
 }
 }
 
-async function cashout(){
-if(activeBet>0){
-let win=Math.floor(activeBet*multiplier);
-balance+=win;
-await updateDoc(userRef,{balance});
-activeBet=0;
-updateUI();
-}
-}
+async function handleBet(box){
+let amount=parseInt(document.getElementById("bet"+box).value);
+let active=box===1?activeBet1:activeBet2;
 
-document.getElementById("btn1").onclick=async()=>{
-let amount=parseInt(document.getElementById("bet1").value);
-
-if(phase==="betting" && activeBet===0){
+if(phase==="betting" && active===0){
 if(balance>=amount){
 balance-=amount;
 await updateDoc(userRef,{balance});
-activeBet=amount;
+if(box===1) activeBet1=amount;
+else activeBet2=amount;
 }
-}else if(phase==="betting" && activeBet>0){
-balance+=activeBet;
+}else if(phase==="betting" && active>0){
+balance+=active;
 await updateDoc(userRef,{balance});
-activeBet=0;
-}else if(phase==="flying" && activeBet>0){
-await cashout();
+if(box===1) activeBet1=0;
+else activeBet2=0;
+}else if(phase==="flying" && active>0){
+let win=Math.floor(active*multiplier);
+balance+=win;
+await updateDoc(userRef,{balance});
+if(box===1) activeBet1=0;
+else activeBet2=0;
 }
-updateUI();
-};
 
-startRound();
+updateUI();
+}
+
+document.getElementById("btn1").onclick=()=>handleBet(1);
+document.getElementById("btn2").onclick=()=>handleBet(2);
+
+updateUI();
+startCountdown();
 </script>
 
 </body>
