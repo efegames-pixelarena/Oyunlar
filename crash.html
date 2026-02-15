@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SkyCrash V1</title>
+<title>SkyCrash V2</title>
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
@@ -81,37 +81,6 @@ position:absolute;
 width:40px;
 height:40px;
 fill:#00eaff;
-}
-
-.fakeLiveBar{
-position:absolute;
-bottom:15px;
-left:0;
-width:100%;
-display:flex;
-justify-content:center;
-pointer-events:none;
-}
-
-.fakeTrack{
-display:flex;
-gap:10px;
-overflow:hidden;
-max-width:90%;
-}
-
-.fakeItem{
-background:rgba(0,255,200,0.12);
-color:#00ffcc;
-padding:6px 12px;
-border-radius:20px;
-white-space:nowrap;
-animation:fadeIn 0.25s ease;
-}
-
-@keyframes fadeIn{
-from{opacity:0;transform:translateY(5px)}
-to{opacity:1;transform:translateY(0)}
 }
 
 .bottom{
@@ -195,10 +164,6 @@ pointer-events:auto;
 <path d="M2 16l20-5-20-5v4l15 1-15 1z"/>
 </svg>
 
-<div class="fakeLiveBar">
-<div class="fakeTrack" id="fakeTrack"></div>
-</div>
-
 </div>
 
 <div class="crashScreen" id="crashScreen">
@@ -219,20 +184,21 @@ pointer-events:auto;
 </div>
 </div>
 
-<!-- FIREBASE ENTEGRASYONU -->
+<!-- FIREBASE -->
 <script type="module">
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, doc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+/* 🔥 BURAYA INDEX.HTML'DEKİ CONFIG'İ KOY */
 const firebaseConfig = {
-  apiKey: "AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
-  authDomain: "emirhan-site.firebaseapp.com",
-  projectId: "emirhan-site",
-  storageBucket: "emirhan-site.firebasestorage.app",
-  messagingSenderId: "668871888390",
-  appId: "1:668871888390:web:76568bda84cb1641f7bd87",
-  measurementId: "G-96ZVZX3DWH"
+  apiKey: "API_KEY",
+  authDomain: "PROJECT.firebaseapp.com",
+  projectId: "PROJECT",
+  storageBucket: "PROJECT.appspot.com",
+  messagingSenderId: "XXXX",
+  appId: "XXXX"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -242,51 +208,49 @@ const db = getFirestore(app);
 let currentUser=null;
 let balance=0;
 
-function updateBalance(){
-document.getElementById("balance").innerText=balance.toFixed(2);
-if(currentUser){
-updateDoc(doc(db,"users",currentUser.uid),{balance:balance});
+/* ---------- BALANCE RENDER ---------- */
+
+function renderBalance(){
+document.getElementById("balance").innerText = balance.toFixed(2);
 }
+
+async function updateBalanceFirestore(newBalance){
+if(!currentUser) return;
+balance = newBalance;
+renderBalance();
+await updateDoc(doc(db,"users",currentUser.uid),{
+balance: newBalance
+});
 }
 
 onAuthStateChanged(auth,(user)=>{
-if(user){
+if(!user) return;
 currentUser=user;
+
 onSnapshot(doc(db,"users",user.uid),(snap)=>{
 if(snap.exists()){
-balance=snap.data().balance;
-document.getElementById("balance").innerText=balance.toFixed(2);
+let data=snap.data();
+balance = typeof data.balance==="number" ? data.balance : 0;
+renderBalance();
 }
 });
-}
 });
-</script>
 
-<!-- OYUN SCRIPTİ -->
-<script>
-/* BURADA OYUNUN TÜM ORİJİNAL JS KODU AYNEN DEVAM EDİYOR */
-/* SADECE let balance=10000; KALDIRILDI */
+/* ---------- GAME ENGINE ---------- */
 
 let phase="betting";
 let multiplier=1;
 let crashPoint=0;
 let animation;
 let history=[];
-let lastTime=0;
-
 let bet1=0, bet2=0;
 let active1=false, active2=false;
 let cashed1=false, cashed2=false;
-let currentWin1=0, currentWin2=0;
+let win1=0, win2=0;
 
-const plane=document.getElementById("plane");
 const crashScreen=document.getElementById("crashScreen");
 const crashValue=document.getElementById("crashValue");
 const countdown=document.getElementById("countdown");
-
-  function updateBalance(){
-document.getElementById("balance").innerText=balance.toFixed(2);
-}
 
 function addHistory(x){
 history.unshift(x.toFixed(2));
@@ -294,38 +258,24 @@ if(history.length>12) history.pop();
 const bar=document.getElementById("historyBar");
 bar.innerHTML="";
 history.forEach(v=>{
-let span=document.createElement("span");
-span.className="historyItem";
-if(v<2) span.classList.add("historyCrash");
-span.innerText=v+"x";
-bar.appendChild(span);
+let s=document.createElement("span");
+s.className="historyItem";
+if(v<2) s.classList.add("historyCrash");
+s.innerText=v+"x";
+bar.appendChild(s);
 });
 }
 
-function resetButtons(){
-["btn1","btn2"].forEach(id=>{
-let b=document.getElementById(id);
-b.disabled=false;
-b.innerText="Bahis Yap";
-b.classList.remove("cancel","cashout");
-});
-}
-
-function startRoundCountdown(){
+function startCountdown(){
 phase="betting";
-generateFakePlayers();
 let time=5;
-countdown.innerText="Yeni tur: "+time;
 crashScreen.classList.add("active");
-resetButtons();
-active1=false;
-active2=false;
-
-let interval=setInterval(()=>{
+countdown.innerText="Yeni tur: "+time;
+let int=setInterval(()=>{
 time--;
 countdown.innerText="Yeni tur: "+time;
 if(time<=0){
-clearInterval(interval);
+clearInterval(int);
 crashScreen.classList.remove("active");
 startFlight();
 }
@@ -336,43 +286,21 @@ function startFlight(){
 phase="flying";
 multiplier=1;
 cashed1=false; cashed2=false;
-currentWin1=0; currentWin2=0;
-lastTime=performance.now();
 crashPoint=(1/(1-Math.random()))*0.97;
-
-if(active1){
-let b=document.getElementById("btn1");
-b.innerText="Çek";
-b.classList.add("cashout");
-}
-if(active2){
-let b=document.getElementById("btn2");
-b.innerText="Çek";
-b.classList.add("cashout");
+animate();
 }
 
-animate(performance.now());
-}
-
-function animate(timestamp){
-let delta=(timestamp-lastTime)/1000;
-lastTime=timestamp;
-
-let speed= multiplier<2?0.07: multiplier<5?0.1:0.15;
-multiplier+=speed*delta*multiplier;
-
+function animate(){
+multiplier+=0.01*multiplier;
 document.getElementById("multiplier").innerText=multiplier.toFixed(2)+"x";
-movePlane(multiplier);
-updateFakePlayers(multiplier);
 
 if(active1 && !cashed1){
-currentWin1 = bet1 * multiplier;
-document.getElementById("btn1").innerText="Çek ("+currentWin1.toFixed(2)+")";
+win1=bet1*multiplier;
+document.getElementById("btn1").innerText="Çek ("+win1.toFixed(2)+")";
 }
-
 if(active2 && !cashed2){
-currentWin2 = bet2 * multiplier;
-document.getElementById("btn2").innerText="Çek ("+currentWin2.toFixed(2)+")";
+win2=bet2*multiplier;
+document.getElementById("btn2").innerText="Çek ("+win2.toFixed(2)+")";
 }
 
 if(multiplier>=crashPoint){
@@ -383,78 +311,56 @@ return;
 animation=requestAnimationFrame(animate);
 }
 
-function movePlane(m){
-let screenH=window.innerHeight-220;
-let maxHeight=screenH*0.6;
-let y=screenH-(m*40);
-if(y<maxHeight) y=maxHeight;
-let x=Math.min(window.innerWidth-60,m*60);
-plane.style.left=x+"px";
-plane.style.top=y+"px";
-}
-
 function triggerCrash(){
 cancelAnimationFrame(animation);
 phase="crashed";
 addHistory(multiplier);
 crashValue.innerText=multiplier.toFixed(2)+"x";
 crashScreen.classList.add("active");
-active1=false;
-active2=false;
-
-setTimeout(()=>{
-startRoundCountdown();
-},2000);
+active1=false; active2=false;
+setTimeout(startCountdown,2000);
 }
 
-function handleBet(btnId, betInputId, index){
-let btn=document.getElementById(btnId);
-let betInput=document.getElementById(betInputId);
+/* ---------- BET LOGIC ---------- */
 
-btn.onclick=function(){
+function setupBet(btnId,inputId,index){
+let btn=document.getElementById(btnId);
+let input=document.getElementById(inputId);
+
+btn.onclick=async function(){
+
 if(phase==="betting"){
-let amount=parseFloat(betInput.value);
+let amount=parseFloat(input.value);
 if(amount<=0 || balance<amount) return;
 
-if(index===1 && !active1){
-bet1=amount; balance-=amount; active1=true;
+await updateBalanceFirestore(balance-amount);
+
+if(index===1){ bet1=amount; active1=true; }
+else{ bet2=amount; active2=true; }
+
 btn.innerText="İptal Et";
 btn.classList.add("cancel");
 }
-else if(index===2 && !active2){
-bet2=amount; balance-=amount; active2=true;
-btn.innerText="İptal Et";
-btn.classList.add("cancel");
-}
-else{
-balance+= index===1?bet1:bet2;
-if(index===1) active1=false; else active2=false;
-btn.innerText="Bahis Yap";
-btn.classList.remove("cancel");
-}
-updateBalance();
-}
+
 else if(phase==="flying"){
 if(index===1 && active1 && !cashed1){
-balance+=currentWin1;
-cashed1=true; active1=false;
-btn.disabled=true;
+await updateBalanceFirestore(balance+win1);
+cashed1=true; active1=false; btn.disabled=true;
 }
 if(index===2 && active2 && !cashed2){
-balance+=currentWin2;
-cashed2=true; active2=false;
-btn.disabled=true;
+await updateBalanceFirestore(balance+win2);
+cashed2=true; active2=false; btn.disabled=true;
 }
-updateBalance();
 }
+
 };
 }
 
-handleBet("btn1","bet1",1);
-handleBet("btn2","bet2",2);
+setupBet("btn1","bet1",1);
+setupBet("btn2","bet2",2);
 
-updateBalance();
-startRoundCountdown();
+startCountdown();
+
 </script>
 
 </body>
