@@ -14,11 +14,29 @@ input{font-size:16px;}
 .top-bar{
 position:fixed;top:0;width:100%;height:55px;
 display:flex;align-items:center;justify-content:space-between;
-padding:0 16px;background:linear-gradient(135deg,#1a2a6c,#16245c);
+padding:0 12px;background:linear-gradient(135deg,#1a2a6c,#16245c);
 z-index:100;
 }
-.right-menu{display:flex;gap:10px;}
-.nav-box{padding:6px 14px;border-radius:14px;font-weight:700;font-size:13px;}
+
+.top-bar > div:first-child{
+font-weight:700;
+flex-shrink:0;
+}
+
+.right-menu{
+display:flex;
+gap:8px;
+flex-wrap:nowrap;
+}
+
+.nav-box{
+padding:6px 12px;
+border-radius:16px;
+font-weight:700;
+font-size:13px;
+white-space:nowrap;
+}
+
 .balance-box{background:#273c8f;}
 .bet-box{background:linear-gradient(90deg,#ff8a00,#ff5f00);color:#000;}
 
@@ -27,6 +45,7 @@ position:absolute;top:55px;width:100%;height:42px;
 display:flex;align-items:center;gap:8px;
 padding:0 12px;overflow-x:auto;background:#16245c;
 }
+
 .history span{
 padding:5px 12px;border-radius:14px;font-size:12px;font-weight:800;
 }
@@ -35,24 +54,34 @@ padding:5px 12px;border-radius:14px;font-size:12px;font-weight:800;
 position:absolute;top:97px;bottom:150px;width:100%;
 display:flex;flex-direction:column;align-items:center;justify-content:center;
 }
-.multiplier{font-size:65px;font-weight:bold;color:#00eaff;}
+
+.multiplier{
+font-size:65px;
+font-weight:bold;
+color:#00eaff;
+}
+
 .status{margin-top:10px;font-size:16px;font-weight:700;color:#ff2a4d;}
 
 .bottom{
 position:absolute;bottom:0;width:100%;height:150px;
 background:#121833;display:flex;justify-content:center;align-items:center;gap:15px;
 }
+
 .betBox{
 background:#1a2248;padding:12px;border-radius:10px;width:45%;max-width:200px;
 display:flex;flex-direction:column;gap:6px;
 }
+
 .betBox input{
 padding:8px;border:none;border-radius:6px;text-align:center;font-weight:bold;
 }
+
 .betBox button{
 padding:10px;border:none;border-radius:6px;font-weight:bold;cursor:pointer;
 background:#6c5ce7;color:white;
 }
+
 .cancel{background:#ff2a4d !important;}
 .cashout{background:#00c853 !important;}
 .disabled{opacity:0.5;pointer-events:none;}
@@ -110,20 +139,18 @@ let balance=0,userRef=null;
 let phase="betting";
 let multiplier=1;
 let crashPoint=0;
-let animation,lastTime=0;
+let animationId=null;
+let startTime=0;
 
 let bet1=0,bet2=0,active1=false,active2=false,win1=0,win2=0;
 
 const balanceEl=document.getElementById("balance");
 const betEl=document.getElementById("bet");
-const statusEl=document.getElementById("status");
 const historyEl=document.getElementById("history");
 const multiplierEl=document.getElementById("multiplier");
 
 const btn1=document.getElementById("btn1");
 const btn2=document.getElementById("btn2");
-const auto1Input=document.getElementById("auto1");
-const auto2Input=document.getElementById("auto2");
 
 onAuthStateChanged(auth,user=>{
 if(!user){location.href="index.html";return;}
@@ -148,39 +175,33 @@ if(historyEl.children.length>20)
 historyEl.removeChild(historyEl.lastChild);
 }
 
-function resetButtons(){
-[btn1,btn2].forEach(btn=>{
-btn.className="";
-btn.disabled=false;
-btn.innerText="Bahis Yap";
-});
-}
-
 function startRound(){
 phase="betting";
 multiplier=1;
-active1=false;
-active2=false;
-bet1=0;
-bet2=0;
+active1=false; active2=false;
+bet1=0; bet2=0;
 updateTopBet();
-resetButtons();
-statusEl.innerText="";
+btn1.innerText="Bahis Yap";
+btn2.innerText="Bahis Yap";
+btn1.className=""; btn2.className="";
 multiplierEl.innerText="1.00x";
-setTimeout(()=>startFlight(),4000);
+setTimeout(startFlight,4000);
 }
 
 function startFlight(){
 phase="flying";
-crashPoint=(1/(1-Math.random()))*0.97;
-lastTime=performance.now();
-animate(lastTime);
+crashPoint=(1/(1-Math.random()))*0.98;
+startTime=performance.now();
+if(animationId) cancelAnimationFrame(animationId);
+animationId=requestAnimationFrame(animate);
 }
 
-function animate(t){
-let delta=(t-lastTime)/1000;
-lastTime=t;
-multiplier*=1+(0.01+multiplier*0.002)*delta*60;
+function animate(now){
+let elapsed=(now-startTime)/1000;
+
+/* ÇOK YAVAŞ BAŞLAYIP STABİL HIZLANAN EĞRİ */
+multiplier = 1 + (Math.exp(elapsed*0.55)-1);
+
 multiplierEl.innerText=multiplier.toFixed(2)+"x";
 
 if(active1){
@@ -196,97 +217,19 @@ if(multiplier>=crashPoint){
 crash();
 return;
 }
-animation=requestAnimationFrame(animate);
+
+animationId=requestAnimationFrame(animate);
 }
 
 function crash(){
-cancelAnimationFrame(animation);
+if(animationId) cancelAnimationFrame(animationId);
 phase="crashed";
 multiplier=crashPoint;
 multiplierEl.innerText=crashPoint.toFixed(2)+"x";
 addHistory(crashPoint);
-active1=false;
-active2=false;
+active1=false; active2=false;
 setTimeout(startRound,5000);
 }
-
-async function placeBet(i){
-if(phase!=="betting") return;
-
-let amount=parseFloat(document.getElementById("bet"+i).value);
-if(amount<=0||balance<amount) return;
-
-balance-=amount;
-await updateDoc(userRef,{balance});
-
-if(i===1){
-bet1=amount;
-active1=true;
-btn1.innerText="İptal";
-btn1.classList.add("cancel");
-}else{
-bet2=amount;
-active2=true;
-btn2.innerText="İptal";
-btn2.classList.add("cancel");
-}
-
-updateTopBet();
-}
-
-async function cancelBet(i){
-if(phase!=="betting") return;
-
-if(i===1 && active1){
-balance+=bet1;
-bet1=0;
-active1=false;
-}
-if(i===2 && active2){
-balance+=bet2;
-bet2=0;
-active2=false;
-}
-
-await updateDoc(userRef,{balance});
-updateTopBet();
-resetButtons();
-}
-
-async function cashout(i){
-if(phase!=="flying") return;
-
-if(i===1 && active1){
-balance+=Math.floor(win1);
-await updateDoc(userRef,{balance});
-active1=false;
-btn1.disabled=true;
-}
-if(i===2 && active2){
-balance+=Math.floor(win2);
-await updateDoc(userRef,{balance});
-active2=false;
-btn2.disabled=true;
-}
-}
-
-btn1.onclick=()=>{
-if(phase==="betting"){
-if(active1) cancelBet(1);
-else placeBet(1);
-}else if(phase==="flying" && active1){
-cashout(1);
-}
-};
-
-btn2.onclick=()=>{
-if(phase==="betting"){
-if(active2) cancelBet(2);
-else placeBet(2);
-}else if(phase==="flying" && active2){
-cashout(2);
-}
-};
 
 startRound();
 </script>
