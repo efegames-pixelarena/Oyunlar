@@ -8,7 +8,6 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;background:#070b18;color:white;}
-
 input{font-size:16px;}
 
 .top-bar{
@@ -18,25 +17,8 @@ padding:0 12px;background:linear-gradient(135deg,#1a2a6c,#16245c);
 z-index:100;
 }
 
-.top-bar > div:first-child{
-font-weight:700;
-flex-shrink:0;
-}
-
-.right-menu{
-display:flex;
-gap:8px;
-flex-wrap:nowrap;
-}
-
-.nav-box{
-padding:6px 12px;
-border-radius:16px;
-font-weight:700;
-font-size:13px;
-white-space:nowrap;
-}
-
+.right-menu{display:flex;gap:8px;}
+.nav-box{padding:6px 12px;border-radius:16px;font-weight:700;font-size:13px;}
 .balance-box{background:#273c8f;}
 .bet-box{background:linear-gradient(90deg,#ff8a00,#ff5f00);color:#000;}
 
@@ -55,12 +37,7 @@ position:absolute;top:97px;bottom:150px;width:100%;
 display:flex;flex-direction:column;align-items:center;justify-content:center;
 }
 
-.multiplier{
-font-size:65px;
-font-weight:bold;
-color:#00eaff;
-}
-
+.multiplier{font-size:65px;font-weight:bold;color:#00eaff;}
 .status{margin-top:10px;font-size:16px;font-weight:700;color:#ff2a4d;}
 
 .bottom{
@@ -117,10 +94,12 @@ background:#6c5ce7;color:white;
 </div>
 </div>
 
+<audio id="crashSound" src="https://actions.google.com/sounds/v1/explosions/explosion.ogg"></audio>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth,onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore,doc,updateDoc,onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore,doc,updateDoc,onSnapshot,setDoc,getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig={
 apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
@@ -142,12 +121,13 @@ let crashPoint=0;
 let animationId=null;
 let startTime=0;
 
-let bet1=0,bet2=0,active1=false,active2=false,win1=0,win2=0;
+let bet1=0,bet2=0,active1=false,active2=false;
 
 const balanceEl=document.getElementById("balance");
 const betEl=document.getElementById("bet");
 const historyEl=document.getElementById("history");
 const multiplierEl=document.getElementById("multiplier");
+const crashSound=document.getElementById("crashSound");
 
 const btn1=document.getElementById("btn1");
 const btn2=document.getElementById("btn2");
@@ -175,17 +155,79 @@ if(historyEl.children.length>20)
 historyEl.removeChild(historyEl.lastChild);
 }
 
+btn1.onclick=()=>handleBet(1);
+btn2.onclick=()=>handleBet(2);
+
+function handleBet(slot){
+if(phase!=="betting") return;
+
+let betInput=document.getElementById("bet"+slot);
+let amount=parseInt(betInput.value);
+
+if(!amount || amount<=0 || amount>balance) return;
+
+balance-=amount;
+updateDoc(userRef,{balance});
+
+if(slot===1){bet1=amount;active1=true;}
+if(slot===2){bet2=amount;active2=true;}
+
+updateTopBet();
+updateButton(slot,"cancel");
+}
+
+function updateButton(slot,type,value){
+let btn=document.getElementById("btn"+slot);
+if(type==="cancel"){
+btn.innerText="İptal";
+btn.className="cancel";
+btn.onclick=()=>cancelBet(slot);
+}
+if(type==="cashout"){
+btn.innerText="Çek "+Math.floor(value);
+btn.className="cashout";
+btn.onclick=()=>cashout(slot,value);
+}
+if(type==="reset"){
+btn.innerText="Bahis Yap";
+btn.className="";
+btn.onclick=()=>handleBet(slot);
+}
+}
+
+function cancelBet(slot){
+if(phase!=="betting") return;
+
+if(slot===1 && active1){
+balance+=bet1; bet1=0; active1=false;
+}
+if(slot===2 && active2){
+balance+=bet2; bet2=0; active2=false;
+}
+updateDoc(userRef,{balance});
+updateTopBet();
+updateButton(slot,"reset");
+}
+
+function cashout(slot,value){
+if(phase!=="flying") return;
+
+balance+=Math.floor(value);
+updateDoc(userRef,{balance});
+
+if(slot===1){active1=false;bet1=0;}
+if(slot===2){active2=false;bet2=0;}
+
+updateTopBet();
+updateButton(slot,"reset");
+}
+
 function startRound(){
 phase="betting";
 multiplier=1;
-active1=false; active2=false;
-bet1=0; bet2=0;
-updateTopBet();
-btn1.innerText="Bahis Yap";
-btn2.innerText="Bahis Yap";
-btn1.className=""; btn2.className="";
-multiplierEl.innerText="1.00x";
-setTimeout(startFlight,4000);
+updateButton(1,"reset");
+updateButton(2,"reset");
+setTimeout(startFlight,5000);
 }
 
 function startFlight(){
@@ -198,26 +240,16 @@ animationId=requestAnimationFrame(animate);
 
 function animate(now){
 let elapsed=(now-startTime)/1000;
-
-/* ÇOK YAVAŞ BAŞLAYIP STABİL HIZLANAN EĞRİ */
 multiplier = 1 + (Math.exp(elapsed*0.55)-1);
-
 multiplierEl.innerText=multiplier.toFixed(2)+"x";
 
-if(active1){
-win1=bet1*multiplier;
-btn1.innerText="Çek "+Math.floor(win1);
-}
-if(active2){
-win2=bet2*multiplier;
-btn2.innerText="Çek "+Math.floor(win2);
-}
+if(active1) updateButton(1,"cashout",bet1*multiplier);
+if(active2) updateButton(2,"cashout",bet2*multiplier);
 
 if(multiplier>=crashPoint){
 crash();
 return;
 }
-
 animationId=requestAnimationFrame(animate);
 }
 
@@ -226,11 +258,27 @@ if(animationId) cancelAnimationFrame(animationId);
 phase="crashed";
 multiplier=crashPoint;
 multiplierEl.innerText=crashPoint.toFixed(2)+"x";
+crashSound.play();
 addHistory(crashPoint);
 active1=false; active2=false;
+bet1=0; bet2=0;
+updateTopBet();
+updateButton(1,"reset");
+updateButton(2,"reset");
 setTimeout(startRound,5000);
 }
 
+/* MULTIPLAYER ROUND SENKRON */
+const roundRef=doc(db,"round","current");
+
+async function syncRound(){
+let snap=await getDoc(roundRef);
+if(!snap.exists()){
+await setDoc(roundRef,{started:Date.now()});
+}
+}
+
+syncRound();
 startRound();
 </script>
 </body>
