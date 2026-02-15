@@ -128,8 +128,8 @@ const controls=document.getElementById("controls");
 const dealerDiv=document.getElementById("dealerCards");
 const playerDiv=document.getElementById("playerCards");
 
-dealerDiv.style.minHeight="110px";
-playerDiv.style.minHeight="110px";
+dealerDiv.style.minHeight="120px";
+playerDiv.style.minHeight="120px";
 
 function disableChips(){
 document.querySelectorAll(".chip").forEach(c=>{
@@ -185,64 +185,87 @@ while(t>21&&a>0){t-=10;a--;}
 return t;
 }
 
+/* 🎴 GERÇEK KART TASARIMI */
+function createCardElement(card,hidden=false){
+let div=document.createElement("div");
+div.style.cssText=`
+width:70px;
+height:100px;
+background:${hidden?"#1e3a8a":"white"};
+border-radius:10px;
+margin:6px;
+position:relative;
+box-shadow:0 4px 10px rgba(0,0,0,0.4);
+display:flex;
+align-items:center;
+justify-content:center;
+font-family:Arial;
+`;
+
+if(hidden){
+div.style.background="linear-gradient(135deg,#1e3a8a,#2563eb)";
+return div;
+}
+
+let color=(card.suit==="♥"||card.suit==="♦")?"#dc2626":"#111";
+let value=
+card.value===1?"A":
+card.value===11?"J":
+card.value===12?"Q":
+card.value===13?"K":card.value;
+
+/* sol üst */
+let top=document.createElement("div");
+top.innerHTML=value+"<br>"+card.suit;
+top.style.cssText=`
+position:absolute;
+top:6px;
+left:8px;
+font-size:14px;
+color:${color};
+font-weight:bold;
+text-align:center;
+`;
+div.appendChild(top);
+
+/* orta suit */
+let center=document.createElement("div");
+center.innerHTML=card.suit;
+center.style.cssText=`
+font-size:28px;
+color:${color};
+`;
+div.appendChild(center);
+
+/* sağ alt */
+let bottom=document.createElement("div");
+bottom.innerHTML=value+"<br>"+card.suit;
+bottom.style.cssText=`
+position:absolute;
+bottom:6px;
+right:8px;
+font-size:14px;
+color:${color};
+font-weight:bold;
+transform:rotate(180deg);
+text-align:center;
+`;
+div.appendChild(bottom);
+
+return div;
+}
+
 function renderCards(){
 dealerDiv.innerHTML="";
 playerDiv.innerHTML="";
 
 dealer.forEach((card,i)=>{
-let div=document.createElement("div");
-div.style.cssText=`
-width:60px;
-height:90px;
-display:inline-flex;
-align-items:center;
-justify-content:center;
-margin:4px;
-border-radius:8px;
-background:white;
-font-weight:bold;
-font-size:20px;
-position:relative;
-z-index:10;
-`;
-if(i===dealerHiddenIndex && gameState==="playing"){
-div.innerHTML="🂠";
-}else{
-let v=card.value===1?"A":
-card.value===11?"J":
-card.value===12?"Q":
-card.value===13?"K":card.value;
-
-div.innerHTML=v+card.suit;
-div.style.color=(card.suit==="♥"||card.suit==="♦")?"red":"black";
-}
-dealerDiv.appendChild(div);
+let hidden=(i===dealerHiddenIndex && gameState==="playing");
+dealerDiv.appendChild(createCardElement(card,hidden));
 });
 
 player.forEach(card=>{
-let div=document.createElement("div");
-div.style.cssText=`
-width:60px;
-height:90px;
-display:inline-flex;
-align-items:center;
-justify-content:center;
-margin:4px;
-border-radius:8px;
-background:white;
-font-weight:bold;
-font-size:20px;
-position:relative;
-z-index:10;
-`;
-let v=card.value===1?"A":
-card.value===11?"J":
-card.value===12?"Q":
-card.value===13?"K":card.value;
-
-div.innerHTML=v+card.suit;
-div.style.color=(card.suit==="♥"||card.suit==="♦")?"red":"black";
-playerDiv.appendChild(div);
+playerDiv.appendChild(createCardElement(card,false));
 });
 
 document.getElementById("playerScore").innerText=total(player);
@@ -271,7 +294,7 @@ betTimer=setInterval(()=>{
 time--;
 
 if(time===1){
-disableChips(); // 🔥 son 1 saniye kilit
+disableChips();
 }
 
 if(time>0){
@@ -326,15 +349,28 @@ stand();
 
 async function hit(){
 if(gameState!=="playing") return;
+
+clearInterval(decisionTimer);
+decisionTimer=null;
+message.innerText="";
+
 player.push(deck.pop());
 renderCards();
-if(total(player)>21) await dealerTurn();
+
+if(total(player)>21){
+await dealerTurn();
+}else{
+startDecisionTimer(); // yeni karttan sonra süre reset
+}
 }
 
 async function stand(){
 if(gameState!=="playing") return;
+
 clearInterval(decisionTimer);
 decisionTimer=null;
+message.innerText="";
+
 await dealerTurn();
 }
 
@@ -343,12 +379,12 @@ gameState="finished";
 controls.style.display="none";
 dealerHiddenIndex=null;
 renderCards();
-await delay(700);
+await delay(800);
 
 while(total(dealer)<17){
 dealer.push(deck.pop());
 renderCards();
-await delay(700);
+await delay(800);
 }
 
 let p=total(player);
