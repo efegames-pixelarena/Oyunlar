@@ -133,7 +133,10 @@ const playerDiv=document.getElementById("playerCards");
 const hitBtn=document.getElementById("hit");
 const standBtn=document.getElementById("stand");
 const doubleBtn=document.getElementById("double");
+
+/* SPLIT TAMAMEN KALDIRILDI */
 const splitBtn=document.getElementById("split");
+if(splitBtn) splitBtn.style.display="none";
 
 const suits=["H","D","C","S"];
 let deck=[],player=[],dealer=[];
@@ -201,10 +204,6 @@ while(t>21&&a>0){t-=10;a--;}
 return t;
 }
 
-function canSplit(){
-return player.length===2 && cardVal(player[0].value)===cardVal(player[1].value);
-}
-
 /* CARD UI */
 
 function createCard(card,hidden=false){
@@ -218,8 +217,10 @@ img.src="https://deckofcardsapi.com/static/img/back.png";
 return img;
 }
 
-let map={1:"A",11:"J",12:"Q",13:"K"};
-let val=map[card.value]||card.value;
+/* 10 SERİSİ DÜZELTİLDİ */
+let map={1:"A",11:"J",12:"Q",13:"K",10:"0"};
+let val=map[card.value]!==undefined?map[card.value]:card.value;
+
 img.src=`https://deckofcardsapi.com/static/img/${val}${card.suit}.png`;
 return img;
 }
@@ -299,7 +300,6 @@ dealer.push(deck.pop()); render();
 
 gameState="playing";
 
-/* 21 ise direkt dealer */
 if(total(player)===21){
 await delay(1000);
 await dealerTurn();
@@ -310,15 +310,8 @@ startDecision();
 }
 
 function startDecision(){
-
-if(total(player)===21){
-dealerTurn();
-return;
-}
-
 controls.style.display="block";
 
-splitBtn.style.display=canSplit()?"inline-block":"none";
 doubleBtn.style.display=(player.length===2 && balance>=bet)?"inline-block":"none";
 
 let time=10;
@@ -337,6 +330,7 @@ message.innerText="Karar "+time;
 
 async function hit(){
 clearInterval(decisionTimer);
+controls.style.display="none";  // BUTONLAR ANINDA KAYBOLUR
 
 message.innerText="Kart Çekiliyor...";
 await delay(3000);
@@ -353,6 +347,7 @@ startDecision();
 
 async function stand(){
 clearInterval(decisionTimer);
+controls.style.display="none"; // BUTONLAR ANINDA KAYBOLUR
 await dealerTurn();
 }
 
@@ -377,28 +372,9 @@ render();
 await dealerTurn();
 }
 
-async function split(){
-if(!canSplit()) return;
-if(balance<bet) return;
-
-balance-=bet;
-await updateDoc(userRef,{balance});
-bet*=2;
-betEl.innerText=bet;
-
-message.innerText="Kart Çekiliyor...";
-await delay(3000);
-
-player.push(deck.pop());
-render();
-
-startDecision();
-}
-
 async function dealerTurn(){
 
 gameState="finished";
-controls.style.display="none";
 dealerHidden=false;
 render();
 
@@ -451,7 +427,6 @@ return new Promise(r=>setTimeout(r,ms));
 hitBtn.onclick=hit;
 standBtn.onclick=stand;
 doubleBtn.onclick=doubleDown;
-splitBtn.onclick=split;
 
 </script>
 </body>
