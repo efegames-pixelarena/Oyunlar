@@ -251,13 +251,47 @@ ctx.lineWidth=4;
 ctx.stroke();
 }
 
+function autoCashoutCheck(){
+if(phase!=="flying") return;
+
+checkAuto(1);
+checkAuto(2);
+}
+
+function checkAuto(box){
+let active=box===1?activeBet1:activeBet2;
+if(!active) return;
+
+let auto=parseFloat(document.getElementById("auto"+box).value);
+if(!auto || auto<=1) return;
+
+if(multiplier>=auto){
+cashout(box);
+}
+}
+
+async function cashout(box){
+let active=box===1?activeBet1:activeBet2;
+if(!active) return;
+
+let win=Math.floor(active*multiplier);
+balance+=win;
+await updateDoc(userRef,{balance});
+
+if(box===1) activeBet1=0;
+else activeBet2=0;
+
+updateUI();
+}
+
 function animate(){
-multiplier+=0.002 + multiplier*0.0006; // DAHA YAVAŞ
+multiplier+=0.002 + multiplier*0.0006;
 
 document.getElementById("multiplier").innerText=multiplier.toFixed(2)+"x";
 drawGraph();
 
-updateUI(); // canlı kazanç güncelle
+autoCashoutCheck();
+updateUI();
 
 if(multiplier>=crashPoint){
 crash();
@@ -315,7 +349,6 @@ document.getElementById("history").prepend(span);
 function updateUI(){
 document.getElementById("balance").innerText=balance;
 document.getElementById("bet").innerText=activeBet1+activeBet2;
-
 updateButton("btn1",activeBet1);
 updateButton("btn2",activeBet2);
 }
@@ -363,11 +396,7 @@ if(box===1) activeBet1=0;
 else activeBet2=0;
 }
 else if(phase==="flying" && active>0){
-let win=Math.floor(active*multiplier);
-balance+=win;
-await updateDoc(userRef,{balance});
-if(box===1) activeBet1=0;
-else activeBet2=0;
+cashout(box);
 }
 
 updateUI();
