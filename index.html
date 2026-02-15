@@ -307,12 +307,12 @@ font-size:14px;
 <main>
 <div class="section-title">Güncel Oyunlar</div>
 <div class="games-grid">
-<div class="game-card" data-name="blackjack" onclick="window.location.href='blackjack.html'"><div class="game-icon">♠️</div>Blackjack Auto</div>
-<div class="game-card" data-name="skycrash" onclick="window.location.href='crash.html'"><div class="game-icon">✈️</div>SkyCrash</div>
-<div class="game-card" data-name="pişt" onclick="window.location.href='pisti.html'"><div class="game-icon">🃏</div>Pişti Oyunu</div>
-<div class="game-card" data-name="yılan" onclick="window.location.href='snake.html'"><div class="game-icon">🐍</div>Yılan Oyunu</div>
-<div class="game-card" data-name="fruit ninja" onclick="window.location.href='reflex.html'"><div class="game-icon">🥕</div>Fruit Ninja</div>
-<div class="game-card" data-name="roket" onclick="window.location.href='rocket.html'"><div class="game-icon">🚀</div>Roket Oyunu</div>
+<div class="game-card" data-name="blackjack" onclick="checkLogin('blackjack.html')"><div class="game-icon">♠️</div>Blackjack Auto</div>
+<div class="game-card" data-name="skycrash" onclick="checkLogin('crash.html')"><div class="game-icon">✈️</div>SkyCrash</div>
+<div class="game-card" data-name="pişt" onclick="checkLogin('pisti.html')"><div class="game-icon">🃏</div>Pişti Oyunu</div>
+<div class="game-card" data-name="yılan" onclick="checkLogin('snake.html')"><div class="game-icon">🐍</div>Yılan Oyunu</div>
+<div class="game-card" data-name="fruit ninja" onclick="checkLogin('reflex.html')"><div class="game-icon">🥕</div>Fruit Ninja</div>
+<div class="game-card" data-name="roket" onclick="checkLogin('rocket.html')"><div class="game-icon">🚀</div>Roket Oyunu</div>
 </div>
 </main>
 
@@ -465,55 +465,14 @@ logoutBtn.addEventListener("click", async ()=>{
 });
 
 /* OYUNDA BAKİYE DÜŞME */
-window.oynaVeBakiyedenDus = async function(miktar){
+window.checkLogin = function(gamePage){
   const user = auth.currentUser;
   if(!user){
-    alert("Önce giriş yap.");
-    return false;
-  }
-
-  const userRef = doc(db,"users",user.uid);
-  const userDoc = await getDoc(userRef);
-
-  if(userDoc.exists()){
-    let currentBalance = userDoc.data().balance;
-
-    if(currentBalance < miktar){
-      alert("Yetersiz bakiye!");
-      return false;
-    }
-
-    await updateDoc(userRef,{
-      balance: currentBalance - miktar
-    });
-
-    return true;
-  }
-
-  return false;
-};
-
-
-/* OYUN KAZANINCA BAKİYE ARTIR */
-window.bakiyeArttir = async function(miktar){
-  const user = auth.currentUser;
-  if(!user){
-    alert("Giriş yapmalısın.");
+    alert("Lütfen giriş yapın. Hesabınız yoksa kayıt olun.");
+    window.location.href = "index.html";
     return;
   }
-
-  const userRef = doc(db,"users",user.uid);
-  const userDoc = await getDoc(userRef);
-
-  if(userDoc.exists()){
-    let currentBalance = userDoc.data().balance;
-
-    await updateDoc(userRef,{
-      balance: currentBalance + miktar
-    });
-
-    alert("Tebrikler! +" + miktar + "₺ kazandın 🎉");
-  }
+  window.location.href = gamePage;
 };
 </script>
 
