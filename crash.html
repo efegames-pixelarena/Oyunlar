@@ -26,12 +26,10 @@ font-style:italic;
 }
 .headerRight{display:flex;gap:15px;align-items:center;}
 .balanceTop{color:#4caf50;font-weight:bold;font-size:18px;}
-.menuIcon{color:#aaa;font-size:22px;}
 
 /* HISTORY */
 .historyBar{
 height:45px;
-background:#0b0f14;
 display:flex;
 align-items:center;
 padding:0 10px;
@@ -72,13 +70,7 @@ left:0;
 height:100%;
 width:0%;
 background:linear-gradient(to top right,#ff0022,#ff3355);
-}
-.plane{
-position:absolute;
-bottom:60px;
-left:0;
-width:70px;
-transition:all .1s linear;
+transition:width .05s linear;
 }
 
 /* BET SECTION */
@@ -142,7 +134,6 @@ color:black;
 <div class="headerLeft">Aviator</div>
 <div class="headerRight">
 <div class="balanceTop"><span id="balanceTop">0</span> TRY</div>
-<div class="menuIcon">≡</div>
 </div>
 </div>
 
@@ -153,16 +144,15 @@ color:black;
 <div class="crashContainer">
 <div class="multiplier" id="multiplierDisplay">1.00x</div>
 <div class="redCurve" id="redCurve"></div>
-<img src="https://i.imgur.com/6X4QZ6F.png" class="plane" id="plane">
 </div>
 
 <div class="betSection">
 
 <div class="betCard">
 <div class="betControl">
-<button onclick="changeBet(1,-0.10)">−</button>
+<button onclick="changeBet(1,-0.1)">−</button>
 <div class="betAmount" id="betDisplay1">1.00</div>
-<button onclick="changeBet(1,0.10)">+</button>
+<button onclick="changeBet(1,0.1)">+</button>
 </div>
 <div class="quickAmounts">
 <button onclick="setBet(1,1)">1</button>
@@ -175,9 +165,9 @@ color:black;
 
 <div class="betCard">
 <div class="betControl">
-<button onclick="changeBet(2,-0.10)">−</button>
+<button onclick="changeBet(2,-0.1)">−</button>
 <div class="betAmount" id="betDisplay2">1.00</div>
-<button onclick="changeBet(2,0.10)">+</button>
+<button onclick="changeBet(2,0.1)">+</button>
 </div>
 <div class="quickAmounts">
 <button onclick="setBet(2,1)">1</button>
@@ -235,35 +225,49 @@ let crashPoint=0;
 let phase="betting";
 let animation;
 
+function getSpeedRate(mult){
+if(mult < 5) return 4;
+if(mult < 15) return 6;
+if(mult < 50) return 9;
+return 9;
+}
+
 function startRound(){
 phase="betting";
 multiplier=1;
+document.getElementById("multiplierDisplay").innerText="1.00x";
+document.getElementById("redCurve").style.width="0%";
 crashPoint=(1/(1-Math.random()))*0.97;
 setTimeout(startFlight,5000);
 }
+
 function startFlight(){
 phase="flying";
 animate();
 }
+
 function animate(){
-multiplier+=0.02*multiplier;
+let rate = getSpeedRate(multiplier);
+multiplier += multiplier * (rate/100);
 updateVisual();
 if(multiplier>=crashPoint){triggerCrash();return;}
 animation=requestAnimationFrame(animate);
 }
+
 function updateVisual(){
 document.getElementById("multiplierDisplay").innerText=
 multiplier.toFixed(2)+"x";
-let percent=Math.min(multiplier*8,100);
+let percent=Math.min(multiplier*5,100);
 document.getElementById("redCurve").style.width=percent+"%";
-document.getElementById("plane").style.left=percent+"%";
 }
+
 function triggerCrash(){
 cancelAnimationFrame(animation);
 addHistory(multiplier);
 phase="crashed";
 setTimeout(startRound,3000);
 }
+
 function addHistory(val){
 let item=document.createElement("div");
 item.className="historyItem";
@@ -277,8 +281,7 @@ if(list.children.length>15) list.removeChild(list.lastChild);
 }
 
 /* BET SYSTEM */
-let bet1=1, bet2=1;
-let active1=false,active2=false;
+let bet1=1,bet2=1;
 
 function changeBet(i,v){
 if(i===1){bet1=Math.max(0.1,bet1+v);updateBetUI(1);}
@@ -298,19 +301,18 @@ document.getElementById("betBtn2").onclick=()=>handleBet(2);
 
 async function handleBet(i){
 if(!authReady) return;
-if(phase==="betting"){
 let amt=i===1?bet1:bet2;
+
+if(phase==="betting"){
 if(balance<amt) return;
 balance-=amt;
 await updateBalance(balance);
-if(i===1) active1=true; else active2=true;
 document.getElementById("betBtn"+i).classList.add("cashout");
 document.getElementById("betBtn"+i).innerText="Cashout";
 }
 else if(phase==="flying"){
-let rounded=Math.round(multiplier*10)/10;
-let amt=i===1?bet1:bet2;
-balance+=amt*rounded;
+let payout = amt * multiplier;
+balance+=payout;
 await updateBalance(balance);
 document.getElementById("betBtn"+i).classList.remove("cashout");
 document.getElementById("betBtn"+i).innerText="Bahis";
