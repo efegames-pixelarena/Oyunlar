@@ -117,7 +117,7 @@ const app=initializeApp(firebaseConfig);
 const auth=getAuth(app);
 const db=getFirestore(app);
 
-let balance=0,bet=0,userRef=null;
+let balance=0,bet=0,insuranceBet=0,userRef=null;
 let gameState="loading";
 let betTimer=null,decisionTimer=null;
 
@@ -128,38 +128,10 @@ const controls=document.getElementById("controls");
 const dealerDiv=document.getElementById("dealerCards");
 const playerDiv=document.getElementById("playerCards");
 
-dealerDiv.style.minHeight="140px";
-playerDiv.style.minHeight="140px";
+dealerDiv.style.minHeight="120px";
+playerDiv.style.minHeight="120px";
 
-function disableChips(){
-document.querySelectorAll(".chip").forEach(c=>{
-c.style.pointerEvents="none";
-c.style.opacity="0.4";
-});
-}
-function enableChips(){
-document.querySelectorAll(".chip").forEach(c=>{
-c.style.pointerEvents="auto";
-c.style.opacity="1";
-});
-}
-
-onAuthStateChanged(auth,user=>{
-if(!user){message.innerText="Giriş yapmalısın";return;}
-userRef=doc(db,"users",user.uid);
-onSnapshot(userRef,snap=>{
-balance=snap.data()?.balance||0;
-balanceEl.innerText=balance;
-
-if(gameState==="loading"){
-gameState="betting";
-message.innerText="Bahis Yapın";
-enableChips();
-}
-});
-});
-
-const suits=["H","D","C","S"]; // Hearts, Diamonds, Clubs, Spades
+const suits=["H","D","C","S"];
 let deck=[],player=[],dealer=[];
 let dealerHiddenIndex=null;
 
@@ -174,41 +146,45 @@ deck.push({suit:s,value:i});
 deck.sort(()=>Math.random()-0.5);
 }
 
-function total(hand){
-let t=0,a=0;
-for(let c of hand){
-if(c.value>10)t+=10;
-else if(c.value===1){t+=11;a++;}
-else t+=c.value;
+function cardValue(v){
+if(v>10) return 10;
+if(v===1) return 11;
+return v;
 }
-while(t>21&&a>0){t-=10;a--;}
+
+function total(hand,hideSecond=false){
+let t=0,a=0;
+hand.forEach((c,i)=>{
+if(hideSecond && i===1) return;
+let val=cardValue(c.value);
+if(val===11){a++; t+=11;}
+else t+=val;
+});
+while(t>21 && a>0){t-=10;a--;}
 return t;
 }
 
-/* 🎴 GERÇEK PNG KART */
-function createCardElement(card,hidden=false){
+function isBlackjack(hand){
+return hand.length===2 &&
+((hand[0].value===1 && cardValue(hand[1].value)===10) ||
+(hand[1].value===1 && cardValue(hand[0].value)===10));
+}
 
+function createCardElement(card,hidden=false){
 let img=document.createElement("img");
-img.style.width="80px";
-img.style.margin="6px";
-img.style.borderRadius="8px";
-img.style.boxShadow="0 4px 10px rgba(0,0,0,0.5)";
+img.style.width="60px";
+img.style.margin="5px";
+img.style.borderRadius="6px";
+img.style.boxShadow="0 3px 6px rgba(0,0,0,0.4)";
 
 if(hidden){
 img.src="https://deckofcardsapi.com/static/img/back.png";
 return img;
 }
 
-let valueMap={
-1:"A",
-11:"J",
-12:"Q",
-13:"K"
-};
-
-let val=valueMap[card.value] || card.value;
+let map={1:"A",11:"J",12:"Q",13:"K"};
+let val=map[card.value] || card.value;
 img.src=`https://deckofcardsapi.com/static/img/${val}${card.suit}.png`;
-
 return img;
 }
 
@@ -216,118 +192,114 @@ function renderCards(){
 dealerDiv.innerHTML="";
 playerDiv.innerHTML="";
 
-dealer.forEach((card,i)=>{
-let hidden=(i===dealerHiddenIndex && gameState==="playing");
-dealerDiv.appendChild(createCardElement(card,hidden));
+dealer.forEach((c,i)=>{
+let hidden=(i===1 && gameState==="playing");
+dealerDiv.appendChild(createCardElement(c,hidden));
 });
 
-player.forEach(card=>{
-playerDiv.appendChild(createCardElement(card,false));
+player.forEach(c=>{
+playerDiv.appendChild(createCardElement(c,false));
 });
 
 document.getElementById("playerScore").innerText=total(player);
 document.getElementById("dealerScore").innerText=
-(gameState==="playing") ? total([dealer[0]]) : total(dealer);
-}
-
-async function addBet(amount){
-if(gameState!=="betting") return;
-if(balance<amount) return;
-
-balance-=amount;
-bet+=amount;
-await updateDoc(userRef,{balance});
-betEl.innerText=bet;
-
-if(!betTimer) startBetTimer();
-}
-window.addBet=addBet;
-
-function startBetTimer(){
-let time=5;
-message.innerText="Bahisler Kapanıyor: "+time+" SN";
-
-betTimer=setInterval(()=>{
-time--;
-
-if(time===1){
-disableChips();
-}
-
-if(time>0){
-message.innerText="Bahisler Kapanıyor: "+time+" SN";
-}else{
-clearInterval(betTimer);
-betTimer=null;
-gameState="dealing";
-message.innerText="";
-startGame();
-}
-},1000);
+(gameState==="playing")
+? total(dealer,true)
+: total(dealer,false);
 }
 
 async function startGame(){
 player=[]; dealer=[];
-dealerHiddenIndex=null;
+insuranceBet=0;
 controls.style.display="none";
 
 createDeck();
 
+/* DOĞRU DAĞITIM */
 player.push(deck.pop());
 dealer.push(deck.pop());
 player.push(deck.pop());
 dealer.push(deck.pop());
-
-dealerHiddenIndex=1;
 
 renderCards();
 await delay(500);
 
+/* BLACKJACK KONTROL */
+if(isBlackjack(player)){
+if(isBlackjack(dealer)){
+dealerHiddenIndex=null;
+renderCards();
+endGame("Push - İki Taraf Blackjack");
+}else{
+balance+=bet*2.5;
+await updateDoc(userRef,{balance});
+dealerHiddenIndex=null;
+renderCards();
+endGame("BLACKJACK! 3:2 Kazandın");
+}
+return;
+}
+
+/* SİGORTA */
+if(dealer[0].value===1){
+message.innerHTML="Sigorta almak ister misin? <button onclick='insuranceYes()'>Evet</button> <button onclick='insuranceNo()'>Hayır</button>";
+setTimeout(checkDealerBJ,3000);
+}else{
 gameState="playing";
 startDecisionTimer();
+}
+}
+
+window.insuranceYes=async()=>{
+insuranceBet=bet/2;
+balance-=insuranceBet;
+await updateDoc(userRef,{balance});
+message.innerText="Sigorta Alındı";
+};
+window.insuranceNo=()=>{message.innerText="";};
+
+async function checkDealerBJ(){
+if(isBlackjack(dealer)){
+dealerHiddenIndex=null;
+renderCards();
+if(insuranceBet>0){
+balance+=insuranceBet*3;
+await updateDoc(userRef,{balance});
+}
+endGame("Dealer Blackjack!");
+}else{
+gameState="playing";
+startDecisionTimer();
+}
 }
 
 function startDecisionTimer(){
 controls.style.display="block";
 let time=10;
 message.innerText="Karar İçin "+time+" Saniye";
-
 decisionTimer=setInterval(()=>{
 time--;
-if(time>0){
-message.innerText="Karar İçin "+time+" Saniye";
-}else{
+if(time<=0){
 clearInterval(decisionTimer);
-decisionTimer=null;
 stand();
+}else{
+message.innerText="Karar İçin "+time+" Saniye";
 }
 },1000);
 }
 
 async function hit(){
-if(gameState!=="playing") return;
-
 clearInterval(decisionTimer);
-decisionTimer=null;
-message.innerText="";
-
 player.push(deck.pop());
 renderCards();
-
 if(total(player)>21){
+dealerHiddenIndex=null;
 await dealerTurn();
-}else{
-startDecisionTimer();
-}
+}else startDecisionTimer();
 }
 
 async function stand(){
-if(gameState!=="playing") return;
-
 clearInterval(decisionTimer);
-decisionTimer=null;
-message.innerText="";
-
 await dealerTurn();
 }
 
@@ -336,50 +308,40 @@ gameState="finished";
 controls.style.display="none";
 dealerHiddenIndex=null;
 renderCards();
-await delay(800);
+await delay(700);
 
 while(total(dealer)<17){
 dealer.push(deck.pop());
 renderCards();
-await delay(800);
+await delay(700);
 }
 
 let p=total(player);
 let d=total(dealer);
 
-if(p>21){
-endGame("Kaybettin!");
-return;
-}
-
-if(d>21||p>d){
+if(p>21) return endGame("Kaybettin!");
+if(d>21 || p>d){
 balance+=bet*2;
 await updateDoc(userRef,{balance});
-endGame("Kazandın!");
+return endGame("Kazandın!");
 }
-else if(d>p){
-endGame("Dealer Kazandı!");
-}
-else{
+if(d>p) return endGame("Dealer Kazandı!");
+
 balance+=bet;
 await updateDoc(userRef,{balance});
 endGame("Berabere!");
-}
 }
 
 function endGame(text){
 message.innerText=text;
 bet=0;
 betEl.innerText=0;
-
 setTimeout(()=>{
-player=[];
-dealer=[];
+player=[]; dealer=[];
 renderCards();
 gameState="betting";
 message.innerText="Bahis Yapın";
-enableChips();
-},2500);
+},3000);
 }
 
 document.getElementById("hit").onclick=hit;
