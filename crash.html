@@ -26,24 +26,6 @@ font-style:italic;
 }
 .balanceTop{color:#4caf50;font-weight:bold;font-size:18px;}
 
-/* HISTORY */
-.historyBar{
-height:45px;
-display:flex;
-align-items:center;
-padding:0 10px;
-border-top:1px solid #1f2633;
-border-bottom:1px solid #1f2633;
-overflow:hidden;
-}
-.historyList{
-display:flex;
-gap:15px;
-overflow-x:auto;
-scrollbar-width:none;
-}
-.historyItem{font-weight:bold;font-size:18px;white-space:nowrap}
-
 /* GAME AREA */
 .crashContainer{
 position:relative;
@@ -67,7 +49,7 @@ font-weight:bold;
 position:absolute;
 bottom:20px;
 left:0;
-width:50px;
+font-size:40px;
 }
 
 .redCurve{
@@ -125,7 +107,6 @@ border:none;
 padding:15px;
 font-size:20px;
 border-radius:15px;
-transition:.2s;
 }
 .betButton.cashout{
 background:#00eaff;
@@ -141,20 +122,12 @@ pointer-events:none;
 
 <div class="header">
 <div class="headerLeft">Aviator</div>
-<div class="balanceTop"><span id="balanceTop">0</span> TRY</div>
-</div>
-
-<div class="historyBar">
-<div class="historyList" id="historyList"></div>
+<div class="balanceTop"><span id="balanceTop">Yükleniyor...</span> TRY</div>
 </div>
 
 <div class="crashContainer">
 <div class="multiplier" id="multiplierDisplay">5</div>
-
-<svg class="plane" id="plane" viewBox="0 0 64 64">
-<path fill="#ffffff" d="M2 32 L62 20 L42 32 L62 44 Z"/>
-</svg>
-
+<div class="plane" id="plane">✈️</div>
 <div class="redCurve" id="redCurve"></div>
 
 <div class="crashMessage" id="crashMessage">
@@ -177,8 +150,8 @@ pointer-events:none;
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth,onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore,doc,onSnapshot,updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 /* FIREBASE CONFIG */
 const firebaseConfig={
@@ -203,23 +176,32 @@ let multiplier=1;
 let crashPoint=0;
 let phase="betting";
 let animation;
-let countdownInterval;
 
-/* AUTH */
-onAuthStateChanged(auth,user=>{
+/* AUTO LOGIN */
+signInAnonymously(auth);
+
+onAuthStateChanged(auth, async(user)=>{
 if(!user) return;
+
 userRef=doc(db,"users",user.uid);
-onSnapshot(userRef,snap=>{
-if(snap.exists()){
-balance=snap.data().balance||0;
-balanceTop.innerText=Math.round(balance);
+let snap=await getDoc(userRef);
+
+if(!snap.exists()){
+await setDoc(userRef,{balance:1000});
+}
+
+onSnapshot(userRef,(docSnap)=>{
+if(docSnap.exists()){
+balance=docSnap.data().balance||0;
+balanceTop.innerText=Math.floor(balance);
 }
 });
 });
 
+/* UPDATE BALANCE */
 async function updateBalance(val){
 if(!userRef) return;
-await updateDoc(userRef,{balance:Math.round(val)});
+await updateDoc(userRef,{balance:Math.floor(val)});
 }
 
 /* GAME */
@@ -239,11 +221,11 @@ startCountdown();
 function startCountdown(){
 let time=5;
 multiplierDisplay.innerText=time;
-countdownInterval=setInterval(()=>{
+let interval=setInterval(()=>{
 time--;
 multiplierDisplay.innerText=time;
 if(time<=0){
-clearInterval(countdownInterval);
+clearInterval(interval);
 startFlight();
 }
 },1000);
@@ -251,8 +233,10 @@ startFlight();
 
 function startFlight(){
 phase="flying";
+if(hasBet){
 betBtn.innerText="Cashout";
 betBtn.classList.add("cashout");
+}
 crashPoint=(1/(1-Math.random()))*0.96;
 animate();
 }
@@ -279,24 +263,13 @@ betBtn.classList.add("disabled");
 crashMessage.style.display="block";
 crashX.innerText=multiplier.toFixed(2)+"x";
 crashCountdown.innerText="Bahislerin Kapanmasına 5sn";
-addHistory(multiplier);
 setTimeout(startRound,5000);
-}
-
-function addHistory(val){
-let item=document.createElement("div");
-item.className="historyItem";
-item.innerText=val.toFixed(2)+"x";
-item.style.color=val<2?"#4da6ff":val<10?"#b266ff":"#ff4d94";
-historyList.prepend(item);
-if(historyList.children.length>15)
-historyList.removeChild(historyList.lastChild);
 }
 
 /* BET */
 function changeBet(v){
 if(phase!=="betting") return;
-bet=Math.max(0.1,bet+v);
+bet=Math.max(1,bet+v);
 betDisplay.innerText=bet.toFixed(2);
 }
 
