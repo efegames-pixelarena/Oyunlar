@@ -67,46 +67,42 @@ body{display:flex;flex-direction:column;height:100dvh;}
 
 <script type="module">
 
-/* ================= FIREBASE CONFIG ================= */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-
+/* FIREBASE CONFIG */
 const firebaseConfig = {
-  apiKey: "CONFIG",
-  authDomain: "CONFIG",
-  projectId: "CONFIG",
-  storageBucket: "CONFIG",
-  messagingSenderId: "CONFIG",
-  appId: "CONFIG"
+  apiKey: "BURAYA",
+  authDomain: "BURAYA",
+  projectId: "BURAYA",
+  storageBucket: "BURAYA",
+  messagingSenderId: "BURAYA",
+  appId: "BURAYA"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-/* ================= GLOBAL ROUND ================= */
-
+/* GLOBAL ROUND */
 const roundRef = doc(db,"crash","currentRound");
 
-let isHost=false;
-let multiplier=1;
-let phase="betting";
-let crashPoint=0;
-let balance=0;
 let uid=null;
+let balance=0;
+let isHost=false;
 let animation;
 
-/* ================= AUTH ================= */
-
+/* AUTH */
 onAuthStateChanged(auth, async(user)=>{
 if(!user) return;
 uid=user.uid;
 listenBalance();
-checkRound();
+await ensureRound();
+listenRound();
 });
 
+/* BALANCE */
 function listenBalance(){
 const userRef=doc(db,"users",uid);
 onSnapshot(userRef,(snap)=>{
@@ -117,89 +113,76 @@ document.getElementById("balance").innerText=balance.toFixed(2);
 });
 }
 
-/* ================= HOST LOGIC ================= */
-
-async function checkRound(){
+/* ROUND VAR MI KONTROL */
+async function ensureRound(){
 const snap=await getDoc(roundRef);
 if(!snap.exists()){
 isHost=true;
-createRound();
-}else{
-listenRound();
+await createRound();
 }
 }
 
+/* ROUND OLUŞTUR */
 async function createRound(){
-crashPoint=(1/(1-Math.random()))*0.97;
+const crashPoint=(1/(1-Math.random()))*0.97;
+
 await setDoc(roundRef,{
 phase:"betting",
 multiplier:1,
 crashPoint:crashPoint,
-timestamp:Date.now()
+createdAt:Date.now()
 });
-listenRound();
-setTimeout(()=>startFlight(),5000);
+
+setTimeout(()=>{
+startFlight();
+},5000);
 }
 
+/* ROUND DİNLE */
 function listenRound(){
 onSnapshot(roundRef,(snap)=>{
 if(!snap.exists()) return;
 const data=snap.data();
-phase=data.phase;
-multiplier=data.multiplier;
-crashPoint=data.crashPoint;
-document.getElementById("multiplier").innerText=multiplier.toFixed(2)+"x";
-if(phase==="crashed"){
-triggerLocalCrash();
+
+document.getElementById("multiplier").innerText =
+data.multiplier.toFixed(2)+"x";
+
+if(data.phase==="crashed"){
+cancelAnimationFrame(animation);
 }
 });
 }
 
-/* ================= FLIGHT ================= */
-
+/* FLIGHT */
 function startFlight(){
 if(!isHost) return;
+
 updateDoc(roundRef,{phase:"flying"});
+let multiplier=1;
 let last=performance.now();
 
 function animate(time){
 let delta=(time-last)/1000;
 last=time;
+
 multiplier+=0.12*delta*multiplier;
+
 updateDoc(roundRef,{multiplier:multiplier});
+
+getDoc(roundRef).then(snap=>{
+const crashPoint=snap.data().crashPoint;
 if(multiplier>=crashPoint){
 updateDoc(roundRef,{phase:"crashed"});
 setTimeout(createRound,4000);
 return;
 }
+});
+
 animation=requestAnimationFrame(animate);
 }
+
 animation=requestAnimationFrame(animate);
 }
-
-/* ================= CRASH ================= */
-
-function triggerLocalCrash(){
-document.body.classList.add("loseAnim");
-setTimeout(()=>document.body.classList.remove("loseAnim"),600);
-}
-
-/* ================= BET ================= */
-
-function handleBet(btnId,inputId,index){
-let btn=document.getElementById(btnId);
-let input=document.getElementById(inputId);
-btn.onclick=async function(){
-let amount=parseFloat(input.value);
-if(amount<=0 || balance<amount) return;
-balance-=amount;
-await updateDoc(doc(db,"users",uid),{balance:balance});
-btn.disabled=true;
-};
-}
-
-handleBet("btn1","bet1",1);
-handleBet("btn2","bet2",2);
 
 </script>
 </body>
