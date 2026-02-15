@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>SkyCrash</title>
 
 <style>
@@ -24,7 +24,6 @@ font-weight:bold;
 color:#ff3b4d;
 font-style:italic;
 }
-.headerRight{display:flex;gap:15px;align-items:center;}
 .balanceTop{color:#4caf50;font-weight:bold;font-size:18px;}
 
 /* HISTORY */
@@ -63,15 +62,6 @@ transform:translate(-50%,-50%);
 font-size:65px;
 font-weight:bold;
 }
-.redCurve{
-position:absolute;
-bottom:0;
-left:0;
-height:100%;
-width:0%;
-background:linear-gradient(to top right,#ff0022,#ff3355);
-transition:width .05s linear;
-}
 
 /* BET SECTION */
 .betSection{
@@ -98,11 +88,20 @@ margin-bottom:10px;
 background:#1b1f27;
 border:none;
 color:white;
-font-size:18px;
-width:40px;height:40px;
+font-size:20px;
+width:45px;height:45px;
 border-radius:50%;
 }
-.betAmount{font-size:22px;font-weight:bold;}
+.betInput{
+width:100%;
+text-align:center;
+background:transparent;
+border:none;
+color:white;
+font-size:22px;
+font-weight:bold;
+outline:none;
+}
 .quickAmounts{
 display:grid;
 grid-template-columns:repeat(4,1fr);
@@ -132,9 +131,7 @@ color:black;
 
 <div class="header">
 <div class="headerLeft">Aviator</div>
-<div class="headerRight">
 <div class="balanceTop"><span id="balanceTop">0</span> TRY</div>
-</div>
 </div>
 
 <div class="historyBar">
@@ -143,16 +140,15 @@ color:black;
 
 <div class="crashContainer">
 <div class="multiplier" id="multiplierDisplay">1.00x</div>
-<div class="redCurve" id="redCurve"></div>
 </div>
 
 <div class="betSection">
 
 <div class="betCard">
 <div class="betControl">
-<button onclick="changeBet(1,-0.1)">−</button>
-<div class="betAmount" id="betDisplay1">1.00</div>
-<button onclick="changeBet(1,0.1)">+</button>
+<button onclick="changeBet(1,-50)">−</button>
+<input type="number" id="bet1" class="betInput" value="100" min="0">
+<button onclick="changeBet(1,100)">+</button>
 </div>
 <div class="quickAmounts">
 <button onclick="setBet(1,1)">1</button>
@@ -165,9 +161,9 @@ color:black;
 
 <div class="betCard">
 <div class="betControl">
-<button onclick="changeBet(2,-0.1)">−</button>
-<div class="betAmount" id="betDisplay2">1.00</div>
-<button onclick="changeBet(2,0.1)">+</button>
+<button onclick="changeBet(2,-50)">−</button>
+<input type="number" id="bet2" class="betInput" value="100" min="0">
+<button onclick="changeBet(2,100)">+</button>
 </div>
 <div class="quickAmounts">
 <button onclick="setBet(2,1)">1</button>
@@ -224,6 +220,7 @@ let multiplier=1;
 let crashPoint=0;
 let phase="betting";
 let animation;
+let activeBets={1:null,2:null};
 
 function getSpeedRate(mult){
 if(mult < 5) return 4;
@@ -236,8 +233,9 @@ function startRound(){
 phase="betting";
 multiplier=1;
 document.getElementById("multiplierDisplay").innerText="1.00x";
-document.getElementById("redCurve").style.width="0%";
 crashPoint=(1/(1-Math.random()))*0.97;
+activeBets={1:null,2:null};
+resetButtons();
 setTimeout(startFlight,5000);
 }
 
@@ -247,24 +245,19 @@ animate();
 }
 
 function animate(){
-let rate = getSpeedRate(multiplier);
-multiplier += multiplier * (rate/100);
-updateVisual();
-if(multiplier>=crashPoint){triggerCrash();return;}
-animation=requestAnimationFrame(animate);
-}
-
-function updateVisual(){
+let rate=getSpeedRate(multiplier);
+multiplier+=multiplier*(rate/100);
 document.getElementById("multiplierDisplay").innerText=
 multiplier.toFixed(2)+"x";
-let percent=Math.min(multiplier*5,100);
-document.getElementById("redCurve").style.width=percent+"%";
+if(multiplier>=crashPoint){triggerCrash();return;}
+animation=requestAnimationFrame(animate);
 }
 
 function triggerCrash(){
 cancelAnimationFrame(animation);
 addHistory(multiplier);
 phase="crashed";
+resetButtons();
 setTimeout(startRound,3000);
 }
 
@@ -280,20 +273,25 @@ list.prepend(item);
 if(list.children.length>15) list.removeChild(list.lastChild);
 }
 
-/* BET SYSTEM */
-let bet1=1,bet2=1;
+/* BET FUNCTIONS */
+function changeBet(i,amount){
+let input=document.getElementById("bet"+i);
+let val=parseInt(input.value)||0;
+val+=amount;
+if(val<0) val=0;
+input.value=val;
+}
 
-function changeBet(i,v){
-if(i===1){bet1=Math.max(0.1,bet1+v);updateBetUI(1);}
-else{bet2=Math.max(0.1,bet2+v);updateBetUI(2);}
+function setBet(i,value){
+document.getElementById("bet"+i).value=value;
 }
-function setBet(i,v){
-if(i===1){bet1=v;updateBetUI(1);}
-else{bet2=v;updateBetUI(2);}
-}
-function updateBetUI(i){
-document.getElementById("betDisplay"+i).innerText=
-(i===1?bet1:bet2).toFixed(2);
+
+function resetButtons(){
+[1,2].forEach(i=>{
+let btn=document.getElementById("betBtn"+i);
+btn.classList.remove("cashout");
+btn.innerText="Bahis";
+});
 }
 
 document.getElementById("betBtn1").onclick=()=>handleBet(1);
@@ -301,21 +299,26 @@ document.getElementById("betBtn2").onclick=()=>handleBet(2);
 
 async function handleBet(i){
 if(!authReady) return;
-let amt=i===1?bet1:bet2;
+
+let amt=parseInt(document.getElementById("bet"+i).value)||0;
 
 if(phase==="betting"){
-if(balance<amt) return;
+if(balance<amt || amt<=0) return;
 balance-=amt;
 await updateBalance(balance);
-document.getElementById("betBtn"+i).classList.add("cashout");
-document.getElementById("betBtn"+i).innerText="Cashout";
+activeBets[i]=amt;
+let btn=document.getElementById("betBtn"+i);
+btn.classList.add("cashout");
+btn.innerText="Cashout";
 }
-else if(phase==="flying"){
-let payout = amt * multiplier;
+else if(phase==="flying" && activeBets[i]){
+let payout=activeBets[i]*multiplier;
 balance+=payout;
 await updateBalance(balance);
-document.getElementById("betBtn"+i).classList.remove("cashout");
-document.getElementById("betBtn"+i).innerText="Bahis";
+activeBets[i]=null;
+let btn=document.getElementById("betBtn"+i);
+btn.classList.remove("cashout");
+btn.innerText="Bahis";
 }
 }
 
