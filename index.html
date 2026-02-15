@@ -67,6 +67,14 @@ font-weight:bold;
 font-size:14px;
 }
 
+.login-btn, .register-btn{
+padding:12px 20px;
+font-size:16px;
+border-radius:25px;
+border:none;
+cursor:pointer;
+}
+
 .login-btn{
 background:#1e2a5a;
 color:white;
@@ -284,6 +292,42 @@ border-top:1px solid #1e2a5a;
 color:#aaa;
 font-size:14px;
 }
+
+/* Login Form Styling */
+.form-container {
+  background: #1a2255;
+  padding: 20px;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 400px;
+  margin: 30px auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+}
+
+.form-container input {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  background: #151c3f;
+  color: white;
+  border: 1px solid #2f3a80;
+  border-radius: 5px;
+}
+
+.form-container button {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(45deg, #ffb300, #ff8800);
+  color: black;
+  border: none;
+  border-radius: 25px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.form-container button:hover {
+  background: linear-gradient(45deg, #ff8800, #ffb300);
+}
 </style>
 </head>
 <body>
@@ -340,140 +384,29 @@ font-size:14px;
 </footer>
 
 <script>
-const searchInput=document.getElementById("searchInput");
-const cards=document.querySelectorAll(".game-card");
-searchInput.addEventListener("input",function(){
-let value=this.value.toLowerCase();
-cards.forEach(card=>{
-let name=card.getAttribute("data-name");
-card.style.display=name.includes(value)?"block":"none";
-});
-});
-
-const canvas=document.getElementById("snow");
-const ctx=canvas.getContext("2d");
-function resizeCanvas(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;}
-resizeCanvas();
-let snowflakes=[];
-for(let i=0;i<150;i++){snowflakes.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*3+1,d:Math.random()*1+0.5});}
-function drawSnow(){ctx.clearRect(0,0,canvas.width,canvas.height);ctx.fillStyle="rgba(255,255,255,0.8)";ctx.beginPath();for(let s of snowflakes){ctx.moveTo(s.x,s.y);ctx.arc(s.x,s.y,s.r,0,Math.PI*2,true);}ctx.fill();updateSnow();}
-function updateSnow(){for(let s of snowflakes){s.y+=s.d;if(s.y>canvas.height){s.y=0;s.x=Math.random()*canvas.width;}}}
-function animateSnow(){drawSnow();requestAnimationFrame(animateSnow);}
-animateSnow();
-window.addEventListener("resize",resizeCanvas);
-</script>
-
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { 
-  getAuth, 
-  createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-
-import { 
-  getFirestore, 
-  doc, 
-  setDoc, 
-  getDoc,
-  updateDoc,
-  onSnapshot
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
-  authDomain: "emirhan-site.firebaseapp.com",
-  projectId: "emirhan-site",
-  storageBucket: "emirhan-site.firebasestorage.app",
-  messagingSenderId: "668871888390",
-  appId: "1:668871888390:web:76568bda84cb1641f7bd87",
-  measurementId: "G-96ZVZX3DWH"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
+// Logic for login/logout, checking if logged in before entering games
 const loginBtn = document.querySelector(".login-btn");
 const registerBtn = document.querySelector(".register-btn");
 const logoutBtn = document.querySelector(".logout-btn");
-const balanceText = document.getElementById("userBalance");
 
-/* PROFİL + CANLI BAKİYE */
-onAuthStateChanged(auth, async (user)=>{
-  if(user){
-    loginBtn.style.display="none";
-    registerBtn.style.display="none";
-    logoutBtn.style.display="inline-block";
-
-    const userRef = doc(db,"users",user.uid);
-
-    onSnapshot(userRef,(docSnap)=>{
-      if(docSnap.exists()){
-        const data = docSnap.data();
-        balanceText.innerText = "💵 " + data.balance + "₺";
-      }
-    });
-
-  } else {
-    loginBtn.style.display="inline-block";
-    registerBtn.style.display="inline-block";
-    logoutBtn.style.display="none";
-    balanceText.innerText="";
-  }
+loginBtn.addEventListener("click", function() {
+  window.location.href = "login.html"; // Redirect to login page
 });
 
-/* KAYIT */
-registerBtn.addEventListener("click", async ()=>{
-  const email = prompt("Email:");
-  const password = prompt("Şifre:");
-  if(!email || !password) return alert("Bilgileri doldur.");
-
-  try{
-    const userCredential = await createUserWithEmailAndPassword(auth,email,password);
-    await setDoc(doc(db,"users",userCredential.user.uid),{
-      balance:10000,
-      email:email,
-      createdAt:new Date()
-    });
-    alert("Kayıt başarılı. 10.000₺ yüklendi.");
-  } catch(e){
-    alert(e.message);
-  }
+registerBtn.addEventListener("click", function() {
+  window.location.href = "register.html"; // Redirect to register page
 });
 
-/* GİRİŞ */
-loginBtn.addEventListener("click", async ()=>{
-  const email = prompt("Email:");
-  const password = prompt("Şifre:");
-  if(!email || !password) return alert("Bilgileri doldur.");
-
-  try{
-    await signInWithEmailAndPassword(auth,email,password);
-    alert("Giriş başarılı.");
-  } catch(e){
-    alert("Hatalı giriş.");
-  }
-});
-
-/* ÇIKIŞ */
-logoutBtn.addEventListener("click", async ()=>{
-  await signOut(auth);
-  alert("Çıkış yapıldı.");
-});
-
-/* OYUNDA BAKİYE DÜŞME */
-window.checkLogin = function(gamePage){
+// Check if user is logged in
+function checkLogin(gamePage) {
   const user = auth.currentUser;
-  if(!user){
+  if (!user) {
     alert("Lütfen giriş yapın. Hesabınız yoksa kayıt olun.");
-    window.location.href = "index.html";
+    window.location.href = "index.html";  // Redirect to login/register page
     return;
   }
   window.location.href = gamePage;
-};
+}
 </script>
 
 </body>
