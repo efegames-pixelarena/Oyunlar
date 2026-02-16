@@ -97,7 +97,7 @@ cursor:pointer;
 .cashout{background:#f1c40f;color:black}
 .cashout:disabled{background:#555;cursor:not-allowed}
 
-input{
+input,select{
 padding:10px;
 border-radius:10px;
 border:none;
@@ -158,7 +158,8 @@ let betAmount=0;
 let mineTotal=3;
 let gameActive=false;
 let multiplier=1;
-const houseEdge=0.97;
+
+const multiplierSteps=[1.25,1.50,1.60,1.65];
 
 const grid=document.getElementById("grid");
 const multiplierText=document.getElementById("multiplier");
@@ -185,18 +186,23 @@ if(!mines.includes(r)) mines.push(r);
 }
 }
 
-function calculateMultiplier(){
-const safe=25-mineTotal;
-let prob=1;
-for(let i=0;i<opened;i++){
-prob*=(safe-i)/(25-i);
+/* ÇARPAN */
+function updateMultiplier(){
+
+if(opened<=multiplierSteps.length){
+multiplier=multiplierSteps[opened-1];
+}else{
+multiplier=parseFloat((multiplier+0.10).toFixed(2));
 }
-multiplier=Math.floor((1/prob)*houseEdge);
+
 multiplierText.innerText=multiplier+"x";
+
+const winAmount=Math.floor(betAmount*multiplier);
+cashoutBtn.innerText="Çek ("+winAmount+"₺)";
 }
 
 /* BAŞLAT */
-startBtn.addEventListener("click", async ()=>{
+startBtn.addEventListener("click",async()=>{
 
 if(!auth.currentUser) return;
 
@@ -218,6 +224,8 @@ transaction.update(userRef,{balance:snap.data().balance-betAmount});
 opened=0;
 multiplier=1;
 multiplierText.innerText="1x";
+cashoutBtn.innerText="Çek (0₺)";
+
 generateMines();
 createGrid();
 gameActive=true;
@@ -238,23 +246,24 @@ tile.innerHTML="💣";
 gameActive=false;
 startBtn.disabled=false;
 cashoutBtn.disabled=true;
+cashoutBtn.innerText="Cashout";
 return;
 }
 
 opened++;
 tile.classList.add("open");
 tile.innerHTML="💎";
-calculateMultiplier();
+updateMultiplier();
 }
 
 /* CASHOUT */
-cashoutBtn.addEventListener("click", async ()=>{
+cashoutBtn.addEventListener("click",async()=>{
 
 if(!gameActive||opened===0) return;
 
 gameActive=false;
 
-const win=betAmount*multiplier;
+const win=Math.floor(betAmount*multiplier);
 
 const userRef=doc(db,"users",auth.currentUser.uid);
 
@@ -265,6 +274,8 @@ transaction.update(userRef,{balance:snap.data().balance+win});
 
 startBtn.disabled=false;
 cashoutBtn.disabled=true;
+cashoutBtn.innerText="Cashout";
+multiplierText.innerText="1x";
 
 });
 
