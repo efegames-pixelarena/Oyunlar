@@ -7,7 +7,14 @@
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;}
-body{background:linear-gradient(180deg,#0b1023,#0d1333,#0a0f1f);color:white;}
+body{
+background:
+radial-gradient(circle at 20% 20%,#1f2b63 0%,transparent 40%),
+radial-gradient(circle at 80% 80%,#16245c 0%,transparent 40%),
+linear-gradient(180deg,#0b1023,#0d1333,#0a0f1f);
+color:white;
+min-height:100vh;
+}
 
 .top-bar{
 position:fixed;
@@ -85,7 +92,17 @@ cursor:pointer;
 }
 
 .start{background:#3498db;color:white}
+.start:disabled{background:#555;cursor:not-allowed}
+
 .cashout{background:#f1c40f;color:black}
+.cashout:disabled{background:#555;cursor:not-allowed}
+
+input{
+padding:10px;
+border-radius:10px;
+border:none;
+margin:5px;
+}
 </style>
 </head>
 <body>
@@ -99,7 +116,7 @@ cursor:pointer;
 
 <h2>💣 Mines</h2>
 
-<input type="number" id="bet" placeholder="Bahis" min="1">
+<input type="number" id="bet" placeholder="Bahis (Max 5000)" min="1" max="5000">
 <select id="mineCount">
 <option value="3">3 Mayın</option>
 <option value="5">5 Mayın</option>
@@ -108,7 +125,7 @@ cursor:pointer;
 </select>
 <br>
 <button id="startBtn" class="start">Başlat</button>
-<button id="cashoutBtn" class="cashout">Cashout</button>
+<button id="cashoutBtn" class="cashout" disabled>Cashout</button>
 
 <h3>Çarpan: <span id="multiplier">1x</span></h3>
 
@@ -120,7 +137,7 @@ cursor:pointer;
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth,onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore,doc,onSnapshot,runTransaction,getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore,doc,onSnapshot,runTransaction } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig={
 apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
@@ -160,7 +177,6 @@ grid.appendChild(tile);
 }
 }
 
-/* MAYIN ÜRET */
 function generateMines(){
 mines=[];
 while(mines.length<mineTotal){
@@ -169,7 +185,6 @@ if(!mines.includes(r)) mines.push(r);
 }
 }
 
-/* RTP HESAP */
 function calculateMultiplier(){
 const safe=25-mineTotal;
 let prob=1;
@@ -180,29 +195,25 @@ multiplier=Math.floor((1/prob)*houseEdge);
 multiplierText.innerText=multiplier+"x";
 }
 
-/* OYUN BAŞLAT */
+/* BAŞLAT */
 startBtn.addEventListener("click", async ()=>{
 
-if(!auth.currentUser) return alert("Giriş yap.");
+if(!auth.currentUser) return;
 
 betAmount=parseInt(document.getElementById("bet").value);
 mineTotal=parseInt(document.getElementById("mineCount").value);
 
-if(!betAmount||betAmount<=0) return alert("Geçerli bahis gir.");
+if(!betAmount||betAmount<=0||betAmount>5000) return;
 
 const userRef=doc(db,"users",auth.currentUser.uid);
 
 try{
 await runTransaction(db,async(transaction)=>{
 const snap=await transaction.get(userRef);
-if(!snap.exists()) throw "Kullanıcı yok";
 if(snap.data().balance<betAmount) throw "Yetersiz bakiye";
 transaction.update(userRef,{balance:snap.data().balance-betAmount});
 });
-}catch(e){
-alert(e);
-return;
-}
+}catch(e){return;}
 
 opened=0;
 multiplier=1;
@@ -211,9 +222,12 @@ generateMines();
 createGrid();
 gameActive=true;
 
+startBtn.disabled=true;
+cashoutBtn.disabled=false;
+
 });
 
-/* KARE AÇ */
+/* AÇMA */
 function reveal(index,tile){
 
 if(!gameActive||tile.classList.contains("open")) return;
@@ -222,6 +236,8 @@ if(mines.includes(index)){
 tile.classList.add("mine");
 tile.innerHTML="💣";
 gameActive=false;
+startBtn.disabled=false;
+cashoutBtn.disabled=true;
 return;
 }
 
@@ -247,7 +263,8 @@ const snap=await transaction.get(userRef);
 transaction.update(userRef,{balance:snap.data().balance+win});
 });
 
-alert("Kazandın: "+win+"₺");
+startBtn.disabled=false;
+cashoutBtn.disabled=true;
 
 });
 
