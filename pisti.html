@@ -139,7 +139,6 @@ animation:shake 0.3s;
 100%{transform:translateX(0)}
 }
 
-/* PATLAMA */
 .explosion{
 position:absolute;
 top:50%;
@@ -158,7 +157,6 @@ pointer-events:none;
 100%{transform:translate(-50%,-50%) scale(5);opacity:0;}
 }
 
-/* BET PANEL */
 .bet-panel{
 background:#151b26;
 border-radius:16px;
@@ -234,7 +232,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { getAuth,onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore,doc,onSnapshot,runTransaction } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-/* IOS DAHİL KESİN ÇALIŞAN SES SİSTEMİ */
+/* IOS DAHİL %100 ÇALIŞAN SES SİSTEMİ */
 let audioCtx;
 let sounds={};
 
@@ -250,8 +248,8 @@ sounds[name]=await audioCtx.decodeAudioData(arrayBuffer);
 }
 
 await loadSound("explode","https://assets.mixkit.co/sfx/preview/mixkit-arcade-retro-game-over-213.wav");
-await loadSound("win","https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.wav");
 await loadSound("open","https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-jump-coin-216.wav");
+await loadSound("win","https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.wav");
 }
 
 function playSound(name){
