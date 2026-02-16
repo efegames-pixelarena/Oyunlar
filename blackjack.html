@@ -44,7 +44,6 @@ transform:translateY(-150px) rotateY(90deg);
 opacity:0;
 transition:all .5s ease;
 }
-
 .card.show{
 transform:translateY(0) rotateY(0deg);
 opacity:1;
@@ -102,7 +101,7 @@ button{padding:14px 28px;margin:8px;border:none;border-radius:12px;font-weight:7
 
 <script type="module">
 
-/* FIREBASE (index.html ile aynı) */
+/* FIREBASE */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth,onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore,doc,onSnapshot,updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -119,6 +118,34 @@ appId:"1:668871888390:web:76568bda84cb1641f7bd87"
 const app=initializeApp(firebaseConfig);
 const auth=getAuth(app);
 const db=getFirestore(app);
+
+/* SES SİSTEMİ */
+let audioCtx;
+function initAudio(){
+if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+}
+function beep(freq,dur){
+initAudio();
+const o=audioCtx.createOscillator();
+const g=audioCtx.createGain();
+o.connect(g); g.connect(audioCtx.destination);
+o.frequency.value=freq;
+o.start();
+g.gain.setValueAtTime(0.2,audioCtx.currentTime);
+g.gain.exponentialRampToValueAtTime(0.0001,audioCtx.currentTime+dur/1000);
+o.stop(audioCtx.currentTime+dur/1000);
+}
+const sounds={
+chip:()=>beep(300,100),
+deal:()=>beep(500,150),
+card:()=>beep(600,120),
+action:()=>beep(400,120),
+win:()=>beep(1000,400),
+lose:()=>beep(120,400),
+bust:()=>beep(90,500),
+count:()=>beep(800,80)
+};
+document.body.addEventListener("click",initAudio,{once:true});
 
 /* OYUN */
 
@@ -137,7 +164,6 @@ const suits=["H","D","C","S"];
 let deck=[],player=[],dealer=[];
 let dealerHidden=true;
 
-/* AUTH */
 onAuthStateChanged(auth,user=>{
 if(!user){message.innerText="Giriş yapmalısın";return;}
 userRef=doc(db,"users",user.uid);
@@ -152,15 +178,6 @@ message.innerText="Bahis Yapın";
 });
 });
 
-/* ZORLUK */
-function difficulty(){
-if(bet<=1000) return 0;
-if(bet<=2000) return 0.05;
-if(bet<=4000) return 0.1;
-if(bet<=6000) return 0.15;
-return 0.2;
-}
-
 function createDeck(){
 deck=[];
 for(let s of suits){
@@ -168,28 +185,18 @@ for(let i=1;i<=13;i++){
 deck.push({suit:s,value:i});
 }}
 deck.sort(()=>Math.random()-0.5);
-if(Math.random()<difficulty()){
-deck.sort((a,b)=>b.value-a.value);
-}
 }
 
-function cardVal(v){
-if(v>10)return 10;
-if(v===1)return 11;
-return v;
-}
-
+function cardVal(v){ if(v>10)return 10; if(v===1)return 11; return v; }
 function total(hand){
 let t=0,a=0;
 hand.forEach(c=>{
 let val=cardVal(c.value);
-if(val===11){a++;t+=11;}else t+=val;
+if(val===11){a++;t+=11;} else t+=val;
 });
 while(t>21&&a>0){t-=10;a--;}
 return t;
 }
-
-/* KART UI */
 
 function cardURL(card){
 let map={1:"A",11:"J",12:"Q",13:"K"};
@@ -197,39 +204,28 @@ let val=map[card.value]||card.value;
 return `https://deckofcardsapi.com/static/img/${val}${card.suit}.png`;
 }
 
-function render(){
-dealerDiv.innerHTML="";
-playerDiv.innerHTML="";
-
-dealer.forEach((c,i)=>{
+/* SADECE YENİ GELEN KART ANİMASYONLU */
+function addCardToUI(container,card,hidden=false){
 let img=document.createElement("img");
-img.src=i===1&&dealerHidden?
-"https://deckofcardsapi.com/static/img/back.png":
-cardURL(c);
+img.src=hidden?"https://deckofcardsapi.com/static/img/back.png":cardURL(card);
 img.className="card";
-dealerDiv.appendChild(img);
+container.appendChild(img);
 setTimeout(()=>img.classList.add("show"),50);
-});
+}
 
-player.forEach(c=>{
-let img=document.createElement("img");
-img.src=cardURL(c);
-img.className="card";
-playerDiv.appendChild(img);
-setTimeout(()=>img.classList.add("show"),50);
-});
-
+function updateScores(){
 document.getElementById("playerScore").innerText=total(player);
 document.getElementById("dealerScore").innerText=
 dealerHidden?cardVal(dealer[0]?.value||0):total(dealer);
 }
 
 /* BAHİS */
-
 async function addBet(amount){
 if(gameState!=="betting")return;
 if(balance<amount)return;
 if(bet+amount>10000)return;
+
+sounds.chip();
 
 balance-=amount;
 bet+=amount;
@@ -245,6 +241,7 @@ function startBetCountdown(){
 let time=5;
 message.innerText="Başlıyor "+time;
 betCountdown=setInterval(()=>{
+sounds.count();
 time--;
 message.innerText="Başlıyor "+time;
 if(time<=0){
@@ -260,49 +257,67 @@ startGame();
 async function startGame(){
 gameState="playing";
 player=[];dealer=[];dealerHidden=true;
+dealerDiv.innerHTML="";
+playerDiv.innerHTML="";
 createDeck();
 
-player.push(deck.pop());render();await delay(600);
-dealer.push(deck.pop());render();await delay(600);
-player.push(deck.pop());render();await delay(600);
-dealer.push(deck.pop());render();
+sounds.deal();
+
+await giveCard(player,playerDiv);
+await giveCard(dealer,dealerDiv);
+await giveCard(player,playerDiv);
+await giveCard(dealer,dealerDiv,true);
 
 controls.style.display="block";
 }
 
+async function giveCard(hand,container,hidden=false){
+await delay(2000);
+sounds.card();
+let card=deck.pop();
+hand.push(card);
+addCardToUI(container,card,hidden);
+updateScores();
+}
+
 async function hit(){
-player.push(deck.pop());
-render();
+controls.style.display="none";
+sounds.action();
+await giveCard(player,playerDiv);
 if(total(player)>=21){
 await dealerTurn();
+}else{
+controls.style.display="block";
 }
 }
 
 async function stand(){
+controls.style.display="none";
+sounds.action();
 await dealerTurn();
 }
 
 async function dealerTurn(){
-controls.style.display="none";
 dealerHidden=false;
-render();
-await delay(800);
+dealerDiv.children[1].src=cardURL(dealer[1]);
+updateScores();
+await delay(2000);
+
 while(total(dealer)<17){
-dealer.push(deck.pop());
-render();
-await delay(600);
+await giveCard(dealer,dealerDiv);
 }
 
 let p=total(player);
 let d=total(dealer);
 
-if(p>21)return endGame("Kaybettin");
+if(p>21){sounds.bust();return endGame("Kaybettin");}
 if(d>21||p>d){
 balance+=bet*2;
 await updateDoc(userRef,{balance});
+sounds.win();
 return endGame("Kazandın");
 }
-if(d>p)return endGame("Dealer Kazandı");
+if(d>p){sounds.lose();return endGame("Dealer Kazandı");}
 
 balance+=bet;
 await updateDoc(userRef,{balance});
@@ -321,9 +336,7 @@ message.innerText="Bahis Yapın";
 },4000);
 }
 
-function delay(ms){
-return new Promise(r=>setTimeout(r,ms));
-}
+function delay(ms){ return new Promise(r=>setTimeout(r,ms)); }
 
 document.getElementById("hit").onclick=hit;
 document.getElementById("stand").onclick=stand;
