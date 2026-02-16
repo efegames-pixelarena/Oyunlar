@@ -180,7 +180,12 @@ for(let s of suits){
 for(let i=1;i<=13;i++){
 deck.push({suit:s,value:i});
 }}
-deck.sort(()=>Math.random()-0.5);
+
+// Fisher-Yates shuffle (gerçek shuffle)
+for (let i = deck.length - 1; i > 0; i--) {
+const j = Math.floor(Math.random() * (i + 1));
+[deck[i], deck[j]] = [deck[j], deck[i]];
+}
 }
 
 function cardVal(v){
@@ -214,7 +219,7 @@ return img;
 }
 
 let map={1:"A",11:"J",12:"Q",13:"K"};
-let val=map[card.value]||card.value;  // 10 artık direkt 10 olarak gider
+let val=map[card.value]||card.value;
 
 img.src=`https://deckofcardsapi.com/static/img/${val}${card.suit}.png`;
 return img;
@@ -275,7 +280,6 @@ message.innerText="Bahisler Kapanıyor "+time;
 /* GAME */
 
 async function startGame(){
-
 if(gameState!=="betting") return;
 
 gameState="dealing";
@@ -288,9 +292,9 @@ createDeck();
 
 message.innerText="Kart Dağıtılıyor...";
 
-player.push(deck.pop()); render(); await delay(3000);
-dealer.push(deck.pop()); render(); await delay(3000);
-player.push(deck.pop()); render(); await delay(3000);
+player.push(deck.pop()); render(); await delay(600);
+dealer.push(deck.pop()); render(); await delay(600);
+player.push(deck.pop()); render(); await delay(600);
 dealer.push(deck.pop()); render();
 
 gameState="playing";
@@ -306,7 +310,6 @@ startDecision();
 function startDecision(){
 decisionActive=true;
 controls.style.display="block";
-
 doubleBtn.style.display=(player.length===2 && balance>=bet)?"inline-block":"none";
 
 let time=10;
@@ -318,8 +321,7 @@ if(!decisionActive) return;
 time--;
 if(time<=0){
 clearInterval(decisionTimer);
-decisionActive=false;
-stand();
+stand(); // bug fix
 }else{
 message.innerText="Karar "+time;
 }
@@ -333,12 +335,13 @@ decisionTimer=null;
 }
 
 async function hit(){
-if(!decisionActive) return;
+if(gameState!=="playing") return;
+
 stopDecision();
 controls.style.display="none";
 message.innerText="Kart Çekiliyor...";
 
-await delay(3000);
+await delay(600);
 player.push(deck.pop());
 render();
 
@@ -350,7 +353,8 @@ startDecision();
 }
 
 async function stand(){
-if(!decisionActive) return;
+if(gameState!=="playing") return;
+
 stopDecision();
 controls.style.display="none";
 message.innerText="Kurupier Oynuyor...";
@@ -358,7 +362,8 @@ await dealerTurn();
 }
 
 async function doubleDown(){
-
+if(gameState!=="playing") return;
+if(player.length!==2) return;
 if(balance<bet) return;
 
 stopDecision();
@@ -370,7 +375,7 @@ await updateDoc(userRef,{balance});
 betEl.innerText=bet;
 
 message.innerText="2X Kart Çekiliyor...";
-await delay(4000);
+await delay(800);
 
 player.push(deck.pop());
 render();
@@ -384,11 +389,11 @@ gameState="finished";
 dealerHidden=false;
 render();
 
-await delay(3000);
+await delay(800);
 
 while(total(dealer)<17){
 message.innerText="Kurupier Kart Çekiyor...";
-await delay(3000);
+await delay(800);
 dealer.push(deck.pop());
 render();
 }
@@ -423,7 +428,7 @@ render();
 gameState="betting";
 enableChips();
 message.innerText="Bahis Yapın";
-},4000);
+},2000);
 }
 
 function delay(ms){
@@ -435,5 +440,3 @@ standBtn.onclick=stand;
 doubleBtn.onclick=doubleDown;
 
 </script>
-</body>
-</html>
