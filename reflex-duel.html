@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Reflex Duel</title>
 
 <style>
@@ -22,96 +22,81 @@ animation:bg 12s ease infinite;
 50%{background-position:100% 50%}
 100%{background-position:0% 50%}
 }
+.menu{
+position:absolute;
+top:30%;
+left:50%;
+transform:translateX(-50%);
+text-align:center;
+}
+input{
+padding:10px;
+margin:5px;
+border-radius:8px;
+border:none;
+text-align:center;
+}
+button{
+padding:12px 25px;
+border:none;
+border-radius:8px;
+margin:5px;
+font-weight:bold;
+cursor:pointer;
+}
 .topbar{
 position:fixed;
 top:0;
 width:100%;
-height:70px;
+height:60px;
 background:rgba(0,0,0,.6);
 display:flex;
 justify-content:space-between;
 align-items:center;
-padding:0 20px;
-z-index:20;
+padding:0 15px;
 }
-.player{font-weight:bold}
-.red{color:#ff4b4b}
-.blue{color:#3fa9ff}
-.middle{font-weight:bold}
-.menu{
-position:fixed;
-top:30%;
-left:50%;
-transform:translateX(-50%);
-z-index:10;
-text-align:center;
-}
-button{
-padding:15px 30px;
-border:none;
-border-radius:10px;
-cursor:pointer;
-font-weight:bold;
-margin:5px;
-}
-.hidden{display:none}
 .center{
 flex:1;
 display:flex;
 justify-content:center;
 align-items:center;
 flex-direction:column;
-margin-top:70px;
+margin-top:60px;
 }
 #countdown{
-position:absolute;
-font-size:120px;
+font-size:100px;
 font-weight:900;
 opacity:0;
 }
-.tap-text{
+#mainText{
 font-size:60px;
 font-weight:900;
-text-align:center;
+margin-top:20px;
 }
-@keyframes pop{
-0%{transform:scale(.5);opacity:0}
-50%{transform:scale(1.3);opacity:1}
-100%{transform:scale(1)}
-}
-.countAnim{animation:pop .4s ease}
+.hidden{display:none}
 </style>
 </head>
 <body>
 
 <div class="menu" id="menu">
 <button id="findMatch">Maç Bul</button>
+<br>
 <button id="createRoom">Oda Kur</button>
-<div id="statusText" style="margin-top:15px;font-weight:bold;"></div>
+<br>
+<input id="roomInput" placeholder="Oda Kodu">
+<button id="joinRoom">Odaya Gir</button>
+<div id="statusText" style="margin-top:15px;"></div>
 </div>
 
 <div class="topbar hidden" id="topbar">
-<div class="player red">
-<div id="myName"></div>
-<div>Skor: <span id="myScore">0</span></div>
-</div>
-<div class="middle">
-<div id="roundInfo">Round 1 / 7</div>
-</div>
-<div class="player blue">
-<div id="oppName"></div>
-<div>Skor: <span id="oppScore">0</span></div>
-</div>
+<div id="myInfo"></div>
+<div id="roundInfo"></div>
+<div id="oppInfo"></div>
 </div>
 
 <div class="center hidden" id="arena">
 <div id="countdown"></div>
-<div class="tap-text" id="mainText">Hazır...</div>
-
-<div id="finishButtons" class="hidden">
-<button onclick="rematch()">Yeniden Oyna</button>
-<button onclick="newMatch()">Yeni Kişi Bul</button>
-</div>
+<div id="mainText">Hazır...</div>
 </div>
 
 <script type="module">
@@ -125,8 +110,8 @@ import {
 getAuth, onAuthStateChanged, signInAnonymously
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-/* FIREBASE CONFIG */
-const firebaseConfig = {
+/* FIREBASE */
+const firebaseConfig={
 apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
 authDomain:"emirhan-site.firebaseapp.com",
 projectId:"emirhan-site",
@@ -139,226 +124,187 @@ const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 const auth=getAuth(app);
 
-let uid=null,username=null;
+let uid,username;
 let roomId=null,isHost=false;
-let roomUnsub=null,queueUnsub=null;
-let gameLocked=false;
+let unsub=null;
 let audioCtx=null;
+let lock=false;
 
-/* AUDIO (iOS UNLOCK) */
+/* AUDIO */
 function unlockAudio(){
 if(!audioCtx){
 audioCtx=new (window.AudioContext||window.webkitAudioContext)();
 }
 }
-function playBeep(freq){
+function beep(freq){
 if(!audioCtx)return;
-const osc=audioCtx.createOscillator();
-const gain=audioCtx.createGain();
-osc.connect(gain);
-gain.connect(audioCtx.destination);
-osc.frequency.value=freq;
-osc.start();
-gain.gain.setValueAtTime(.2,audioCtx.currentTime);
-gain.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.3);
-osc.stop(audioCtx.currentTime+.3);
+const o=audioCtx.createOscillator();
+const g=audioCtx.createGain();
+o.connect(g); g.connect(audioCtx.destination);
+o.frequency.value=freq;
+o.start();
+g.gain.setValueAtTime(.2,audioCtx.currentTime);
+g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.3);
+o.stop(audioCtx.currentTime+.3);
 }
 
 /* AUTH */
 onAuthStateChanged(auth,async(user)=>{
-if(!user){ await signInAnonymously(auth); return; }
+if(!user){ await signInAnonymously(auth); return;}
 uid=user.uid;
-
-const ref=doc(db,"users",uid);
-const snap=await getDoc(ref);
-if(!snap.exists()){
 username="Player_"+uid.slice(0,4);
-await setDoc(ref,{username,createdAt:serverTimestamp()});
-}else username=snap.data().username;
 });
 
-/* CLEAN OLD ROOM ON REFRESH */
-async function cleanOldRooms(){
-const q=await getDocs(query(collection(db,"rooms"),
-where("player1","==",uid)));
-q.forEach(async d=>await deleteDoc(d.ref));
+/* ROOM CODE */
+function generateCode(){
+return Math.random().toString(36).substring(2,8).toUpperCase();
 }
 
-/* MATCH FIND */
+/* CLEAN OLD ROOM */
+async function leaveRoom(){
+if(unsub)unsub();
+if(roomId){
+await deleteDoc(doc(db,"rooms",roomId)).catch(()=>{});
+}
+roomId=null;
+}
+
+/* MATCHMAKING */
 findMatch.onclick=async()=>{
 unlockAudio();
 statusText.innerText="Rakip Bekleniyor...";
-findMatch.disabled=true;
-await cleanOldRooms();
+await leaveRoom();
 
-const q=await getDocs(
-query(collection(db,"matchmakingQueue"),
-where("uid","!=",uid),
-limit(1))
-);
+const q=await getDocs(query(collection(db,"matchQueue"),
+where("uid","!=",uid),limit(1)));
 
 if(!q.empty){
 const opp=q.docs[0];
-const oppUser=await getDoc(doc(db,"users",opp.data().uid));
-
-roomId=crypto.randomUUID();
+const code=generateCode();
+roomId=code;
 isHost=true;
 
-await setDoc(doc(db,"rooms",roomId),{
+await setDoc(doc(db,"rooms",code),{
 player1:uid,
 player2:opp.data().uid,
-p1Name:username,
-p2Name:oppUser.data().username,
 p1:0,p2:0,
 round:1,
 state:"countdown",
-count:3,
-tapWinner:null,
-createdAt:serverTimestamp()
+count:3
 });
-
-await deleteDoc(doc(db,"matchmakingQueue",opp.id));
+await deleteDoc(opp.ref);
 startGame();
-listenRoom();
 startCountdown();
-
+listenRoom();
 }else{
-await setDoc(doc(db,"matchmakingQueue",uid),{uid});
-listenQueue();
+await setDoc(doc(db,"matchQueue",uid),{uid});
 }
 };
 
 /* CREATE ROOM */
 createRoom.onclick=async()=>{
 unlockAudio();
-roomId=crypto.randomUUID();
+await leaveRoom();
+const code=generateCode();
+roomId=code;
 isHost=true;
 
-await setDoc(doc(db,"rooms",roomId),{
+await setDoc(doc(db,"rooms",code),{
 player1:uid,
 player2:null,
-p1Name:username,
 p1:0,p2:0,
 round:1,
 state:"waiting"
 });
-
-statusText.innerText="Oda Kuruldu. ID: "+roomId;
+statusText.innerText="Oda Kodu: "+code;
 };
 
-function listenQueue(){
-queueUnsub=onSnapshot(
-query(collection(db,"rooms"),where("player2","==",uid)),
-(s)=>{
-if(!s.empty){
-roomId=s.docs[0].id;
+/* JOIN ROOM */
+joinRoom.onclick=async()=>{
+unlockAudio();
+const code=roomInput.value.trim().toUpperCase();
+const ref=doc(db,"rooms",code);
+const snap=await getDoc(ref);
+if(!snap.exists()){ statusText.innerText="Oda Yok"; return;}
+await updateDoc(ref,{player2:uid,state:"countdown",count:3});
+roomId=code;
 isHost=false;
-queueUnsub();
 startGame();
 listenRoom();
-}
-});
-}
+};
 
+/* LISTEN */
 function listenRoom(){
-if(roomUnsub)roomUnsub();
-roomUnsub=onSnapshot(doc(db,"rooms",roomId),(snap)=>{
-if(!snap.exists()){ resetUI(); return; }
+unsub=onSnapshot(doc(db,"rooms",roomId),(snap)=>{
+if(!snap.exists()){reset();return;}
 updateUI(snap.data());
 });
 }
 
+/* COUNTDOWN */
 async function startCountdown(){
 if(!isHost)return;
-let count=3;
-const interval=setInterval(async()=>{
-await updateDoc(doc(db,"rooms",roomId),{count});
-playBeep(600);
-count--;
-if(count<0){
-clearInterval(interval);
+let c=3;
+const int=setInterval(async()=>{
+await updateDoc(doc(db,"rooms",roomId),{count:c});
+beep(600);
+c--;
+if(c<0){
+clearInterval(int);
 await updateDoc(doc(db,"rooms",roomId),{state:"active"});
-playBeep(1200);
+beep(1200);
 }
 },1000);
 }
 
+/* TAP */
 async function tap(){
-if(gameLocked)return;
-gameLocked=true;
-
+if(lock)return;
+lock=true;
 const ref=doc(db,"rooms",roomId);
 await runTransaction(db,async(t)=>{
 const snap=await t.get(ref);
 if(!snap.exists())return;
 const d=snap.data();
-if(d.state!=="active"||d.tapWinner)return;
-t.update(ref,{tapWinner:uid});
+if(d.state!=="active"||d.winner)return;
+t.update(ref,{winner:uid,state:"result"});
 });
-setTimeout(()=>gameLocked=false,200);
+setTimeout(()=>lock=false,200);
 }
 
+/* UI */
 function updateUI(d){
-if(!d.player2){
-mainText.innerText="Rakip Bekleniyor...";
-return;
-}
-
-myName.innerText=uid===d.player1?d.p1Name:d.p2Name;
-oppName.innerText=uid===d.player1?d.p2Name:d.p1Name;
-myScore.innerText=uid===d.player1?d.p1:d.p2;
-oppScore.innerText=uid===d.player1?d.p2:d.p1;
 roundInfo.innerText="Round "+d.round+" / 7";
+myInfo.innerText="Sen";
+oppInfo.innerText="Rakip";
 
-if(d.count!==undefined){
-countdown.innerText=d.count>0?d.count:"GO!";
-countdown.style.opacity=1;
-countdown.classList.remove("countAnim");
-void countdown.offsetWidth;
-countdown.classList.add("countAnim");
-setTimeout(()=>countdown.style.opacity=0,600);
+if(d.state==="waiting"){
+mainText.innerText="Rakip Bekleniyor...";
 }
-
-if(d.tapWinner){
-mainText.innerText=d.tapWinner===uid?"Kazandın!":"Kaybettin!";
+if(d.state==="countdown"){
+countdown.style.opacity=1;
+countdown.innerText=d.count>0?d.count:"GO!";
 }
 if(d.state==="active"){
+countdown.style.opacity=0;
 mainText.innerText="TAP!";
 }
-if(d.state==="finished"){
-mainText.innerText="Maç Bitti!";
-finishButtons.classList.remove("hidden");
+if(d.state==="result"){
+mainText.innerText=d.winner===uid?"Kazandın!":"Kaybettin!";
 }
 }
 
 function startGame(){
-menu.style.display="none";
+menu.classList.add("hidden");
 arena.classList.remove("hidden");
 topbar.classList.remove("hidden");
 }
 
-async function resetUI(){
-menu.style.display="block";
+function reset(){
+menu.classList.remove("hidden");
 arena.classList.add("hidden");
 topbar.classList.add("hidden");
-findMatch.disabled=false;
-statusText.innerText="";
 }
-
-window.rematch=async()=>{
-if(!isHost)return;
-await updateDoc(doc(db,"rooms",roomId),{
-p1:0,p2:0,round:1,state:"countdown",count:3,tapWinner:null
-});
-startCountdown();
-finishButtons.classList.add("hidden");
-};
-
-window.newMatch=async()=>{
-await deleteDoc(doc(db,"rooms",roomId)).catch(()=>{});
-roomId=null;
-resetUI();
-};
 
 document.addEventListener("touchstart",tap);
 document.addEventListener("mousedown",tap);
