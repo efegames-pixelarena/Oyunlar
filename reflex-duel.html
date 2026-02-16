@@ -7,7 +7,6 @@
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
-
 body{
 height:100vh;
 overflow:hidden;
@@ -18,13 +17,11 @@ background:linear-gradient(-45deg,#0b0f1a,#10182a,#0b0f1a,#16223a);
 background-size:400% 400%;
 animation:bg 12s ease infinite;
 }
-
 @keyframes bg{
 0%{background-position:0% 50%}
 50%{background-position:100% 50%}
 100%{background-position:0% 50%}
 }
-
 .topbar{
 position:fixed;
 top:0;
@@ -37,13 +34,10 @@ align-items:center;
 padding:0 20px;
 z-index:20;
 }
-
 .player{font-weight:bold}
 .red{color:#ff4b4b}
 .blue{color:#3fa9ff}
-
 .middle{font-weight:bold}
-
 .menu{
 position:fixed;
 top:25%;
@@ -51,7 +45,6 @@ left:50%;
 transform:translateX(-50%);
 z-index:10;
 }
-
 button{
 padding:15px 30px;
 border:none;
@@ -60,9 +53,7 @@ cursor:pointer;
 font-weight:bold;
 margin:5px;
 }
-
 .hidden{display:none}
-
 .center{
 flex:1;
 display:flex;
@@ -71,25 +62,21 @@ align-items:center;
 flex-direction:column;
 margin-top:70px;
 }
-
 #countdown{
 position:absolute;
 font-size:120px;
 font-weight:900;
 opacity:0;
 }
-
 .tap-text{
 font-size:70px;
 font-weight:900;
 }
-
 @keyframes pop{
 0%{transform:scale(.5);opacity:0}
 50%{transform:scale(1.3);opacity:1}
 100%{transform:scale(1)}
 }
-
 .countAnim{animation:pop .4s ease}
 </style>
 </head>
@@ -104,11 +91,9 @@ font-weight:900;
 <div id="myName"></div>
 <div>Skor: <span id="myScore">0</span></div>
 </div>
-
 <div class="middle">
 <div id="roundInfo">Round 1 / 7</div>
 </div>
-
 <div class="player blue">
 <div id="oppName"></div>
 <div>Skor: <span id="oppScore">0</span></div>
@@ -130,30 +115,37 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import {
 getFirestore, doc, setDoc, updateDoc, onSnapshot,
 serverTimestamp, collection, query, limit,
-getDocs, deleteDoc, where, getDoc, addDoc
+getDocs, deleteDoc, where, getDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {
 getAuth, onAuthStateChanged, signInAnonymously
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-const firebaseConfig={ /* SENİN CONFIG */ };
+/* 🔥 SENİN GERÇEK CONFIG */
+const firebaseConfig = {
+apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
+authDomain:"emirhan-site.firebaseapp.com",
+projectId:"emirhan-site",
+storageBucket:"emirhan-site.firebasestorage.app",
+messagingSenderId:"668871888390",
+appId:"1:668871888390:web:76568bda84cb1641f7bd87"
+};
 
 const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 const auth=getAuth(app);
 
-let uid,username,roomId,isHost=false;
+let uid=null,username=null,roomId=null,isHost=false;
 let unsubscribeRoom=null;
-
-/* AUDIO (iOS UYUMLU) */
-const beep=new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg");
-beep.load();
 
 /* AUTH */
 onAuthStateChanged(auth,async(user)=>{
-if(!user){ await signInAnonymously(auth); }
-else{
+if(!user){
+await signInAnonymously(auth);
+return;
+}
 uid=user.uid;
+
 const ref=doc(db,"users",uid);
 const snap=await getDoc(ref);
 
@@ -163,16 +155,23 @@ await setDoc(ref,{username,createdAt:serverTimestamp()});
 }else{
 username=snap.data().username;
 }
-}
 });
 
-/* MATCH */
+/* MAÇ BUL */
 document.getElementById("findMatch").onclick=async()=>{
 
-// eski queue temizle
+if(!uid){
+alert("Bağlanıyor... 1 saniye sonra tekrar dene.");
+return;
+}
+
 await deleteDoc(doc(db,"matchmakingQueue",uid)).catch(()=>{});
 
-const q=await getDocs(query(collection(db,"matchmakingQueue"),where("uid","!=",uid),limit(1)));
+const q=await getDocs(
+query(collection(db,"matchmakingQueue"),
+where("uid","!=",uid),
+limit(1))
+);
 
 if(!q.empty){
 
@@ -196,6 +195,7 @@ createdAt:serverTimestamp()
 });
 
 await deleteDoc(doc(db,"matchmakingQueue",opp.id));
+
 startGame();
 listenRoom();
 startCountdown();
@@ -208,7 +208,9 @@ alert("Rakip bekleniyor...");
 };
 
 function listenForMatch(){
-onSnapshot(query(collection(db,"rooms"),where("player2","==",uid)),(s)=>{
+onSnapshot(
+query(collection(db,"rooms"),where("player2","==",uid)),
+(s)=>{
 if(!s.empty){
 roomId=s.docs[0].id;
 startGame();
@@ -227,16 +229,13 @@ updateUI(snap.data());
 });
 }
 
-/* COUNTDOWN */
 async function startCountdown(){
 if(!isHost) return;
 
 let count=3;
 const interval=setInterval(async()=>{
 await updateDoc(doc(db,"rooms",roomId),{count});
-beep.play().catch(()=>{});
 count--;
-
 if(count<0){
 clearInterval(interval);
 await updateDoc(doc(db,"rooms",roomId),{state:"active"});
@@ -244,7 +243,6 @@ await updateDoc(doc(db,"rooms",roomId),{state:"active"});
 },1000);
 }
 
-/* TAP (SPAM SERBEST) */
 async function tap(){
 if(!roomId) return;
 const ref=doc(db,"rooms",roomId);
@@ -257,7 +255,6 @@ await updateDoc(ref,{tapWinner:uid});
 }
 }
 
-/* UI */
 function updateUI(d){
 
 myName.innerText=uid===d.player1?d.p1Name:d.p2Name;
@@ -311,7 +308,6 @@ arena.classList.remove("hidden");
 topbar.classList.remove("hidden");
 }
 
-/* REMATCH */
 window.rematch=async()=>{
 finishButtons.classList.add("hidden");
 if(isHost){
@@ -322,7 +318,6 @@ startCountdown();
 }
 };
 
-/* NEW MATCH */
 window.newMatch=async()=>{
 unsubscribeRoom&&unsubscribeRoom();
 await deleteDoc(doc(db,"rooms",roomId)).catch(()=>{});
