@@ -298,6 +298,19 @@ const firebaseConfig = {
   appId:"1:668871888390:web:76568bda84cb1641f7bd87"
 };
 
+  /* OYUN GİRİŞ KONTROLÜ */
+window.checkLogin = function(page){
+  const user = auth.currentUser;
+
+  if(!user){
+    alert("Lütfen giriş yapın.");
+    openLogin(); // giriş modalını aç
+    return;
+  }
+
+  window.location.href = page;
+};
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
