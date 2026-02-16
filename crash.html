@@ -131,6 +131,55 @@ transition:0.2s;
 
 <script type="module">
 
+/* ===== SES SİSTEMİ (DÜZELTİLDİ) ===== */
+let audioCtx=null;
+function initAudio(){
+if(!audioCtx){
+audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+}
+if(audioCtx.state==="suspended") audioCtx.resume();
+}
+document.addEventListener("click",initAudio,{once:true});
+
+function playBeep(freq,dur,type="sine",vol=0.2){
+initAudio();
+const o=audioCtx.createOscillator();
+const g=audioCtx.createGain();
+o.type=type;
+o.frequency.value=freq;
+o.connect(g);
+g.connect(audioCtx.destination);
+g.gain.setValueAtTime(vol,audioCtx.currentTime);
+g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+dur/1000);
+o.start();
+o.stop(audioCtx.currentTime+dur/1000);
+}
+
+function countdownSound(){ playBeep(900,120,"square",0.25); }
+function crashSound(){ playBeep(60,600,"sawtooth",0.6); }
+function cashSound(){
+playBeep(1200,100,"triangle",0.3);
+setTimeout(()=>playBeep(1500,120,"triangle",0.3),80);
+}
+let flightOsc=null;
+function startFlightSound(){
+initAudio();
+flightOsc=audioCtx.createOscillator();
+let gain=audioCtx.createGain();
+flightOsc.type="sine";
+flightOsc.frequency.value=200;
+flightOsc.connect(gain);
+gain.connect(audioCtx.destination);
+gain.gain.value=0.15;
+flightOsc.start();
+}
+function stopFlightSound(){
+if(flightOsc){
+flightOsc.stop();
+flightOsc=null;
+}
+}
+
 /* ===== UZAY ANİMASYONU ===== */
 const canvas=document.getElementById("graph");
 const ctx=canvas.getContext("2d");
@@ -201,45 +250,14 @@ ufoActive=false;
 }
 }
 
-/* ===== FIREBASE & OYUN KODUN DEĞİŞMEDİ ===== */
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth,onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore,doc,onSnapshot,updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-const firebaseConfig={
-apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
-authDomain:"emirhan-site.firebaseapp.com",
-projectId:"emirhan-site",
-storageBucket:"emirhan-site.firebasestorage.app",
-messagingSenderId:"668871888390",
-appId:"1:668871888390:web:76568bda84cb1641f7bd87"
-};
-
-const app=initializeApp(firebaseConfig);
-const auth=getAuth(app);
-const db=getFirestore(app);
-
-let userRef=null;
-let balance=0;
-
-onAuthStateChanged(auth,user=>{
-if(user){
-userRef=doc(db,"users",user.uid);
-onSnapshot(userRef,snap=>{
-if(snap.exists()){
-balance=snap.data().balance||0;
-updateUI();
-}
-});
-}
-});
-
+/* ===== OYUN ===== */
 let phase="betting";
 let multiplier=1;
 let crashPoint=0;
 let animationId;
 let activeBet1=0;
 let activeBet2=0;
+let balance=0;
 
 const multiplierEl=document.getElementById("multiplier");
 
@@ -260,11 +278,14 @@ function startFlight(){
 phase="flying";
 multiplier=1;
 crashPoint=1.5+Math.random()*4;
+startFlightSound();
 animationId=requestAnimationFrame(animate);
 }
 
 function crash(){
 phase="crashed";
+stopFlightSound();
+crashSound();
 addHistory(multiplier);
 activeBet1=0;
 activeBet2=0;
@@ -280,6 +301,7 @@ multiplierEl.innerText="Uçuşa "+count+" Saniye";
 
 let interval=setInterval(()=>{
 count--;
+countdownSound();
 if(count<=0){
 clearInterval(interval);
 startFlight();
@@ -330,21 +352,19 @@ let active=box===1?activeBet1:activeBet2;
 if(phase==="betting" && active===0){
 if(balance>=amount){
 balance-=amount;
-await updateDoc(userRef,{balance});
 if(box===1) activeBet1=amount;
 else activeBet2=amount;
 }
 }
 else if(phase==="betting" && active>0){
 balance+=active;
-await updateDoc(userRef,{balance});
 if(box===1) activeBet1=0;
 else activeBet2=0;
 }
 else if(phase==="flying" && active>0){
 let win=Math.floor(active*multiplier);
 balance+=win;
-await updateDoc(userRef,{balance});
+cashSound();
 if(box===1) activeBet1=0;
 else activeBet2=0;
 }
