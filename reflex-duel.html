@@ -73,23 +73,12 @@ font-weight:900;
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
-getFirestore,
-doc,
-setDoc,
-onSnapshot,
-serverTimestamp,
-collection,
-query,
-limit,
-getDocs,
-deleteDoc,
-where
+getFirestore, doc, setDoc, updateDoc, onSnapshot,
+serverTimestamp, collection, query, limit, getDocs,
+deleteDoc, where
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
 import {
-getAuth,
-onAuthStateChanged,
-signInAnonymously
+getAuth, onAuthStateChanged, signInAnonymously
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 /* CONFIG */
@@ -106,99 +95,176 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-let unsubscribeRoom = null;
+let uid=null;
+let roomId=null;
+let isHost=false;
+let localTapped=false;
 
-/* AUTH */
-onAuthStateChanged(auth, async (user)=>{
-if(!user){
-await signInAnonymously(auth);
-}
+onAuthStateChanged(auth, async(user)=>{
+ if(!user) await signInAnonymously(auth);
+ else uid=user.uid;
 });
 
-/* MATCHMAKING */
+/* MATCH */
 document.getElementById("findMatch").onclick = async ()=>{
 
-if(!auth.currentUser){
-alert("Auth yükleniyor, tekrar dene.");
-return;
-}
-
-const uid = auth.currentUser.uid;
 const queueRef = collection(db,"matchmakingQueue");
-
-/* 🔥 KENDİNİ HARİÇ TUT */
-const snap = await getDocs(
-query(queueRef, where("uid","!=",uid), limit(1))
-);
+const snap = await getDocs(query(queueRef, where("uid","!=",uid), limit(1)));
 
 if(!snap.empty){
 
-const opponentData = snap.docs[0];
-const opponentId = opponentData.data().uid;
-const roomId = crypto.randomUUID();
+const opp = snap.docs[0];
+roomId = crypto.randomUUID();
+isHost=true;
 
-/* ROOM OLUŞTUR */
 await setDoc(doc(db,"rooms",roomId),{
 player1:uid,
-player2:opponentId,
-status:"active",
-createdAt:serverTimestamp()
+player2:opp.data().uid,
+round:1,
+p1:0,
+p2:0,
+state:"waiting"
 });
 
-/* İKİSİNİ DE QUEUE'DAN SİL */
+await deleteDoc(doc(db,"matchmakingQueue",opp.id));
 await deleteDoc(doc(db,"matchmakingQueue",uid));
-await deleteDoc(doc(db,"matchmakingQueue",opponentData.id));
 
-listenRoom(roomId);
-startGame();
+listenRoom();
+startRound();
 
 }else{
 
-/* QUEUE'YA EKLE */
-await setDoc(doc(db,"matchmakingQueue",uid),{
-uid:uid,
-createdAt:serverTimestamp()
-});
-
-/* ODA DİNLER */
-listenForMatch(uid);
-
+await setDoc(doc(db,"matchmakingQueue",uid),{uid:uid});
+listenForMatch();
 alert("Rakip bekleniyor...");
 }
 };
 
-/* RAKİP GELİNCE OTOMATİK BAŞLAT */
-function listenForMatch(uid){
-
-const roomsRef = collection(db,"rooms");
-
-unsubscribeRoom = onSnapshot(
-query(roomsRef, where("player2","==",uid)),
-(snapshot)=>{
-if(!snapshot.empty){
-const roomId = snapshot.docs[0].id;
-listenRoom(roomId);
-startGame();
+function listenForMatch(){
+onSnapshot(query(collection(db,"rooms"), where("player2","==",uid)),
+(s)=>{
+if(!s.empty){
+roomId=s.docs[0].id;
+listenRoom();
 }
 });
 }
 
-function listenRoom(roomId){
-
-unsubscribeRoom = onSnapshot(doc(db,"rooms",roomId),(docSnap)=>{
-if(docSnap.exists()){
-console.log("Oda güncellendi:",docSnap.data());
-}
+function listenRoom(){
+onSnapshot(doc(db,"rooms",roomId),(snap)=>{
+if(!snap.exists()) return;
+const data=snap.data();
+updateUI(data);
 });
 }
 
-/* UI */
+/* ROUND */
+async function startRound(){
+
+if(!isHost) return;
+
+await updateDoc(doc(db,"rooms",roomId),{state:"delay"});
+
+const delay = 2000 + Math.random()*3000;
+
+setTimeout(async()=>{
+await updateDoc(doc(db,"rooms",roomId),{
+state:"active",
+startTime:Date.now(),
+tapWinner:null
+});
+},delay);
+}
+
+async function tap(){
+
+if(localTapped) return;
+localTapped=true;
+
+const ref = doc(db,"rooms",roomId);
+const snap = await getDocs(query(collection(db,"rooms")));
+const data = (await snap.docs.find(d=>d.id===roomId)).data();
+
+if(data.state!=="active"){
+loseRound();
+return;
+}
+
+if(!data.tapWinner){
+await updateDoc(ref,{
+tapWinner:uid,
+tapTime:Date.now()
+});
+}
+}
+
+function loseRound(){
+document.getElementById("mainText").innerText="ERKEN!";
+localTapped=false;
+}
+
+function updateUI(data){
+
+if(data.state==="delay"){
+document.getElementById("mainText").innerText="Hazır Ol...";
+localTapped=false;
+}
+
+if(data.state==="active"){
+document.getElementById("mainText").innerText="TAP!";
+}
+
+if(data.tapWinner){
+
+if(data.tapWinner===uid){
+document.getElementById("mainText").innerText="Kazandın!";
+}else{
+document.getElementById("mainText").innerText="Kaybettin!";
+}
+
+setTimeout(async()=>{
+if(isHost){
+let p1=data.p1;
+let p2=data.p2;
+
+if(data.tapWinner===data.player1) p1++;
+else p2++;
+
+if(p1===4 || p2===4){
+await updateDoc(doc(db,"rooms",roomId),{state:"finished"});
+}else{
+await updateDoc(doc(db,"rooms",roomId),{
+p1,p2,
+round:data.round+1,
+state:"waiting",
+tapWinner:null
+});
+startRound();
+}
+}
+},1500);
+}
+
+if(data.state==="finished"){
+if((data.p1>data.p2 && uid===data.player1) ||
+   (data.p2>data.p1 && uid===data.player2)){
+document.getElementById("mainText").innerText="MAÇ KAZANDIN!";
+}else{
+document.getElementById("mainText").innerText="MAÇ KAYBETTİN!";
+}
+}
+}
+
 function startGame(){
 document.getElementById("menu").classList.add("hidden");
 document.getElementById("arena").classList.remove("hidden");
-document.getElementById("mainText").innerText="Eşleşme Başladı!";
 }
-</script>
 
+document.addEventListener("touchstart",tap);
+document.addEventListener("mousedown",tap);
+document.addEventListener("keydown",(e)=>{
+if(e.code==="Space") tap();
+});
+</script>
 </body>
 </html>
