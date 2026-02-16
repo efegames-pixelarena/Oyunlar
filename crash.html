@@ -104,9 +104,9 @@ transition:0.2s;
 <body>
 
 <!-- SESLER -->
-<audio id="betSound" src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-jump-coin-216.wav"></audio>
-<audio id="cashSound" src="https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.wav"></audio>
-<audio id="crashSound" src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-retro-game-over-213.wav"></audio>
+<audio id="betSound" preload="auto" src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-jump-coin-216.wav"></audio>
+<audio id="cashSound" preload="auto" src="https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.wav"></audio>
+<audio id="crashSound" preload="auto" src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-retro-game-over-213.wav"></audio>
 
 <div class="top-bar">
 <div class="brand">SkyCrash</div>
@@ -136,11 +136,20 @@ transition:0.2s;
 
 <script type="module">
 
-const betSound=document.getElementById("betSound");
-const cashSound=document.getElementById("cashSound");
-const crashSound=document.getElementById("crashSound");
+/* SES AKTİFLEŞTİRME (Mobil için) */
+let audioUnlocked=false;
+function unlockAudio(){
+if(audioUnlocked) return;
+document.getElementById("betSound").play().then(()=>{}).catch(()=>{});
+document.getElementById("betSound").pause();
+audioUnlocked=true;
+}
+document.body.addEventListener("click",unlockAudio);
 
-function playSound(sound){
+/* SES FONKSİYONU */
+function playSound(id){
+const sound=document.getElementById(id);
+if(!sound) return;
 sound.currentTime=0;
 sound.play().catch(()=>{});
 }
@@ -259,12 +268,15 @@ const multiplierEl=document.getElementById("multiplier");
 
 function animate(){
 drawSpace();
+
 if(phase==="flying"){
 multiplier+=0.002 + multiplier*0.0006;
 multiplierEl.className="multiplier big";
 multiplierEl.innerText=multiplier.toFixed(2)+"x";
+updateUI();
 if(multiplier>=crashPoint){ crash(); return; }
 }
+
 animationId=requestAnimationFrame(animate);
 }
 
@@ -276,7 +288,7 @@ animationId=requestAnimationFrame(animate);
 }
 
 function crash(){
-playSound(crashSound);
+playSound("crashSound");
 phase="crashed";
 addHistory(multiplier);
 activeBet1=0;
@@ -348,7 +360,7 @@ balance-=amount;
 await updateDoc(userRef,{balance});
 if(box===1) activeBet1=amount;
 else activeBet2=amount;
-playSound(betSound);
+playSound("betSound");
 }
 }
 else if(phase==="betting" && active>0){
@@ -363,7 +375,7 @@ balance+=win;
 await updateDoc(userRef,{balance});
 if(box===1) activeBet1=0;
 else activeBet2=0;
-playSound(cashSound);
+playSound("cashSound");
 }
 
 updateUI();
