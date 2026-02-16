@@ -130,33 +130,59 @@ transition:0.2s;
 </div>
 
 <script type="module">
+
 /* ===== CANVAS ===== */
 const canvas=document.getElementById("graph");
 const ctx=canvas.getContext("2d");
+function resize(){canvas.width=canvas.offsetWidth;canvas.height=canvas.offsetHeight;}
+window.addEventListener("resize",resize);resize();
 
-function resize(){
-canvas.width=canvas.offsetWidth;
-canvas.height=canvas.offsetHeight;
-}
-window.addEventListener("resize",resize);
-resize();
-
-/* ===== SESLER GERİ EKLENDİ ===== */
+/* ===== SESLER ===== */
 let audioCtx=new (window.AudioContext||window.webkitAudioContext)();
 function tone(f,d,t="sine",v=0.2){
 let o=audioCtx.createOscillator();
 let g=audioCtx.createGain();
-o.type=t;
-o.frequency.value=f;
-o.connect(g);
-g.connect(audioCtx.destination);
-g.gain.value=v;
-o.start();
+o.type=t;o.frequency.value=f;
+o.connect(g);g.connect(audioCtx.destination);
+g.gain.value=v;o.start();
 o.stop(audioCtx.currentTime+d/1000);
 }
-function soundCrash(){tone(70,700,"sawtooth",0.5);}
-function soundCash(){tone(1300,120,"triangle",0.3);}
+function soundCrash(){tone(80,600,"sawtooth",0.5);}
+function soundCash(){tone(1200,150,"triangle",0.3);}
 function soundTick(){tone(900,100,"square",0.2);}
+
+/* ===== FIREBASE ORİJİNAL ===== */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth,onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore,doc,onSnapshot,updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig={
+apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
+authDomain:"emirhan-site.firebaseapp.com",
+projectId:"emirhan-site",
+storageBucket:"emirhan-site.firebasestorage.app",
+messagingSenderId:"668871888390",
+appId:"1:668871888390:web:76568bda84cb1641f7bd87"
+};
+
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getFirestore(app);
+
+let userRef=null;
+let balance=0;
+
+onAuthStateChanged(auth,user=>{
+if(user){
+userRef=doc(db,"users",user.uid);
+onSnapshot(userRef,snap=>{
+if(snap.exists()){
+balance=snap.data().balance||0;
+updateUI();
+}
+});
+}
+});
 
 /* ===== OYUN ===== */
 let phase="betting";
@@ -165,10 +191,12 @@ let crashPoint=0;
 let animationId;
 let activeBet1=0;
 let activeBet2=0;
-let balance=10000;
+
+let rocketX=0,rocketY=0,rocketCrash=false,fallSpeed=0;
+
 const multiplierEl=document.getElementById("multiplier");
 
-/* ===== HISTORY GERİ GELDİ ===== */
+/* ===== HISTORY ===== */
 function addHistory(val){
 let span=document.createElement("span");
 span.innerText=val.toFixed(2)+"x";
@@ -176,18 +204,13 @@ span.style.background=val<2?"#ff2a4d":"#00c853";
 document.getElementById("history").prepend(span);
 }
 
-/* ===== ROKET ÇİZGİ HİZASINDA YAVAŞ ===== */
-let rocketX=0, rocketY=0, rocketCrash=false, fallSpeed=0;
-
+/* ===== ROKET ===== */
 function drawRocket(){
 let progress=Math.min(multiplier/10,1);
 rocketX=progress*canvas.width;
 rocketY=canvas.height-(Math.log(multiplier+1)/Math.log(11))*canvas.height;
 
-if(rocketCrash){
-fallSpeed+=0.4;
-rocketY+=fallSpeed;
-}
+if(rocketCrash){fallSpeed+=0.4;rocketY+=fallSpeed;}
 
 ctx.beginPath();
 ctx.arc(rocketX,rocketY,8,0,Math.PI*2);
@@ -196,8 +219,8 @@ ctx.fill();
 
 if(rocketCrash){
 ctx.beginPath();
-ctx.arc(rocketX,rocketY,25,0,Math.PI*2);
-ctx.fillStyle="rgba(255,0,0,0.5)";
+ctx.arc(rocketX,rocketY,30,0,Math.PI*2);
+ctx.fillStyle="rgba(255,0,0,0.4)";
 ctx.fill();
 }
 }
@@ -206,22 +229,20 @@ function animate(){
 ctx.clearRect(0,0,canvas.width,canvas.height);
 
 if(phase==="flying"){
-multiplier+=0.002 + multiplier*0.0006;
+multiplier+=0.002+multiplier*0.0006;
 multiplierEl.className="multiplier big";
 multiplierEl.innerText=multiplier.toFixed(2)+"x";
 drawRocket();
-if(multiplier>=crashPoint){ crash(); return; }
+if(multiplier>=crashPoint){crash();return;}
 }
-if(phase==="crashed"){
-drawRocket();
-}
+if(phase==="crashed"){drawRocket();}
+
 animationId=requestAnimationFrame(animate);
 }
 
 function startFlight(){
 phase="flying";
-rocketCrash=false;
-fallSpeed=0;
+rocketCrash=false;fallSpeed=0;
 multiplier=1;
 crashPoint=1.5+Math.random()*4;
 animationId=requestAnimationFrame(animate);
@@ -232,8 +253,8 @@ phase="crashed";
 rocketCrash=true;
 soundCrash();
 addHistory(multiplier);
-activeBet1=0;
-activeBet2=0;
+activeBet1=0;activeBet2=0;
+updateUI();
 setTimeout(startCountdown,3000);
 }
 
@@ -245,16 +266,12 @@ multiplierEl.innerText="Uçuşa "+count+" Saniye";
 let interval=setInterval(()=>{
 soundTick();
 count--;
-if(count<=0){
-clearInterval(interval);
-startFlight();
-}else{
-multiplierEl.innerText="Uçuşa "+count+" Saniye";
-}
+if(count<=0){clearInterval(interval);startFlight();}
+else{multiplierEl.innerText="Uçuşa "+count+" Saniye";}
 },1000);
 }
 
-/* ===== BUTONLAR TAM ÇALIŞIYOR ===== */
+/* ===== BUTONLAR ===== */
 function updateUI(){
 document.getElementById("balance").innerText=balance;
 document.getElementById("bet").innerText=activeBet1+activeBet2;
@@ -296,14 +313,13 @@ balance+=Math.floor(active*multiplier);
 soundCash();
 if(box===1) activeBet1=0; else activeBet2=0;
 }
-
 updateUI();
 }
 
 document.getElementById("btn1").onclick=()=>handleBet(1);
 document.getElementById("btn2").onclick=()=>handleBet(2);
 
-updateUI();
+animate();
 startCountdown();
 </script>
 </body>
