@@ -74,8 +74,8 @@ font-weight:900;
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
 getFirestore, doc, setDoc, updateDoc, onSnapshot,
-serverTimestamp, collection, query, limit, getDocs,
-deleteDoc, where
+serverTimestamp, collection, query, limit,
+getDocs, deleteDoc, where
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {
 getAuth, onAuthStateChanged, signInAnonymously
@@ -99,13 +99,14 @@ let uid=null;
 let roomId=null;
 let isHost=false;
 let localTapped=false;
+let unsubRoom=null;
 
 onAuthStateChanged(auth, async(user)=>{
  if(!user) await signInAnonymously(auth);
  else uid=user.uid;
 });
 
-/* MATCH */
+/* MATCHMAKING */
 document.getElementById("findMatch").onclick = async ()=>{
 
 const queueRef = collection(db,"matchmakingQueue");
@@ -123,18 +124,21 @@ player2:opp.data().uid,
 round:1,
 p1:0,
 p2:0,
-state:"waiting"
+state:"countdown",
+tapWinner:null,
+createdAt:serverTimestamp()
 });
 
 await deleteDoc(doc(db,"matchmakingQueue",opp.id));
 await deleteDoc(doc(db,"matchmakingQueue",uid));
 
+startGame();
 listenRoom();
 startRound();
 
 }else{
 
-await setDoc(doc(db,"matchmakingQueue",uid),{uid:uid});
+await setDoc(doc(db,"matchmakingQueue",uid),{uid});
 listenForMatch();
 alert("Rakip bekleniyor...");
 }
@@ -145,20 +149,29 @@ onSnapshot(query(collection(db,"rooms"), where("player2","==",uid)),
 (s)=>{
 if(!s.empty){
 roomId=s.docs[0].id;
+startGame();
 listenRoom();
 }
 });
 }
 
 function listenRoom(){
-onSnapshot(doc(db,"rooms",roomId),(snap)=>{
+unsubRoom = onSnapshot(doc(db,"rooms",roomId),(snap)=>{
 if(!snap.exists()) return;
+
 const data=snap.data();
 updateUI(data);
+
+/* DISCONNECT CHECK */
+if(data.state!=="finished"){
+if(!data.player1 || !data.player2){
+finishMatch(uid);
+}
+}
 });
 }
 
-/* ROUND */
+/* ROUND ENGINE */
 async function startRound(){
 
 if(!isHost) return;
@@ -170,12 +183,13 @@ const delay = 2000 + Math.random()*3000;
 setTimeout(async()=>{
 await updateDoc(doc(db,"rooms",roomId),{
 state:"active",
-startTime:Date.now(),
+activeAt:serverTimestamp(),
 tapWinner:null
 });
 },delay);
 }
 
+/* TAP */
 async function tap(){
 
 if(localTapped) return;
@@ -183,27 +197,29 @@ localTapped=true;
 
 const ref = doc(db,"rooms",roomId);
 const snap = await getDocs(query(collection(db,"rooms")));
-const data = (await snap.docs.find(d=>d.id===roomId)).data();
+const data = snap.docs.find(d=>d.id===roomId).data();
 
 if(data.state!=="active"){
-loseRound();
+earlyLose();
 return;
 }
 
+/* WINNER LOCK */
 if(!data.tapWinner){
 await updateDoc(ref,{
 tapWinner:uid,
-tapTime:Date.now()
+tapAt:serverTimestamp()
 });
 }
 }
 
-function loseRound(){
+function earlyLose(){
 document.getElementById("mainText").innerText="ERKEN!";
 localTapped=false;
 }
 
-function updateUI(data){
+/* UI + SCORE */
+async function updateUI(data){
 
 if(data.state==="delay"){
 document.getElementById("mainText").innerText="Hazır Ol...";
@@ -216,14 +232,18 @@ document.getElementById("mainText").innerText="TAP!";
 
 if(data.tapWinner){
 
-if(data.tapWinner===uid){
-document.getElementById("mainText").innerText="Kazandın!";
-}else{
-document.getElementById("mainText").innerText="Kaybettin!";
+const win = data.tapWinner===uid;
+document.getElementById("mainText").innerText= win ? "Kazandın!" : "Kaybettin!";
+
+/* REACTION TIME */
+if(data.tapAt && data.activeAt){
+const reaction = data.tapAt.toMillis() - data.activeAt.toMillis();
+console.log("Reaction:",reaction,"ms");
 }
 
 setTimeout(async()=>{
 if(isHost){
+
 let p1=data.p1;
 let p2=data.p2;
 
@@ -231,30 +251,38 @@ if(data.tapWinner===data.player1) p1++;
 else p2++;
 
 if(p1===4 || p2===4){
-await updateDoc(doc(db,"rooms",roomId),{state:"finished"});
+await finishMatch(data.tapWinner);
 }else{
 await updateDoc(doc(db,"rooms",roomId),{
 p1,p2,
 round:data.round+1,
-state:"waiting",
+state:"countdown",
 tapWinner:null
 });
 startRound();
 }
 }
+localTapped=false;
 },1500);
 }
 
 if(data.state==="finished"){
-if((data.p1>data.p2 && uid===data.player1) ||
-   (data.p2>data.p1 && uid===data.player2)){
-document.getElementById("mainText").innerText="MAÇ KAZANDIN!";
-}else{
-document.getElementById("mainText").innerText="MAÇ KAYBETTİN!";
-}
+const win =
+(data.p1>data.p2 && uid===data.player1) ||
+(data.p2>data.p1 && uid===data.player2);
+
+document.getElementById("mainText").innerText=
+win ? "MAÇ KAZANDIN!" : "MAÇ KAYBETTİN!";
 }
 }
 
+async function finishMatch(winnerUid){
+await updateDoc(doc(db,"rooms",roomId),{
+state:"finished"
+});
+}
+
+/* UI */
 function startGame(){
 document.getElementById("menu").classList.add("hidden");
 document.getElementById("arena").classList.remove("hidden");
@@ -266,5 +294,3 @@ document.addEventListener("keydown",(e)=>{
 if(e.code==="Space") tap();
 });
 </script>
-</body>
-</html>
