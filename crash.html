@@ -131,6 +131,39 @@ transition:0.2s;
 
 <script type="module">
 
+/* ===== FIREBASE (SİLİNMEDİ) ===== */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth,onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore,doc,onSnapshot,updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig={
+apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
+authDomain:"emirhan-site.firebaseapp.com",
+projectId:"emirhan-site",
+storageBucket:"emirhan-site.firebasestorage.app",
+messagingSenderId:"668871888390",
+appId:"1:668871888390:web:76568bda84cb1641f7bd87"
+};
+
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getFirestore(app);
+
+let userRef=null;
+let balance=0;
+
+onAuthStateChanged(auth,user=>{
+if(user){
+userRef=doc(db,"users",user.uid);
+onSnapshot(userRef,snap=>{
+if(snap.exists()){
+balance=snap.data().balance||0;
+updateUI();
+}
+});
+}
+});
+
 /* ===== SES SİSTEMİ (DÜZELTİLDİ) ===== */
 let audioCtx=null;
 function initAudio(){
