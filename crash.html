@@ -145,7 +145,7 @@ sound.currentTime=0;
 sound.play().catch(()=>{});
 }
 
-/* ===== CANVAS ANİMASYON AYNI ===== */
+/* ===== UZAY ANİMASYONU ===== */
 const canvas=document.getElementById("graph");
 const ctx=canvas.getContext("2d");
 
@@ -167,8 +167,13 @@ delta:Math.random()*0.02
 });
 }
 
+let meteors=[];
+let ufoX=-200;
+let ufoActive=false;
+
 function drawSpace(){
 ctx.clearRect(0,0,canvas.width,canvas.height);
+
 stars.forEach(s=>{
 s.alpha+=s.delta;
 if(s.alpha<=0||s.alpha>=1) s.delta*=-1;
@@ -177,9 +182,40 @@ ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
 ctx.fillStyle="rgba(255,255,255,"+s.alpha+")";
 ctx.fill();
 });
+
+if(Math.random()<0.01){
+meteors.push({x:Math.random()*canvas.width,y:-20});
 }
 
-/* ===== FIREBASE AYNI ===== */
+meteors.forEach((m,i)=>{
+ctx.beginPath();
+ctx.moveTo(m.x,m.y);
+ctx.lineTo(m.x+40,m.y+80);
+ctx.strokeStyle="white";
+ctx.lineWidth=2;
+ctx.stroke();
+m.x+=5;m.y+=8;
+if(m.y>canvas.height) meteors.splice(i,1);
+});
+
+if(!ufoActive && Math.random()<0.002){
+ufoActive=true;
+ufoX=-100;
+}
+
+if(ufoActive){
+ctx.beginPath();
+ctx.ellipse(ufoX,80,30,12,0,0,Math.PI*2);
+ctx.fillStyle="#9be7ff";
+ctx.fill();
+ufoX+=2;
+if(ufoX>canvas.width+100){
+ufoActive=false;
+}
+}
+}
+
+/* ===== FIREBASE ===== */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth,onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore,doc,onSnapshot,updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -215,8 +251,10 @@ updateUI();
 let phase="betting";
 let multiplier=1;
 let crashPoint=0;
+let animationId;
 let activeBet1=0;
 let activeBet2=0;
+
 const multiplierEl=document.getElementById("multiplier");
 
 function animate(){
@@ -227,18 +265,20 @@ multiplierEl.className="multiplier big";
 multiplierEl.innerText=multiplier.toFixed(2)+"x";
 if(multiplier>=crashPoint){ crash(); return; }
 }
-requestAnimationFrame(animate);
+animationId=requestAnimationFrame(animate);
 }
 
 function startFlight(){
 phase="flying";
 multiplier=1;
 crashPoint=1.5+Math.random()*4;
+animationId=requestAnimationFrame(animate);
 }
 
 function crash(){
 playSound(crashSound);
 phase="crashed";
+addHistory(multiplier);
 activeBet1=0;
 activeBet2=0;
 updateUI();
@@ -250,6 +290,7 @@ phase="betting";
 let count=5;
 multiplierEl.className="multiplier small";
 multiplierEl.innerText="Uçuşa "+count+" Saniye";
+
 let interval=setInterval(()=>{
 count--;
 if(count<=0){
@@ -259,7 +300,15 @@ startFlight();
 multiplierEl.innerText="Uçuşa "+count+" Saniye";
 }
 },1000);
+
 updateUI();
+}
+
+function addHistory(val){
+let span=document.createElement("span");
+span.innerText=val.toFixed(2)+"x";
+span.style.background=val<2?"#ff2a4d":"#00c853";
+document.getElementById("history").prepend(span);
 }
 
 function updateUI(){
@@ -286,6 +335,7 @@ if(!userRef) return;
 
 let input=document.getElementById("bet"+box);
 let amount=parseInt(input.value);
+
 if(amount<1) amount=1;
 if(amount>5000) amount=5000;
 input.value=amount;
