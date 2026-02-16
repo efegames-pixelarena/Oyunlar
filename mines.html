@@ -14,10 +14,14 @@ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
 -webkit-tap-highlight-color:transparent;
 }
 
+html,body{
+height:100%;
+}
+
 body{
 background:#0c111d;
 color:#fff;
-min-height:100vh;
+overflow:hidden;
 }
 
 /* TOP BAR */
@@ -64,9 +68,15 @@ color:#ffcc00;
 
 /* MAIN CONTAINER */
 .container{
-max-width:520px;
-margin:auto;
-padding:90px 15px 20px;
+position:absolute;
+top:60px;
+bottom:0;
+left:0;
+right:0;
+display:flex;
+flex-direction:column;
+padding:15px;
+overflow:auto;
 }
 
 /* MINES HEADER */
@@ -79,11 +89,6 @@ padding:12px 15px;
 border-radius:14px;
 margin-bottom:15px;
 box-shadow:0 0 20px rgba(0,0,0,0.5);
-}
-
-.mines-header span{
-opacity:0.7;
-font-size:14px;
 }
 
 /* GRID */
@@ -105,6 +110,8 @@ font-size:22px;
 cursor:pointer;
 transition:0.25s;
 box-shadow:inset 0 0 8px rgba(0,0,0,0.6);
+position:relative;
+overflow:hidden;
 }
 
 .tile.open{
@@ -117,30 +124,28 @@ background:#ff4d4f;
 box-shadow:0 0 18px red;
 }
 
+/* PATLAMA EFEKTİ */
+.explosion{
+position:absolute;
+width:20px;
+height:20px;
+background:radial-gradient(circle,rgba(255,255,255,1) 0%,rgba(255,0,0,0.8) 40%,rgba(255,0,0,0) 70%);
+border-radius:50%;
+animation:explode 0.6s ease-out forwards;
+}
+
+@keyframes explode{
+0%{transform:scale(0.2);opacity:1;}
+100%{transform:scale(4);opacity:0;}
+}
+
 /* BET PANEL */
 .bet-panel{
 background:#151b26;
 border-radius:16px;
 padding:15px;
 box-shadow:0 0 20px rgba(0,0,0,0.6);
-}
-
-.tabs{
-display:flex;
-margin-bottom:15px;
-}
-
-.tab{
-flex:1;
-text-align:center;
-padding:10px;
-border-radius:12px;
-background:#1e2533;
-font-weight:600;
-}
-
-.tab.active{
-background:#2b3447;
+margin-top:auto;
 }
 
 input,select{
@@ -183,6 +188,11 @@ color:#999;
 </head>
 <body>
 
+<!-- SESLER -->
+<audio id="explodeSound" preload="auto" src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-retro-game-over-213.wav"></audio>
+<audio id="winSound" preload="auto" src="https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.wav"></audio>
+<audio id="cashSound" preload="auto" src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-jump-coin-216.wav"></audio>
+
 <div class="top-bar">
 <div class="brand">PixelArena</div>
 <div class="right-menu">
@@ -195,17 +205,12 @@ color:#999;
 
 <div class="mines-header">
 <div>Mines</div>
-<div><span>Mayın:</span> <span id="mineDisplay">1</span></div>
+<div>Mayın: <span id="mineDisplay">1</span></div>
 </div>
 
 <div id="grid"></div>
 
 <div class="bet-panel">
-
-<div class="tabs">
-<div class="tab active">Manuel</div>
-<div class="tab">Auto Bet</div>
-</div>
 
 <input type="number" id="bet" placeholder="Bahis (250 - 3000)">
 <select id="mineCount"></select>
@@ -222,6 +227,24 @@ color:#999;
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth,onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore,doc,onSnapshot,runTransaction } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+/* IOS SES UNLOCK */
+let audioUnlocked=false;
+function unlockAudio(){
+if(audioUnlocked) return;
+document.querySelectorAll("audio").forEach(a=>{
+a.play().then(()=>a.pause()).catch(()=>{});
+});
+audioUnlocked=true;
+}
+document.body.addEventListener("click",unlockAudio);
+
+function playSound(id){
+const s=document.getElementById(id);
+if(!s) return;
+s.currentTime=0;
+s.play().catch(()=>{});
+}
 
 const firebaseConfig={
 apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
@@ -320,6 +343,8 @@ currentBetText.innerText=betAmount;
 cashoutBtn.addEventListener("click",async()=>{
 if(!gameActive||opened===0) return;
 
+playSound("cashSound");
+
 const win=Math.floor(betAmount*multiplier);
 const userRef=doc(db,"users",auth.currentUser.uid);
 
@@ -327,6 +352,8 @@ await runTransaction(db,async(transaction)=>{
 const snap=await transaction.get(userRef);
 transaction.update(userRef,{balance:snap.data().balance+win});
 });
+
+playSound("winSound");
 
 gameActive=false;
 betInput.disabled=false;
@@ -343,6 +370,13 @@ if(!gameActive||tile.classList.contains("open")) return;
 if(mines.includes(i)){
 tile.classList.add("mine");
 tile.innerHTML="💣";
+
+const boom=document.createElement("div");
+boom.classList.add("explosion");
+tile.appendChild(boom);
+
+playSound("explodeSound");
+
 gameActive=false;
 betInput.disabled=false;
 mineSelect.disabled=false;
