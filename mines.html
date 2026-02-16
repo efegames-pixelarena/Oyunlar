@@ -107,23 +107,20 @@ cursor:pointer;
 <option value="10">10 Mayın</option>
 </select>
 <br>
-<button class="start" onclick="startGame()">Başlat</button>
-<button class="cashout" onclick="cashout()">Cashout</button>
+<button id="startBtn" class="start">Başlat</button>
+<button id="cashoutBtn" class="cashout">Cashout</button>
 
-<h3>Çarpan: <span id="multiplier">1.00x</span></h3>
+<h3>Çarpan: <span id="multiplier">1x</span></h3>
 
 <div id="grid"></div>
 
 </div>
 
-<audio id="safeSound" src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-jump-coin-216.wav"></audio>
-<audio id="boomSound" src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-bomb-explosion-2759.wav"></audio>
-
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth,onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore,doc,onSnapshot,runTransaction } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore,doc,onSnapshot,runTransaction,getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig={
 apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
@@ -149,17 +146,21 @@ const houseEdge=0.97;
 const grid=document.getElementById("grid");
 const multiplierText=document.getElementById("multiplier");
 const balanceText=document.getElementById("userBalance");
+const startBtn=document.getElementById("startBtn");
+const cashoutBtn=document.getElementById("cashoutBtn");
 
+/* GRID */
 function createGrid(){
 grid.innerHTML="";
 for(let i=0;i<25;i++){
 const tile=document.createElement("div");
 tile.classList.add("tile");
-tile.onclick=()=>reveal(i,tile);
+tile.addEventListener("click",()=>reveal(i,tile));
 grid.appendChild(tile);
 }
 }
 
+/* MAYIN ÜRET */
 function generateMines(){
 mines=[];
 while(mines.length<mineTotal){
@@ -168,42 +169,51 @@ if(!mines.includes(r)) mines.push(r);
 }
 }
 
-/* GERÇEK MATEMATİKSEL RTP */
+/* RTP HESAP */
 function calculateMultiplier(){
 const safe=25-mineTotal;
 let prob=1;
 for(let i=0;i<opened;i++){
 prob*=(safe-i)/(25-i);
 }
-multiplier=(1/prob)*houseEdge;
-multiplierText.innerText=multiplier.toFixed(2)+"x";
+multiplier=Math.floor((1/prob)*houseEdge);
+multiplierText.innerText=multiplier+"x";
 }
 
-async function startGame(){
+/* OYUN BAŞLAT */
+startBtn.addEventListener("click", async ()=>{
 
 if(!auth.currentUser) return alert("Giriş yap.");
 
-betAmount=parseFloat(document.getElementById("bet").value);
+betAmount=parseInt(document.getElementById("bet").value);
 mineTotal=parseInt(document.getElementById("mineCount").value);
 
 if(!betAmount||betAmount<=0) return alert("Geçerli bahis gir.");
 
 const userRef=doc(db,"users",auth.currentUser.uid);
 
+try{
 await runTransaction(db,async(transaction)=>{
 const snap=await transaction.get(userRef);
+if(!snap.exists()) throw "Kullanıcı yok";
 if(snap.data().balance<betAmount) throw "Yetersiz bakiye";
 transaction.update(userRef,{balance:snap.data().balance-betAmount});
 });
+}catch(e){
+alert(e);
+return;
+}
 
 opened=0;
 multiplier=1;
-multiplierText.innerText="1.00x";
+multiplierText.innerText="1x";
 generateMines();
 createGrid();
 gameActive=true;
-}
 
+});
+
+/* KARE AÇ */
 function reveal(index,tile){
 
 if(!gameActive||tile.classList.contains("open")) return;
@@ -211,7 +221,6 @@ if(!gameActive||tile.classList.contains("open")) return;
 if(mines.includes(index)){
 tile.classList.add("mine");
 tile.innerHTML="💣";
-document.getElementById("boomSound").play();
 gameActive=false;
 return;
 }
@@ -219,16 +228,16 @@ return;
 opened++;
 tile.classList.add("open");
 tile.innerHTML="💎";
-document.getElementById("safeSound").play();
-
 calculateMultiplier();
 }
 
-async function cashout(){
+/* CASHOUT */
+cashoutBtn.addEventListener("click", async ()=>{
 
 if(!gameActive||opened===0) return;
 
 gameActive=false;
+
 const win=betAmount*multiplier;
 
 const userRef=doc(db,"users",auth.currentUser.uid);
@@ -238,16 +247,17 @@ const snap=await transaction.get(userRef);
 transaction.update(userRef,{balance:snap.data().balance+win});
 });
 
-alert("Kazandın: "+win.toFixed(2)+"₺");
-}
+alert("Kazandın: "+win+"₺");
 
-/* BAKİYE CANLI */
+});
+
+/* CANLI BAKİYE */
 onAuthStateChanged(auth,(user)=>{
 if(user){
 const userRef=doc(db,"users",user.uid);
 onSnapshot(userRef,(snap)=>{
 if(snap.exists()){
-balanceText.innerText=snap.data().balance.toFixed(2)+"₺";
+balanceText.innerText=parseInt(snap.data().balance)+"₺";
 }
 });
 }
