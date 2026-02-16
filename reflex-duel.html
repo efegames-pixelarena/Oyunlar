@@ -3,113 +3,54 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Reflex Duel</title>
-
+<title>Reflex Duel V2</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
 body{
-height:100vh;
-overflow:hidden;
+margin:0;
+background:#0f172a;
 color:white;
-display:flex;
-flex-direction:column;
-background:linear-gradient(-45deg,#0b0f1a,#10182a,#0b0f1a,#16223a);
-background-size:400% 400%;
-animation:bg 12s ease infinite;
-}
-@keyframes bg{
-0%{background-position:0% 50%}
-50%{background-position:100% 50%}
-100%{background-position:0% 50%}
-}
-.menu{
-position:absolute;
-top:30%;
-left:50%;
-transform:translateX(-50%);
-text-align:center;
-}
-input{
-padding:10px;
-margin:5px;
-border-radius:8px;
-border:none;
-text-align:center;
-}
-button{
-padding:12px 25px;
-border:none;
-border-radius:8px;
-margin:5px;
-font-weight:bold;
-cursor:pointer;
-}
-.topbar{
-position:fixed;
-top:0;
-width:100%;
-height:60px;
-background:rgba(0,0,0,.6);
-display:flex;
-justify-content:space-between;
-align-items:center;
-padding:0 15px;
-}
-.center{
-flex:1;
+font-family:Arial;
 display:flex;
 justify-content:center;
 align-items:center;
+height:100vh;
 flex-direction:column;
-margin-top:60px;
 }
-#countdown{
-font-size:100px;
-font-weight:900;
-opacity:0;
+button{
+padding:15px 30px;
+margin:10px;
+border:none;
+border-radius:8px;
+font-size:16px;
+font-weight:bold;
+cursor:pointer;
 }
-#mainText{
-font-size:60px;
-font-weight:900;
-margin-top:20px;
-text-align:center;
-}
+#status{margin-top:15px;font-weight:bold}
+#bigText{font-size:60px;margin-top:40px}
 .hidden{display:none}
 </style>
 </head>
 <body>
 
-<div class="menu" id="menu">
-<button id="findMatch">Maç Bul</button><br>
-<button id="createRoom">Oda Kur</button><br>
-<input id="roomInput" placeholder="Oda Kodu">
-<button id="joinRoom">Odaya Gir</button>
-<div id="statusText" style="margin-top:15px;font-weight:bold;"></div>
-</div>
-
-<div class="topbar hidden" id="topbar">
-<div id="myInfo"></div>
-<div id="roundInfo"></div>
-<div id="oppInfo"></div>
-</div>
-
-<div class="center hidden" id="arena">
-<div id="countdown"></div>
-<div id="mainText">Hazır...</div>
-</div>
+<button id="findBtn">Maç Bul</button>
+<div id="status"></div>
+<div id="bigText" class="hidden"></div>
 
 <script type="module">
+
+/* FIREBASE IMPORTS */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
-getFirestore, doc, setDoc, updateDoc, onSnapshot,
-serverTimestamp, collection, query, limit,
-getDocs, deleteDoc, getDoc, runTransaction
+getFirestore, doc, setDoc, updateDoc,
+deleteDoc, onSnapshot,
+collection, getDocs,
+serverTimestamp, runTransaction
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {
-getAuth, onAuthStateChanged, signInAnonymously
+getAuth, signInAnonymously, onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-/* FIREBASE */
+/* FIREBASE CONFIG (SENİN PROJE) */
 const firebaseConfig={
 apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
 authDomain:"emirhan-site.firebaseapp.com",
@@ -123,15 +64,21 @@ const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 const auth=getAuth(app);
 
-let uid,username;
-let roomId=null,isHost=false;
-let unsub=null;
+/* ELEMENTS */
+const findBtn=document.getElementById("findBtn");
+const status=document.getElementById("status");
+const bigText=document.getElementById("bigText");
+
+/* GLOBALS */
+let uid=null;
+let roomId=null;
+let isHost=false;
+let roomUnsub=null;
 let queueUnsub=null;
 let audioCtx=null;
-let lock=false;
-let countdownStarted=false;
+let tapLock=false;
 
-/* AUDIO */
+/* AUDIO (iOS UYUMLU) */
 function unlockAudio(){
 if(!audioCtx){
 audioCtx=new (window.AudioContext||window.webkitAudioContext)();
@@ -144,74 +91,73 @@ const g=audioCtx.createGain();
 o.connect(g); g.connect(audioCtx.destination);
 o.frequency.value=freq;
 o.start();
-g.gain.setValueAtTime(.25,audioCtx.currentTime);
-g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.25);
-o.stop(audioCtx.currentTime+.25);
+g.gain.setValueAtTime(.3,audioCtx.currentTime);
+g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.2);
+o.stop(audioCtx.currentTime+.2);
 }
 
 /* AUTH */
 onAuthStateChanged(auth,async(user)=>{
-if(!user){ await signInAnonymously(auth); return;}
+if(!user){
+await signInAnonymously(auth);
+return;
+}
 uid=user.uid;
-username="Player_"+uid.slice(0,4);
+
+/* Eski queue temizle */
 await deleteDoc(doc(db,"matchQueue",uid)).catch(()=>{});
 });
 
-/* UTIL */
-function generateCode(){
-return Math.random().toString(36).substring(2,8).toUpperCase();
-}
-async function leaveRoom(){
-if(unsub)unsub();
-if(queueUnsub)queueUnsub();
-if(roomId){
-await deleteDoc(doc(db,"rooms",roomId)).catch(()=>{});
-}
-roomId=null;
-}
-
-/* MATCHMAKING */
-findMatch.onclick=async()=>{
+/* FIND MATCH */
+findBtn.onclick=async()=>{
+if(!uid)return;
 unlockAudio();
-statusText.innerText="Rakip Bekleniyor...";
-await leaveRoom();
+status.innerText="Rakip aranıyor...";
+await cleanUp();
 
-const snap=await getDocs(query(collection(db,"matchQueue"),limit(10)));
+/* Kuyrukta biri var mı */
+const snap=await getDocs(collection(db,"matchQueue"));
 let opponent=null;
 
-snap.forEach(docSnap=>{
-if(docSnap.data().uid!==uid && !opponent){
-opponent=docSnap;
+snap.forEach(d=>{
+if(d.id!==uid && !opponent){
+opponent=d;
 }
 });
 
 if(opponent){
+
 await runTransaction(db,async(t)=>{
 const fresh=await t.get(opponent.ref);
 if(!fresh.exists())return;
-if(fresh.data().uid===uid)return;
 
-const code=generateCode();
-roomId=code;
+roomId=crypto.randomUUID();
 isHost=true;
 
-t.set(doc(db,"rooms",code),{
+t.set(doc(db,"rooms",roomId),{
 player1:uid,
-player2:fresh.data().uid,
+player2:fresh.id,
 round:1,
-p1:0,
-p2:0,
+score1:0,
+score2:0,
 state:"countdown",
 count:3,
-winner:null
+winner:null,
+createdAt:serverTimestamp()
 });
+
 t.delete(opponent.ref);
 });
 
 startGame();
 listenRoom();
+
 }else{
-await setDoc(doc(db,"matchQueue",uid),{uid});
+
+await setDoc(doc(db,"matchQueue",uid),{
+createdAt:serverTimestamp()
+});
+
 listenQueue();
 }
 };
@@ -220,15 +166,14 @@ listenQueue();
 function listenQueue(){
 queueUnsub=onSnapshot(doc(db,"matchQueue",uid),async(snap)=>{
 if(!snap.exists())return;
+
 const rooms=await getDocs(collection(db,"rooms"));
 rooms.forEach(r=>{
-const d=r.data();
-if(d.player2===uid){
+if(r.data().player2===uid){
 roomId=r.id;
 isHost=false;
 startGame();
 listenRoom();
-if(queueUnsub)queueUnsub();
 }
 });
 });
@@ -236,21 +181,25 @@ if(queueUnsub)queueUnsub();
 
 /* ROOM LISTENER */
 function listenRoom(){
-unsub=onSnapshot(doc(db,"rooms",roomId),(snap)=>{
-if(!snap.exists()){reset();return;}
+roomUnsub=onSnapshot(doc(db,"rooms",roomId),(snap)=>{
+if(!snap.exists()){
+resetUI();
+return;
+}
 updateUI(snap.data());
 });
 }
 
 /* COUNTDOWN */
 async function startCountdown(){
-if(!isHost || countdownStarted)return;
-countdownStarted=true;
+if(!isHost)return;
 let c=3;
+
 const int=setInterval(async()=>{
 await updateDoc(doc(db,"rooms",roomId),{count:c});
 beep(600);
 c--;
+
 if(c<0){
 clearInterval(int);
 await updateDoc(doc(db,"rooms",roomId),{state:"active"});
@@ -261,62 +210,73 @@ beep(1200);
 
 /* TAP */
 async function tap(){
-if(lock||!roomId)return;
-lock=true;
+if(tapLock||!roomId)return;
+tapLock=true;
 
 await runTransaction(db,async(t)=>{
 const ref=doc(db,"rooms",roomId);
 const snap=await t.get(ref);
 if(!snap.exists())return;
+
 const d=snap.data();
 if(d.state!=="active"||d.winner)return;
+
 t.update(ref,{winner:uid,state:"result"});
 });
 
-setTimeout(()=>lock=false,200);
+setTimeout(()=>tapLock=false,200);
 }
 
 /* UI */
 function updateUI(d){
-roundInfo.innerText="Round "+d.round+" / 7";
-myInfo.innerText="Sen";
-oppInfo.innerText="Rakip";
+bigText.classList.remove("hidden");
 
-if(d.state==="waiting"){
-mainText.innerText="Rakip Bekleniyor...";
-}
 if(d.state==="countdown"){
-if(isHost) startCountdown();
-countdown.style.opacity=1;
-countdown.innerText=d.count>0?d.count:"GO!";
+if(isHost)startCountdown();
+bigText.innerText=d.count>0?d.count:"GO!";
 }
-if(d.state==="active"){
-countdown.style.opacity=0;
-mainText.innerText="TAP!";
+else if(d.state==="active"){
+bigText.innerText="TAP!";
 }
-if(d.state==="result"){
-mainText.innerText=d.winner===uid?"Kazandın!":"Kaybettin!";
+else if(d.state==="result"){
+bigText.innerText=d.winner===uid?"Kazandın":"Kaybettin";
 }
 }
 
-/* UI SWITCH */
 function startGame(){
-menu.classList.add("hidden");
-arena.classList.remove("hidden");
-topbar.classList.remove("hidden");
-}
-function reset(){
-menu.classList.remove("hidden");
-arena.classList.add("hidden");
-topbar.classList.add("hidden");
-statusText.innerText="";
-roomId=null;
-countdownStarted=false;
+findBtn.classList.add("hidden");
+status.innerText="";
 }
 
+function resetUI(){
+findBtn.classList.remove("hidden");
+bigText.classList.add("hidden");
+bigText.innerText="";
+roomId=null;
+}
+
+/* CLEANUP */
+async function cleanUp(){
+if(roomUnsub)roomUnsub();
+if(queueUnsub)queueUnsub();
+if(roomId && isHost){
+await deleteDoc(doc(db,"rooms",roomId)).catch(()=>{});
+}
+roomId=null;
+}
+
+/* Sayfa kapanınca temizle */
+window.addEventListener("beforeunload",async()=>{
+if(roomId && isHost){
+await deleteDoc(doc(db,"rooms",roomId)).catch(()=>{});
+}
+});
+
+/* TAP EVENTS */
 document.addEventListener("touchstart",tap);
 document.addEventListener("mousedown",tap);
-document.addEventListener("keydown",e=>{if(e.code==="Space")tap()});
+document.addEventListener("keydown",e=>{if(e.code==="Space")tap();});
+
 </script>
 </body>
 </html>
