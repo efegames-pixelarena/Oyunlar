@@ -103,6 +103,11 @@ transition:0.2s;
 </head>
 <body>
 
+<!-- SESLER -->
+<audio id="betSound" src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-jump-coin-216.wav"></audio>
+<audio id="cashSound" src="https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.wav"></audio>
+<audio id="crashSound" src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-retro-game-over-213.wav"></audio>
+
 <div class="top-bar">
 <div class="brand">SkyCrash</div>
 <div class="right-menu">
@@ -131,7 +136,50 @@ transition:0.2s;
 
 <script type="module">
 
-/* ===== FIREBASE (SİLİNMEDİ) ===== */
+const betSound=document.getElementById("betSound");
+const cashSound=document.getElementById("cashSound");
+const crashSound=document.getElementById("crashSound");
+
+function playSound(sound){
+sound.currentTime=0;
+sound.play().catch(()=>{});
+}
+
+/* ===== CANVAS ANİMASYON AYNI ===== */
+const canvas=document.getElementById("graph");
+const ctx=canvas.getContext("2d");
+
+function resize(){
+canvas.width=canvas.offsetWidth;
+canvas.height=canvas.offsetHeight;
+}
+window.addEventListener("resize",resize);
+resize();
+
+let stars=[];
+for(let i=0;i<150;i++){
+stars.push({
+x:Math.random()*canvas.width,
+y:Math.random()*canvas.height,
+r:Math.random()*2,
+alpha:Math.random(),
+delta:Math.random()*0.02
+});
+}
+
+function drawSpace(){
+ctx.clearRect(0,0,canvas.width,canvas.height);
+stars.forEach(s=>{
+s.alpha+=s.delta;
+if(s.alpha<=0||s.alpha>=1) s.delta*=-1;
+ctx.beginPath();
+ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+ctx.fillStyle="rgba(255,255,255,"+s.alpha+")";
+ctx.fill();
+});
+}
+
+/* ===== FIREBASE AYNI ===== */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth,onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore,doc,onSnapshot,updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -164,162 +212,33 @@ updateUI();
 }
 });
 
-/* ===== SES SİSTEMİ (DÜZELTİLDİ) ===== */
-let audioCtx=null;
-function initAudio(){
-if(!audioCtx){
-audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-}
-if(audioCtx.state==="suspended") audioCtx.resume();
-}
-document.addEventListener("click",initAudio,{once:true});
-
-function playBeep(freq,dur,type="sine",vol=0.2){
-initAudio();
-const o=audioCtx.createOscillator();
-const g=audioCtx.createGain();
-o.type=type;
-o.frequency.value=freq;
-o.connect(g);
-g.connect(audioCtx.destination);
-g.gain.setValueAtTime(vol,audioCtx.currentTime);
-g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+dur/1000);
-o.start();
-o.stop(audioCtx.currentTime+dur/1000);
-}
-
-function countdownSound(){ playBeep(900,120,"square",0.25); }
-function crashSound(){ playBeep(60,600,"sawtooth",0.6); }
-function cashSound(){
-playBeep(1200,100,"triangle",0.3);
-setTimeout(()=>playBeep(1500,120,"triangle",0.3),80);
-}
-let flightOsc=null;
-function startFlightSound(){
-initAudio();
-flightOsc=audioCtx.createOscillator();
-let gain=audioCtx.createGain();
-flightOsc.type="sine";
-flightOsc.frequency.value=200;
-flightOsc.connect(gain);
-gain.connect(audioCtx.destination);
-gain.gain.value=0.15;
-flightOsc.start();
-}
-function stopFlightSound(){
-if(flightOsc){
-flightOsc.stop();
-flightOsc=null;
-}
-}
-
-/* ===== UZAY ANİMASYONU ===== */
-const canvas=document.getElementById("graph");
-const ctx=canvas.getContext("2d");
-
-function resize(){
-canvas.width=canvas.offsetWidth;
-canvas.height=canvas.offsetHeight;
-}
-window.addEventListener("resize",resize);
-resize();
-
-let stars=[];
-for(let i=0;i<150;i++){
-stars.push({
-x:Math.random()*canvas.width,
-y:Math.random()*canvas.height,
-r:Math.random()*2,
-alpha:Math.random(),
-delta:Math.random()*0.02
-});
-}
-
-let meteors=[];
-let ufoX=-200;
-let ufoActive=false;
-
-function drawSpace(){
-ctx.clearRect(0,0,canvas.width,canvas.height);
-
-stars.forEach(s=>{
-s.alpha+=s.delta;
-if(s.alpha<=0||s.alpha>=1) s.delta*=-1;
-ctx.beginPath();
-ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
-ctx.fillStyle="rgba(255,255,255,"+s.alpha+")";
-ctx.fill();
-});
-
-if(Math.random()<0.01){
-meteors.push({x:Math.random()*canvas.width,y:-20});
-}
-
-meteors.forEach((m,i)=>{
-ctx.beginPath();
-ctx.moveTo(m.x,m.y);
-ctx.lineTo(m.x+40,m.y+80);
-ctx.strokeStyle="white";
-ctx.lineWidth=2;
-ctx.stroke();
-m.x+=5;m.y+=8;
-if(m.y>canvas.height) meteors.splice(i,1);
-});
-
-if(!ufoActive && Math.random()<0.002){
-ufoActive=true;
-ufoX=-100;
-}
-
-if(ufoActive){
-ctx.beginPath();
-ctx.ellipse(ufoX,80,30,12,0,0,Math.PI*2);
-ctx.fillStyle="#9be7ff";
-ctx.fill();
-ufoX+=2;
-if(ufoX>canvas.width+100){
-ufoActive=false;
-}
-}
-}
-
-/* ===== OYUN ===== */
 let phase="betting";
 let multiplier=1;
 let crashPoint=0;
-let animationId;
 let activeBet1=0;
 let activeBet2=0;
-let balance=0;
-
 const multiplierEl=document.getElementById("multiplier");
 
 function animate(){
 drawSpace();
-
 if(phase==="flying"){
 multiplier+=0.002 + multiplier*0.0006;
 multiplierEl.className="multiplier big";
 multiplierEl.innerText=multiplier.toFixed(2)+"x";
 if(multiplier>=crashPoint){ crash(); return; }
 }
-
-animationId=requestAnimationFrame(animate);
+requestAnimationFrame(animate);
 }
 
 function startFlight(){
 phase="flying";
 multiplier=1;
 crashPoint=1.5+Math.random()*4;
-startFlightSound();
-animationId=requestAnimationFrame(animate);
 }
 
 function crash(){
+playSound(crashSound);
 phase="crashed";
-stopFlightSound();
-crashSound();
-addHistory(multiplier);
 activeBet1=0;
 activeBet2=0;
 updateUI();
@@ -331,10 +250,8 @@ phase="betting";
 let count=5;
 multiplierEl.className="multiplier small";
 multiplierEl.innerText="Uçuşa "+count+" Saniye";
-
 let interval=setInterval(()=>{
 count--;
-countdownSound();
 if(count<=0){
 clearInterval(interval);
 startFlight();
@@ -342,15 +259,7 @@ startFlight();
 multiplierEl.innerText="Uçuşa "+count+" Saniye";
 }
 },1000);
-
 updateUI();
-}
-
-function addHistory(val){
-let span=document.createElement("span");
-span.innerText=val.toFixed(2)+"x";
-span.style.background=val<2?"#ff2a4d":"#00c853";
-document.getElementById("history").prepend(span);
 }
 
 function updateUI(){
@@ -373,9 +282,10 @@ else{ btn.innerText="Bahis Yap"; btn.className=""; }
 }
 
 async function handleBet(box){
+if(!userRef) return;
+
 let input=document.getElementById("bet"+box);
 let amount=parseInt(input.value);
-
 if(amount<1) amount=1;
 if(amount>5000) amount=5000;
 input.value=amount;
@@ -385,21 +295,25 @@ let active=box===1?activeBet1:activeBet2;
 if(phase==="betting" && active===0){
 if(balance>=amount){
 balance-=amount;
+await updateDoc(userRef,{balance});
 if(box===1) activeBet1=amount;
 else activeBet2=amount;
+playSound(betSound);
 }
 }
 else if(phase==="betting" && active>0){
 balance+=active;
+await updateDoc(userRef,{balance});
 if(box===1) activeBet1=0;
 else activeBet2=0;
 }
 else if(phase==="flying" && active>0){
 let win=Math.floor(active*multiplier);
 balance+=win;
-cashSound();
+await updateDoc(userRef,{balance});
 if(box===1) activeBet1=0;
 else activeBet2=0;
+playSound(cashSound);
 }
 
 updateUI();
