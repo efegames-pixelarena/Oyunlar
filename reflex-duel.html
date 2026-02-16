@@ -19,14 +19,14 @@ body::before{
 content:"";
 position:fixed;
 left:0;top:0;height:100%;width:25%;
-background:linear-gradient(to right,rgba(255,0,0,0.2),transparent);
+background:linear-gradient(to right,rgba(255,0,0,0.25),transparent);
 pointer-events:none;
 }
 body::after{
 content:"";
 position:fixed;
 right:0;top:0;height:100%;width:25%;
-background:linear-gradient(to left,rgba(0,120,255,0.2),transparent);
+background:linear-gradient(to left,rgba(0,120,255,0.25),transparent);
 pointer-events:none;
 }
 .menu{
@@ -55,7 +55,7 @@ justify-content:center;
 flex-direction:column;
 }
 .tap-text{
-font-size:80px;
+font-size:70px;
 font-weight:900;
 }
 </style>
@@ -82,7 +82,8 @@ collection,
 query,
 limit,
 getDocs,
-deleteDoc
+deleteDoc,
+where
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 import {
@@ -91,7 +92,7 @@ onAuthStateChanged,
 signInAnonymously
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-/* ✅ AYNI CONFIG */
+/* CONFIG */
 const firebaseConfig = {
   apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
   authDomain:"emirhan-site.firebaseapp.com",
@@ -105,14 +106,11 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-let currentUser=null;
+let unsubscribeRoom = null;
 
-/* AUTH BEKLE */
+/* AUTH */
 onAuthStateChanged(auth, async (user)=>{
-if(user){
-currentUser=user;
-}else{
-/* FREE PLAY için anonim giriş */
+if(!user){
 await signInAnonymously(auth);
 }
 });
@@ -127,29 +125,74 @@ return;
 
 const uid = auth.currentUser.uid;
 const queueRef = collection(db,"matchmakingQueue");
-const existing = await getDocs(query(queueRef,limit(1)));
 
-if(!existing.empty){
-const opponent = existing.docs[0];
+/* 🔥 KENDİNİ HARİÇ TUT */
+const snap = await getDocs(
+query(queueRef, where("uid","!=",uid), limit(1))
+);
+
+if(!snap.empty){
+
+const opponentData = snap.docs[0];
+const opponentId = opponentData.data().uid;
 const roomId = crypto.randomUUID();
 
+/* ROOM OLUŞTUR */
 await setDoc(doc(db,"rooms",roomId),{
 player1:uid,
-player2:opponent.id,
+player2:opponentId,
+status:"active",
 createdAt:serverTimestamp()
 });
 
-await deleteDoc(doc(db,"matchmakingQueue",opponent.id));
+/* İKİSİNİ DE QUEUE'DAN SİL */
+await deleteDoc(doc(db,"matchmakingQueue",uid));
+await deleteDoc(doc(db,"matchmakingQueue",opponentData.id));
 
+listenRoom(roomId);
 startGame();
+
 }else{
+
+/* QUEUE'YA EKLE */
 await setDoc(doc(db,"matchmakingQueue",uid),{
+uid:uid,
 createdAt:serverTimestamp()
 });
+
+/* ODA DİNLER */
+listenForMatch(uid);
+
 alert("Rakip bekleniyor...");
 }
 };
 
+/* RAKİP GELİNCE OTOMATİK BAŞLAT */
+function listenForMatch(uid){
+
+const roomsRef = collection(db,"rooms");
+
+unsubscribeRoom = onSnapshot(
+query(roomsRef, where("player2","==",uid)),
+(snapshot)=>{
+if(!snapshot.empty){
+const roomId = snapshot.docs[0].id;
+listenRoom(roomId);
+startGame();
+}
+});
+}
+
+function listenRoom(roomId){
+
+unsubscribeRoom = onSnapshot(doc(db,"rooms",roomId),(docSnap)=>{
+if(docSnap.exists()){
+console.log("Oda güncellendi:",docSnap.data());
+}
+});
+}
+
+/* UI */
 function startGame(){
 document.getElementById("menu").classList.add("hidden");
 document.getElementById("arena").classList.remove("hidden");
