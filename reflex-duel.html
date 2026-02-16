@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Reflex Duel</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,Helvetica,sans-serif}
+body{
+background:#0b0f1a;
+color:white;
+overflow:hidden;
+display:flex;
+flex-direction:column;
+height:100vh;
+}
+
+/* SIDE GLOW */
+body::before{
+content:"";
+position:fixed;
+left:0;top:0;height:100%;width:25%;
+background:linear-gradient(to right,rgba(255,0,0,0.2),transparent);
+pointer-events:none;
+}
+body::after{
+content:"";
+position:fixed;
+right:0;top:0;height:100%;width:25%;
+background:linear-gradient(to left,rgba(0,120,255,0.2),transparent);
+pointer-events:none;
+}
+
+/* TOP BAR */
+.top{
+display:flex;
+justify-content:space-between;
+padding:15px;
+font-weight:bold;
+font-size:14px;
+}
+
+.player-red{color:#ff4b4b}
+.player-blue{color:#4ba3ff}
+
+/* CENTER */
+.center{
+flex:1;
+display:flex;
+align-items:center;
+justify-content:center;
+flex-direction:column;
+text-align:center;
+}
+
+.tap-text{
+font-size:80px;
+font-weight:900;
+transition:0.2s;
+}
+
+.small-text{
+margin-top:15px;
+font-size:18px;
+opacity:0.8;
+}
+
+/* BOTTOM */
+.bottom{
+padding:15px;
+text-align:center;
+font-size:16px;
+}
+
+/* BUTTONS */
+.menu{
+position:absolute;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+text-align:center;
+}
+
+.menu button{
+padding:15px 25px;
+margin:10px;
+border:none;
+border-radius:12px;
+font-weight:bold;
+cursor:pointer;
+font-size:15px;
+}
+
+.btn-red{background:#ff4b4b;color:white}
+.btn-blue{background:#4ba3ff;color:white}
+
+.hidden{display:none}
+</style>
+</head>
+<body>
+
+<div class="menu" id="menu">
+<button class="btn-red" id="findMatch">Maç Bul</button>
+<button class="btn-blue" id="createRoom">Oda Oluştur</button>
+<br>
+<input id="roomCodeInput" placeholder="Oda Kodu Gir" style="padding:10px;border-radius:8px;border:none;margin-top:10px">
+<button class="btn-blue" id="joinRoom">Katıl</button>
+</div>
+
+<div class="top hidden" id="topBar">
+<div class="player-red" id="p1Name">Sen</div>
+<div class="player-blue" id="p2Name">Rakip</div>
+</div>
+
+<div class="center hidden" id="arena">
+<div class="tap-text" id="mainText">Bekleniyor...</div>
+<div class="small-text" id="reactionText"></div>
+</div>
+
+<div class="bottom hidden" id="bottomBar">
+Round <span id="roundNum">1</span> / 7<br>
+🔴 <span id="p1Score">0</span> - <span id="p2Score">0</span> 🔵
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+getFirestore,
+doc,
+setDoc,
+getDoc,
+updateDoc,
+onSnapshot,
+serverTimestamp,
+runTransaction,
+deleteDoc,
+collection,
+query,
+limit,
+getDocs
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+import {
+getAuth,
+onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+/* FIREBASE CONFIG */
+const firebaseConfig = {
+  apiKey:"YOUR_KEY",
+  authDomain:"YOUR_DOMAIN",
+  projectId:"YOUR_PROJECT"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+let currentRoom=null;
+let playerSide=null;
+let localTapLock=false;
+
+/* FULLSCREEN */
+function goFull(){
+if(document.documentElement.requestFullscreen){
+document.documentElement.requestFullscreen();
+}
+}
+
+/* MATCHMAKING */
+async function findMatch(uid,username){
+const queueRef = collection(db,"matchmakingQueue");
+const existing = await getDocs(query(queueRef,limit(1)));
+
+if(!existing.empty){
+const opponent = existing.docs[0];
+const roomId = crypto.randomUUID();
+
+await setDoc(doc(db,"rooms",roomId),{
+status:"waiting",
+mode:"random",
+player1:{uid:uid,username:username},
+player2:{uid:opponent.id,username:opponent.data().username},
+round:1,
+maxRounds:7,
+p1Score:0,
+p2Score:0,
+tapWinner:null,
+activeAt:null,
+tapAt:null,
+winner:null,
+createdAt:serverTimestamp()
+});
+
+await deleteDoc(doc(db,"matchmakingQueue",opponent.id));
+startRoom(roomId,uid);
+}else{
+await setDoc(doc(db,"matchmakingQueue",uid),{
+username:username,
+createdAt:serverTimestamp()
+});
+alert("Rakip bekleniyor...");
+}
+}
+
+/* ROOM LISTENER */
+function startRoom(roomId,uid){
+currentRoom=roomId;
+goFull();
+document.getElementById("menu").classList.add("hidden");
+document.getElementById("topBar").classList.remove("hidden");
+document.getElementById("arena").classList.remove("hidden");
+document.getElementById("bottomBar").classList.remove("hidden");
+
+const roomRef = doc(db,"rooms",roomId);
+
+onSnapshot(roomRef,(snap)=>{
+const data=snap.data();
+if(!data)return;
+
+playerSide = (data.player1.uid===uid) ? "p1":"p2";
+
+document.getElementById("p1Name").innerText=data.player1.username;
+document.getElementById("p2Name").innerText=data.player2.username;
+document.getElementById("roundNum").innerText=data.round;
+document.getElementById("p1Score").innerText=data.p1Score;
+document.getElementById("p2Score").innerText=data.p2Score;
+
+updateUIState(data);
+});
+}
+
+/* UI STATE */
+function updateUIState(data){
+const text=document.getElementById("mainText");
+if(data.status==="waiting") text.innerText="Rakip Bekleniyor...";
+if(data.status==="countdown") text.innerText="Hazır Ol...";
+if(data.status==="active") text.innerText="TAP!";
+if(data.status==="roundEnd"){
+text.innerText=data.tapWinner===playerSide?"KAZANDIN!":"KAYBETTİN!";
+if(data.tapAt && data.activeAt){
+const reaction=data.tapAt.toMillis()-data.activeAt.toMillis();
+document.getElementById("reactionText").innerText="Refleks: "+reaction+"ms";
+}
+}
+if(data.status==="finished"){
+text.innerText=data.winner===playerSide?"MAÇ KAZANDIN!":"MAÇ KAYBETTİN!";
+}
+}
+
+/* TAP */
+async function handleTap(){
+if(localTapLock)return;
+localTapLock=true;
+
+const roomRef=doc(db,"rooms",currentRoom);
+
+await runTransaction(db,async(transaction)=>{
+const snap=await transaction.get(roomRef);
+const data=snap.data();
+
+if(data.status!=="active"){
+localTapLock=false;
+return;
+}
+
+if(data.tapWinner===null){
+transaction.update(roomRef,{
+tapWinner:playerSide,
+tapAt:serverTimestamp()
+});
+}
+});
+}
+
+/* INPUTS */
+document.addEventListener("mousedown",handleTap);
+document.addEventListener("touchstart",handleTap,{passive:false});
+document.addEventListener("keydown",(e)=>{
+if(e.code==="Space"||e.code==="Enter")handleTap();
+});
+
+/* AUTH */
+onAuthStateChanged(auth,(user)=>{
+if(!user){
+alert("Giriş yapmalısın.");
+location.href="index.html";
+}else{
+document.getElementById("findMatch").onclick=()=>{
+findMatch(user.uid,user.email);
+};
+}
+});
+</script>
+</body>
+</html>
