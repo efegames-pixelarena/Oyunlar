@@ -136,7 +136,7 @@ transition:0.2s;
 
 <script type="module">
 
-/* ===== GELİŞMİŞ iOS SES AKTİFLEŞTİRME ===== */
+/* ===== GELİŞTİRİLMİŞ SES SİSTEMİ (iOS DAHİL TÜM CİHAZLAR) ===== */
 let audioUnlocked=false;
 
 function unlockAudio(){
@@ -144,11 +144,13 @@ if(audioUnlocked) return;
 
 ["betSound","cashSound","crashSound"].forEach(id=>{
 const sound=document.getElementById(id);
+if(sound){
 sound.volume=1;
 sound.play().then(()=>{
 sound.pause();
 sound.currentTime=0;
 }).catch(()=>{});
+}
 });
 
 audioUnlocked=true;
@@ -159,11 +161,14 @@ document.addEventListener("click",unlockAudio,{once:true});
 
 /* SES ÇALMA */
 function playSound(id){
-const original=document.getElementById(id);
-if(!original) return;
+const sound=document.getElementById(id);
+if(!sound) return;
+try{
+sound.currentTime=0;
+sound.play().catch(()=>{});
+}catch(e){}
+}
 
-const sound=original.cloneNode(true);
-sound.volume=1;
 /* ===== UZAY ANİMASYONU ===== */
 const canvas=document.getElementById("graph");
 const ctx=canvas.getContext("2d");
