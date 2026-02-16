@@ -16,6 +16,7 @@ color:white;
 min-height:100vh;
 }
 
+/* ===== ÜST BAR ===== */
 .top-bar{
 position:fixed;
 top:0;
@@ -34,18 +35,19 @@ z-index:1000;
 font-size:18px;
 font-weight:800;
 background:linear-gradient(90deg,#4fd1ff,#fff,#4fd1ff);
+background-size:200% auto;
 -webkit-background-clip:text;
 -webkit-text-fill-color:transparent;
+animation:shine 3s linear infinite;
 }
+@keyframes shine{to{background-position:200% center;}}
 
-.balance-box{
-background:#273c8f;
-padding:6px 14px;
-border-radius:14px;
-font-weight:700;
-font-size:13px;
-}
+.right-menu{display:flex;gap:10px;}
+.nav-box{padding:6px 14px;border-radius:14px;font-weight:700;font-size:13px;text-align:center;}
+.balance-box{background:#273c8f;}
+.bet-box{background:linear-gradient(90deg,#ff8a00,#ff5f00);color:#000;}
 
+/* ===== OYUN ALANI ===== */
 .container{
 max-width:520px;
 margin:auto;
@@ -73,7 +75,7 @@ border:1px solid #2a3577;
 transition:0.2s;
 }
 
-.tile.open{background:#2ecc71}
+.tile.open{background:#2ecc71;}
 .tile.mine{background:#e74c3c;animation:explode 0.4s ease;}
 
 @keyframes explode{
@@ -91,27 +93,33 @@ font-weight:bold;
 cursor:pointer;
 }
 
-.start{background:#3498db;color:white}
-.start:disabled{background:#555;cursor:not-allowed}
+.start{background:#3498db;color:white;}
+.start:disabled{background:#555;cursor:not-allowed;}
 
-.cashout{background:#f1c40f;color:black}
-.cashout:disabled{background:#555;cursor:not-allowed}
+.cashout{background:#f1c40f;color:black;}
+.cashout:disabled{background:#555;cursor:not-allowed;}
 
 input,select{
 padding:10px;
 border-radius:10px;
 border:none;
 margin:5px;
+font-size:15px;
 }
 </style>
 </head>
 <body>
 
+<!-- ÜST BAR -->
 <div class="top-bar">
-<div class="brand">PixelArena</div>
-<div class="balance-box">Bakiye: <span id="userBalance">0₺</span></div>
+  <div class="brand">PixelArena Mines</div>
+  <div class="right-menu">
+    <div class="nav-box balance-box">Bakiye: <span id="userBalance">0</span>₺</div>
+    <div class="nav-box bet-box">Bahis: <span id="currentBet">0</span>₺</div>
+  </div>
 </div>
 
+<!-- OYUN -->
 <div class="container">
 
 <h2>💣 Mines</h2>
@@ -131,174 +139,172 @@ margin:5px;
 </div>
 
 <script type="module">
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth,onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore,doc,onSnapshot,runTransaction } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+/* ===== FIREBASE CONFIG (SENİN) ===== */
 const firebaseConfig={
-apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
-authDomain:"emirhan-site.firebaseapp.com",
-projectId:"emirhan-site",
-storageBucket:"emirhan-site.firebasestorage.app",
-messagingSenderId:"668871888390",
-appId:"1:668871888390:web:76568bda84cb1641f7bd87"
+  apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
+  authDomain:"emirhan-site.firebaseapp.com",
+  projectId:"emirhan-site",
+  storageBucket:"emirhan-site.firebasestorage.app",
+  messagingSenderId:"668871888390",
+  appId:"1:668871888390:web:76568bda84cb1641f7bd87"
 };
 
-const app=initializeApp(firebaseConfig);
-const auth=getAuth(app);
-const db=getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
 let mines=[];
 let opened=0;
 let betAmount=0;
-let mineTotal=3;
-let gameActive=false;
+let mineTotal=1;
 let multiplier=1;
+let gameActive=false;
 
 const grid=document.getElementById("grid");
 const multiplierText=document.getElementById("multiplier");
 const balanceText=document.getElementById("userBalance");
+const currentBetText=document.getElementById("currentBet");
 const startBtn=document.getElementById("startBtn");
 const cashoutBtn=document.getElementById("cashoutBtn");
 const mineSelect=document.getElementById("mineCount");
 
-/* 1-24 MAYIN */
+/* 1–24 MAYIN SEÇENEKLERİ */
 for(let i=1;i<=24;i++){
-const option=document.createElement("option");
-option.value=i;
-option.text=i+" Mayın";
-mineSelect.appendChild(option);
+  const opt=document.createElement("option");
+  opt.value=i;
+  opt.text=i+" Mayın";
+  mineSelect.appendChild(opt);
 }
 
+/* GRID OLUŞTUR */
 function createGrid(){
-grid.innerHTML="";
-for(let i=0;i<25;i++){
-const tile=document.createElement("div");
-tile.classList.add("tile");
-tile.addEventListener("click",()=>reveal(i,tile));
-grid.appendChild(tile);
-}
+  grid.innerHTML="";
+  for(let i=0;i<25;i++){
+    const tile=document.createElement("div");
+    tile.classList.add("tile");
+    tile.addEventListener("click",()=>reveal(i,tile));
+    grid.appendChild(tile);
+  }
 }
 
 function generateMines(){
-mines=[];
-while(mines.length<mineTotal){
-let r=Math.floor(Math.random()*25);
-if(!mines.includes(r)) mines.push(r);
-}
+  mines=[];
+  while(mines.length<mineTotal){
+    let r=Math.floor(Math.random()*25);
+    if(!mines.includes(r)) mines.push(r);
+  }
 }
 
-/* GERÇEK RİSK ÇARPANI */
+/* ÇARPAN HESAP */
 function updateMultiplier(){
+  const safeLeft = (25-mineTotal) - (opened-1);
+  const totalLeft = 25 - (opened-1);
 
-const remainingSafe = 25 - mineTotal - (opened - 1);
-const totalRemaining = 25 - (opened - 1);
+  multiplier = multiplier * (totalLeft / safeLeft);
+  multiplier = Math.floor(multiplier * 100) / 100;
 
-multiplier *= totalRemaining / remainingSafe;
-
-multiplier = Math.floor(multiplier * 100) / 100;
-
-multiplierText.innerText = multiplier + "x";
-
-const winAmount = Math.floor(betAmount * multiplier);
-cashoutBtn.innerText = "Çek ("+winAmount+"₺)";
+  multiplierText.innerText = multiplier+"x";
+  const win=Math.floor(betAmount*multiplier);
+  cashoutBtn.innerText="Çek ("+win+"₺)";
 }
 
-/* BAŞLAT */
-startBtn.addEventListener("click",async()=>{
+/* OYUN BAŞLA */
+startBtn.addEventListener("click", async ()=>{
+  if(!auth.currentUser) return;
 
-if(!auth.currentUser) return;
+  betAmount=parseInt(document.getElementById("bet").value);
+  mineTotal=parseInt(mineSelect.value);
 
-betAmount=parseInt(document.getElementById("bet").value);
-mineTotal=parseInt(mineSelect.value);
+  if(!betAmount||betAmount<=0||betAmount>5000) return;
 
-if(!betAmount||betAmount<=0||betAmount>5000) return;
+  const userRef=doc(db,"users",auth.currentUser.uid);
 
-const userRef=doc(db,"users",auth.currentUser.uid);
+  try{
+    await runTransaction(db,async(transaction)=>{
+      const snap=await transaction.get(userRef);
+      if(!snap.exists()) throw "Hata";
+      if(snap.data().balance<betAmount) throw "Yetersiz bakiye";
+      transaction.update(userRef,{balance:snap.data().balance-betAmount});
+    });
+  }catch(e){
+    return;
+  }
 
-try{
-await runTransaction(db,async(transaction)=>{
-const snap=await transaction.get(userRef);
-if(snap.data().balance<betAmount) throw "Yetersiz bakiye";
-transaction.update(userRef,{balance:snap.data().balance-betAmount});
+  balanceText.innerText = parseInt(balanceText.innerText) - betAmount;
+  currentBetText.innerText = betAmount;
+
+  opened=0;
+  multiplier=1;
+  multiplierText.innerText="1x";
+  cashoutBtn.innerText="Çek (0₺)";
+
+  generateMines();
+  createGrid();
+  gameActive=true;
+
+  startBtn.disabled=true;
+  cashoutBtn.disabled=false;
 });
-}catch(e){return;}
 
-opened=0;
-multiplier=1;
+/* KUTU AÇMA */
+function reveal(idx,tile){
+  if(!gameActive || tile.classList.contains("open")) return;
 
-multiplierText.innerText="1x";
-cashoutBtn.innerText="Çek (0₺)";
+  if(mines.includes(idx)){
+    tile.classList.add("mine");
+    tile.innerHTML="💣";
+    gameActive=false;
+    startBtn.disabled=false;
+    cashoutBtn.disabled=true;
+    cashoutBtn.innerText="Cashout";
+    return;
+  }
 
-generateMines();
-createGrid();
-gameActive=true;
-
-startBtn.disabled=true;
-cashoutBtn.disabled=false;
-
-});
-
-/* AÇMA */
-function reveal(index,tile){
-
-if(!gameActive||tile.classList.contains("open")) return;
-
-if(mines.includes(index)){
-tile.classList.add("mine");
-tile.innerHTML="💣";
-gameActive=false;
-startBtn.disabled=false;
-cashoutBtn.disabled=true;
-cashoutBtn.innerText="Cashout";
-return;
-}
-
-opened++;
-tile.classList.add("open");
-tile.innerHTML="💎";
-
-updateMultiplier();
+  opened++;
+  tile.classList.add("open");
+  tile.innerHTML="💎";
+  updateMultiplier();
 }
 
 /* CASHOUT */
-cashoutBtn.addEventListener("click",async()=>{
+cashoutBtn.addEventListener("click", async ()=>{
+  if(!gameActive||opened===0) return;
 
-if(!gameActive||opened===0) return;
+  gameActive=false;
 
-gameActive=false;
+  const win=Math.floor(betAmount*multiplier);
+  const userRef=doc(db,"users",auth.currentUser.uid);
 
-const win=Math.floor(betAmount*multiplier);
+  await runTransaction(db,async(transaction)=>{
+    const snap=await transaction.get(userRef);
+    transaction.update(userRef,{balance:snap.data().balance+win});
+  });
 
-const userRef=doc(db,"users",auth.currentUser.uid);
-
-await runTransaction(db,async(transaction)=>{
-const snap=await transaction.get(userRef);
-transaction.update(userRef,{balance:snap.data().balance+win});
-});
-
-startBtn.disabled=false;
-cashoutBtn.disabled=true;
-cashoutBtn.innerText="Cashout";
-multiplierText.innerText="1x";
-
+  balanceText.innerText = parseInt(balanceText.innerText)+win;
+  startBtn.disabled=false;
+  cashoutBtn.disabled=true;
+  cashoutBtn.innerText="Cashout";
+  multiplierText.innerText="1x";
+  currentBetText.innerText="0";
 });
 
 /* CANLI BAKİYE */
 onAuthStateChanged(auth,(user)=>{
-if(user){
-const userRef=doc(db,"users",user.uid);
-onSnapshot(userRef,(snap)=>{
-if(snap.exists()){
-balanceText.innerText=parseInt(snap.data().balance)+"₺";
-}
-});
-}
+  if(!user) return;
+  const userRef=doc(db,"users",user.uid);
+  onSnapshot(userRef,(snap)=>{
+    if(snap.exists()){
+      balanceText.innerText=parseInt(snap.data().balance)+"₺";
+    }
+  });
 });
 
 createGrid();
-
 </script>
+
 </body>
 </html>
