@@ -33,7 +33,22 @@ animation:shine 3s linear infinite;}
 .score{margin-top:6px;font-size:17px;font-weight:600;color:#ffd700;}
 .dealer-title{font-size:17px;letter-spacing:4px;margin-bottom:8px;color:#d4af37;}
 
-.cards{display:flex;justify-content:center;gap:10px;min-height:100px;}
+.cards{display:flex;justify-content:center;gap:10px;min-height:110px;}
+
+.card{
+width:70px;
+height:100px;
+border-radius:8px;
+box-shadow:0 6px 15px rgba(0,0,0,0.6);
+transform:translateY(-150px) rotateY(90deg);
+opacity:0;
+transition:all .5s ease;
+}
+
+.card.show{
+transform:translateY(0) rotateY(0deg);
+opacity:1;
+}
 
 #message{position:absolute;bottom:170px;width:100%;text-align:center;font-size:20px;font-weight:600;}
 .controls{position:absolute;bottom:110px;width:100%;text-align:center;display:none;}
@@ -76,7 +91,6 @@ button{padding:14px 28px;margin:8px;border:none;border-radius:12px;font-weight:7
 <div class="controls" id="controls">
 <button id="hit">KART ÇEK</button>
 <button id="stand">DUR/KAL</button>
-<button id="double">2X</button>
 </div>
 
 <div class="chips">
@@ -88,75 +102,58 @@ button{padding:14px 28px;margin:8px;border:none;border-radius:12px;font-weight:7
 
 <script type="module">
 
-/* ------------------------------------------------ */
-/* IOS UYUMLU SES SİSTEMİ (WebAudio) */
-/* ------------------------------------------------ */
+/* FIREBASE (index.html ile aynı) */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth,onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore,doc,onSnapshot,updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-let audioCtx;
-function initAudio(){
-if(!audioCtx){
-audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-}
-}
-
-function beep(freq,duration){
-initAudio();
-const osc=audioCtx.createOscillator();
-const gain=audioCtx.createGain();
-osc.connect(gain);
-gain.connect(audioCtx.destination);
-osc.frequency.value=freq;
-osc.type="sine";
-osc.start();
-gain.gain.setValueAtTime(0.2,audioCtx.currentTime);
-gain.gain.exponentialRampToValueAtTime(0.0001,audioCtx.currentTime+duration/1000);
-osc.stop(audioCtx.currentTime+duration/1000);
-}
-
-/* Ses Fonksiyonları */
-
-const sounds={
-card:()=>beep(500,120),
-chip:()=>beep(300,100),
-count:()=>beep(800,80),
-deal:()=>beep(600,150),
-action:()=>beep(400,120),
-win:()=>beep(1000,400),
-lose:()=>beep(120,400),
-bust:()=>beep(90,500)
+const firebaseConfig = {
+apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
+authDomain:"emirhan-site.firebaseapp.com",
+projectId:"emirhan-site",
+storageBucket:"emirhan-site.firebasestorage.app",
+messagingSenderId:"668871888390",
+appId:"1:668871888390:web:76568bda84cb1641f7bd87"
 };
 
-document.body.addEventListener("click",initAudio,{once:true});
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getFirestore(app);
 
-/* ------------------------------------------------ */
 /* OYUN */
-/* ------------------------------------------------ */
 
-let balance=10000;
-let bet=0;
-let gameState="betting";
-let decisionTimer=null;
-let decisionActive=false;
-let betLocked=false;
+let balance=0,bet=0,userRef=null;
+let gameState="loading";
+let betCountdown=null;
 
 const balanceEl=document.getElementById("balance");
 const betEl=document.getElementById("bet");
 const message=document.getElementById("message");
+const dealerDiv=document.getElementById("dealerCards");
+const playerDiv=document.getElementById("playerCards");
 const controls=document.getElementById("controls");
-
-balanceEl.innerText=balance;
 
 const suits=["H","D","C","S"];
 let deck=[],player=[],dealer=[];
 let dealerHidden=true;
 
-/* HİLE KORUMA */
-Object.freeze(suits);
-Object.defineProperty(window,"balance",{writable:false});
+/* AUTH */
+onAuthStateChanged(auth,user=>{
+if(!user){message.innerText="Giriş yapmalısın";return;}
+userRef=doc(db,"users",user.uid);
+onSnapshot(userRef,snap=>{
+if(!snap.exists())return;
+balance=snap.data().balance||0;
+balanceEl.innerText=balance;
+if(gameState==="loading"){
+gameState="betting";
+message.innerText="Bahis Yapın";
+}
+});
+});
 
 /* ZORLUK */
-
-function difficultyModifier(){
+function difficulty(){
 if(bet<=1000) return 0;
 if(bet<=2000) return 0.05;
 if(bet<=4000) return 0.1;
@@ -171,16 +168,14 @@ for(let i=1;i<=13;i++){
 deck.push({suit:s,value:i});
 }}
 deck.sort(()=>Math.random()-0.5);
-
-/* BETE GÖRE ZORLAŞTIRMA */
-if(Math.random()<difficultyModifier()){
+if(Math.random()<difficulty()){
 deck.sort((a,b)=>b.value-a.value);
 }
 }
 
 function cardVal(v){
-if(v>10) return 10;
-if(v===1) return 11;
+if(v>10)return 10;
+if(v===1)return 11;
 return v;
 }
 
@@ -188,155 +183,129 @@ function total(hand){
 let t=0,a=0;
 hand.forEach(c=>{
 let val=cardVal(c.value);
-if(val===11){a++;t+=11;} else t+=val;
+if(val===11){a++;t+=11;}else t+=val;
 });
 while(t>21&&a>0){t-=10;a--;}
 return t;
 }
 
-/* BAHİS */
+/* KART UI */
 
-function addBet(amount){
-if(gameState!=="betting") return;
-if(balance<amount) return;
-
-sounds.chip();
-
-balance-=amount;
-bet+=amount;
-balanceEl.innerText=balance;
-betEl.innerText=bet;
-}
-window.addBet=addBet;
-
-/* OYUN */
-
-async function startGame(){
-
-if(bet===0) return;
-
-gameState="dealing";
-player=[];
-dealer=[];
-dealerHidden=true;
-createDeck();
-
-controls.style.display="none";
-message.innerText="Kart Dağıtılıyor...";
-sounds.deal();
-
-await giveCard(player);
-await giveCard(dealer);
-await giveCard(player);
-await giveCard(dealer,true);
-
-if(total(player)===21){
-await dealerTurn();
-return;
-}
-
-startDecision();
-}
-
-async function giveCard(target,hidden=false){
-await delay(3000);
-sounds.card();
-target.push(deck.pop());
-render(hidden);
+function cardURL(card){
+let map={1:"A",11:"J",12:"Q",13:"K"};
+let val=map[card.value]||card.value;
+return `https://deckofcardsapi.com/static/img/${val}${card.suit}.png`;
 }
 
 function render(){
+dealerDiv.innerHTML="";
+playerDiv.innerHTML="";
+
+dealer.forEach((c,i)=>{
+let img=document.createElement("img");
+img.src=i===1&&dealerHidden?
+"https://deckofcardsapi.com/static/img/back.png":
+cardURL(c);
+img.className="card";
+dealerDiv.appendChild(img);
+setTimeout(()=>img.classList.add("show"),50);
+});
+
+player.forEach(c=>{
+let img=document.createElement("img");
+img.src=cardURL(c);
+img.className="card";
+playerDiv.appendChild(img);
+setTimeout(()=>img.classList.add("show"),50);
+});
+
 document.getElementById("playerScore").innerText=total(player);
 document.getElementById("dealerScore").innerText=
 dealerHidden?cardVal(dealer[0]?.value||0):total(dealer);
 }
 
-function startDecision(){
-decisionActive=true;
-controls.style.display="block";
+/* BAHİS */
 
-let time=10;
-message.innerText="Karar "+time;
+async function addBet(amount){
+if(gameState!=="betting")return;
+if(balance<amount)return;
+if(bet+amount>10000)return;
 
-decisionTimer=setInterval(()=>{
-sounds.count();
+balance-=amount;
+bet+=amount;
+await updateDoc(userRef,{balance});
+balanceEl.innerText=balance;
+betEl.innerText=bet;
+
+if(!betCountdown)startBetCountdown();
+}
+window.addBet=addBet;
+
+function startBetCountdown(){
+let time=5;
+message.innerText="Başlıyor "+time;
+betCountdown=setInterval(()=>{
 time--;
-message.innerText="Karar "+time;
+message.innerText="Başlıyor "+time;
 if(time<=0){
-clearInterval(decisionTimer);
-decisionActive=false;
-stand();
+clearInterval(betCountdown);
+betCountdown=null;
+startGame();
 }
 },1000);
 }
 
-function stopDecision(){
-decisionActive=false;
-clearInterval(decisionTimer);
+/* OYUN */
+
+async function startGame(){
+gameState="playing";
+player=[];dealer=[];dealerHidden=true;
+createDeck();
+
+player.push(deck.pop());render();await delay(600);
+dealer.push(deck.pop());render();await delay(600);
+player.push(deck.pop());render();await delay(600);
+dealer.push(deck.pop());render();
+
+controls.style.display="block";
 }
 
 async function hit(){
-if(!decisionActive) return;
-sounds.action();
-stopDecision();
-controls.style.display="none";
-
-await giveCard(player);
-
+player.push(deck.pop());
+render();
 if(total(player)>=21){
-if(total(player)>21) sounds.bust();
 await dealerTurn();
-}else{
-startDecision();
 }
 }
 
 async function stand(){
-sounds.action();
-stopDecision();
-controls.style.display="none";
-await dealerTurn();
-}
-
-async function doubleDown(){
-if(balance<bet) return;
-sounds.action();
-
-balance-=bet;
-bet*=2;
-balanceEl.innerText=balance;
-betEl.innerText=bet;
-
-await giveCard(player);
 await dealerTurn();
 }
 
 async function dealerTurn(){
-
-gameState="finished";
+controls.style.display="none";
 dealerHidden=false;
 render();
-await delay(3000);
-
+await delay(800);
 while(total(dealer)<17){
-await giveCard(dealer);
+dealer.push(deck.pop());
+render();
+await delay(600);
 }
 
 let p=total(player);
 let d=total(dealer);
 
-if(p>21) return endGame("Kaybettin");
+if(p>21)return endGame("Kaybettin");
 if(d>21||p>d){
 balance+=bet*2;
-sounds.win();
+await updateDoc(userRef,{balance});
 return endGame("Kazandın");
 }
-if(d>p){
-sounds.lose();
-return endGame("Dealer Kazandı");
-}
+if(d>p)return endGame("Dealer Kazandı");
 
 balance+=bet;
+await updateDoc(userRef,{balance});
 endGame("Berabere");
 }
 
@@ -344,19 +313,13 @@ function endGame(text){
 message.innerText=text;
 bet=0;
 betEl.innerText=0;
-
 setTimeout(()=>{
+dealerDiv.innerHTML="";
+playerDiv.innerHTML="";
 gameState="betting";
 message.innerText="Bahis Yapın";
 },4000);
 }
-
-/* ÇIKIŞTA BAHİS İADE */
-window.addEventListener("beforeunload",()=>{
-if(gameState!=="finished"){
-balance+=bet;
-}
-});
 
 function delay(ms){
 return new Promise(r=>setTimeout(r,ms));
@@ -364,15 +327,6 @@ return new Promise(r=>setTimeout(r,ms));
 
 document.getElementById("hit").onclick=hit;
 document.getElementById("stand").onclick=stand;
-document.getElementById("double").onclick=doubleDown;
-
-/* OYUNU BAŞLAT */
-message.innerText="Bahis Yapın";
-document.querySelectorAll(".chip").forEach(c=>{
-c.addEventListener("click",()=>{
-if(gameState==="betting") startGame();
-});
-});
 
 </script>
 </body>
