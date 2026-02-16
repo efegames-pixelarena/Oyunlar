@@ -129,7 +129,8 @@ transition:0.2s;
 </div>
 </div>
 
-<script>
+<script type="module">
+/* ===== CANVAS ===== */
 const canvas=document.getElementById("graph");
 const ctx=canvas.getContext("2d");
 
@@ -140,9 +141,9 @@ canvas.height=canvas.offsetHeight;
 window.addEventListener("resize",resize);
 resize();
 
-/* ==== SESLER GERİ GELDİ ==== */
+/* ===== SESLER GERİ EKLENDİ ===== */
 let audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-function beep(f,d,t="sine",v=0.2){
+function tone(f,d,t="sine",v=0.2){
 let o=audioCtx.createOscillator();
 let g=audioCtx.createGain();
 o.type=t;
@@ -153,21 +154,21 @@ g.gain.value=v;
 o.start();
 o.stop(audioCtx.currentTime+d/1000);
 }
-function crashSound(){beep(80,600,"sawtooth",0.5);}
-function cashSound(){beep(1200,100,"triangle",0.3);}
-function tick(){beep(900,100,"square",0.2);}
+function soundCrash(){tone(70,700,"sawtooth",0.5);}
+function soundCash(){tone(1300,120,"triangle",0.3);}
+function soundTick(){tone(900,100,"square",0.2);}
 
-/* ==== OYUN ==== */
+/* ===== OYUN ===== */
 let phase="betting";
 let multiplier=1;
 let crashPoint=0;
-let rocketProgress=0;
+let animationId;
 let activeBet1=0;
 let activeBet2=0;
 let balance=10000;
-let multiplierEl=document.getElementById("multiplier");
+const multiplierEl=document.getElementById("multiplier");
 
-/* ==== HISTORY GERİ GELDİ ==== */
+/* ===== HISTORY GERİ GELDİ ===== */
 function addHistory(val){
 let span=document.createElement("span");
 span.innerText=val.toFixed(2)+"x";
@@ -175,20 +176,27 @@ span.style.background=val<2?"#ff2a4d":"#00c853";
 document.getElementById("history").prepend(span);
 }
 
-/* ==== ROKET ÇİZGİ HİZASINDA ==== */
+/* ===== ROKET ÇİZGİ HİZASINDA YAVAŞ ===== */
+let rocketX=0, rocketY=0, rocketCrash=false, fallSpeed=0;
+
 function drawRocket(){
 let progress=Math.min(multiplier/10,1);
-let x=progress*canvas.width;
-let y=canvas.height-(Math.log(multiplier+1)/Math.log(11))*canvas.height;
+rocketX=progress*canvas.width;
+rocketY=canvas.height-(Math.log(multiplier+1)/Math.log(11))*canvas.height;
+
+if(rocketCrash){
+fallSpeed+=0.4;
+rocketY+=fallSpeed;
+}
 
 ctx.beginPath();
-ctx.arc(x,y,6,0,Math.PI*2);
+ctx.arc(rocketX,rocketY,8,0,Math.PI*2);
 ctx.fillStyle="white";
 ctx.fill();
 
-if(phase==="crashed"){
+if(rocketCrash){
 ctx.beginPath();
-ctx.arc(x,y,20,0,Math.PI*2);
+ctx.arc(rocketX,rocketY,25,0,Math.PI*2);
 ctx.fillStyle="rgba(255,0,0,0.5)";
 ctx.fill();
 }
@@ -204,19 +212,25 @@ multiplierEl.innerText=multiplier.toFixed(2)+"x";
 drawRocket();
 if(multiplier>=crashPoint){ crash(); return; }
 }
-requestAnimationFrame(animate);
+if(phase==="crashed"){
+drawRocket();
+}
+animationId=requestAnimationFrame(animate);
 }
 
 function startFlight(){
 phase="flying";
+rocketCrash=false;
+fallSpeed=0;
 multiplier=1;
 crashPoint=1.5+Math.random()*4;
-animate();
+animationId=requestAnimationFrame(animate);
 }
 
 function crash(){
 phase="crashed";
-crashSound();
+rocketCrash=true;
+soundCrash();
 addHistory(multiplier);
 activeBet1=0;
 activeBet2=0;
@@ -228,11 +242,11 @@ phase="betting";
 let count=5;
 multiplierEl.className="multiplier small";
 multiplierEl.innerText="Uçuşa "+count+" Saniye";
-let i=setInterval(()=>{
-tick();
+let interval=setInterval(()=>{
+soundTick();
 count--;
 if(count<=0){
-clearInterval(i);
+clearInterval(interval);
 startFlight();
 }else{
 multiplierEl.innerText="Uçuşa "+count+" Saniye";
@@ -240,10 +254,22 @@ multiplierEl.innerText="Uçuşa "+count+" Saniye";
 },1000);
 }
 
-/* ==== BUTONLAR TAM ÇALIŞIYOR ==== */
+/* ===== BUTONLAR TAM ÇALIŞIYOR ===== */
 function updateUI(){
 document.getElementById("balance").innerText=balance;
 document.getElementById("bet").innerText=activeBet1+activeBet2;
+updateButton("btn1",activeBet1);
+updateButton("btn2",activeBet2);
+}
+
+function updateButton(id,bet){
+let btn=document.getElementById(id);
+if(phase==="betting" && bet===0){btn.innerText="Bahis Yap";btn.className="";}
+else if(phase==="betting" && bet>0){btn.innerText="İptal";btn.className="cancel";}
+else if(phase==="flying" && bet>0){
+btn.innerText="Çek (₺"+Math.floor(bet*multiplier)+")";
+btn.className="cashout";
+}else{btn.innerText="Bahis Yap";btn.className="";}
 }
 
 function handleBet(box){
@@ -253,34 +279,24 @@ if(amount<1) amount=1;
 if(amount>5000) amount=5000;
 input.value=amount;
 
+let active=box===1?activeBet1:activeBet2;
+
 if(phase==="betting"){
-if(box===1){
-if(activeBet1===0 && balance>=amount){
-balance-=amount;activeBet1=amount;
-}else if(activeBet1>0){
-balance+=activeBet1;activeBet1=0;
+if(active===0 && balance>=amount){
+balance-=amount;
+if(box===1) activeBet1=amount; else activeBet2=amount;
+}
+else if(active>0){
+balance+=active;
+if(box===1) activeBet1=0; else activeBet2=0;
 }
 }
-if(box===2){
-if(activeBet2===0 && balance>=amount){
-balance-=amount;activeBet2=amount;
-}else if(activeBet2>0){
-balance+=activeBet2;activeBet2=0;
+else if(phase==="flying" && active>0){
+balance+=Math.floor(active*multiplier);
+soundCash();
+if(box===1) activeBet1=0; else activeBet2=0;
 }
-}
-}
-else if(phase==="flying"){
-if(box===1 && activeBet1>0){
-balance+=Math.floor(activeBet1*multiplier);
-cashSound();
-activeBet1=0;
-}
-if(box===2 && activeBet2>0){
-balance+=Math.floor(activeBet2*multiplier);
-cashSound();
-activeBet2=0;
-}
-}
+
 updateUI();
 }
 
