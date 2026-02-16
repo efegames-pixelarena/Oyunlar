@@ -14,16 +14,9 @@ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
 -webkit-tap-highlight-color:transparent;
 }
 
-html,body{
-touch-action:manipulation;
-}
-
 body{
-background:
-radial-gradient(circle at 20% 20%,#1f2b63 0%,transparent 40%),
-radial-gradient(circle at 80% 80%,#16245c 0%,transparent 40%),
-linear-gradient(180deg,#0b1023,#0d1333,#0a0f1f);
-color:white;
+background:#0c111d;
+color:#fff;
 min-height:100vh;
 }
 
@@ -32,129 +25,197 @@ min-height:100vh;
 position:fixed;
 top:0;
 width:100%;
-height:55px;
+height:60px;
 display:flex;
 align-items:center;
 justify-content:space-between;
-padding:0 16px;
-background:linear-gradient(135deg,#1a2a6c,#16245c);
-box-shadow:0 4px 15px rgba(0,0,0,0.45);
+padding:0 15px;
+background:#141923;
+box-shadow:0 4px 20px rgba(0,0,0,0.6);
 z-index:1000;
 }
 
 .brand{
 font-size:18px;
-font-weight:800;
-background:linear-gradient(90deg,#4fd1ff,#fff,#4fd1ff);
-background-size:200% auto;
--webkit-background-clip:text;
--webkit-text-fill-color:transparent;
-animation:shine 3s linear infinite;
+font-weight:700;
+color:#fff;
 }
-@keyframes shine{to{background-position:200% center;}}
 
-.right-menu{display:flex;gap:10px;}
-.nav-box{padding:6px 14px;border-radius:14px;font-weight:700;font-size:13px;text-align:center;}
-.balance-box{background:#273c8f;}
-.bet-box{background:linear-gradient(90deg,#ff8a00,#ff5f00);color:#000;}
+.right-menu{
+display:flex;
+gap:8px;
+}
 
+.nav-box{
+background:#1e2533;
+padding:6px 12px;
+border-radius:12px;
+font-weight:600;
+font-size:13px;
+}
+
+.balance-box{
+color:#00d4ff;
+}
+
+.bet-box{
+color:#ffcc00;
+}
+
+/* MAIN CONTAINER */
 .container{
 max-width:520px;
 margin:auto;
-padding:90px 20px 20px;
-text-align:center;
+padding:90px 15px 20px;
 }
 
+/* MINES HEADER */
+.mines-header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+background:#151b26;
+padding:12px 15px;
+border-radius:14px;
+margin-bottom:15px;
+box-shadow:0 0 20px rgba(0,0,0,0.5);
+}
+
+.mines-header span{
+opacity:0.7;
+font-size:14px;
+}
+
+/* GRID */
 #grid{
 display:grid;
 grid-template-columns:repeat(5,1fr);
-gap:8px;
-margin-top:20px;
+gap:10px;
+margin-bottom:20px;
 }
 
 .tile{
-background:#141b3f;
-height:65px;
-border-radius:12px;
+background:#1b2232;
+height:68px;
+border-radius:14px;
 display:flex;
 align-items:center;
 justify-content:center;
 font-size:22px;
 cursor:pointer;
-border:1px solid #2a3577;
-transition:0.3s;
-transform-style:preserve-3d;
+transition:0.25s;
+box-shadow:inset 0 0 8px rgba(0,0,0,0.6);
 }
 
 .tile.open{
-animation:flipOpen 0.35s ease forwards;
-background:#2ecc71;
-box-shadow:0 0 20px #2ecc71;
-}
-
-@keyframes flipOpen{
-0%{transform:rotateY(0) scale(0.8)}
-50%{transform:rotateY(90deg) scale(1.1)}
-100%{transform:rotateY(0) scale(1)}
+background:#16c784;
+box-shadow:0 0 15px #16c784;
 }
 
 .tile.mine{
-animation:explode 0.4s ease;
-background:#e74c3c;
-box-shadow:0 0 25px red;
+background:#ff4d4f;
+box-shadow:0 0 18px red;
 }
 
-@keyframes explode{
-0%{transform:scale(1)}
-50%{transform:scale(1.5)}
-100%{transform:scale(1)}
+/* BET PANEL */
+.bet-panel{
+background:#151b26;
+border-radius:16px;
+padding:15px;
+box-shadow:0 0 20px rgba(0,0,0,0.6);
+}
+
+.tabs{
+display:flex;
+margin-bottom:15px;
+}
+
+.tab{
+flex:1;
+text-align:center;
+padding:10px;
+border-radius:12px;
+background:#1e2533;
+font-weight:600;
+}
+
+.tab.active{
+background:#2b3447;
+}
+
+input,select{
+width:100%;
+background:#1e2533;
+border:none;
+border-radius:12px;
+padding:12px;
+color:white;
+margin-bottom:10px;
+font-size:15px;
 }
 
 button{
-padding:10px;
-border-radius:10px;
+width:100%;
+padding:14px;
+border-radius:12px;
 border:none;
-margin:5px;
 font-weight:bold;
 cursor:pointer;
+margin-top:5px;
+font-size:15px;
 }
 
-.start{background:#3498db;color:white;}
-.start:disabled{background:#555;}
+.start{
+background:#00c853;
+color:black;
+}
 
-.cashout{background:#f1c40f;color:black;}
-.cashout:disabled{background:#555;}
+.cashout{
+background:#ffcc00;
+color:black;
+}
 
-input,select{
-padding:10px;
-border-radius:10px;
-border:none;
-margin:5px;
-font-size:15px;
+button:disabled{
+background:#444;
+color:#999;
 }
 </style>
 </head>
 <body>
 
 <div class="top-bar">
-<div class="brand">PixelArena Mines</div>
+<div class="brand">PixelArena</div>
 <div class="right-menu">
-<div class="nav-box balance-box">Bakiye: <span id="userBalance">0</span>₺</div>
-<div class="nav-box bet-box">Bahis: <span id="currentBet">0</span></div>
+<div class="nav-box balance-box">₺ <span id="userBalance">0</span></div>
+<div class="nav-box bet-box">Bet: <span id="currentBet">0</span></div>
 </div>
 </div>
 
 <div class="container">
-<h2>💣 Mines</h2>
+
+<div class="mines-header">
+<div>Mines</div>
+<div><span>Mayın:</span> <span id="mineDisplay">1</span></div>
+</div>
+
+<div id="grid"></div>
+
+<div class="bet-panel">
+
+<div class="tabs">
+<div class="tab active">Manuel</div>
+<div class="tab">Auto Bet</div>
+</div>
 
 <input type="number" id="bet" placeholder="Bahis (250 - 3000)">
 <select id="mineCount"></select>
-<br>
-<button id="startBtn" class="start">Başlat</button>
+
+<button id="startBtn" class="start">BET</button>
 <button id="cashoutBtn" class="cashout" disabled>Çek</button>
 
-<h3>Çarpan: <span id="multiplier">1x</span></h3>
-<div id="grid"></div>
+<h3 style="text-align:center;margin-top:10px;">Çarpan: <span id="multiplier">1x</span></h3>
+
+</div>
 </div>
 
 <script type="module">
@@ -175,46 +236,6 @@ const app=initializeApp(firebaseConfig);
 const auth=getAuth(app);
 const db=getFirestore(app);
 
-/* AUDIO SYSTEM */
-let audioCtx=null;
-function initAudio(){
-if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-}
-function playStartSound(){
-initAudio();
-const osc=audioCtx.createOscillator();
-const gain=audioCtx.createGain();
-osc.type="triangle";
-osc.frequency.setValueAtTime(400,audioCtx.currentTime);
-osc.frequency.linearRampToValueAtTime(700,audioCtx.currentTime+0.3);
-gain.gain.setValueAtTime(0.4,audioCtx.currentTime);
-gain.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+0.4);
-osc.connect(gain);
-gain.connect(audioCtx.destination);
-osc.start();
-osc.stop(audioCtx.currentTime+0.4);
-}
-function explosionSound(){
-initAudio();
-const osc=audioCtx.createOscillator();
-const gain=audioCtx.createGain();
-osc.type="square";
-osc.frequency.setValueAtTime(90,audioCtx.currentTime);
-gain.gain.setValueAtTime(0.7,audioCtx.currentTime);
-gain.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+0.5);
-osc.connect(gain);
-gain.connect(audioCtx.destination);
-osc.start();
-osc.stop(audioCtx.currentTime+0.5);
-}
-
-/* FIRST USER TOUCH = ENABLE AUDIO + START SOUND */
-document.addEventListener("click",()=>{
-if(!audioCtx){
-playStartSound();
-}
-},{once:true});
-
 let mines=[],opened=0,betAmount=0,mineTotal=1,multiplier=1,gameActive=false;
 
 const grid=document.getElementById("grid");
@@ -225,14 +246,18 @@ const startBtn=document.getElementById("startBtn");
 const cashoutBtn=document.getElementById("cashoutBtn");
 const mineSelect=document.getElementById("mineCount");
 const betInput=document.getElementById("bet");
+const mineDisplay=document.getElementById("mineDisplay");
 
-/* 1-24 */
 for(let i=1;i<=24;i++){
 let opt=document.createElement("option");
 opt.value=i;
 opt.text=i+" Mayın";
 mineSelect.appendChild(opt);
 }
+
+mineSelect.addEventListener("change",()=>{
+mineDisplay.innerText=mineSelect.value;
+});
 
 function createGrid(){
 grid.innerHTML="";
@@ -292,7 +317,6 @@ cashoutBtn.disabled=false;
 currentBetText.innerText=betAmount;
 });
 
-/* CASHOUT FIXED */
 cashoutBtn.addEventListener("click",async()=>{
 if(!gameActive||opened===0) return;
 
@@ -319,7 +343,6 @@ if(!gameActive||tile.classList.contains("open")) return;
 if(mines.includes(i)){
 tile.classList.add("mine");
 tile.innerHTML="💣";
-explosionSound();
 gameActive=false;
 betInput.disabled=false;
 mineSelect.disabled=false;
