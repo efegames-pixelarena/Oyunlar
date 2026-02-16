@@ -139,7 +139,7 @@ animation:shake 0.3s;
 100%{transform:translateX(0)}
 }
 
-/* GELİŞTİRİLMİŞ PATLAMA */
+/* PATLAMA */
 .explosion{
 position:absolute;
 top:50%;
@@ -207,11 +207,6 @@ color:#999;
 </head>
 <body>
 
-<!-- SESLER -->
-<audio id="explodeSound" preload="auto" playsinline src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-retro-game-over-213.wav"></audio>
-<audio id="winSound" preload="auto" playsinline src="https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.wav"></audio>
-<audio id="cashSound" preload="auto" playsinline src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-jump-coin-216.wav"></audio>
-
 <div class="top-bar">
 <div class="brand">PixelArena</div>
 <div class="right-menu">
@@ -237,8 +232,6 @@ color:#999;
 <button id="startBtn" class="start">BET</button>
 <button id="cashoutBtn" class="cashout" disabled>Çek</button>
 
-<h3 style="text-align:center;margin-top:10px;">Çarpan: <span id="multiplier">1x</span></h3>
-
 </div>
 </div>
 
@@ -247,26 +240,36 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { getAuth,onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore,doc,onSnapshot,runTransaction } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-/* IOS SES UNLOCK */
-let audioUnlocked=false;
-function unlockAudio(){
-if(audioUnlocked) return;
-document.querySelectorAll("audio").forEach(a=>{
-a.volume=1;
-a.play().then(()=>{a.pause();a.currentTime=0;}).catch(()=>{});
-});
-audioUnlocked=true;
-}
-document.body.addEventListener("touchstart",unlockAudio,{once:true});
-document.body.addEventListener("click",unlockAudio,{once:true});
+/* KESİN ÇALIŞAN SES SİSTEMİ (IOS DAHİL) */
+let audioCtx;
+let sounds={};
 
-function playSound(id){
-const original=document.getElementById(id);
-if(!original) return;
-const sound=original.cloneNode(true);
-sound.volume=1;
-sound.play().catch(()=>{});
+async function initAudio(){
+if(audioCtx) return;
+audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+await audioCtx.resume();
+
+async function loadSound(name,url){
+const res=await fetch(url);
+const arrayBuffer=await res.arrayBuffer();
+sounds[name]=await audioCtx.decodeAudioData(arrayBuffer);
 }
+
+await loadSound("explode","https://assets.mixkit.co/sfx/preview/mixkit-arcade-retro-game-over-213.wav");
+await loadSound("win","https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.wav");
+await loadSound("cash","https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-jump-coin-216.wav");
+}
+
+function playSound(name){
+if(!audioCtx||!sounds[name]) return;
+const source=audioCtx.createBufferSource();
+source.buffer=sounds[name];
+source.connect(audioCtx.destination);
+source.start(0);
+}
+
+document.body.addEventListener("touchstart",initAudio,{once:true});
+document.body.addEventListener("click",initAudio,{once:true});
 
 const firebaseConfig={
 apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
@@ -284,7 +287,6 @@ const db=getFirestore(app);
 let mines=[],opened=0,betAmount=0,mineTotal=1,multiplier=1,gameActive=false;
 
 const grid=document.getElementById("grid");
-const multiplierText=document.getElementById("multiplier");
 const balanceText=document.getElementById("userBalance");
 const currentBetText=document.getElementById("currentBet");
 const startBtn=document.getElementById("startBtn");
@@ -327,7 +329,6 @@ const safeLeft=(25-mineTotal)-(opened-1);
 const totalLeft=25-(opened-1);
 multiplier*=totalLeft/safeLeft;
 multiplier=Math.floor(multiplier*100)/100;
-multiplierText.innerText=multiplier+"x";
 cashoutBtn.innerText="Çek ("+Math.floor(betAmount*multiplier)+"₺)";
 }
 
@@ -365,7 +366,7 @@ currentBetText.innerText=betAmount;
 cashoutBtn.addEventListener("click",async()=>{
 if(!gameActive||opened===0) return;
 
-playSound("cashSound");
+playSound("cash");
 
 const win=Math.floor(betAmount*multiplier);
 const userRef=doc(db,"users",auth.currentUser.uid);
@@ -375,14 +376,13 @@ const snap=await transaction.get(userRef);
 transaction.update(userRef,{balance:snap.data().balance+win});
 });
 
-playSound("winSound");
+playSound("win");
 
 gameActive=false;
 betInput.disabled=false;
 mineSelect.disabled=false;
 startBtn.disabled=false;
 cashoutBtn.disabled=true;
-multiplierText.innerText="1x";
 currentBetText.innerText="0";
 });
 
@@ -397,7 +397,7 @@ const boom=document.createElement("div");
 boom.classList.add("explosion");
 tile.appendChild(boom);
 
-playSound("explodeSound");
+playSound("explode");
 
 gameActive=false;
 betInput.disabled=false;
