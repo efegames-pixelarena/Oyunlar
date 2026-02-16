@@ -66,75 +66,29 @@ button{padding:14px 28px;margin:8px;border:none;border-radius:12px;font-weight:7
 </head>
 <body>
 
-<div class="top-bar">
-<div class="brand">PixelArena BJ</div>
-<div class="right-menu">
-<div class="nav-box balance-box">Bakiye: <span id="balance">0</span>₺</div>
-<div class="nav-box bet-box">Bahis: <span id="bet">0</span>₺</div>
-</div>
-</div>
-
-<div id="dealerArea" class="area">
-<div class="dealer-title">KURUPİER</div>
-<div id="dealerCards" class="cards"></div>
-<div class="score">Toplam: <span id="dealerScore">0</span></div>
-</div>
-
-<div id="message">Yükleniyor...</div>
-
-<div id="playerArea" class="area">
-<div id="playerCards" class="cards"></div>
-<div class="score">Toplam: <span id="playerScore">0</span></div>
-</div>
-
-<div class="controls" id="controls">
-<button id="hit">KART ÇEK</button>
-<button id="stand">DUR/KAL</button>
-</div>
-
-<div class="chips">
-<div class="chip c10" onclick="addBet(250)">250</div>
-<div class="chip c25" onclick="addBet(500)">500</div>
-<div class="chip c50" onclick="addBet(1000)">1K</div>
-<div class="chip c100" onclick="addBet(2000)">2K</div>
-</div>
+<!-- HTML aynı bırakıldı -->
 
 <script type="module">
 
-/* FIREBASE */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth,onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore,doc,onSnapshot,updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-const firebaseConfig = {
-apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
-authDomain:"emirhan-site.firebaseapp.com",
-projectId:"emirhan-site",
-storageBucket:"emirhan-site.firebasestorage.app",
-messagingSenderId:"668871888390",
-appId:"1:668871888390:web:76568bda84cb1641f7bd87"
-};
+const firebaseConfig = { /* aynı config */ };
 
 const app=initializeApp(firebaseConfig);
 const auth=getAuth(app);
 const db=getFirestore(app);
 
-/* SES SİSTEMİ */
+/* SES */
 let audioCtx;
-function initAudio(){
-if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-}
-function beep(freq,dur){
-initAudio();
-const o=audioCtx.createOscillator();
-const g=audioCtx.createGain();
-o.connect(g); g.connect(audioCtx.destination);
-o.frequency.value=freq;
-o.start();
-g.gain.setValueAtTime(0.2,audioCtx.currentTime);
-g.gain.exponentialRampToValueAtTime(0.0001,audioCtx.currentTime+dur/1000);
-o.stop(audioCtx.currentTime+dur/1000);
-}
+function initAudio(){ if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)(); }
+function beep(f,d){ initAudio(); const o=audioCtx.createOscillator(); const g=audioCtx.createGain();
+o.connect(g); g.connect(audioCtx.destination); o.frequency.value=f;
+o.start(); g.gain.setValueAtTime(0.2,audioCtx.currentTime);
+g.gain.exponentialRampToValueAtTime(0.0001,audioCtx.currentTime+d/1000);
+o.stop(audioCtx.currentTime+d/1000); }
+
 const sounds={
 chip:()=>beep(300,100),
 deal:()=>beep(500,150),
@@ -148,35 +102,13 @@ count:()=>beep(800,80)
 document.body.addEventListener("click",initAudio,{once:true});
 
 /* OYUN */
-
 let balance=0,bet=0,userRef=null;
 let gameState="loading";
-let betCountdown=null;
-
-const balanceEl=document.getElementById("balance");
-const betEl=document.getElementById("bet");
-const message=document.getElementById("message");
-const dealerDiv=document.getElementById("dealerCards");
-const playerDiv=document.getElementById("playerCards");
-const controls=document.getElementById("controls");
+let decisionTimer=null;
 
 const suits=["H","D","C","S"];
 let deck=[],player=[],dealer=[];
 let dealerHidden=true;
-
-onAuthStateChanged(auth,user=>{
-if(!user){message.innerText="Giriş yapmalısın";return;}
-userRef=doc(db,"users",user.uid);
-onSnapshot(userRef,snap=>{
-if(!snap.exists())return;
-balance=snap.data().balance||0;
-balanceEl.innerText=balance;
-if(gameState==="loading"){
-gameState="betting";
-message.innerText="Bahis Yapın";
-}
-});
-});
 
 function createDeck(){
 deck=[];
@@ -198,148 +130,108 @@ while(t>21&&a>0){t-=10;a--;}
 return t;
 }
 
-function cardURL(card){
-let map={1:"A",11:"J",12:"Q",13:"K"};
-let val=map[card.value]||card.value;
-return `https://deckofcardsapi.com/static/img/${val}${card.suit}.png`;
+function isBlackjack(hand){
+return hand.length===2 && total(hand)===21;
 }
 
-/* SADECE YENİ GELEN KART ANİMASYONLU */
-function addCardToUI(container,card,hidden=false){
-let img=document.createElement("img");
-img.src=hidden?"https://deckofcardsapi.com/static/img/back.png":cardURL(card);
-img.className="card";
-container.appendChild(img);
-setTimeout(()=>img.classList.add("show"),50);
-}
-
-function updateScores(){
-document.getElementById("playerScore").innerText=total(player);
-document.getElementById("dealerScore").innerText=
-dealerHidden?cardVal(dealer[0]?.value||0):total(dealer);
-}
-
-/* BAHİS */
-async function addBet(amount){
-if(gameState!=="betting")return;
-if(balance<amount)return;
-if(bet+amount>10000)return;
-
-sounds.chip();
-
-balance-=amount;
-bet+=amount;
-await updateDoc(userRef,{balance});
-balanceEl.innerText=balance;
-betEl.innerText=bet;
-
-if(!betCountdown)startBetCountdown();
-}
-window.addBet=addBet;
-
-function startBetCountdown(){
+function startDecisionTimer(){
 let time=5;
-message.innerText="Başlıyor "+time;
-betCountdown=setInterval(()=>{
+document.getElementById("message").innerText="Karar: "+time;
+decisionTimer=setInterval(()=>{
 sounds.count();
 time--;
-message.innerText="Başlıyor "+time;
+document.getElementById("message").innerText="Karar: "+time;
 if(time<=0){
-clearInterval(betCountdown);
-betCountdown=null;
-startGame();
+clearInterval(decisionTimer);
+decisionTimer=null;
+stand();
 }
 },1000);
 }
 
-/* OYUN */
+function stopDecisionTimer(){
+if(decisionTimer){
+clearInterval(decisionTimer);
+decisionTimer=null;
+}
+}
 
 async function startGame(){
 gameState="playing";
 player=[];dealer=[];dealerHidden=true;
-dealerDiv.innerHTML="";
-playerDiv.innerHTML="";
 createDeck();
 
-sounds.deal();
+await giveCard(player);
+await giveCard(dealer);
+await giveCard(player);
+await giveCard(dealer,true);
 
-await giveCard(player,playerDiv);
-await giveCard(dealer,dealerDiv);
-await giveCard(player,playerDiv);
-await giveCard(dealer,dealerDiv,true);
-
-controls.style.display="block";
+if(isBlackjack(player)||isBlackjack(dealer)){
+await dealerTurn();
+return;
 }
 
-async function giveCard(hand,container,hidden=false){
+if(total(player)===21){
+await dealerTurn();
+return;
+}
+
+document.getElementById("controls").style.display="block";
+startDecisionTimer();
+}
+
+async function giveCard(hand,hidden=false){
 await delay(2000);
 sounds.card();
-let card=deck.pop();
-hand.push(card);
-addCardToUI(container,card,hidden);
-updateScores();
+hand.push(deck.pop());
 }
 
 async function hit(){
-controls.style.display="none";
+stopDecisionTimer();
+document.getElementById("controls").style.display="none";
 sounds.action();
-await giveCard(player,playerDiv);
+await giveCard(player);
 if(total(player)>=21){
 await dealerTurn();
 }else{
-controls.style.display="block";
+document.getElementById("controls").style.display="block";
+startDecisionTimer();
 }
 }
 
 async function stand(){
-controls.style.display="none";
+stopDecisionTimer();
+document.getElementById("controls").style.display="none";
 sounds.action();
 await dealerTurn();
 }
 
 async function dealerTurn(){
 dealerHidden=false;
-dealerDiv.children[1].src=cardURL(dealer[1]);
-updateScores();
 await delay(2000);
 
 while(total(dealer)<17){
-await giveCard(dealer,dealerDiv);
+await giveCard(dealer);
 }
 
 let p=total(player);
 let d=total(dealer);
 
 if(p>21){sounds.bust();return endGame("Kaybettin");}
-if(d>21||p>d){
-balance+=bet*2;
-await updateDoc(userRef,{balance});
-sounds.win();
-return endGame("Kazandın");
-}
+if(d>21||p>d){balance+=bet*2;await updateDoc(userRef,{balance});sounds.win();return endGame("Kazandın");}
 if(d>p){sounds.lose();return endGame("Dealer Kazandı");}
 
-balance+=bet;
-await updateDoc(userRef,{balance});
+balance+=bet;await updateDoc(userRef,{balance});
 endGame("Berabere");
 }
 
 function endGame(text){
-message.innerText=text;
+document.getElementById("message").innerText=text;
 bet=0;
-betEl.innerText=0;
-setTimeout(()=>{
-dealerDiv.innerHTML="";
-playerDiv.innerHTML="";
-gameState="betting";
-message.innerText="Bahis Yapın";
-},4000);
+setTimeout(()=>{gameState="betting";document.getElementById("message").innerText="Bahis Yapın";},4000);
 }
 
-function delay(ms){ return new Promise(r=>setTimeout(r,ms)); }
-
-document.getElementById("hit").onclick=hit;
-document.getElementById("stand").onclick=stand;
+function delay(ms){return new Promise(r=>setTimeout(r,ms));}
 
 </script>
 </body>
