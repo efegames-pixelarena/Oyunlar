@@ -39,6 +39,32 @@ main{padding-top:20px;}
 .game-card:hover{transform:translateY(-10px) scale(1.03);box-shadow:0 0 30px #ffb300;border:1px solid #ffb300;}
 .game-icon{font-size:45px;margin-bottom:15px;}
 
+  /* AUTH LOGO üst bar ile aynı stil */
+.auth-logo{
+font-size:26px;
+font-weight:800;
+margin-bottom:20px;
+background:linear-gradient(90deg,#4fd1ff,#fff,#4fd1ff);
+background-size:200% auto;
+-webkit-background-clip:text;
+-webkit-text-fill-color:transparent;
+animation:shine 3s linear infinite;
+text-align:center;
+}
+
+/* AUTH GERİ BUTONU */
+.auth-back{
+width:100%;
+padding:12px;
+margin-top:10px;
+border:none;
+border-radius:12px;
+background:#ff3b3b;
+color:white;
+font-weight:bold;
+cursor:pointer;
+}
+
 /* ===== FOOTER DÜZENLENDİ ===== */
 .footer{background:linear-gradient(180deg,#0a0f1f,#0c1328);padding:40px 20px 20px;margin-top:60px;border-top:1px solid #1e2a5a;}
 .footer-links{display:flex;justify-content:center;margin-bottom:20px;text-align:center;}
@@ -60,19 +86,23 @@ main{padding-top:20px;}
 <canvas id="snow"></canvas>
 
 <!-- AUTH MODAL -->
-<div class="auth-overlay" id="authOverlay">
 <div class="auth-card">
 <div class="auth-logo">PixelArena</div>
+
 <h2 id="authTitle">Giriş Yap</h2>
+
 <input type="email" id="authEmail" placeholder="E-mail">
 <input type="password" id="authPassword" placeholder="Şifre">
 <input type="text" id="authUsername" placeholder="Kullanıcı Adı" style="display:none;">
+
 <button class="auth-btn" id="authSubmit">Giriş Yap</button>
+
 <div class="auth-switch">
 <span id="switchText">Hesabın yok mu?</span>
 <b id="switchMode">Kayıt Ol</b>
 </div>
-</div>
+
+<button class="auth-back" id="authBack">Geri</button>
 </div>
 
 <!-- TOP BAR -->
