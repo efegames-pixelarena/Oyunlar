@@ -194,11 +194,6 @@ background:#00c853;
 color:black;
 }
 
-.cashout{
-background:#ffcc00;
-color:black;
-}
-
 button:disabled{
 background:#444;
 color:#999;
@@ -230,7 +225,6 @@ color:#999;
 <select id="mineCount"></select>
 
 <button id="startBtn" class="start">BET</button>
-<button id="cashoutBtn" class="cashout" disabled>Çek</button>
 
 </div>
 </div>
@@ -240,7 +234,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { getAuth,onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore,doc,onSnapshot,runTransaction } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-/* KESİN ÇALIŞAN SES SİSTEMİ (IOS DAHİL) */
+/* IOS DAHİL KESİN ÇALIŞAN SES SİSTEMİ */
 let audioCtx;
 let sounds={};
 
@@ -257,7 +251,7 @@ sounds[name]=await audioCtx.decodeAudioData(arrayBuffer);
 
 await loadSound("explode","https://assets.mixkit.co/sfx/preview/mixkit-arcade-retro-game-over-213.wav");
 await loadSound("win","https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.wav");
-await loadSound("cash","https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-jump-coin-216.wav");
+await loadSound("open","https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-jump-coin-216.wav");
 }
 
 function playSound(name){
@@ -290,7 +284,6 @@ const grid=document.getElementById("grid");
 const balanceText=document.getElementById("userBalance");
 const currentBetText=document.getElementById("currentBet");
 const startBtn=document.getElementById("startBtn");
-const cashoutBtn=document.getElementById("cashoutBtn");
 const mineSelect=document.getElementById("mineCount");
 const betInput=document.getElementById("bet");
 const mineDisplay=document.getElementById("mineDisplay");
@@ -329,11 +322,32 @@ const safeLeft=(25-mineTotal)-(opened-1);
 const totalLeft=25-(opened-1);
 multiplier*=totalLeft/safeLeft;
 multiplier=Math.floor(multiplier*100)/100;
-cashoutBtn.innerText="Çek ("+Math.floor(betAmount*multiplier)+"₺)";
+startBtn.innerText="Çek ("+Math.floor(betAmount*multiplier)+"₺)";
 }
 
 startBtn.addEventListener("click",async()=>{
 if(!auth.currentUser) return;
+
+if(gameActive){
+if(opened===0) return;
+
+const win=Math.floor(betAmount*multiplier);
+const userRef=doc(db,"users",auth.currentUser.uid);
+
+await runTransaction(db,async(transaction)=>{
+const snap=await transaction.get(userRef);
+transaction.update(userRef,{balance:snap.data().balance+win});
+});
+
+playSound("win");
+
+gameActive=false;
+betInput.disabled=false;
+mineSelect.disabled=false;
+startBtn.innerText="BET";
+currentBetText.innerText="0";
+return;
+}
 
 betAmount=parseInt(betInput.value);
 if(betAmount<250){ alert("Minimum Bahis 250₺"); return; }
@@ -357,33 +371,8 @@ createGrid();
 gameActive=true;
 betInput.disabled=true;
 mineSelect.disabled=true;
-startBtn.disabled=true;
-cashoutBtn.disabled=false;
-
+startBtn.innerText="Çek";
 currentBetText.innerText=betAmount;
-});
-
-cashoutBtn.addEventListener("click",async()=>{
-if(!gameActive||opened===0) return;
-
-playSound("cash");
-
-const win=Math.floor(betAmount*multiplier);
-const userRef=doc(db,"users",auth.currentUser.uid);
-
-await runTransaction(db,async(transaction)=>{
-const snap=await transaction.get(userRef);
-transaction.update(userRef,{balance:snap.data().balance+win});
-});
-
-playSound("win");
-
-gameActive=false;
-betInput.disabled=false;
-mineSelect.disabled=false;
-startBtn.disabled=false;
-cashoutBtn.disabled=true;
-currentBetText.innerText="0";
 });
 
 function reveal(i,tile){
@@ -402,14 +391,16 @@ playSound("explode");
 gameActive=false;
 betInput.disabled=false;
 mineSelect.disabled=false;
-startBtn.disabled=false;
-cashoutBtn.disabled=true;
+startBtn.innerText="BET";
 return;
 }
 
 opened++;
 tile.classList.add("open");
 tile.innerHTML="💎";
+
+playSound("open");
+
 updateMultiplier();
 }
 
