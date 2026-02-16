@@ -63,6 +63,7 @@ position:absolute;top:50%;left:50%;
 transform:translate(-50%,-50%);
 width:120px;height:160px;
 }
+
 .stack-card{
 width:95px;
 position:absolute;
@@ -81,11 +82,19 @@ position:absolute;top:15px;left:50%;
 transform:translateX(-50%);
 display:flex;gap:10px;
 }
+
 .card{
 width:80px;
 cursor:pointer;
-transition:none; /* Zıplama kapatıldı */
 pointer-events:auto;
+}
+
+/* MASAYA GERÇEK ATIŞ ANİMASYONU */
+.card-throw{
+position:absolute;
+width:80px;
+z-index:2000;
+transition:all 0.45s cubic-bezier(.2,.8,.2,1);
 }
 
 .chips{
@@ -114,7 +123,6 @@ font-weight:bold;font-size:16px;
 cursor:pointer;
 }
 
-/* GELİŞTİRİLMİŞ PİŞTİ */
 .pisti-anim{
 position:fixed;
 top:50%;left:50%;
@@ -130,9 +138,9 @@ z-index:3000;
 animation:pistiUltra 1.2s ease forwards;
 }
 @keyframes pistiUltra{
-0%{opacity:0;transform:translate(-50%,-50%) scale(0.2) rotate(-10deg);}
-40%{opacity:1;transform:translate(-50%,-50%) scale(1.4) rotate(5deg);}
-70%{transform:translate(-50%,-50%) scale(1) rotate(0deg);}
+0%{opacity:0;transform:translate(-50%,-50%) scale(0.2);}
+40%{opacity:1;transform:translate(-50%,-50%) scale(1.4);}
+70%{transform:translate(-50%,-50%) scale(1);}
 100%{opacity:0;transform:translate(-50%,-50%) scale(1);}
 }
 </style>
@@ -185,13 +193,20 @@ const app=initializeApp(firebaseConfig);
 const auth=getAuth(app);
 const db=getFirestore(app);
 
-const cardSound=new Audio("https://cdn.pixabay.com/download/audio/2022/03/15/audio_115b9b3c6e.mp3?filename=card-place-90385.mp3");
-const coinSound=new Audio("https://assets.mixkit.co/active_storage/sfx/2001/2001-preview.mp3");
+/* GERÇEK SESLER - iOS UNLOCK */
+const chipSound=new Audio("https://assets.mixkit.co/active_storage/sfx/2964/2964-preview.mp3");
+const cardSound=new Audio("https://assets.mixkit.co/active_storage/sfx/2058/2058-preview.mp3");
+const winSound=new Audio("https://assets.mixkit.co/active_storage/sfx/2001/2001-preview.mp3");
 const loseSound=new Audio("https://assets.mixkit.co/active_storage/sfx/2018/2018-preview.mp3");
-const winSound=new Audio("https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3");
+
+document.body.addEventListener("click",()=>{
+chipSound.play().then(()=>chipSound.pause());
+cardSound.play().then(()=>cardSound.pause());
+},{once:true});
 
 let balance=0,bet=0,userRef=null;
 let gameStarted=false;
+let dealing=false; // DAĞITIM KİLİDİ
 
 onAuthStateChanged(auth,user=>{
 if(!user) return;
@@ -211,7 +226,8 @@ bet+=amount;
 await updateDoc(userRef,{balance});
 document.getElementById("balance").innerText=balance;
 document.getElementById("bet").innerText=bet;
-coinSound.play();
+chipSound.currentTime=0;
+chipSound.play();
 }
 
 window.startGame=function(){
@@ -245,9 +261,9 @@ renderTable();
 setTimeout(dealRound,1000);
 }
 
-/* İSTENİLEN DAĞITIM */
 function dealRound(){
 if(round>=totalRounds){ endGame(); return; }
+dealing=true;
 player=[]; computer=[];
 let count=0;
 
@@ -256,10 +272,10 @@ if(count<4){
 player.push(deck.shift());
 render();
 count++;
-setTimeout(givePlayer,1000);
+setTimeout(givePlayer,400);
 }else{
 count=0;
-setTimeout(giveComputer,1000);
+setTimeout(giveComputer,400);
 }
 }
 
@@ -268,13 +284,13 @@ if(count<4){
 computer.push(deck.shift());
 render();
 count++;
-setTimeout(giveComputer,1000);
+setTimeout(giveComputer,400);
 }else{
 round++;
+dealing=false; // DAĞITIM BİTTİ
 render();
 }
 }
-
 givePlayer();
 }
 
@@ -318,22 +334,37 @@ tc.appendChild(im);
 });
 }
 
-function showPisti(){
-let div=document.createElement("div");
-div.className="pisti-anim";
-div.innerText="🔥 PİŞTİ 🔥";
-document.body.appendChild(div);
-setTimeout(()=>div.remove(),1200);
+/* GERÇEK MASAYA ATIŞ */
+function throwCardToTable(srcImg,card){
+const rect=srcImg.getBoundingClientRect();
+const clone=srcImg.cloneNode();
+clone.className="card-throw";
+clone.style.left=rect.left+"px";
+clone.style.top=rect.top+"px";
+document.body.appendChild(clone);
+
+setTimeout(()=>{
+const tableRect=document.getElementById("tableCards").getBoundingClientRect();
+clone.style.left=tableRect.left+20+"px";
+clone.style.top=tableRect.top+20+"px";
+},10);
+
+setTimeout(()=>{
+clone.remove();
+table.push(card);
+check("p");
+render();
+},450);
 }
 
 function play(i){
+if(dealing) return; // DAĞITIM BİTMEDEN ATAMAZ
 cardSound.currentTime=0;
 cardSound.play();
 let c=player.splice(i,1)[0];
-table.push(c);
-check("p");
-render();
-setTimeout(compPlay,600);
+let imgEl=document.querySelectorAll("#playerHand img")[i];
+throwCardToTable(imgEl,c);
+setTimeout(compPlay,700);
 }
 
 function compPlay(){
@@ -377,8 +408,10 @@ async function endGame(){
 if(ps>cs){
 balance+=bet*3;
 await updateDoc(userRef,{balance});
+winSound.currentTime=0;
 winSound.play();
 }else{
+loseSound.currentTime=0;
 loseSound.play();
 }
 bet=0;
