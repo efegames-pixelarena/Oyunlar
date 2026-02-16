@@ -212,11 +212,7 @@ return `https://deckofcardsapi.com/static/img/${val}${card.suit}.png`;
 function addCardToUI(container,card,hidden=false){
 let img=document.createElement("img");
 img.src=hidden?"https://deckofcardsapi.com/static/img/back.png":cardURL(card);
-
-img.onerror=function(){
-img.src=cardURL(card);
-};
-
+img.onerror=function(){ img.src=cardURL(card); };
 img.className="card";
 container.appendChild(img);
 requestAnimationFrame(()=>img.classList.add("show"));
@@ -300,7 +296,7 @@ startActionTimer();
 }
 
 async function giveCard(hand,container,hidden=false){
-await delay(200);
+await delay(2000);
 sounds.card();
 let card=deck.pop();
 hand.push(card);
