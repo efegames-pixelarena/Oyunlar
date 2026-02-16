@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PixelArena - Mines</title>
+<style>
+body{margin:0;background:#0f1428;color:#fff;font-family:Arial;text-align:center}
+.container{max-width:500px;margin:auto;padding:20px}
+h1{margin-top:20px}
+.controls{margin:15px 0}
+input,select,button{padding:10px;border-radius:8px;border:none;margin:5px}
+button{cursor:pointer;font-weight:bold}
+#grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:20px}
+.tile{background:#1c2455;height:60px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer}
+.tile.open{background:#2ecc71}
+.tile.mine{background:#e74c3c}
+.info{margin-top:15px;font-size:18px}
+.cashout{background:#f1c40f;color:#000}
+.start{background:#3498db;color:#fff}
+</style>
+</head>
+<body>
+
+<div class="container">
+<h1>💣 Mines</h1>
+
+<div class="controls">
+<input type="number" id="bet" placeholder="Bahis" min="1">
+<select id="mineCount">
+<option value="3">3 Mayın</option>
+<option value="4">4 Mayın</option>
+<option value="5">5 Mayın</option>
+<option value="6">6 Mayın</option>
+<option value="7">7 Mayın</option>
+<option value="8">8 Mayın</option>
+<option value="9">9 Mayın</option>
+<option value="10">10 Mayın</option>
+</select>
+<br>
+<button class="start" onclick="startGame()">Oyunu Başlat</button>
+<button class="cashout" onclick="cashout()">Parayı Çek</button>
+</div>
+
+<div class="info">
+Çarpan: <span id="multiplier">1.00x</span>
+</div>
+
+<div id="grid"></div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+/* 🔥 Firebase Config (Kendi configinle değiştir) */
+const firebaseConfig = {
+  apiKey: "API_KEY",
+  authDomain: "PROJECT.firebaseapp.com",
+  projectId: "PROJECT_ID",
+  storageBucket: "PROJECT.appspot.com",
+  messagingSenderId: "XXXX",
+  appId: "XXXX"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const grid = document.getElementById("grid");
+const multiplierText = document.getElementById("multiplier");
+
+let mines = [];
+let opened = 0;
+let gameActive = false;
+let betAmount = 0;
+let mineTotal = 3;
+let currentMultiplier = 1;
+const houseEdge = 0.97; // %3 ev avantajı
+
+function createGrid(){
+  grid.innerHTML="";
+  for(let i=0;i<25;i++){
+    const tile=document.createElement("div");
+    tile.classList.add("tile");
+    tile.dataset.index=i;
+    tile.onclick=()=>revealTile(i,tile);
+    grid.appendChild(tile);
+  }
+}
+
+function startGame(){
+  if(!auth.currentUser){alert("Giriş yapmalısın");return;}
+  betAmount=parseFloat(document.getElementById("bet").value);
+  mineTotal=parseInt(document.getElementById("mineCount").value);
+  if(!betAmount||betAmount<=0){alert("Geçerli bahis gir");return;}
+
+  mines=[];
+  opened=0;
+  currentMultiplier=1;
+  multiplierText.innerText="1.00x";
+  createGrid();
+
+  while(mines.length<mineTotal){
+    let r=Math.floor(Math.random()*25);
+    if(!mines.includes(r))mines.push(r);
+  }
+
+  gameActive=true;
+
+  const userRef=doc(db,"users",auth.currentUser.uid);
+  runTransaction(db,async(transaction)=>{
+    const snap=await transaction.get(userRef);
+    if(snap.data().balance<betAmount)throw "Yetersiz bakiye";
+    transaction.update(userRef,{balance:snap.data().balance-betAmount});
+  }).catch(e=>alert(e));
+}
+
+function revealTile(index,tile){
+  if(!gameActive||tile.classList.contains("open"))return;
+
+  if(mines.includes(index)){
+    tile.classList.add("mine");
+    tile.innerHTML="💣";
+    gameActive=false;
+    alert("Mayına bastın!");
+    return;
+  }
+
+  opened++;
+  tile.classList.add("open");
+  tile.innerHTML="💎";
+
+  const safeTiles=25-mineTotal;
+  currentMultiplier = (25/(safeTiles-opened+1))*houseEdge;
+  multiplierText.innerText=currentMultiplier.toFixed(2)+"x";
+}
+
+function cashout(){
+  if(!gameActive||opened===0)return;
+  gameActive=false;
+
+  const win=betAmount*currentMultiplier;
+
+  const userRef=doc(db,"users",auth.currentUser.uid);
+  runTransaction(db,async(transaction)=>{
+    const snap=await transaction.get(userRef);
+    transaction.update(userRef,{balance:snap.data().balance+win});
+  });
+
+  alert("Kazandın: "+win.toFixed(2));
+}
+createGrid();
+</script>
+</body>
+</html>
