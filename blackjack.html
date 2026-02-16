@@ -33,7 +33,7 @@ animation:shine 3s linear infinite;}
 .score{margin-top:6px;font-size:17px;font-weight:600;color:#ffd700;}
 .dealer-title{font-size:17px;letter-spacing:4px;margin-bottom:8px;color:#d4af37;}
 
-.cards{display:flex;justify-content:center;gap:10px;min-height:110px;}
+.cards{display:flex;justify-content:center;gap:10px;min-height:110px;flex-wrap:wrap;}
 
 .card{
 width:70px;height:100px;border-radius:8px;
@@ -95,8 +95,6 @@ button{padding:14px 28px;margin:8px;border:none;border-radius:12px;font-weight:7
 
 <script type="module">
 
-/* ================= FIREBASE ================= */
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth,onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore,doc,onSnapshot,updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -114,24 +112,30 @@ const app=initializeApp(firebaseConfig);
 const auth=getAuth(app);
 const db=getFirestore(app);
 
-/* ================= SES ================= */
-
 let audioCtx;
+
 function initAudio(){
-if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-if(audioCtx.state==="suspended") audioCtx.resume();
+if(!audioCtx){
+audioCtx=new (window.AudioContext||window.webkitAudioContext)();
 }
+if(audioCtx.state==="suspended"){
+audioCtx.resume();
+}
+}
+
 function beep(freq,dur){
 initAudio();
 const o=audioCtx.createOscillator();
 const g=audioCtx.createGain();
-o.connect(g); g.connect(audioCtx.destination);
+o.connect(g);
+g.connect(audioCtx.destination);
 o.frequency.value=freq;
 o.start();
-g.gain.setValueAtTime(0.25,audioCtx.currentTime);
+g.gain.setValueAtTime(0.2,audioCtx.currentTime);
 g.gain.exponentialRampToValueAtTime(0.0001,audioCtx.currentTime+dur/1000);
 o.stop(audioCtx.currentTime+dur/1000);
 }
+
 const sounds={
 chip:()=>beep(300,100),
 deal:()=>beep(500,150),
@@ -142,9 +146,8 @@ lose:()=>beep(120,400),
 bust:()=>beep(90,500),
 count:()=>beep(800,80)
 };
-document.body.addEventListener("click",initAudio);
 
-/* ================= OYUN ================= */
+document.body.addEventListener("click",initAudio,{once:true});
 
 let balance=0,bet=0,userRef=null;
 let gameState="loading";
@@ -196,6 +199,10 @@ while(t>21&&a>0){t-=10;a--;}
 return t;
 }
 
+function isBlackjack(hand){
+return hand.length===2 && total(hand)===21;
+}
+
 function cardURL(card){
 let map={1:"A",11:"J",12:"Q",13:"K"};
 let val=map[card.value]||card.value;
@@ -205,13 +212,14 @@ return `https://deckofcardsapi.com/static/img/${val}${card.suit}.png`;
 function addCardToUI(container,card,hidden=false){
 let img=document.createElement("img");
 img.src=hidden?"https://deckofcardsapi.com/static/img/back.png":cardURL(card);
+
 img.onerror=function(){
-this.onerror=null;
-this.src="https://deckofcardsapi.com/static/img/back.png";
+img.src=cardURL(card);
 };
+
 img.className="card";
 container.appendChild(img);
-setTimeout(()=>img.classList.add("show"),50);
+requestAnimationFrame(()=>img.classList.add("show"));
 }
 
 function updateScores(){
@@ -220,7 +228,154 @@ document.getElementById("dealerScore").innerText=
 dealerHidden?cardVal(dealer[0]?.value||0):total(dealer);
 }
 
+async function addBet(amount){
+if(gameState!=="betting")return;
+if(balance<amount)return;
+if(bet+amount>10000)return;
+
+sounds.chip();
+balance-=amount;
+bet+=amount;
+await updateDoc(userRef,{balance});
+balanceEl.innerText=balance;
+betEl.innerText=bet;
+
+if(!betCountdown)startBetCountdown();
+}
+window.addBet=addBet;
+
+function startBetCountdown(){
+let time=5;
+message.innerText="Başlıyor "+time;
+betCountdown=setInterval(()=>{
+sounds.count();
+time--;
+message.innerText="Başlıyor "+time;
+if(time<=0){
+clearInterval(betCountdown);
+betCountdown=null;
+startGame();
+}
+},1000);
+}
+
+function startActionTimer(){
+clearInterval(actionTimer);
+let time=10;
+message.innerText="Karar: "+time;
+actionTimer=setInterval(()=>{
+sounds.count();
+time--;
+message.innerText="Karar: "+time;
+if(time<=0){
+clearInterval(actionTimer);
+stand();
+}
+},1000);
+}
+
+async function startGame(){
+gameState="playing";
+player=[];dealer=[];dealerHidden=true;
+dealerDiv.innerHTML="";
+playerDiv.innerHTML="";
+createDeck();
+sounds.deal();
+
+await giveCard(player,playerDiv);
+await giveCard(dealer,dealerDiv);
+await giveCard(player,playerDiv);
+await giveCard(dealer,dealerDiv,true);
+
+if(isBlackjack(player)||isBlackjack(dealer)){
+dealerHidden=false;
+dealerDiv.children[1].src=cardURL(dealer[1]);
+updateScores();
+await delay(1000);
+return dealerTurn();
+}
+
+controls.style.display="block";
+startActionTimer();
+}
+
+async function giveCard(hand,container,hidden=false){
+await delay(200);
+sounds.card();
+let card=deck.pop();
+hand.push(card);
+addCardToUI(container,card,hidden);
+updateScores();
+}
+
+async function hit(){
+clearInterval(actionTimer);
+controls.style.display="none";
+sounds.action();
+await giveCard(player,playerDiv);
+
+if(total(player)===21){
+return stand();
+}
+if(total(player)>21){
+return dealerTurn();
+}
+controls.style.display="block";
+startActionTimer();
+}
+
+async function stand(){
+clearInterval(actionTimer);
+controls.style.display="none";
+sounds.action();
+await dealerTurn();
+}
+
+async function dealerTurn(){
+dealerHidden=false;
+if(dealerDiv.children[1])
+dealerDiv.children[1].src=cardURL(dealer[1]);
+updateScores();
+await delay(500);
+
+while(total(dealer)<17){
+await giveCard(dealer,dealerDiv);
+}
+
+let p=total(player);
+let d=total(dealer);
+
+if(p>21){sounds.bust();return endGame("Kaybettin");}
+if(d>21||p>d){
+balance+=bet*2;
+await updateDoc(userRef,{balance});
+sounds.win();
+return endGame("Kazandın");
+}
+if(d>p){sounds.lose();return endGame("Dealer Kazandı");}
+
+balance+=bet;
+await updateDoc(userRef,{balance});
+endGame("Berabere");
+}
+
+function endGame(text){
+clearInterval(actionTimer);
+message.innerText=text;
+bet=0;
+betEl.innerText=0;
+setTimeout(()=>{
+dealerDiv.innerHTML="";
+playerDiv.innerHTML="";
+gameState="betting";
+message.innerText="Bahis Yapın";
+},4000);
+}
+
 function delay(ms){ return new Promise(r=>setTimeout(r,ms)); }
+
+document.getElementById("hit").onclick=hit;
+document.getElementById("stand").onclick=stand;
 
 </script>
 </body>
