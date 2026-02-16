@@ -187,73 +187,95 @@ window.addEventListener("resize",resize);
 resize();
 
 /* =========================
-   UZAY ARKA PLAN ANİMASYONU
+   UZAY + TWINKLE + UFO
 ========================= */
 
 let stars=[];
-for(let i=0;i<100;i++){
+for(let i=0;i<120;i++){
 stars.push({
 x:Math.random()*canvas.width,
 y:Math.random()*canvas.height,
-r:Math.random()*2
+r:Math.random()*2,
+alpha:Math.random(),
+dir:Math.random()>0.5?1:-1
 });
 }
 
 let meteors=[];
-let ships=[];
+let ufos=[];
+let rocket={x:canvas.width/2,y:canvas.height,active:false};
 
 function drawSpace(){
 ctx.fillStyle="#070b18";
 ctx.fillRect(0,0,canvas.width,canvas.height);
 
 stars.forEach(s=>{
+s.alpha+=0.01*s.dir;
+if(s.alpha<=0.1||s.alpha>=1) s.dir*=-1;
+ctx.globalAlpha=s.alpha;
 ctx.beginPath();
 ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
 ctx.fillStyle="white";
 ctx.fill();
 });
+ctx.globalAlpha=1;
 
-if(Math.random()<0.01){
+if(Math.random()<0.02){
 meteors.push({x:Math.random()*canvas.width,y:0});
 }
 
 meteors.forEach((m,i)=>{
-m.x+=5;
-m.y+=5;
+m.x+=6;
+m.y+=6;
 ctx.strokeStyle="orange";
 ctx.beginPath();
 ctx.moveTo(m.x,m.y);
-ctx.lineTo(m.x-20,m.y-20);
+ctx.lineTo(m.x-25,m.y-25);
 ctx.stroke();
 if(m.y>canvas.height) meteors.splice(i,1);
 });
 
 if(Math.random()<0.005){
-ships.push({x:-50,y:Math.random()*canvas.height});
+ufos.push({x:-60,y:Math.random()*canvas.height});
 }
 
-ships.forEach((s,i)=>{
-s.x+=3;
-ctx.fillStyle="cyan";
-ctx.fillRect(s.x,s.y,30,10);
-if(s.x>canvas.width) ships.splice(i,1);
+ufos.forEach((u,i)=>{
+u.x+=2;
+ctx.fillStyle="lime";
+ctx.beginPath();
+ctx.ellipse(u.x,u.y,20,8,0,0,Math.PI*2);
+ctx.fill();
+if(u.x>canvas.width+60) ufos.splice(i,1);
 });
+}
+
+/* =========================
+   ROKET EFEKTİ
+========================= */
+
+function drawRocket(){
+if(!rocket.active) return;
+ctx.fillStyle="white";
+ctx.beginPath();
+ctx.moveTo(rocket.x,rocket.y);
+ctx.lineTo(rocket.x-8,rocket.y+20);
+ctx.lineTo(rocket.x+8,rocket.y+20);
+ctx.closePath();
+ctx.fill();
+
+ctx.fillStyle="orange";
+ctx.fillRect(rocket.x-4,rocket.y+20,8,15);
+
+rocket.y-=2+multiplier*0.5;
 }
 
 /* ========================= */
 
 function drawGraph(){
 drawSpace();
-if(phase==="betting") return;
-let progress=Math.min(multiplier/10,1);
-let x=progress*canvas.width;
-let y=canvas.height-(Math.log(multiplier+1)/Math.log(11))*canvas.height;
-ctx.beginPath();
-ctx.moveTo(0,canvas.height);
-ctx.lineTo(x,y);
-ctx.strokeStyle=phase==="crashed"?"#ff2a4d":"#b366ff";
-ctx.lineWidth=4;
-ctx.stroke();
+if(phase==="flying"){
+drawRocket();
+}
 }
 
 function animate(){
@@ -270,6 +292,9 @@ function startFlight(){
 phase="flying";
 multiplier=1;
 crashPoint=1.5+Math.random()*4;
+rocket.y=canvas.height;
+rocket.x=canvas.width/2;
+rocket.active=true;
 animationId=requestAnimationFrame(animate);
 updateUI();
 }
@@ -277,6 +302,7 @@ updateUI();
 function crash(){
 phase="crashed";
 cancelAnimationFrame(animationId);
+rocket.active=false;
 addHistory(multiplier);
 activeBet1=0;
 activeBet2=0;
@@ -289,7 +315,6 @@ phase="betting";
 let count=5;
 multiplierEl.className="multiplier small";
 multiplierEl.innerText="Uçuşa "+count+" Saniye";
-ctx.clearRect(0,0,canvas.width,canvas.height);
 
 let interval=setInterval(()=>{
 count--;
@@ -304,31 +329,9 @@ multiplierEl.innerText="Uçuşa "+count+" Saniye";
 updateUI();
 }
 
-function addHistory(val){
-let span=document.createElement("span");
-span.innerText=val.toFixed(2)+"x";
-span.style.background=val<2?"#ff2a4d":"#00c853";
-document.getElementById("history").prepend(span);
-}
-
-function updateUI(){
-document.getElementById("balance").innerText=balance;
-document.getElementById("bet").innerText=activeBet1+activeBet2;
-updateButton("btn1",activeBet1);
-updateButton("btn2",activeBet2);
-}
-
-function updateButton(id,bet){
-let btn=document.getElementById(id);
-if(phase==="betting" && bet===0){ btn.innerText="Bahis Yap"; btn.className=""; }
-else if(phase==="betting" && bet>0){ btn.innerText="İptal"; btn.className="cancel"; }
-else if(phase==="flying" && bet>0){
-let live=Math.floor(bet*multiplier);
-btn.innerText="Çek (₺"+live+")";
-btn.className="cashout";
-}
-else{ btn.innerText="Bahis Yap"; btn.className=""; }
-}
+/* =========================
+   BAHİS LİMİTİ
+========================= */
 
 async function handleBet(box){
 if(phase!=="betting" && phase!=="flying") return;
@@ -336,7 +339,7 @@ if(phase!=="betting" && phase!=="flying") return;
 let input=document.getElementById("bet"+box);
 let amount=parseInt(input.value);
 
-if(isNaN(amount) || amount<1) amount=1;
+if(isNaN(amount)||amount<1) amount=1;
 if(amount>5000) amount=5000;
 input.value=amount;
 
@@ -365,6 +368,8 @@ else activeBet2=0;
 }
 updateUI();
 }
+
+/* ========================= */
 
 document.getElementById("btn1").onclick=()=>handleBet(1);
 document.getElementById("btn2").onclick=()=>handleBet(2);
