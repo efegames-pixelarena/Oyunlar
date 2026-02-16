@@ -13,24 +13,89 @@ user-scalable=no">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
 html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;background:#070b18;color:white;}
-.top-bar{position:fixed;top:0;width:100%;height:55px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:linear-gradient(135deg,#1a2a6c,#16245c);box-shadow:0 4px 15px rgba(0,0,0,0.45);z-index:100;}
-.brand{font-size:18px;font-weight:800;background:linear-gradient(90deg,#4fd1ff,#fff,#4fd1ff);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:shine 3s linear infinite;}
+
+.top-bar{
+position:fixed;top:0;width:100%;height:55px;
+display:flex;align-items:center;justify-content:space-between;
+padding:0 16px;
+background:linear-gradient(135deg,#1a2a6c,#16245c);
+box-shadow:0 4px 15px rgba(0,0,0,0.45);
+z-index:100;
+}
+
+.brand{
+font-size:18px;font-weight:800;
+background:linear-gradient(90deg,#4fd1ff,#fff,#4fd1ff);
+background-size:200% auto;
+-webkit-background-clip:text;
+-webkit-text-fill-color:transparent;
+animation:shine 3s linear infinite;
+}
 @keyframes shine{to{background-position:200% center;}}
+
 .right-menu{display:flex;gap:10px;}
 .nav-box{padding:6px 14px;border-radius:14px;font-weight:700;font-size:13px;min-width:95px;text-align:center;}
 .balance-box{background:#273c8f;}
 .bet-box{background:linear-gradient(90deg,#ff8a00,#ff5f00);color:#000;}
-.history{position:absolute;top:55px;width:100%;height:42px;display:flex;align-items:center;gap:8px;padding:0 12px;overflow-x:auto;background:#16245c;}
+
+.history{
+position:absolute;top:55px;width:100%;height:42px;
+display:flex;align-items:center;gap:8px;
+padding:0 12px;overflow-x:auto;background:#16245c;
+}
 .history span{padding:5px 12px;border-radius:14px;font-size:12px;font-weight:800;white-space:nowrap;}
+
 .main{position:absolute;top:97px;bottom:170px;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+
 canvas{position:absolute;width:100%;height:100%;left:0;top:0;}
-.multiplier{position:relative;font-weight:800;z-index:2;background:linear-gradient(90deg,#4fd1ff,#fff,#4fd1ff);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:shine 3s linear infinite;}
+
+.multiplier{
+position:relative;font-weight:800;z-index:2;
+background:linear-gradient(90deg,#4fd1ff,#fff,#4fd1ff);
+background-size:200% auto;
+-webkit-background-clip:text;
+-webkit-text-fill-color:transparent;
+animation:shine 3s linear infinite;
+}
 .multiplier.big{font-size:65px;}
 .multiplier.small{font-size:28px;}
-.bottom{position:absolute;bottom:0;width:100%;height:170px;background:#121833;display:flex;justify-content:center;align-items:center;gap:20px;}
-.betBox{background:#1a2248;padding:18px;border-radius:12px;width:48%;max-width:240px;display:flex;flex-direction:column;gap:10px;}
-.betBox input{padding:12px;border:none;border-radius:8px;text-align:center;font-weight:bold;font-size:16px;}
-.betBox button{padding:14px;border:none;border-radius:8px;font-weight:bold;font-size:15px;cursor:pointer;background:#6c5ce7;color:white;transition:0.2s;}
+
+.bottom{
+position:absolute;bottom:0;width:100%;height:170px;
+background:#121833;display:flex;justify-content:center;align-items:center;gap:20px;
+}
+
+.betBox{
+background:#1a2248;
+padding:18px;
+border-radius:12px;
+width:48%;
+max-width:240px;
+display:flex;
+flex-direction:column;
+gap:10px;
+}
+
+.betBox input{
+padding:12px;
+border:none;
+border-radius:8px;
+text-align:center;
+font-weight:bold;
+font-size:16px;
+}
+
+.betBox button{
+padding:14px;
+border:none;
+border-radius:8px;
+font-weight:bold;
+font-size:15px;
+cursor:pointer;
+background:#6c5ce7;
+color:white;
+transition:0.2s;
+}
 .betBox button:active{transform:scale(0.97);}
 .cancel{background:#ff2a4d !important;}
 .cashout{background:#00c853 !important;}
@@ -39,17 +104,9 @@ canvas{position:absolute;width:100%;height:100%;left:0;top:0;}
 <body>
 
 <!-- SESLER -->
-<audio id="betSound" preload="auto" playsinline webkit-playsinline>
-<source src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-jump-coin-216.wav" type="audio/wav">
-</audio>
-
-<audio id="cashSound" preload="auto" playsinline webkit-playsinline>
-<source src="https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.wav" type="audio/wav">
-</audio>
-
-<audio id="crashSound" preload="auto" playsinline webkit-playsinline>
-<source src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-retro-game-over-213.wav" type="audio/wav">
-</audio>
+<audio id="betSound" preload="auto" playsinline webkit-playsinline src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-jump-coin-216.wav"></audio>
+<audio id="cashSound" preload="auto" playsinline webkit-playsinline src="https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.wav"></audio>
+<audio id="crashSound" preload="auto" playsinline webkit-playsinline src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-retro-game-over-213.wav"></audio>
 
 <div class="top-bar">
 <div class="brand">SkyCrash</div>
@@ -79,26 +136,18 @@ canvas{position:absolute;width:100%;height:100%;left:0;top:0;}
 
 <script type="module">
 
-/* ====== PROFESYONEL iOS SES AKTİFLEŞTİRME ====== */
+/* ===== GELİŞMİŞ iOS SES AKTİFLEŞTİRME ===== */
 let audioUnlocked=false;
-
-function forceLoadAudio(){
-["betSound","cashSound","crashSound"].forEach(id=>{
-const a=document.getElementById(id);
-a.load();
-});
-}
 
 function unlockAudio(){
 if(audioUnlocked) return;
 
 ["betSound","cashSound","crashSound"].forEach(id=>{
-const a=document.getElementById(id);
-a.muted=true;
-a.play().then(()=>{
-a.pause();
-a.currentTime=0;
-a.muted=false;
+const sound=document.getElementById(id);
+sound.volume=1;
+sound.play().then(()=>{
+sound.pause();
+sound.currentTime=0;
 }).catch(()=>{});
 });
 
@@ -107,18 +156,14 @@ audioUnlocked=true;
 
 document.addEventListener("touchstart",unlockAudio,{once:true});
 document.addEventListener("click",unlockAudio,{once:true});
-forceLoadAudio();
 
 /* SES ÇALMA */
 function playSound(id){
-const sound=document.getElementById(id);
-if(!sound) return;
-sound.currentTime=0;
-sound.play().catch(()=>{});
-}
+const original=document.getElementById(id);
+if(!original) return;
 
-/* ===== BURADAN SONRASI OYUN KODUNUN AYNISI (DOKUNULMADI) ===== */
-
+const sound=original.cloneNode(true);
+sound.volume=1;
 /* ===== UZAY ANİMASYONU ===== */
 const canvas=document.getElementById("graph");
 const ctx=canvas.getContext("2d");
@@ -132,7 +177,13 @@ resize();
 
 let stars=[];
 for(let i=0;i<150;i++){
-stars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*2,alpha:Math.random(),delta:Math.random()*0.02});
+stars.push({
+x:Math.random()*canvas.width,
+y:Math.random()*canvas.height,
+r:Math.random()*2,
+alpha:Math.random(),
+delta:Math.random()*0.02
+});
 }
 
 let meteors=[];
@@ -141,6 +192,7 @@ let ufoActive=false;
 
 function drawSpace(){
 ctx.clearRect(0,0,canvas.width,canvas.height);
+
 stars.forEach(s=>{
 s.alpha+=s.delta;
 if(s.alpha<=0||s.alpha>=1) s.delta*=-1;
@@ -149,23 +201,71 @@ ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
 ctx.fillStyle="rgba(255,255,255,"+s.alpha+")";
 ctx.fill();
 });
-if(Math.random()<0.01){ meteors.push({x:Math.random()*canvas.width,y:-20}); }
+
+if(Math.random()<0.01){
+meteors.push({x:Math.random()*canvas.width,y:-20});
+}
+
 meteors.forEach((m,i)=>{
-ctx.beginPath();ctx.moveTo(m.x,m.y);ctx.lineTo(m.x+40,m.y+80);
-ctx.strokeStyle="white";ctx.lineWidth=2;ctx.stroke();
+ctx.beginPath();
+ctx.moveTo(m.x,m.y);
+ctx.lineTo(m.x+40,m.y+80);
+ctx.strokeStyle="white";
+ctx.lineWidth=2;
+ctx.stroke();
 m.x+=5;m.y+=8;
 if(m.y>canvas.height) meteors.splice(i,1);
 });
-if(!ufoActive && Math.random()<0.002){ufoActive=true;ufoX=-100;}
+
+if(!ufoActive && Math.random()<0.002){
+ufoActive=true;
+ufoX=-100;
+}
+
 if(ufoActive){
-ctx.beginPath();ctx.ellipse(ufoX,80,30,12,0,0,Math.PI*2);
-ctx.fillStyle="#9be7ff";ctx.fill();
+ctx.beginPath();
+ctx.ellipse(ufoX,80,30,12,0,0,Math.PI*2);
+ctx.fillStyle="#9be7ff";
+ctx.fill();
 ufoX+=2;
-if(ufoX>canvas.width+100){ufoActive=false;}
+if(ufoX>canvas.width+100){
+ufoActive=false;
+}
 }
 }
 
-/* ===== OYUN MEKANİĞİ (DEĞİŞMEDİ) ===== */
+/* ===== FIREBASE ===== */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth,onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore,doc,onSnapshot,updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig={
+apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
+authDomain:"emirhan-site.firebaseapp.com",
+projectId:"emirhan-site",
+storageBucket:"emirhan-site.firebasestorage.app",
+messagingSenderId:"668871888390",
+appId:"1:668871888390:web:76568bda84cb1641f7bd87"
+};
+
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getFirestore(app);
+
+let userRef=null;
+let balance=0;
+
+onAuthStateChanged(auth,user=>{
+if(user){
+userRef=doc(db,"users",user.uid);
+onSnapshot(userRef,snap=>{
+if(snap.exists()){
+balance=snap.data().balance||0;
+updateUI();
+}
+});
+}
+});
 
 let phase="betting";
 let multiplier=1;
@@ -173,10 +273,12 @@ let crashPoint=0;
 let animationId;
 let activeBet1=0;
 let activeBet2=0;
+
 const multiplierEl=document.getElementById("multiplier");
 
 function animate(){
 drawSpace();
+
 if(phase==="flying"){
 multiplier+=0.002 + multiplier*0.0006;
 multiplierEl.className="multiplier big";
@@ -184,6 +286,7 @@ multiplierEl.innerText=multiplier.toFixed(2)+"x";
 updateUI();
 if(multiplier>=crashPoint){ crash(); return; }
 }
+
 animationId=requestAnimationFrame(animate);
 }
 
@@ -209,11 +312,17 @@ phase="betting";
 let count=5;
 multiplierEl.className="multiplier small";
 multiplierEl.innerText="Uçuşa "+count+" Saniye";
+
 let interval=setInterval(()=>{
 count--;
-if(count<=0){clearInterval(interval);startFlight();}
-else{multiplierEl.innerText="Uçuşa "+count+" Saniye";}
+if(count<=0){
+clearInterval(interval);
+startFlight();
+}else{
+multiplierEl.innerText="Uçuşa "+count+" Saniye";
+}
 },1000);
+
 updateUI();
 }
 
@@ -225,7 +334,7 @@ document.getElementById("history").prepend(span);
 }
 
 function updateUI(){
-document.getElementById("balance").innerText=balance||0;
+document.getElementById("balance").innerText=balance;
 document.getElementById("bet").innerText=activeBet1+activeBet2;
 updateButton("btn1",activeBet1);
 updateButton("btn2",activeBet2);
@@ -243,12 +352,50 @@ btn.className="cashout";
 else{ btn.innerText="Bahis Yap"; btn.className=""; }
 }
 
-document.getElementById("btn1").onclick=()=>playSound("betSound");
-document.getElementById("btn2").onclick=()=>playSound("betSound");
+async function handleBet(box){
+if(!userRef) return;
+
+let input=document.getElementById("bet"+box);
+let amount=parseInt(input.value);
+
+if(amount<1) amount=1;
+if(amount>5000) amount=5000;
+input.value=amount;
+
+let active=box===1?activeBet1:activeBet2;
+
+if(phase==="betting" && active===0){
+if(balance>=amount){
+balance-=amount;
+await updateDoc(userRef,{balance});
+if(box===1) activeBet1=amount;
+else activeBet2=amount;
+playSound("betSound");
+}
+}
+else if(phase==="betting" && active>0){
+balance+=active;
+await updateDoc(userRef,{balance});
+if(box===1) activeBet1=0;
+else activeBet2=0;
+}
+else if(phase==="flying" && active>0){
+let win=Math.floor(active*multiplier);
+balance+=win;
+await updateDoc(userRef,{balance});
+if(box===1) activeBet1=0;
+else activeBet2=0;
+playSound("cashSound");
+}
+
+updateUI();
+}
+
+document.getElementById("btn1").onclick=()=>handleBet(1);
+document.getElementById("btn2").onclick=()=>handleBet(2);
 
 animate();
 startCountdown();
-
 </script>
 </body>
 </html>
