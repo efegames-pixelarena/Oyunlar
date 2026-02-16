@@ -2,7 +2,10 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
+
+<!-- ✅ ZOOM FIX -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
 <title>PixelArena</title>
 
 <style>
@@ -13,19 +16,12 @@ box-sizing:border-box;
 font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
 -webkit-tap-highlight-color:transparent;
 }
+
 body{
 background:linear-gradient(180deg,#0b1023,#0d1333,#0a0f1f);
 color:white;
 overflow-x:hidden;
 touch-action:manipulation;
-}
-#snow{
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-z-index:-1;
 }
 
 /* AUTH MODAL */
@@ -42,6 +38,7 @@ align-items:center;
 justify-content:center;
 z-index:5000;
 }
+
 .auth-card{
 width:90%;
 max-width:380px;
@@ -51,7 +48,7 @@ background:linear-gradient(145deg,#1c2455,#12183c);
 box-shadow:0 0 40px rgba(0,0,0,0.6);
 }
 
-/* ÜST BAR İLE AYNI LOGO STİLİ */
+/* ✅ ÜST BAR İLE AYNI LOGO STİLİ */
 .auth-logo{
 font-size:26px;
 font-weight:800;
@@ -65,6 +62,7 @@ text-align:center;
 }
 
 .auth-card h2{text-align:center;margin-bottom:20px;}
+
 .auth-card input{
 width:100%;
 padding:14px;
@@ -76,6 +74,7 @@ color:white;
 font-size:14px;
 outline:none;
 }
+
 .auth-btn{
 width:100%;
 padding:14px;
@@ -86,22 +85,24 @@ font-weight:bold;
 font-size:15px;
 cursor:pointer;
 }
+
 .auth-switch{
 margin-top:15px;
 text-align:center;
 font-size:13px;
 color:#aaa;
 }
+
 .auth-switch b{
 color:#ffb300;
 cursor:pointer;
 }
 
-/* KIRMIZI GERİ BUTONU */
+/* ✅ KIRMIZI GERİ BUTONU */
 .auth-back{
+margin-top:12px;
 width:100%;
 padding:12px;
-margin-top:10px;
 border:none;
 border-radius:12px;
 background:#ff3b3b;
@@ -110,7 +111,7 @@ font-weight:bold;
 cursor:pointer;
 }
 
-/* TOP BAR */
+/* ÜST BAR */
 .top-bar{
 position:fixed;
 top:0;
@@ -124,6 +125,7 @@ background:linear-gradient(135deg,#1a2a6c,#16245c);
 box-shadow:0 4px 15px rgba(0,0,0,0.45);
 z-index:1000;
 }
+
 .brand{
 font-size:18px;
 font-weight:800;
@@ -133,39 +135,21 @@ background-size:200% auto;
 -webkit-text-fill-color:transparent;
 animation:shine 3s linear infinite;
 }
-@keyframes shine{to{background-position:200% center;}}
-.right-menu{display:flex;gap:10px;align-items:center;}
-.nav-box{
-padding:6px 14px;
-border-radius:14px;
-font-weight:700;
-font-size:13px;
-min-width:95px;
-text-align:center;
+
+@keyframes shine{
+to{background-position:200% center;}
 }
-.balance-box{background:#273c8f;}
-.btn{
-padding:6px 12px;
-border-radius:12px;
-border:none;
-cursor:pointer;
-font-weight:700;
-font-size:13px;
-}
-.login-btn{background:#1e2a5a;color:white;border:1px solid #2f3a80;}
-.register-btn{background:linear-gradient(90deg,#ff8a00,#ff5f00);color:black;}
-.logout-btn{background:#ff3b3b;color:white;}
 </style>
 </head>
-<body>
 
-<canvas id="snow"></canvas>
+<body>
 
 <!-- AUTH MODAL -->
 <div class="auth-overlay" id="authOverlay">
 <div class="auth-card">
 
 <div class="auth-logo">PixelArena</div>
+
 <h2 id="authTitle">Giriş Yap</h2>
 
 <input type="email" id="authEmail" placeholder="E-mail">
@@ -185,43 +169,44 @@ font-size:13px;
 </div>
 
 <script type="module">
-/* Firebase kodların aynen korunmuştur */
 
-const overlay=document.getElementById("authOverlay");
-const authTitle=document.getElementById("authTitle");
-const authEmail=document.getElementById("authEmail");
-const authPassword=document.getElementById("authPassword");
-const authUsername=document.getElementById("authUsername");
-const authSubmit=document.getElementById("authSubmit");
-const switchMode=document.getElementById("switchMode");
-const switchText=document.getElementById("switchText");
-const authBack=document.getElementById("authBack");
+/* ELEMENTLER */
+const overlay = document.getElementById("authOverlay");
+const authTitle = document.getElementById("authTitle");
+const authUsername = document.getElementById("authUsername");
+const authSubmit = document.getElementById("authSubmit");
+const switchMode = document.getElementById("switchMode");
+const switchText = document.getElementById("switchText");
+const authBack = document.getElementById("authBack");
 
-let isLogin=true;
+let isLogin = true;
 
-/* SWITCH FIX */
-switchMode.onclick=()=>{
-isLogin=!isLogin;
+/* ✅ SWITCH FIX */
+switchMode.onclick = () => {
+
+isLogin = !isLogin;
 
 if(isLogin){
-authTitle.innerText="Giriş Yap";
-authSubmit.innerText="Giriş Yap";
-authUsername.style.display="none";
-switchText.innerText="Hesabın yok mu?";
-switchMode.innerText="Kayıt Ol";
+authTitle.innerText = "Giriş Yap";
+authSubmit.innerText = "Giriş Yap";
+authUsername.style.display = "none";
+switchText.innerText = "Hesabın yok mu?";
+switchMode.innerText = "Kayıt Ol";
 }else{
-authTitle.innerText="Kayıt Ol";
-authSubmit.innerText="Kayıt Ol";
-authUsername.style.display="block";
-switchText.innerText="Zaten hesabın var mı?";
-switchMode.innerText="Giriş Yap";
+authTitle.innerText = "Kayıt Ol";
+authSubmit.innerText = "Kayıt Ol";
+authUsername.style.display = "block";
+switchText.innerText = "Zaten hesabın var mı?";
+switchMode.innerText = "Giriş Yap";
 }
+
 };
 
-/* GERİ BUTONU */
-authBack.onclick=()=>{
-overlay.style.display="none";
+/* ✅ GERİ BUTONU */
+authBack.onclick = () => {
+overlay.style.display = "none";
 };
+
 </script>
 
 </body>
