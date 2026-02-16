@@ -16,7 +16,7 @@ flex-direction:column;
 height:100vh;
 }
 
-/* RED BLUE SIDE */
+/* SIDE COLORS */
 body::before{
 content:"";
 position:fixed;
@@ -32,16 +32,17 @@ background:linear-gradient(to left,rgba(0,120,255,0.25),transparent);
 pointer-events:none;
 }
 
+/* MENU */
 .menu{
-position:absolute;
-top:50%;
+position:fixed;
+top:15%;
 left:50%;
-transform:translate(-50%,-50%);
-text-align:center;
+transform:translateX(-50%);
+z-index:10;
 }
 
 .menu button{
-padding:15px 25px;
+padding:15px 30px;
 border:none;
 border-radius:12px;
 font-weight:bold;
@@ -51,6 +52,7 @@ background:#ff4b4b;
 color:white;
 }
 
+/* ARENA */
 .hidden{display:none}
 
 .center{
@@ -60,6 +62,7 @@ align-items:center;
 justify-content:center;
 flex-direction:column;
 position:relative;
+pointer-events:none;
 }
 
 .tap-text{
@@ -108,7 +111,7 @@ import {
 getAuth, onAuthStateChanged, signInAnonymously
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-/* CONFIG */
+/* FIREBASE CONFIG */
 const firebaseConfig = {
   apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
   authDomain:"emirhan-site.firebaseapp.com",
@@ -127,7 +130,7 @@ let roomId=null;
 let isHost=false;
 let localTapped=false;
 
-/* AUDIO */
+/* AUDIO (iOS SAFE) */
 let audioCtx;
 let unlocked=false;
 
@@ -157,7 +160,7 @@ onAuthStateChanged(auth, async(user)=>{
  else uid=user.uid;
 });
 
-/* MATCH */
+/* MATCHMAKING */
 document.getElementById("findMatch").onclick = async ()=>{
 unlockAudio();
 
@@ -165,6 +168,7 @@ const queueRef = collection(db,"matchmakingQueue");
 const snap = await getDocs(query(queueRef, where("uid","!=",uid), limit(1)));
 
 if(!snap.empty){
+
 const opp=snap.docs[0];
 roomId=crypto.randomUUID();
 isHost=true;
@@ -177,7 +181,8 @@ p1:0,
 p2:0,
 state:"countdown",
 tapWinner:null,
-count:3
+count:3,
+createdAt:serverTimestamp()
 });
 
 await deleteDoc(doc(db,"matchmakingQueue",opp.id));
@@ -326,7 +331,7 @@ document.getElementById("mainText").innerText="MAÇ BİTTİ!";
 }
 
 function startGame(){
-document.getElementById("menu").classList.add("hidden");
+document.getElementById("menu").style.display="none";
 document.getElementById("arena").classList.remove("hidden");
 }
 
