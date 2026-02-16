@@ -217,7 +217,151 @@ s.x=Math.random()*canvas.width;
 function animateSnow(){drawSnow();requestAnimationFrame(animateSnow);}
 animateSnow();
 window.addEventListener("resize",resizeCanvas);
-</script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { 
+  getAuth, 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-</body>
-</html>
+import { 
+  getFirestore, 
+  doc, 
+  setDoc, 
+  getDoc,
+  onSnapshot
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+/* FIREBASE CONFIG */
+const firebaseConfig = {
+  apiKey: "AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
+  authDomain: "emirhan-site.firebaseapp.com",
+  projectId: "emirhan-site",
+  storageBucket: "emirhan-site.firebasestorage.app",
+  messagingSenderId: "668871888390",
+  appId: "1:668871888390:web:76568bda84cb1641f7bd87"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+/* ELEMENTLER */
+const overlay = document.getElementById("authOverlay");
+const authTitle = document.getElementById("authTitle");
+const authEmail = document.getElementById("authEmail");
+const authPassword = document.getElementById("authPassword");
+const authUsername = document.getElementById("authUsername");
+const authSubmit = document.getElementById("authSubmit");
+const switchMode = document.getElementById("switchMode");
+const switchText = document.getElementById("switchText");
+
+const loginBtn = document.querySelector(".login-btn");
+const registerBtn = document.querySelector(".register-btn");
+const logoutBtn = document.querySelector(".logout-btn");
+const balanceText = document.getElementById("userBalance");
+
+let isLogin = true;
+
+/* MODAL AÇMA */
+loginBtn.onclick = () => {
+  overlay.style.display = "flex";
+  isLogin = true;
+  authTitle.innerText = "Giriş Yap";
+  authSubmit.innerText = "Giriş Yap";
+  authUsername.style.display = "none";
+  switchText.innerText = "Hesabın yok mu?";
+  switchMode.innerText = "Kayıt Ol";
+};
+
+registerBtn.onclick = () => {
+  overlay.style.display = "flex";
+  isLogin = false;
+  authTitle.innerText = "Kayıt Ol";
+  authSubmit.innerText = "Kayıt Ol";
+  authUsername.style.display = "block";
+  switchText.innerText = "Zaten hesabın var mı?";
+  switchMode.innerText = "Giriş Yap";
+};
+
+/* MODAL İÇİ SWITCH */
+switchMode.onclick = () => {
+  isLogin = !isLogin;
+  loginBtn.onclick();
+};
+
+/* SUBMIT */
+authSubmit.onclick = async () => {
+  const email = authEmail.value;
+  const password = authPassword.value;
+  const username = authUsername.value;
+
+  if(!email || !password) return alert("Tüm alanları doldur.");
+
+  try {
+    if(isLogin){
+      await signInWithEmailAndPassword(auth,email,password);
+      alert("Giriş başarılı.");
+    } else {
+      if(!username) return alert("Kullanıcı adı gir.");
+      const userCredential = await createUserWithEmailAndPassword(auth,email,password);
+      await setDoc(doc(db,"users",userCredential.user.uid),{
+        balance:10000,
+        username:username,
+        email:email,
+        createdAt:new Date()
+      });
+      alert("Kayıt başarılı. 10.000₺ yüklendi.");
+    }
+
+    overlay.style.display = "none";
+    authEmail.value="";
+    authPassword.value="";
+    authUsername.value="";
+
+  } catch(e){
+    alert(e.message);
+  }
+};
+
+/* AUTH STATE */
+onAuthStateChanged(auth, (user)=>{
+  if(user){
+    loginBtn.style.display="none";
+    registerBtn.style.display="none";
+    logoutBtn.style.display="inline-block";
+
+    const userRef = doc(db,"users",user.uid);
+    onSnapshot(userRef,(snap)=>{
+      if(snap.exists()){
+        const data = snap.data();
+        balanceText.innerText = "💵 " + data.balance + "₺";
+      }
+    });
+
+  } else {
+    loginBtn.style.display="inline-block";
+    registerBtn.style.display="inline-block";
+    logoutBtn.style.display="none";
+    balanceText.innerText="";
+  }
+});
+
+/* ÇIKIŞ */
+logoutBtn.onclick = async ()=>{
+  await signOut(auth);
+  alert("Çıkış yapıldı.");
+};
+
+/* OYUN GİRİŞ KONTROL */
+window.checkLogin = function(page){
+  if(!auth.currentUser){
+    overlay.style.display="flex";
+    return;
+  }
+  window.location.href = page;
+};
+</script>
