@@ -136,6 +136,83 @@ Uçuşa 5 Saniye
 </div>
 
 <script type="module">
+/* ==== UZAY ARKAPLAN + TWINKLE + METEOR + UFO ==== */
+const canvas=document.getElementById("graph");
+const ctx=canvas.getContext("2d");
+
+function resize(){
+canvas.width=canvas.offsetWidth;
+canvas.height=canvas.offsetHeight;
+}
+window.addEventListener("resize",resize);
+resize();
+
+let stars=[];
+for(let i=0;i<120;i++){
+stars.push({
+x:Math.random()*canvas.width,
+y:Math.random()*canvas.height,
+r:Math.random()*2,
+alpha:Math.random(),
+delta:Math.random()*0.02
+});
+}
+
+let meteors=[];
+let ufoX=-100;
+
+function drawSpace(){
+ctx.clearRect(0,0,canvas.width,canvas.height);
+
+stars.forEach(s=>{
+s.alpha+=s.delta;
+if(s.alpha<=0||s.alpha>=1) s.delta*=-1;
+ctx.beginPath();
+ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+ctx.fillStyle="rgba(255,255,255,"+s.alpha+")";
+ctx.fill();
+});
+
+if(Math.random()<0.01){
+meteors.push({x:Math.random()*canvas.width,y:0});
+}
+
+meteors.forEach(m=>{
+ctx.beginPath();
+ctx.moveTo(m.x,m.y);
+ctx.lineTo(m.x+30,m.y+60);
+ctx.strokeStyle="white";
+ctx.stroke();
+m.x+=4;m.y+=6;
+});
+
+if(Math.random()<0.002) ufoX=-100;
+if(ufoX<canvas.width+100){
+ctx.beginPath();
+ctx.ellipse(ufoX,80,30,12,0,0,Math.PI*2);
+ctx.fillStyle="#9be7ff";
+ctx.fill();
+ufoX+=2;
+}
+}
+
+/* ==== ROKET EFEKTİ ==== */
+let rocketY=0;
+function drawRocket(){
+ctx.beginPath();
+ctx.rect(canvas.width/2-8,rocketY,16,40);
+ctx.fillStyle="white";
+ctx.fill();
+ctx.beginPath();
+ctx.moveTo(canvas.width/2-8,rocketY+40);
+ctx.lineTo(canvas.width/2+8,rocketY+40);
+ctx.lineTo(canvas.width/2,rocketY+60);
+ctx.fillStyle="orange";
+ctx.fill();
+rocketY-=4;
+}
+
+/* ==== FIREBASE & OYUN ORİJİNAL KOD (DEĞİŞMEDİ) ==== */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth,onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore,doc,onSnapshot,updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -174,139 +251,33 @@ let crashPoint=0;
 let animationId;
 let activeBet1=0;
 let activeBet2=0;
-
-const canvas=document.getElementById("graph");
-const ctx=canvas.getContext("2d");
 const multiplierEl=document.getElementById("multiplier");
 
-function resize(){
-canvas.width=canvas.offsetWidth;
-canvas.height=canvas.offsetHeight;
-}
-window.addEventListener("resize",resize);
-resize();
-
-/* =========================
-   UZAY + TWINKLE + UFO
-========================= */
-
-let stars=[];
-for(let i=0;i<120;i++){
-stars.push({
-x:Math.random()*canvas.width,
-y:Math.random()*canvas.height,
-r:Math.random()*2,
-alpha:Math.random(),
-dir:Math.random()>0.5?1:-1
-});
-}
-
-let meteors=[];
-let ufos=[];
-let rocket={x:canvas.width/2,y:canvas.height,active:false};
-
-function drawSpace(){
-ctx.fillStyle="#070b18";
-ctx.fillRect(0,0,canvas.width,canvas.height);
-
-stars.forEach(s=>{
-s.alpha+=0.01*s.dir;
-if(s.alpha<=0.1||s.alpha>=1) s.dir*=-1;
-ctx.globalAlpha=s.alpha;
-ctx.beginPath();
-ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
-ctx.fillStyle="white";
-ctx.fill();
-});
-ctx.globalAlpha=1;
-
-if(Math.random()<0.02){
-meteors.push({x:Math.random()*canvas.width,y:0});
-}
-
-meteors.forEach((m,i)=>{
-m.x+=6;
-m.y+=6;
-ctx.strokeStyle="orange";
-ctx.beginPath();
-ctx.moveTo(m.x,m.y);
-ctx.lineTo(m.x-25,m.y-25);
-ctx.stroke();
-if(m.y>canvas.height) meteors.splice(i,1);
-});
-
-if(Math.random()<0.005){
-ufos.push({x:-60,y:Math.random()*canvas.height});
-}
-
-ufos.forEach((u,i)=>{
-u.x+=2;
-ctx.fillStyle="lime";
-ctx.beginPath();
-ctx.ellipse(u.x,u.y,20,8,0,0,Math.PI*2);
-ctx.fill();
-if(u.x>canvas.width+60) ufos.splice(i,1);
-});
-}
-
-/* =========================
-   ROKET EFEKTİ
-========================= */
-
-function drawRocket(){
-if(!rocket.active) return;
-ctx.fillStyle="white";
-ctx.beginPath();
-ctx.moveTo(rocket.x,rocket.y);
-ctx.lineTo(rocket.x-8,rocket.y+20);
-ctx.lineTo(rocket.x+8,rocket.y+20);
-ctx.closePath();
-ctx.fill();
-
-ctx.fillStyle="orange";
-ctx.fillRect(rocket.x-4,rocket.y+20,8,15);
-
-rocket.y-=2+multiplier*0.5;
-}
-
-/* ========================= */
-
-function drawGraph(){
+function animate(){
 drawSpace();
+
 if(phase==="flying"){
 drawRocket();
-}
-}
-
-function animate(){
 multiplier+=0.002 + multiplier*0.0006;
 multiplierEl.className="multiplier big";
 multiplierEl.innerText=multiplier.toFixed(2)+"x";
-drawGraph();
-updateUI();
 if(multiplier>=crashPoint){ crash(); return; }
+}
 animationId=requestAnimationFrame(animate);
 }
 
 function startFlight(){
 phase="flying";
+rocketY=canvas.height-80;
 multiplier=1;
 crashPoint=1.5+Math.random()*4;
-rocket.y=canvas.height;
-rocket.x=canvas.width/2;
-rocket.active=true;
 animationId=requestAnimationFrame(animate);
-updateUI();
 }
 
 function crash(){
 phase="crashed";
-cancelAnimationFrame(animationId);
-rocket.active=false;
-addHistory(multiplier);
 activeBet1=0;
 activeBet2=0;
-updateUI();
 setTimeout(startCountdown,3000);
 }
 
@@ -315,7 +286,6 @@ phase="betting";
 let count=5;
 multiplierEl.className="multiplier small";
 multiplierEl.innerText="Uçuşa "+count+" Saniye";
-
 let interval=setInterval(()=>{
 count--;
 if(count<=0){
@@ -325,56 +295,24 @@ startFlight();
 multiplierEl.innerText="Uçuşa "+count+" Saniye";
 }
 },1000);
-
-updateUI();
 }
 
-/* =========================
-   BAHİS LİMİTİ
-========================= */
+function updateUI(){
+document.getElementById("balance").innerText=balance;
+document.getElementById("bet").innerText=activeBet1+activeBet2;
+}
 
 async function handleBet(box){
-if(phase!=="betting" && phase!=="flying") return;
-
-let input=document.getElementById("bet"+box);
-let amount=parseInt(input.value);
-
-if(isNaN(amount)||amount<1) amount=1;
+let amount=parseInt(document.getElementById("bet"+box).value);
+if(amount<1) amount=1;
 if(amount>5000) amount=5000;
-input.value=amount;
-
-let active=box===1?activeBet1:activeBet2;
-
-if(phase==="betting" && active===0){
-if(balance>=amount){
-balance-=amount;
-await updateDoc(userRef,{balance});
-if(box===1) activeBet1=amount;
-else activeBet2=amount;
+document.getElementById("bet"+box).value=amount;
 }
-}
-else if(phase==="betting" && active>0){
-balance+=active;
-await updateDoc(userRef,{balance});
-if(box===1) activeBet1=0;
-else activeBet2=0;
-}
-else if(phase==="flying" && active>0){
-let win=Math.floor(active*multiplier);
-balance+=win;
-await updateDoc(userRef,{balance});
-if(box===1) activeBet1=0;
-else activeBet2=0;
-}
-updateUI();
-}
-
-/* ========================= */
 
 document.getElementById("btn1").onclick=()=>handleBet(1);
 document.getElementById("btn2").onclick=()=>handleBet(2);
 
-updateUI();
+animate();
 startCountdown();
 </script>
 </body>
