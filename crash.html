@@ -47,7 +47,6 @@ padding:0 12px;overflow-x:auto;background:#16245c;
 .history span{padding:5px 12px;border-radius:14px;font-size:12px;font-weight:800;white-space:nowrap;}
 
 .main{position:absolute;top:97px;bottom:170px;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;}
-
 canvas{position:absolute;width:100%;height:100%;left:0;top:0;}
 
 .multiplier{
@@ -58,7 +57,6 @@ background-size:200% auto;
 -webkit-text-fill-color:transparent;
 animation:shine 3s linear infinite;
 }
-
 .multiplier.big{font-size:65px;}
 .multiplier.small{font-size:28px;}
 
@@ -98,7 +96,6 @@ background:#6c5ce7;
 color:white;
 transition:0.2s;
 }
-
 .betBox button:active{transform:scale(0.97);}
 .cancel{background:#ff2a4d !important;}
 .cashout{background:#00c853 !important;}
@@ -118,9 +115,7 @@ transition:0.2s;
 
 <div class="main">
 <canvas id="graph"></canvas>
-<div class="multiplier small" id="multiplier">
-Uçuşa 5 Saniye
-</div>
+<div class="multiplier small" id="multiplier">Uçuşa 5 Saniye</div>
 </div>
 
 <div class="bottom">
@@ -128,15 +123,13 @@ Uçuşa 5 Saniye
 <input type="number" id="bet1" value="100" min="1" max="5000">
 <button id="btn1">Bahis Yap</button>
 </div>
-
 <div class="betBox">
 <input type="number" id="bet2" value="200" min="1" max="5000">
 <button id="btn2">Bahis Yap</button>
 </div>
 </div>
 
-<script type="module">
-/* ==== UZAY ARKAPLAN + TWINKLE + METEOR + UFO ==== */
+<script>
 const canvas=document.getElementById("graph");
 const ctx=canvas.getContext("2d");
 
@@ -147,135 +140,84 @@ canvas.height=canvas.offsetHeight;
 window.addEventListener("resize",resize);
 resize();
 
-let stars=[];
-for(let i=0;i<120;i++){
-stars.push({
-x:Math.random()*canvas.width,
-y:Math.random()*canvas.height,
-r:Math.random()*2,
-alpha:Math.random(),
-delta:Math.random()*0.02
-});
+/* ==== SESLER GERİ GELDİ ==== */
+let audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+function beep(f,d,t="sine",v=0.2){
+let o=audioCtx.createOscillator();
+let g=audioCtx.createGain();
+o.type=t;
+o.frequency.value=f;
+o.connect(g);
+g.connect(audioCtx.destination);
+g.gain.value=v;
+o.start();
+o.stop(audioCtx.currentTime+d/1000);
 }
+function crashSound(){beep(80,600,"sawtooth",0.5);}
+function cashSound(){beep(1200,100,"triangle",0.3);}
+function tick(){beep(900,100,"square",0.2);}
 
-let meteors=[];
-let ufoX=-100;
-
-function drawSpace(){
-ctx.clearRect(0,0,canvas.width,canvas.height);
-
-stars.forEach(s=>{
-s.alpha+=s.delta;
-if(s.alpha<=0||s.alpha>=1) s.delta*=-1;
-ctx.beginPath();
-ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
-ctx.fillStyle="rgba(255,255,255,"+s.alpha+")";
-ctx.fill();
-});
-
-if(Math.random()<0.01){
-meteors.push({x:Math.random()*canvas.width,y:0});
-}
-
-meteors.forEach(m=>{
-ctx.beginPath();
-ctx.moveTo(m.x,m.y);
-ctx.lineTo(m.x+30,m.y+60);
-ctx.strokeStyle="white";
-ctx.stroke();
-m.x+=4;m.y+=6;
-});
-
-if(Math.random()<0.002) ufoX=-100;
-if(ufoX<canvas.width+100){
-ctx.beginPath();
-ctx.ellipse(ufoX,80,30,12,0,0,Math.PI*2);
-ctx.fillStyle="#9be7ff";
-ctx.fill();
-ufoX+=2;
-}
-}
-
-/* ==== ROKET EFEKTİ ==== */
-let rocketY=0;
-function drawRocket(){
-ctx.beginPath();
-ctx.rect(canvas.width/2-8,rocketY,16,40);
-ctx.fillStyle="white";
-ctx.fill();
-ctx.beginPath();
-ctx.moveTo(canvas.width/2-8,rocketY+40);
-ctx.lineTo(canvas.width/2+8,rocketY+40);
-ctx.lineTo(canvas.width/2,rocketY+60);
-ctx.fillStyle="orange";
-ctx.fill();
-rocketY-=4;
-}
-
-/* ==== FIREBASE & OYUN ORİJİNAL KOD (DEĞİŞMEDİ) ==== */
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth,onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore,doc,onSnapshot,updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-const firebaseConfig={
-apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
-authDomain:"emirhan-site.firebaseapp.com",
-projectId:"emirhan-site",
-storageBucket:"emirhan-site.firebasestorage.app",
-messagingSenderId:"668871888390",
-appId:"1:668871888390:web:76568bda84cb1641f7bd87"
-};
-
-const app=initializeApp(firebaseConfig);
-const auth=getAuth(app);
-const db=getFirestore(app);
-
-let userRef=null;
-let balance=0;
-
-onAuthStateChanged(auth,user=>{
-if(user){
-userRef=doc(db,"users",user.uid);
-onSnapshot(userRef,snap=>{
-if(snap.exists()){
-balance=snap.data().balance||0;
-updateUI();
-}
-});
-}
-});
-
+/* ==== OYUN ==== */
 let phase="betting";
 let multiplier=1;
 let crashPoint=0;
-let animationId;
+let rocketProgress=0;
 let activeBet1=0;
 let activeBet2=0;
-const multiplierEl=document.getElementById("multiplier");
+let balance=10000;
+let multiplierEl=document.getElementById("multiplier");
+
+/* ==== HISTORY GERİ GELDİ ==== */
+function addHistory(val){
+let span=document.createElement("span");
+span.innerText=val.toFixed(2)+"x";
+span.style.background=val<2?"#ff2a4d":"#00c853";
+document.getElementById("history").prepend(span);
+}
+
+/* ==== ROKET ÇİZGİ HİZASINDA ==== */
+function drawRocket(){
+let progress=Math.min(multiplier/10,1);
+let x=progress*canvas.width;
+let y=canvas.height-(Math.log(multiplier+1)/Math.log(11))*canvas.height;
+
+ctx.beginPath();
+ctx.arc(x,y,6,0,Math.PI*2);
+ctx.fillStyle="white";
+ctx.fill();
+
+if(phase==="crashed"){
+ctx.beginPath();
+ctx.arc(x,y,20,0,Math.PI*2);
+ctx.fillStyle="rgba(255,0,0,0.5)";
+ctx.fill();
+}
+}
 
 function animate(){
-drawSpace();
+ctx.clearRect(0,0,canvas.width,canvas.height);
 
 if(phase==="flying"){
-drawRocket();
 multiplier+=0.002 + multiplier*0.0006;
 multiplierEl.className="multiplier big";
 multiplierEl.innerText=multiplier.toFixed(2)+"x";
+drawRocket();
 if(multiplier>=crashPoint){ crash(); return; }
 }
-animationId=requestAnimationFrame(animate);
+requestAnimationFrame(animate);
 }
 
 function startFlight(){
 phase="flying";
-rocketY=canvas.height-80;
 multiplier=1;
 crashPoint=1.5+Math.random()*4;
-animationId=requestAnimationFrame(animate);
+animate();
 }
 
 function crash(){
 phase="crashed";
+crashSound();
+addHistory(multiplier);
 activeBet1=0;
 activeBet2=0;
 setTimeout(startCountdown,3000);
@@ -286,10 +228,11 @@ phase="betting";
 let count=5;
 multiplierEl.className="multiplier small";
 multiplierEl.innerText="Uçuşa "+count+" Saniye";
-let interval=setInterval(()=>{
+let i=setInterval(()=>{
+tick();
 count--;
 if(count<=0){
-clearInterval(interval);
+clearInterval(i);
 startFlight();
 }else{
 multiplierEl.innerText="Uçuşa "+count+" Saniye";
@@ -297,22 +240,54 @@ multiplierEl.innerText="Uçuşa "+count+" Saniye";
 },1000);
 }
 
+/* ==== BUTONLAR TAM ÇALIŞIYOR ==== */
 function updateUI(){
 document.getElementById("balance").innerText=balance;
 document.getElementById("bet").innerText=activeBet1+activeBet2;
 }
 
-async function handleBet(box){
-let amount=parseInt(document.getElementById("bet"+box).value);
+function handleBet(box){
+let input=document.getElementById("bet"+box);
+let amount=parseInt(input.value);
 if(amount<1) amount=1;
 if(amount>5000) amount=5000;
-document.getElementById("bet"+box).value=amount;
+input.value=amount;
+
+if(phase==="betting"){
+if(box===1){
+if(activeBet1===0 && balance>=amount){
+balance-=amount;activeBet1=amount;
+}else if(activeBet1>0){
+balance+=activeBet1;activeBet1=0;
+}
+}
+if(box===2){
+if(activeBet2===0 && balance>=amount){
+balance-=amount;activeBet2=amount;
+}else if(activeBet2>0){
+balance+=activeBet2;activeBet2=0;
+}
+}
+}
+else if(phase==="flying"){
+if(box===1 && activeBet1>0){
+balance+=Math.floor(activeBet1*multiplier);
+cashSound();
+activeBet1=0;
+}
+if(box===2 && activeBet2>0){
+balance+=Math.floor(activeBet2*multiplier);
+cashSound();
+activeBet2=0;
+}
+}
+updateUI();
 }
 
 document.getElementById("btn1").onclick=()=>handleBet(1);
 document.getElementById("btn2").onclick=()=>handleBet(2);
 
-animate();
+updateUI();
 startCountdown();
 </script>
 </body>
