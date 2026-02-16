@@ -139,7 +139,6 @@ animation:shake 0.3s;
 100%{transform:translateX(0)}
 }
 
-/* PATLAMA */
 .explosion{
 position:absolute;
 top:50%;
@@ -158,7 +157,6 @@ pointer-events:none;
 100%{transform:translate(-50%,-50%) scale(5);opacity:0;}
 }
 
-/* BET PANEL */
 .bet-panel{
 background:#151b26;
 border-radius:16px;
@@ -220,12 +218,9 @@ color:#999;
 <div id="grid"></div>
 
 <div class="bet-panel">
-
 <input type="number" id="bet" placeholder="Bahis (250 - 3000)">
 <select id="mineCount"></select>
-
 <button id="startBtn" class="start">BET</button>
-
 </div>
 </div>
 
@@ -234,36 +229,44 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { getAuth,onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore,doc,onSnapshot,runTransaction } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-/* IOS DAHİL KESİN ÇALIŞAN SES SİSTEMİ */
+/* IOS DAHİL %100 ÇALIŞAN SES SİSTEMİ */
 let audioCtx;
 let sounds={};
+let unlocked=false;
 
 async function initAudio(){
-if(audioCtx) return;
+if(unlocked) return;
+
 audioCtx=new (window.AudioContext||window.webkitAudioContext)();
 await audioCtx.resume();
 
-async function loadSound(name,url){
-const res=await fetch(url);
-const arrayBuffer=await res.arrayBuffer();
-sounds[name]=await audioCtx.decodeAudioData(arrayBuffer);
+const files={
+explode:"https://assets.mixkit.co/sfx/preview/mixkit-arcade-retro-game-over-213.wav",
+open:"https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-jump-coin-216.wav",
+win:"https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.wav"
+};
+
+for(const key in files){
+const res=await fetch(files[key]);
+const buffer=await res.arrayBuffer();
+sounds[key]=await audioCtx.decodeAudioData(buffer);
 }
 
-await loadSound("explode","https://assets.mixkit.co/sfx/preview/mixkit-arcade-retro-game-over-213.wav");
-await loadSound("win","https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.wav");
-await loadSound("open","https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-jump-coin-216.wav");
+unlocked=true;
 }
 
 function playSound(name){
 if(!audioCtx||!sounds[name]) return;
-const source=audioCtx.createBufferSource();
-source.buffer=sounds[name];
-source.connect(audioCtx.destination);
-source.start(0);
+if(audioCtx.state==="suspended") audioCtx.resume();
+const src=audioCtx.createBufferSource();
+src.buffer=sounds[name];
+src.connect(audioCtx.destination);
+src.start(0);
 }
 
-document.body.addEventListener("touchstart",initAudio,{once:true});
-document.body.addEventListener("click",initAudio,{once:true});
+document.addEventListener("touchstart",initAudio,{once:true});
+document.addEventListener("click",initAudio,{once:true});
+document.addEventListener("touchend",initAudio,{once:true});
 
 const firebaseConfig={
 apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
