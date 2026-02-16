@@ -6,14 +6,19 @@
 <title>Pişti Casino PRO</title>
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;}
+*{
+margin:0;padding:0;box-sizing:border-box;
+-webkit-tap-highlight-color:transparent;
+user-select:none;
+-webkit-user-select:none;
+-webkit-touch-callout:none;
+}
 body{
 height:100vh;overflow:hidden;
 font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
 background:#0b1023;color:white;
 display:flex;flex-direction:column;align-items:center;
 }
-
 .top-bar{
 position:fixed;top:0;width:100%;height:55px;
 display:flex;align-items:center;justify-content:space-between;
@@ -35,7 +40,6 @@ padding:6px 14px;border-radius:14px;
 font-weight:700;font-size:13px;min-width:110px;text-align:center;
 background:#273c8f;
 }
-
 h1{margin-top:70px;margin-bottom:5px;}
 .score-board{margin-bottom:10px;}
 
@@ -58,9 +62,14 @@ pointer-events:auto;
 position:absolute;top:50%;left:50%;
 transform:translate(-50%,-50%);
 display:flex;
+flex-direction:column;
+align-items:center;
 }
-.stack-card{width:95px;margin-left:-65px;}
-.stack-card:first-child{margin-left:0;}
+.stack-card{
+width:95px;
+margin-top:-120px;
+}
+.stack-card:first-child{margin-top:0;}
 
 .hand{
 position:absolute;bottom:15px;left:50%;
@@ -72,7 +81,12 @@ position:absolute;top:15px;left:50%;
 transform:translateX(-50%);
 display:flex;gap:10px;
 }
-.card{width:80px;cursor:pointer;transition:0.3s;}
+.card{
+width:80px;
+cursor:pointer;
+transition:0.3s;
+pointer-events:auto;
+}
 .card:hover{transform:translateY(-10px);}
 
 .chips{
@@ -137,7 +151,7 @@ Oyuncu: <span id="ps">0</span> | ChatGPT: <span id="cs">0</span>
 </div>
 
 <div class="chips" id="chipsArea">
-<div class="chip c1" onclick="addBet(100)">100</div>
+<div class="chip c1" onclick="addBet(250)">250</div>
 <div class="chip c2" onclick="addBet(500)">500</div>
 <div class="chip c3" onclick="addBet(1000)">1K</div>
 <div class="chip c4" onclick="addBet(5000)">5K</div>
@@ -146,11 +160,12 @@ Oyuncu: <span id="ps">0</span> | ChatGPT: <span id="cs">0</span>
 <button class="start-btn" id="startBtn" onclick="startGame()">BAŞLA</button>
 
 <script type="module">
+
+// FIREBASE CONFIG AYNI
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth,onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore,doc,onSnapshot,updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-/* FIREBASE */
 const firebaseConfig={
 apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
 authDomain:"emirhan-site.firebaseapp.com",
@@ -164,58 +179,11 @@ const app=initializeApp(firebaseConfig);
 const auth=getAuth(app);
 const db=getFirestore(app);
 
-/* AUDIO ENGINE (iOS SAFE) */
-let audioCtx;
-function initAudio(){
-if(!audioCtx){
-audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-}
-if(audioCtx.state==="suspended"){
-audioCtx.resume();
-}
-}
-document.body.addEventListener("touchstart",initAudio,{once:true});
-document.body.addEventListener("click",initAudio,{once:true});
-
-function playCardSound(){
-const o=audioCtx.createOscillator();
-const g=audioCtx.createGain();
-o.type="triangle";
-o.frequency.value=300;
-g.gain.value=0.2;
-o.connect(g); g.connect(audioCtx.destination);
-o.start();
-o.stop(audioCtx.currentTime+0.08);
-}
-
-function playCoinSound(){
-const o=audioCtx.createOscillator();
-const g=audioCtx.createGain();
-o.type="square";
-o.frequency.setValueAtTime(800,audioCtx.currentTime);
-o.frequency.exponentialRampToValueAtTime(1200,audioCtx.currentTime+0.1);
-g.gain.value=0.3;
-o.connect(g); g.connect(audioCtx.destination);
-o.start();
-o.stop(audioCtx.currentTime+0.15);
-}
-
-function playBigWin(){
-for(let i=0;i<3;i++){
-setTimeout(()=>{
-const o=audioCtx.createOscillator();
-const g=audioCtx.createGain();
-o.type="sawtooth";
-o.frequency.value=600+(i*200);
-g.gain.value=0.25;
-o.connect(g); g.connect(audioCtx.destination);
-o.start();
-o.stop(audioCtx.currentTime+0.2);
-},i*150);
-}
-}
-
-/* GAME LOGIC AYNI */
+/* GERÇEK SESLER */
+const cardSound=new Audio("https://assets.mixkit.co/active_storage/sfx/1998/1998-preview.mp3");
+const coinSound=new Audio("https://assets.mixkit.co/active_storage/sfx/2001/2001-preview.mp3");
+const loseSound=new Audio("https://assets.mixkit.co/active_storage/sfx/2018/2018-preview.mp3");
+const winSound=new Audio("https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3");
 
 let balance=0,bet=0,userRef=null;
 let gameStarted=false;
@@ -231,17 +199,18 @@ document.getElementById("balance").innerText=balance;
 
 window.addBet=async function(amount){
 if(gameStarted) return;
+if(bet+amount>15000) return alert("Maksimum bahis 15000₺");
 if(balance<amount) return;
 balance-=amount;
 bet+=amount;
 await updateDoc(userRef,{balance});
 document.getElementById("balance").innerText=balance;
 document.getElementById("bet").innerText=bet;
-playCoinSound();
+coinSound.play();
 }
 
 window.startGame=function(){
-if(bet<=0) return alert("Bahis koymadan oyun başlamaz!");
+if(bet<250) return alert("Minimum bahis 250₺");
 gameStarted=true;
 document.getElementById("tableArea").classList.add("active");
 document.getElementById("chipsArea").style.display="none";
@@ -295,6 +264,8 @@ player.forEach((c,i)=>{
 let im=document.createElement("img");
 im.src=img(c);
 im.className="card";
+im.draggable=false;
+im.oncontextmenu=e=>e.preventDefault();
 im.onclick=()=>play(i);
 ph.appendChild(im);
 });
@@ -321,7 +292,7 @@ tc.appendChild(im);
 }
 
 function play(i){
-playCardSound();
+cardSound.play();
 let c=player.splice(i,1)[0];
 table.push(c);
 check("p");
@@ -334,8 +305,8 @@ if(computer.length===0){
 if(player.length===0) dealRound();
 return;
 }
-let chosen=computer.splice(0,1)[0];
-playCardSound();
+let chosen=aiChoose();
+cardSound.play();
 table.push(chosen);
 check("c");
 render();
@@ -343,16 +314,47 @@ if(player.length===0 && computer.length===0)
 setTimeout(dealRound,500);
 }
 
+function aiChoose(){
+let real=table.filter(x=>x!=="BACK");
+let last=real[real.length-1];
+if(!last) return computer.shift();
+let smartLevel=bet/15000;
+if(Math.random()<smartLevel){
+for(let i=0;i<computer.length;i++){
+if(computer[i][0]===last[0]||computer[i][0]==="J"){
+return computer.splice(i,1)[0];
+}
+}
+}
+return computer.shift();
+}
+
 function check(owner){
 let real=table.filter(x=>x!=="BACK");
 if(real.length<2) return;
 let last=real[real.length-1];
 let prev=real[real.length-2];
+
+let pişti=false;
+
+if(real.length===2){
+if(last[0]===prev[0] && last[0]!=="J"){
+pişti=true;
+if(owner==="p") ps+=10;
+else cs+=10;
+}
+if(prev[0]==="J" && last[0]==="J"){
+pişti=true;
+if(owner==="p") ps+=20;
+else cs+=20;
+}
+}
+
 if(last[0]==="J"||last[0]===prev[0]){
 if(owner==="p") ps+=real.length;
 else cs+=real.length;
 table=[];
-playCoinSound();
+coinSound.play();
 }
 }
 
@@ -360,7 +362,10 @@ async function endGame(){
 if(ps>cs){
 balance+=bet*5;
 await updateDoc(userRef,{balance});
+winSound.play();
 showWin();
+}else{
+loseSound.play();
 }
 bet=0;
 document.getElementById("bet").innerText=0;
@@ -372,7 +377,6 @@ document.getElementById("startBtn").style.display="block";
 }
 
 function showWin(){
-playBigWin();
 let div=document.createElement("div");
 div.className="win-anim";
 div.innerText="🎉 BÜYÜK KAZANÇ!";
