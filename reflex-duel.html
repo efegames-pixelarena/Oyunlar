@@ -126,10 +126,12 @@ const auth=getAuth(app);
 let uid,username;
 let roomId=null,isHost=false;
 let unsub=null;
+let queueUnsub=null;
 let audioCtx=null;
 let lock=false;
+let countdownStarted=false;
 
-/* AUDIO (iOS SAFE) */
+/* AUDIO */
 function unlockAudio(){
 if(!audioCtx){
 audioCtx=new (window.AudioContext||window.webkitAudioContext)();
@@ -152,44 +154,38 @@ onAuthStateChanged(auth,async(user)=>{
 if(!user){ await signInAnonymously(auth); return;}
 uid=user.uid;
 username="Player_"+uid.slice(0,4);
-
-/* SAYFA AÇILDIĞINDA ESKİ QUEUE TEMİZLE */
 await deleteDoc(doc(db,"matchQueue",uid)).catch(()=>{});
 });
 
-/* ROOM CODE */
+/* UTIL */
 function generateCode(){
 return Math.random().toString(36).substring(2,8).toUpperCase();
 }
-
-/* ROOM CLEAN */
 async function leaveRoom(){
 if(unsub)unsub();
+if(queueUnsub)queueUnsub();
 if(roomId){
 await deleteDoc(doc(db,"rooms",roomId)).catch(()=>{});
 }
 roomId=null;
 }
 
-/* MATCHMAKING (SELF MATCH FIX) */
+/* MATCHMAKING */
 findMatch.onclick=async()=>{
 unlockAudio();
 statusText.innerText="Rakip Bekleniyor...";
 await leaveRoom();
 
-const queueRef=collection(db,"matchQueue");
-const snap=await getDocs(query(queueRef,limit(10)));
-
+const snap=await getDocs(query(collection(db,"matchQueue"),limit(10)));
 let opponent=null;
+
 snap.forEach(docSnap=>{
-const data=docSnap.data();
-if(data.uid!==uid && !opponent){
+if(docSnap.data().uid!==uid && !opponent){
 opponent=docSnap;
 }
 });
 
 if(opponent){
-
 await runTransaction(db,async(t)=>{
 const fresh=await t.get(opponent.ref);
 if(!fresh.exists())return;
@@ -203,71 +199,42 @@ t.set(doc(db,"rooms",code),{
 player1:uid,
 player2:fresh.data().uid,
 round:1,
+p1:0,
+p2:0,
 state:"countdown",
 count:3,
-winner:null,
-createdAt:serverTimestamp()
+winner:null
 });
-
 t.delete(opponent.ref);
 });
 
 startGame();
 listenRoom();
-startCountdown();
-
 }else{
-await setDoc(doc(db,"matchQueue",uid),{
-uid:uid,
-createdAt:serverTimestamp()
-});
+await setDoc(doc(db,"matchQueue",uid),{uid});
+listenQueue();
 }
 };
 
-/* CREATE ROOM */
-createRoom.onclick=async()=>{
-unlockAudio();
-await leaveRoom();
-const code=generateCode();
-roomId=code;
-isHost=true;
-
-await setDoc(doc(db,"rooms",code),{
-player1:uid,
-player2:null,
-round:1,
-state:"waiting"
-});
-
-statusText.innerText="Oda Kodu: "+code;
-};
-
-/* JOIN ROOM */
-joinRoom.onclick=async()=>{
-unlockAudio();
-const code=roomInput.value.trim().toUpperCase();
-if(!code)return;
-
-const ref=doc(db,"rooms",code);
-const snap=await getDoc(ref);
-if(!snap.exists()){
-statusText.innerText="Oda Bulunamadı";
-return;
-}
-
-await updateDoc(ref,{
-player2:uid,
-state:"countdown",
-count:3
-});
-
-roomId=code;
+/* QUEUE LISTENER */
+function listenQueue(){
+queueUnsub=onSnapshot(doc(db,"matchQueue",uid),async(snap)=>{
+if(!snap.exists())return;
+const rooms=await getDocs(collection(db,"rooms"));
+rooms.forEach(r=>{
+const d=r.data();
+if(d.player2===uid){
+roomId=r.id;
 isHost=false;
 startGame();
 listenRoom();
-};
+if(queueUnsub)queueUnsub();
+}
+});
+});
+}
 
-/* LISTEN ROOM */
+/* ROOM LISTENER */
 function listenRoom(){
 unsub=onSnapshot(doc(db,"rooms",roomId),(snap)=>{
 if(!snap.exists()){reset();return;}
@@ -277,7 +244,8 @@ updateUI(snap.data());
 
 /* COUNTDOWN */
 async function startCountdown(){
-if(!isHost)return;
+if(!isHost || countdownStarted)return;
+countdownStarted=true;
 let c=3;
 const int=setInterval(async()=>{
 await updateDoc(doc(db,"rooms",roomId),{count:c});
@@ -291,7 +259,7 @@ beep(1200);
 },1000);
 }
 
-/* TAP (ANTI CHEAT) */
+/* TAP */
 async function tap(){
 if(lock||!roomId)return;
 lock=true;
@@ -310,7 +278,7 @@ setTimeout(()=>lock=false,200);
 
 /* UI */
 function updateUI(d){
-roundInfo.innerText="Round "+(d.round||1)+" / 7";
+roundInfo.innerText="Round "+d.round+" / 7";
 myInfo.innerText="Sen";
 oppInfo.innerText="Rakip";
 
@@ -318,6 +286,7 @@ if(d.state==="waiting"){
 mainText.innerText="Rakip Bekleniyor...";
 }
 if(d.state==="countdown"){
+if(isHost) startCountdown();
 countdown.style.opacity=1;
 countdown.innerText=d.count>0?d.count:"GO!";
 }
@@ -342,6 +311,7 @@ arena.classList.add("hidden");
 topbar.classList.add("hidden");
 statusText.innerText="";
 roomId=null;
+countdownStarted=false;
 }
 
 document.addEventListener("touchstart",tap);
