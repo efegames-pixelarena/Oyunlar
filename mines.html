@@ -16,7 +16,7 @@ color:white;
 min-height:100vh;
 }
 
-/* ===== ÜST BAR ===== */
+/* ===== TOP BAR ===== */
 .top-bar{
 position:fixed;
 top:0;
@@ -47,7 +47,6 @@ animation:shine 3s linear infinite;
 .balance-box{background:#273c8f;}
 .bet-box{background:linear-gradient(90deg,#ff8a00,#ff5f00);color:#000;}
 
-/* ===== OYUN ALANI ===== */
 .container{
 max-width:520px;
 margin:auto;
@@ -72,11 +71,26 @@ justify-content:center;
 font-size:22px;
 cursor:pointer;
 border:1px solid #2a3577;
-transition:0.2s;
+transition:0.25s;
+transform:scale(1);
 }
 
-.tile.open{background:#2ecc71;}
-.tile.mine{background:#e74c3c;animation:explode 0.4s ease;}
+.tile.open{
+background:#2ecc71;
+animation:pop 0.25s ease;
+box-shadow:0 0 15px #2ecc71;
+}
+
+@keyframes pop{
+0%{transform:scale(0.7)}
+70%{transform:scale(1.1)}
+100%{transform:scale(1)}
+}
+
+.tile.mine{
+background:#e74c3c;
+animation:explode 0.4s ease;
+}
 
 @keyframes explode{
 0%{transform:scale(1)}
@@ -110,22 +124,19 @@ font-size:15px;
 </head>
 <body>
 
-<!-- ÜST BAR -->
 <div class="top-bar">
   <div class="brand">PixelArena Mines</div>
   <div class="right-menu">
     <div class="nav-box balance-box">Bakiye: <span id="userBalance">0</span>₺</div>
-    <div class="nav-box bet-box">Bahis: <span id="currentBet">0</span>₺</div>
+    <div class="nav-box bet-box">Bahis: <span id="currentBet">0</span></div>
   </div>
 </div>
 
-<!-- OYUN -->
 <div class="container">
 
 <h2>💣 Mines</h2>
 
 <input type="number" id="bet" placeholder="Bahis (Max 5000)" min="1" max="5000">
-
 <select id="mineCount"></select>
 
 <br>
@@ -135,7 +146,6 @@ font-size:15px;
 <h3>Çarpan: <span id="multiplier">1x</span></h3>
 
 <div id="grid"></div>
-
 </div>
 
 <script type="module">
@@ -143,26 +153,57 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { getAuth,onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore,doc,onSnapshot,runTransaction } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-/* ===== FIREBASE CONFIG (SENİN) ===== */
+/* FIREBASE */
 const firebaseConfig={
-  apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
-  authDomain:"emirhan-site.firebaseapp.com",
-  projectId:"emirhan-site",
-  storageBucket:"emirhan-site.firebasestorage.app",
-  messagingSenderId:"668871888390",
-  appId:"1:668871888390:web:76568bda84cb1641f7bd87"
+apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
+authDomain:"emirhan-site.firebaseapp.com",
+projectId:"emirhan-site",
+storageBucket:"emirhan-site.firebasestorage.app",
+messagingSenderId:"668871888390",
+appId:"1:668871888390:web:76568bda84cb1641f7bd87"
 };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getFirestore(app);
 
-let mines=[];
-let opened=0;
-let betAmount=0;
-let mineTotal=1;
-let multiplier=1;
-let gameActive=false;
+/* AUDIO (iOS UYUMLU) */
+let audioCtx=null;
+function initAudio(){
+if(!audioCtx){
+audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+}
+}
+function playExplosion(){
+initAudio();
+const osc=audioCtx.createOscillator();
+const gain=audioCtx.createGain();
+osc.type="sawtooth";
+osc.frequency.setValueAtTime(120,audioCtx.currentTime);
+gain.gain.setValueAtTime(0.4,audioCtx.currentTime);
+gain.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+0.4);
+osc.connect(gain);
+gain.connect(audioCtx.destination);
+osc.start();
+osc.stop(audioCtx.currentTime+0.4);
+}
+function playWin(){
+initAudio();
+const osc=audioCtx.createOscillator();
+const gain=audioCtx.createGain();
+osc.type="triangle";
+osc.frequency.setValueAtTime(300,audioCtx.currentTime);
+osc.frequency.linearRampToValueAtTime(700,audioCtx.currentTime+0.4);
+gain.gain.setValueAtTime(0.5,audioCtx.currentTime);
+gain.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+0.5);
+osc.connect(gain);
+gain.connect(audioCtx.destination);
+osc.start();
+osc.stop(audioCtx.currentTime+0.5);
+}
+
+/* OYUN DEĞİŞKEN */
+let mines=[],opened=0,betAmount=0,mineTotal=1,multiplier=1,gameActive=false;
 
 const grid=document.getElementById("grid");
 const multiplierText=document.getElementById("multiplier");
@@ -171,136 +212,129 @@ const currentBetText=document.getElementById("currentBet");
 const startBtn=document.getElementById("startBtn");
 const cashoutBtn=document.getElementById("cashoutBtn");
 const mineSelect=document.getElementById("mineCount");
+const betInput=document.getElementById("bet");
 
-/* 1–24 MAYIN SEÇENEKLERİ */
+/* 1-24 */
 for(let i=1;i<=24;i++){
-  const opt=document.createElement("option");
-  opt.value=i;
-  opt.text=i+" Mayın";
-  mineSelect.appendChild(opt);
+let opt=document.createElement("option");
+opt.value=i;
+opt.text=i+" Mayın";
+mineSelect.appendChild(opt);
 }
 
-/* GRID OLUŞTUR */
 function createGrid(){
-  grid.innerHTML="";
-  for(let i=0;i<25;i++){
-    const tile=document.createElement("div");
-    tile.classList.add("tile");
-    tile.addEventListener("click",()=>reveal(i,tile));
-    grid.appendChild(tile);
-  }
+grid.innerHTML="";
+for(let i=0;i<25;i++){
+let tile=document.createElement("div");
+tile.classList.add("tile");
+tile.addEventListener("click",()=>reveal(i,tile));
+grid.appendChild(tile);
+}
 }
 
 function generateMines(){
-  mines=[];
-  while(mines.length<mineTotal){
-    let r=Math.floor(Math.random()*25);
-    if(!mines.includes(r)) mines.push(r);
-  }
+mines=[];
+while(mines.length<mineTotal){
+let r=Math.floor(Math.random()*25);
+if(!mines.includes(r)) mines.push(r);
+}
 }
 
-/* ÇARPAN HESAP */
 function updateMultiplier(){
-  const safeLeft = (25-mineTotal) - (opened-1);
-  const totalLeft = 25 - (opened-1);
-
-  multiplier = multiplier * (totalLeft / safeLeft);
-  multiplier = Math.floor(multiplier * 100) / 100;
-
-  multiplierText.innerText = multiplier+"x";
-  const win=Math.floor(betAmount*multiplier);
-  cashoutBtn.innerText="Çek ("+win+"₺)";
+const safeLeft=(25-mineTotal)-(opened-1);
+const totalLeft=25-(opened-1);
+multiplier*=totalLeft/safeLeft;
+multiplier=Math.floor(multiplier*100)/100;
+multiplierText.innerText=multiplier+"x";
+cashoutBtn.innerText="Çek ("+Math.floor(betAmount*multiplier)+"₺)";
 }
 
-/* OYUN BAŞLA */
-startBtn.addEventListener("click", async ()=>{
-  if(!auth.currentUser) return;
+/* START */
+startBtn.addEventListener("click",async()=>{
+if(!auth.currentUser) return;
 
-  betAmount=parseInt(document.getElementById("bet").value);
-  mineTotal=parseInt(mineSelect.value);
+betAmount=parseInt(betInput.value);
+mineTotal=parseInt(mineSelect.value);
+if(!betAmount||betAmount<=0||betAmount>5000) return;
 
-  if(!betAmount||betAmount<=0||betAmount>5000) return;
+const userRef=doc(db,"users",auth.currentUser.uid);
 
-  const userRef=doc(db,"users",auth.currentUser.uid);
+try{
+await runTransaction(db,async(transaction)=>{
+const snap=await transaction.get(userRef);
+if(snap.data().balance<betAmount) throw "";
+transaction.update(userRef,{balance:snap.data().balance-betAmount});
+});
+}catch{ return;}
 
-  try{
-    await runTransaction(db,async(transaction)=>{
-      const snap=await transaction.get(userRef);
-      if(!snap.exists()) throw "Hata";
-      if(snap.data().balance<betAmount) throw "Yetersiz bakiye";
-      transaction.update(userRef,{balance:snap.data().balance-betAmount});
-    });
-  }catch(e){
-    return;
-  }
+opened=0; multiplier=1;
+generateMines();
+createGrid();
 
-  balanceText.innerText = parseInt(balanceText.innerText) - betAmount;
-  currentBetText.innerText = betAmount;
+gameActive=true;
 
-  opened=0;
-  multiplier=1;
-  multiplierText.innerText="1x";
-  cashoutBtn.innerText="Çek (0₺)";
+betInput.disabled=true;
+mineSelect.disabled=true;
+startBtn.disabled=true;
+cashoutBtn.disabled=false;
 
-  generateMines();
-  createGrid();
-  gameActive=true;
-
-  startBtn.disabled=true;
-  cashoutBtn.disabled=false;
+currentBetText.innerText=betAmount;
 });
 
-/* KUTU AÇMA */
-function reveal(idx,tile){
-  if(!gameActive || tile.classList.contains("open")) return;
+/* REVEAL */
+function reveal(i,tile){
+if(!gameActive||tile.classList.contains("open")) return;
 
-  if(mines.includes(idx)){
-    tile.classList.add("mine");
-    tile.innerHTML="💣";
-    gameActive=false;
-    startBtn.disabled=false;
-    cashoutBtn.disabled=true;
-    cashoutBtn.innerText="Cashout";
-    return;
-  }
+if(mines.includes(i)){
+tile.classList.add("mine");
+tile.innerHTML="💣";
+playExplosion();
+endGame();
+return;
+}
 
-  opened++;
-  tile.classList.add("open");
-  tile.innerHTML="💎";
-  updateMultiplier();
+opened++;
+tile.classList.add("open");
+tile.innerHTML="💎";
+updateMultiplier();
 }
 
 /* CASHOUT */
-cashoutBtn.addEventListener("click", async ()=>{
-  if(!gameActive||opened===0) return;
+cashoutBtn.addEventListener("click",async()=>{
+if(!gameActive||opened===0) return;
 
-  gameActive=false;
+const win=Math.floor(betAmount*multiplier);
+const userRef=doc(db,"users",auth.currentUser.uid);
 
-  const win=Math.floor(betAmount*multiplier);
-  const userRef=doc(db,"users",auth.currentUser.uid);
-
-  await runTransaction(db,async(transaction)=>{
-    const snap=await transaction.get(userRef);
-    transaction.update(userRef,{balance:snap.data().balance+win});
-  });
-
-  balanceText.innerText = parseInt(balanceText.innerText)+win;
-  startBtn.disabled=false;
-  cashoutBtn.disabled=true;
-  cashoutBtn.innerText="Cashout";
-  multiplierText.innerText="1x";
-  currentBetText.innerText="0";
+await runTransaction(db,async(transaction)=>{
+const snap=await transaction.get(userRef);
+transaction.update(userRef,{balance:snap.data().balance+win});
 });
 
-/* CANLI BAKİYE */
-onAuthStateChanged(auth,(user)=>{
-  if(!user) return;
-  const userRef=doc(db,"users",user.uid);
-  onSnapshot(userRef,(snap)=>{
-    if(snap.exists()){
-      balanceText.innerText=parseInt(snap.data().balance)+"₺";
-    }
-  });
+playWin();
+endGame();
+});
+
+/* END */
+function endGame(){
+gameActive=false;
+betInput.disabled=false;
+mineSelect.disabled=false;
+startBtn.disabled=false;
+cashoutBtn.disabled=true;
+multiplierText.innerText="1x";
+currentBetText.innerText="0";
+}
+
+/* LIVE BALANCE */
+onAuthStateChanged(auth,user=>{
+if(!user) return;
+const userRef=doc(db,"users",user.uid);
+onSnapshot(userRef,snap=>{
+if(snap.exists()){
+balanceText.innerText=parseInt(snap.data().balance);
+}
+});
 });
 
 createGrid();
