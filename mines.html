@@ -2,11 +2,22 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>PixelArena - Mines</title>
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;}
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
+-webkit-tap-highlight-color:transparent;
+}
+
+html,body{
+touch-action:manipulation;
+}
+
 body{
 background:
 radial-gradient(circle at 20% 20%,#1f2b63 0%,transparent 40%),
@@ -30,6 +41,7 @@ background:linear-gradient(135deg,#1a2a6c,#16245c);
 box-shadow:0 4px 15px rgba(0,0,0,0.45);
 z-index:1000;
 }
+
 .brand{
 font-size:18px;
 font-weight:800;
@@ -40,6 +52,7 @@ background-size:200% auto;
 animation:shine 3s linear infinite;
 }
 @keyframes shine{to{background-position:200% center;}}
+
 .right-menu{display:flex;gap:10px;}
 .nav-box{padding:6px 14px;border-radius:14px;font-weight:700;font-size:13px;text-align:center;}
 .balance-box{background:#273c8f;}
@@ -107,10 +120,10 @@ cursor:pointer;
 }
 
 .start{background:#3498db;color:white;}
-.start:disabled{background:#555;cursor:not-allowed;}
+.start:disabled{background:#555;}
 
 .cashout{background:#f1c40f;color:black;}
-.cashout:disabled{background:#555;cursor:not-allowed;}
+.cashout:disabled{background:#555;}
 
 input,select{
 padding:10px;
@@ -138,7 +151,7 @@ font-size:15px;
 <select id="mineCount"></select>
 <br>
 <button id="startBtn" class="start">Başlat</button>
-<button id="cashoutBtn" class="cashout" disabled>Cashout</button>
+<button id="cashoutBtn" class="cashout" disabled>Çek</button>
 
 <h3>Çarpan: <span id="multiplier">1x</span></h3>
 <div id="grid"></div>
@@ -162,24 +175,45 @@ const app=initializeApp(firebaseConfig);
 const auth=getAuth(app);
 const db=getFirestore(app);
 
-/* AUDIO (iOS dahil) */
+/* AUDIO SYSTEM */
 let audioCtx=null;
 function initAudio(){
 if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
 }
+function playStartSound(){
+initAudio();
+const osc=audioCtx.createOscillator();
+const gain=audioCtx.createGain();
+osc.type="triangle";
+osc.frequency.setValueAtTime(400,audioCtx.currentTime);
+osc.frequency.linearRampToValueAtTime(700,audioCtx.currentTime+0.3);
+gain.gain.setValueAtTime(0.4,audioCtx.currentTime);
+gain.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+0.4);
+osc.connect(gain);
+gain.connect(audioCtx.destination);
+osc.start();
+osc.stop(audioCtx.currentTime+0.4);
+}
 function explosionSound(){
 initAudio();
-const noise=audioCtx.createOscillator();
+const osc=audioCtx.createOscillator();
 const gain=audioCtx.createGain();
-noise.type="square";
-noise.frequency.setValueAtTime(80,audioCtx.currentTime);
+osc.type="square";
+osc.frequency.setValueAtTime(90,audioCtx.currentTime);
 gain.gain.setValueAtTime(0.7,audioCtx.currentTime);
 gain.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+0.5);
-noise.connect(gain);
+osc.connect(gain);
 gain.connect(audioCtx.destination);
-noise.start();
-noise.stop(audioCtx.currentTime+0.5);
+osc.start();
+osc.stop(audioCtx.currentTime+0.5);
 }
+
+/* FIRST USER TOUCH = ENABLE AUDIO + START SOUND */
+document.addEventListener("click",()=>{
+if(!audioCtx){
+playStartSound();
+}
+},{once:true});
 
 let mines=[],opened=0,betAmount=0,mineTotal=1,multiplier=1,gameActive=false;
 
@@ -256,6 +290,27 @@ startBtn.disabled=true;
 cashoutBtn.disabled=false;
 
 currentBetText.innerText=betAmount;
+});
+
+/* CASHOUT FIXED */
+cashoutBtn.addEventListener("click",async()=>{
+if(!gameActive||opened===0) return;
+
+const win=Math.floor(betAmount*multiplier);
+const userRef=doc(db,"users",auth.currentUser.uid);
+
+await runTransaction(db,async(transaction)=>{
+const snap=await transaction.get(userRef);
+transaction.update(userRef,{balance:snap.data().balance+win});
+});
+
+gameActive=false;
+betInput.disabled=false;
+mineSelect.disabled=false;
+startBtn.disabled=false;
+cashoutBtn.disabled=true;
+multiplierText.innerText="1x";
+currentBetText.innerText="0";
 });
 
 function reveal(i,tile){
