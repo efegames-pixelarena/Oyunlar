@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>PixelArena - Mines</title>
 
 <style>
@@ -23,25 +23,15 @@ body{
 background:#0c111d;
 color:#fff;
 overflow:hidden;
-}
-
-/* TAM EKRAN FIX */
-.container{
-position:fixed;
-top:60px;
-bottom:0;
-left:0;
-right:0;
-display:flex;
-flex-direction:column;
-padding:15px;
-overflow:auto;
+padding-bottom:env(safe-area-inset-bottom);
 }
 
 /* TOP BAR */
 .top-bar{
 position:fixed;
 top:0;
+left:0;
+right:0;
 width:100%;
 height:60px;
 display:flex;
@@ -72,8 +62,28 @@ font-weight:600;
 font-size:13px;
 }
 
-.balance-box{ color:#00d4ff; }
-.bet-box{ color:#ffcc00; }
+.balance-box{
+color:#00d4ff;
+}
+
+.bet-box{
+color:#ffcc00;
+}
+
+/* MAIN CONTAINER */
+.container{
+position:fixed;
+top:60px;
+left:0;
+right:0;
+bottom:0;
+width:100%;
+height:calc(100% - 60px);
+display:flex;
+flex-direction:column;
+padding:15px;
+overflow:auto;
+}
 
 /* MINES HEADER */
 .mines-header{
@@ -117,24 +127,35 @@ box-shadow:0 0 15px #16c784;
 
 .tile.mine{
 background:#ff4d4f;
-box-shadow:0 0 25px red;
+box-shadow:0 0 18px red;
+animation:shake 0.3s;
 }
 
-/* GÜÇLENDİRİLMİŞ PATLAMA */
+@keyframes shake{
+0%{transform:translateX(0)}
+25%{transform:translateX(-4px)}
+50%{transform:translateX(4px)}
+75%{transform:translateX(-4px)}
+100%{transform:translateX(0)}
+}
+
+/* GELİŞTİRİLMİŞ PATLAMA */
 .explosion{
 position:absolute;
-width:30px;
-height:30px;
-background:radial-gradient(circle,rgba(255,255,255,1) 0%,rgba(255,0,0,0.9) 40%,rgba(255,0,0,0.2) 60%,rgba(255,0,0,0) 80%);
+top:50%;
+left:50%;
+width:20px;
+height:20px;
+transform:translate(-50%,-50%);
+background:radial-gradient(circle,#fff 0%,#ff0000 40%,rgba(255,0,0,0) 70%);
 border-radius:50%;
-animation:explode 0.7s ease-out forwards;
+animation:explode 0.6s ease-out forwards;
 pointer-events:none;
 }
 
 @keyframes explode{
-0%{transform:scale(0.2);opacity:1;}
-50%{transform:scale(2.5);opacity:1;}
-100%{transform:scale(5);opacity:0;}
+0%{transform:translate(-50%,-50%) scale(0.2);opacity:1;}
+100%{transform:translate(-50%,-50%) scale(5);opacity:0;}
 }
 
 /* BET PANEL */
@@ -168,8 +189,15 @@ margin-top:5px;
 font-size:15px;
 }
 
-.start{ background:#00c853; color:black; }
-.cashout{ background:#ffcc00; color:black; }
+.start{
+background:#00c853;
+color:black;
+}
+
+.cashout{
+background:#ffcc00;
+color:black;
+}
 
 button:disabled{
 background:#444;
@@ -179,7 +207,7 @@ color:#999;
 </head>
 <body>
 
-<!-- SESLER (iOS UYUMLU) -->
+<!-- SESLER -->
 <audio id="explodeSound" preload="auto" playsinline src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-retro-game-over-213.wav"></audio>
 <audio id="winSound" preload="auto" playsinline src="https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.wav"></audio>
 <audio id="cashSound" preload="auto" playsinline src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-jump-coin-216.wav"></audio>
@@ -202,11 +230,15 @@ color:#999;
 <div id="grid"></div>
 
 <div class="bet-panel">
+
 <input type="number" id="bet" placeholder="Bahis (250 - 3000)">
 <select id="mineCount"></select>
+
 <button id="startBtn" class="start">BET</button>
 <button id="cashoutBtn" class="cashout" disabled>Çek</button>
+
 <h3 style="text-align:center;margin-top:10px;">Çarpan: <span id="multiplier">1x</span></h3>
+
 </div>
 </div>
 
@@ -215,28 +247,25 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { getAuth,onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore,doc,onSnapshot,runTransaction } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-/* GELİŞMİŞ iOS SES UNLOCK */
+/* IOS SES UNLOCK */
 let audioUnlocked=false;
 function unlockAudio(){
 if(audioUnlocked) return;
 document.querySelectorAll("audio").forEach(a=>{
-a.muted=true;
-a.play().then(()=>{
-a.pause();
-a.currentTime=0;
-a.muted=false;
-}).catch(()=>{});
+a.volume=1;
+a.play().then(()=>{a.pause();a.currentTime=0;}).catch(()=>{});
 });
 audioUnlocked=true;
 }
-document.addEventListener("touchstart",unlockAudio,{once:true});
-document.addEventListener("click",unlockAudio,{once:true});
+document.body.addEventListener("touchstart",unlockAudio,{once:true});
+document.body.addEventListener("click",unlockAudio,{once:true});
 
 function playSound(id){
-const s=document.getElementById(id);
-if(!s) return;
-s.currentTime=0;
-s.play().catch(()=>{});
+const original=document.getElementById(id);
+if(!original) return;
+const sound=original.cloneNode(true);
+sound.volume=1;
+sound.play().catch(()=>{});
 }
 
 const firebaseConfig={
@@ -303,8 +332,6 @@ cashoutBtn.innerText="Çek ("+Math.floor(betAmount*multiplier)+"₺)";
 }
 
 startBtn.addEventListener("click",async()=>{
-playSound("cashSound");
-
 if(!auth.currentUser) return;
 
 betAmount=parseInt(betInput.value);
@@ -383,7 +410,6 @@ return;
 opened++;
 tile.classList.add("open");
 tile.innerHTML="💎";
-playSound("winSound");
 updateMultiplier();
 }
 
