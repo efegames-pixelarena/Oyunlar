@@ -46,7 +46,7 @@ padding:0 12px;overflow-x:auto;background:#16245c;
 }
 .history span{padding:5px 12px;border-radius:14px;font-size:12px;font-weight:800;white-space:nowrap;}
 
-.main{position:absolute;top:97px;bottom:150px;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.main{position:absolute;top:97px;bottom:170px;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;}
 
 canvas{position:absolute;width:100%;height:100%;left:0;top:0;}
 
@@ -63,13 +63,42 @@ animation:shine 3s linear infinite;
 .multiplier.small{font-size:28px;}
 
 .bottom{
-position:absolute;bottom:0;width:100%;height:150px;
-background:#121833;display:flex;justify-content:center;align-items:center;gap:15px;
+position:absolute;bottom:0;width:100%;height:170px;
+background:#121833;display:flex;justify-content:center;align-items:center;gap:20px;
 }
 
-.betBox{background:#1a2248;padding:12px;border-radius:10px;width:45%;max-width:200px;display:flex;flex-direction:column;gap:6px;}
-.betBox input{padding:8px;border:none;border-radius:6px;text-align:center;font-weight:bold;}
-.betBox button{padding:10px;border:none;border-radius:6px;font-weight:bold;cursor:pointer;background:#6c5ce7;color:white;transition:0.2s;}
+.betBox{
+background:#1a2248;
+padding:18px;
+border-radius:12px;
+width:48%;
+max-width:240px;
+display:flex;
+flex-direction:column;
+gap:10px;
+}
+
+.betBox input{
+padding:12px;
+border:none;
+border-radius:8px;
+text-align:center;
+font-weight:bold;
+font-size:16px;
+}
+
+.betBox button{
+padding:14px;
+border:none;
+border-radius:8px;
+font-weight:bold;
+font-size:15px;
+cursor:pointer;
+background:#6c5ce7;
+color:white;
+transition:0.2s;
+}
+
 .betBox button:active{transform:scale(0.97);}
 .cancel{background:#ff2a4d !important;}
 .cashout{background:#00c853 !important;}
@@ -90,7 +119,7 @@ background:#121833;display:flex;justify-content:center;align-items:center;gap:15
 <div class="main">
 <canvas id="graph"></canvas>
 <div class="multiplier small" id="multiplier">
-Bahislerin Kapanmasına 5 Saniye
+Uçuşa 5 Saniye
 </div>
 </div>
 
@@ -278,7 +307,7 @@ function startCountdown(){
 phase="betting";
 let count=5;
 multiplierEl.className="multiplier small";
-multiplierEl.innerText="Bahislerin Kapanmasına "+count+" Saniye";
+multiplierEl.innerText="Uçuşa "+count+" Saniye";
 ctx.clearRect(0,0,canvas.width,canvas.height);
 
 let interval=setInterval(()=>{
@@ -288,7 +317,7 @@ if(count<=0){
 clearInterval(interval);
 startFlight();
 }else{
-multiplierEl.innerText="Bahislerin Kapanmasına "+count+" Saniye";
+multiplierEl.innerText="Uçuşa "+count+" Saniye";
 }
 },1000);
 
