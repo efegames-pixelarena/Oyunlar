@@ -117,12 +117,9 @@ margin:5px;
 <h2>💣 Mines</h2>
 
 <input type="number" id="bet" placeholder="Bahis (Max 5000)" min="1" max="5000">
-<select id="mineCount">
-<option value="3">3 Mayın</option>
-<option value="5">5 Mayın</option>
-<option value="7">7 Mayın</option>
-<option value="10">10 Mayın</option>
-</select>
+
+<select id="mineCount"></select>
+
 <br>
 <button id="startBtn" class="start">Başlat</button>
 <button id="cashoutBtn" class="cashout" disabled>Cashout</button>
@@ -159,15 +156,21 @@ let mineTotal=3;
 let gameActive=false;
 let multiplier=1;
 
-const multiplierSteps=[1.25,1.50,1.60,1.65];
-
 const grid=document.getElementById("grid");
 const multiplierText=document.getElementById("multiplier");
 const balanceText=document.getElementById("userBalance");
 const startBtn=document.getElementById("startBtn");
 const cashoutBtn=document.getElementById("cashoutBtn");
+const mineSelect=document.getElementById("mineCount");
 
-/* GRID */
+/* 1-24 MAYIN */
+for(let i=1;i<=24;i++){
+const option=document.createElement("option");
+option.value=i;
+option.text=i+" Mayın";
+mineSelect.appendChild(option);
+}
+
 function createGrid(){
 grid.innerHTML="";
 for(let i=0;i<25;i++){
@@ -186,19 +189,20 @@ if(!mines.includes(r)) mines.push(r);
 }
 }
 
-/* ÇARPAN */
+/* GERÇEK RİSK ÇARPANI */
 function updateMultiplier(){
 
-if(opened<=multiplierSteps.length){
-multiplier=multiplierSteps[opened-1];
-}else{
-multiplier=parseFloat((multiplier+0.10).toFixed(2));
-}
+const remainingSafe = 25 - mineTotal - (opened - 1);
+const totalRemaining = 25 - (opened - 1);
 
-multiplierText.innerText=multiplier+"x";
+multiplier *= totalRemaining / remainingSafe;
 
-const winAmount=Math.floor(betAmount*multiplier);
-cashoutBtn.innerText="Çek ("+winAmount+"₺)";
+multiplier = Math.floor(multiplier * 100) / 100;
+
+multiplierText.innerText = multiplier + "x";
+
+const winAmount = Math.floor(betAmount * multiplier);
+cashoutBtn.innerText = "Çek ("+winAmount+"₺)";
 }
 
 /* BAŞLAT */
@@ -207,7 +211,7 @@ startBtn.addEventListener("click",async()=>{
 if(!auth.currentUser) return;
 
 betAmount=parseInt(document.getElementById("bet").value);
-mineTotal=parseInt(document.getElementById("mineCount").value);
+mineTotal=parseInt(mineSelect.value);
 
 if(!betAmount||betAmount<=0||betAmount>5000) return;
 
@@ -223,6 +227,7 @@ transaction.update(userRef,{balance:snap.data().balance-betAmount});
 
 opened=0;
 multiplier=1;
+
 multiplierText.innerText="1x";
 cashoutBtn.innerText="Çek (0₺)";
 
@@ -253,6 +258,7 @@ return;
 opened++;
 tile.classList.add("open");
 tile.innerHTML="💎";
+
 updateMultiplier();
 }
 
