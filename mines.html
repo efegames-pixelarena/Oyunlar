@@ -6,36 +6,45 @@
 <title>PixelArena - Mines</title>
 
 <style>
-body{
-margin:0;
-background:linear-gradient(180deg,#0b1023,#0d1333,#0a0f1f);
-color:white;
-font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
-text-align:center;
+*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;}
+body{background:linear-gradient(180deg,#0b1023,#0d1333,#0a0f1f);color:white;}
+
+.top-bar{
+position:fixed;
+top:0;
+width:100%;
+height:55px;
+display:flex;
+align-items:center;
+justify-content:space-between;
+padding:0 16px;
+background:linear-gradient(135deg,#1a2a6c,#16245c);
+box-shadow:0 4px 15px rgba(0,0,0,0.45);
+z-index:1000;
+}
+
+.brand{
+font-size:18px;
+font-weight:800;
+background:linear-gradient(90deg,#4fd1ff,#fff,#4fd1ff);
+-webkit-background-clip:text;
+-webkit-text-fill-color:transparent;
+}
+
+.balance-box{
+background:#273c8f;
+padding:6px 14px;
+border-radius:14px;
+font-weight:700;
+font-size:13px;
 }
 
 .container{
 max-width:520px;
 margin:auto;
-padding:20px;
+padding:90px 20px 20px;
+text-align:center;
 }
-
-h1{margin-top:20px}
-
-.controls{margin:15px 0}
-
-input,select,button{
-padding:10px;
-border-radius:10px;
-border:none;
-margin:5px;
-font-size:14px;
-}
-
-button{cursor:pointer;font-weight:bold}
-
-.start{background:#3498db;color:white}
-.cashout{background:#f1c40f;color:black}
 
 #grid{
 display:grid;
@@ -54,81 +63,99 @@ justify-content:center;
 font-size:22px;
 cursor:pointer;
 border:1px solid #2a3577;
+transition:0.2s;
 }
 
 .tile.open{background:#2ecc71}
-.tile.mine{background:#e74c3c}
+.tile.mine{background:#e74c3c;animation:explode 0.4s ease;}
 
-.info{margin-top:15px;font-size:18px}
+@keyframes explode{
+0%{transform:scale(1)}
+50%{transform:scale(1.4)}
+100%{transform:scale(1)}
+}
+
+button{
+padding:10px;
+border-radius:10px;
+border:none;
+margin:5px;
+font-weight:bold;
+cursor:pointer;
+}
+
+.start{background:#3498db;color:white}
+.cashout{background:#f1c40f;color:black}
 </style>
 </head>
 <body>
 
-<div class="container">
-<h1>💣 PixelArena Mines</h1>
+<div class="top-bar">
+<div class="brand">PixelArena</div>
+<div class="balance-box">Bakiye: <span id="userBalance">0₺</span></div>
+</div>
 
-<div class="controls">
-<input type="number" id="bet" placeholder="Bahis Miktarı" min="1">
+<div class="container">
+
+<h2>💣 Mines</h2>
+
+<input type="number" id="bet" placeholder="Bahis" min="1">
 <select id="mineCount">
 <option value="3">3 Mayın</option>
-<option value="4">4 Mayın</option>
 <option value="5">5 Mayın</option>
-<option value="6">6 Mayın</option>
 <option value="7">7 Mayın</option>
-<option value="8">8 Mayın</option>
-<option value="9">9 Mayın</option>
 <option value="10">10 Mayın</option>
 </select>
 <br>
-<button class="start" onclick="startGame()">Oyunu Başlat</button>
-<button class="cashout" onclick="cashout()">Parayı Çek</button>
-</div>
+<button class="start" onclick="startGame()">Başlat</button>
+<button class="cashout" onclick="cashout()">Cashout</button>
 
-<div class="info">
-Çarpan: <span id="multiplier">1.00x</span>
-</div>
+<h3>Çarpan: <span id="multiplier">1.00x</span></h3>
 
 <div id="grid"></div>
+
 </div>
+
+<audio id="safeSound" src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-jump-coin-216.wav"></audio>
+<audio id="boomSound" src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-bomb-explosion-2759.wav"></audio>
 
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth,onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore,doc,onSnapshot,runTransaction } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-/* SENİN FIREBASE CONFIG */
-const firebaseConfig = {
-  apiKey: "AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
-  authDomain: "emirhan-site.firebaseapp.com",
-  projectId: "emirhan-site",
-  storageBucket: "emirhan-site.firebasestorage.app",
-  messagingSenderId: "668871888390",
-  appId: "1:668871888390:web:76568bda84cb1641f7bd87"
+const firebaseConfig={
+apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
+authDomain:"emirhan-site.firebaseapp.com",
+projectId:"emirhan-site",
+storageBucket:"emirhan-site.firebasestorage.app",
+messagingSenderId:"668871888390",
+appId:"1:668871888390:web:76568bda84cb1641f7bd87"
 };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getFirestore(app);
 
 let mines=[];
 let opened=0;
-let gameActive=false;
 let betAmount=0;
 let mineTotal=3;
-let currentMultiplier=1;
+let gameActive=false;
+let multiplier=1;
 const houseEdge=0.97;
 
 const grid=document.getElementById("grid");
 const multiplierText=document.getElementById("multiplier");
+const balanceText=document.getElementById("userBalance");
 
 function createGrid(){
 grid.innerHTML="";
 for(let i=0;i<25;i++){
 const tile=document.createElement("div");
 tile.classList.add("tile");
-tile.dataset.index=i;
-tile.onclick=()=>revealTile(i,tile);
+tile.onclick=()=>reveal(i,tile);
 grid.appendChild(tile);
 }
 }
@@ -141,94 +168,93 @@ if(!mines.includes(r)) mines.push(r);
 }
 }
 
+/* GERÇEK MATEMATİKSEL RTP */
+function calculateMultiplier(){
+const safe=25-mineTotal;
+let prob=1;
+for(let i=0;i<opened;i++){
+prob*=(safe-i)/(25-i);
+}
+multiplier=(1/prob)*houseEdge;
+multiplierText.innerText=multiplier.toFixed(2)+"x";
+}
+
 async function startGame(){
 
-if(!auth.currentUser){
-alert("Giriş yapmalısın.");
-return;
-}
+if(!auth.currentUser) return alert("Giriş yap.");
 
 betAmount=parseFloat(document.getElementById("bet").value);
 mineTotal=parseInt(document.getElementById("mineCount").value);
 
-if(!betAmount || betAmount<=0){
-alert("Geçerli bahis gir.");
-return;
-}
+if(!betAmount||betAmount<=0) return alert("Geçerli bahis gir.");
 
 const userRef=doc(db,"users",auth.currentUser.uid);
-const snap=await getDoc(userRef);
 
-if(!snap.exists()) return alert("Kullanıcı bulunamadı.");
-
-let balance=snap.data().balance;
-
-if(balance<betAmount){
-alert("Yetersiz bakiye.");
-return;
-}
-
-/* BAKİYE DÜŞ */
-await updateDoc(userRef,{
-balance:balance-betAmount
+await runTransaction(db,async(transaction)=>{
+const snap=await transaction.get(userRef);
+if(snap.data().balance<betAmount) throw "Yetersiz bakiye";
+transaction.update(userRef,{balance:snap.data().balance-betAmount});
 });
 
 opened=0;
-currentMultiplier=1;
+multiplier=1;
 multiplierText.innerText="1.00x";
-
 generateMines();
 createGrid();
-
 gameActive=true;
 }
 
-function revealTile(index,tile){
+function reveal(index,tile){
 
-if(!gameActive || tile.classList.contains("open")) return;
+if(!gameActive||tile.classList.contains("open")) return;
 
 if(mines.includes(index)){
 tile.classList.add("mine");
 tile.innerHTML="💣";
+document.getElementById("boomSound").play();
 gameActive=false;
-alert("Mayına bastın! Bahis kaybedildi.");
 return;
 }
 
 opened++;
 tile.classList.add("open");
 tile.innerHTML="💎";
+document.getElementById("safeSound").play();
 
-const safeTiles=25-mineTotal;
-
-currentMultiplier=(25/(safeTiles-opened+1))*houseEdge;
-
-multiplierText.innerText=currentMultiplier.toFixed(2)+"x";
+calculateMultiplier();
 }
 
 async function cashout(){
 
-if(!gameActive || opened===0) return;
+if(!gameActive||opened===0) return;
 
 gameActive=false;
-
-const win=betAmount*currentMultiplier;
+const win=betAmount*multiplier;
 
 const userRef=doc(db,"users",auth.currentUser.uid);
-const snap=await getDoc(userRef);
 
-let balance=snap.data().balance;
-
-await updateDoc(userRef,{
-balance:balance+win
+await runTransaction(db,async(transaction)=>{
+const snap=await transaction.get(userRef);
+transaction.update(userRef,{balance:snap.data().balance+win});
 });
 
 alert("Kazandın: "+win.toFixed(2)+"₺");
 }
 
+/* BAKİYE CANLI */
+onAuthStateChanged(auth,(user)=>{
+if(user){
+const userRef=doc(db,"users",user.uid);
+onSnapshot(userRef,(snap)=>{
+if(snap.exists()){
+balanceText.innerText=snap.data().balance.toFixed(2)+"₺";
+}
+});
+}
+});
+
 createGrid();
 
 </script>
-
 </body>
 </html>
