@@ -11,30 +11,12 @@ user-scalable=no">
 <title>SkyCrash</title>
 
 <style>
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
--webkit-tap-highlight-color:transparent;
-touch-action:manipulation;
-}
-
-html,body{
-height:100%;
-overflow:hidden;
-font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
-background:#070b18;
-color:white;
-}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
+html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;background:#070b18;color:white;}
 
 .top-bar{
-position:fixed;
-top:0;
-width:100%;
-height:55px;
-display:flex;
-align-items:center;
-justify-content:space-between;
+position:fixed;top:0;width:100%;height:55px;
+display:flex;align-items:center;justify-content:space-between;
 padding:0 16px;
 background:linear-gradient(135deg,#1a2a6c,#16245c);
 box-shadow:0 4px 15px rgba(0,0,0,0.45);
@@ -42,8 +24,7 @@ z-index:100;
 }
 
 .brand{
-font-size:18px;
-font-weight:800;
+font-size:18px;font-weight:800;
 background:linear-gradient(90deg,#4fd1ff,#fff,#4fd1ff);
 background-size:200% auto;
 -webkit-background-clip:text;
@@ -51,127 +32,45 @@ background-size:200% auto;
 animation:shine 3s linear infinite;
 }
 
-@keyframes shine{
-to{background-position:200% center;}
-}
+@keyframes shine{to{background-position:200% center;}}
 
 .right-menu{display:flex;gap:10px;}
-
-.nav-box{
-padding:6px 14px;
-border-radius:14px;
-font-weight:700;
-font-size:13px;
-min-width:95px;
-text-align:center;
-}
-
+.nav-box{padding:6px 14px;border-radius:14px;font-weight:700;font-size:13px;min-width:95px;text-align:center;}
 .balance-box{background:#273c8f;}
 .bet-box{background:linear-gradient(90deg,#ff8a00,#ff5f00);color:#000;}
 
 .history{
-position:absolute;
-top:55px;
-width:100%;
-height:42px;
-display:flex;
-align-items:center;
-gap:8px;
-padding:0 12px;
-overflow-x:auto;
-background:#16245c;
+position:absolute;top:55px;width:100%;height:42px;
+display:flex;align-items:center;gap:8px;
+padding:0 12px;overflow-x:auto;background:#16245c;
 }
+.history span{padding:5px 12px;border-radius:14px;font-size:12px;font-weight:800;white-space:nowrap;}
 
-.history span{
-padding:5px 12px;
-border-radius:14px;
-font-size:12px;
-font-weight:800;
-white-space:nowrap;
-}
+.main{position:absolute;top:97px;bottom:150px;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;}
 
-.main{
-position:absolute;
-top:97px;
-bottom:150px;
-width:100%;
-display:flex;
-flex-direction:column;
-align-items:center;
-justify-content:center;
-}
-
-canvas{
-position:absolute;
-width:100%;
-height:100%;
-left:0;
-top:0;
-}
+canvas{position:absolute;width:100%;height:100%;left:0;top:0;}
 
 .multiplier{
-position:relative;
-font-weight:bold;
-color:#00eaff;
-z-index:2;
+position:relative;font-weight:800;z-index:2;
+background:linear-gradient(90deg,#4fd1ff,#fff,#4fd1ff);
+background-size:200% auto;
+-webkit-background-clip:text;
+-webkit-text-fill-color:transparent;
+animation:shine 3s linear infinite;
 }
 
-/* Flying sırasında büyük */
-.multiplier.big{
-font-size:65px;
-}
-
-/* Betting sırasında küçük */
-.multiplier.small{
-font-size:28px;
-}
+.multiplier.big{font-size:65px;}
+.multiplier.small{font-size:28px;}
 
 .bottom{
-position:absolute;
-bottom:0;
-width:100%;
-height:150px;
-background:#121833;
-display:flex;
-justify-content:center;
-align-items:center;
-gap:15px;
+position:absolute;bottom:0;width:100%;height:150px;
+background:#121833;display:flex;justify-content:center;align-items:center;gap:15px;
 }
 
-.betBox{
-background:#1a2248;
-padding:12px;
-border-radius:10px;
-width:45%;
-max-width:200px;
-display:flex;
-flex-direction:column;
-gap:6px;
-}
-
-.betBox input{
-padding:8px;
-border:none;
-border-radius:6px;
-text-align:center;
-font-weight:bold;
-}
-
-.betBox button{
-padding:10px;
-border:none;
-border-radius:6px;
-font-weight:bold;
-cursor:pointer;
-background:#6c5ce7;
-color:white;
-transition:0.2s;
-}
-
-.betBox button:active{
-transform:scale(0.97);
-}
-
+.betBox{background:#1a2248;padding:12px;border-radius:10px;width:45%;max-width:200px;display:flex;flex-direction:column;gap:6px;}
+.betBox input{padding:8px;border:none;border-radius:6px;text-align:center;font-weight:bold;}
+.betBox button{padding:10px;border:none;border-radius:6px;font-weight:bold;cursor:pointer;background:#6c5ce7;color:white;transition:0.2s;}
+.betBox button:active{transform:scale(0.97);}
 .cancel{background:#ff2a4d !important;}
 .cashout{background:#00c853 !important;}
 </style>
@@ -181,12 +80,8 @@ transform:scale(0.97);
 <div class="top-bar">
 <div class="brand">SkyCrash</div>
 <div class="right-menu">
-<div class="nav-box balance-box">
-Bakiye: <span id="balance">0</span>₺
-</div>
-<div class="nav-box bet-box">
-Bahis: <span id="bet">0</span>₺
-</div>
+<div class="nav-box balance-box">Bakiye: <span id="balance">0</span>₺</div>
+<div class="nav-box bet-box">Bahis: <span id="bet">0</span>₺</div>
 </div>
 </div>
 
@@ -229,6 +124,54 @@ const app=initializeApp(firebaseConfig);
 const auth=getAuth(app);
 const db=getFirestore(app);
 
+let audioCtx;
+function initAudio(){
+if(!audioCtx){
+audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+}
+if(audioCtx.state==="suspended") audioCtx.resume();
+}
+document.body.addEventListener("click",initAudio,{once:true});
+
+function playBeep(freq,dur,type="sine",vol=0.2){
+initAudio();
+const o=audioCtx.createOscillator();
+const g=audioCtx.createGain();
+o.type=type;
+o.frequency.value=freq;
+o.connect(g);
+g.connect(audioCtx.destination);
+g.gain.setValueAtTime(vol,audioCtx.currentTime);
+g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+dur/1000);
+o.start();
+o.stop(audioCtx.currentTime+dur/1000);
+}
+
+function countdownSound(){ playBeep(900,120,"square",0.25); }
+function crashSound(){ playBeep(60,600,"sawtooth",0.6); }
+function cashSound(){
+playBeep(1200,100,"triangle",0.3);
+setTimeout(()=>playBeep(1500,120,"triangle",0.3),80);
+}
+let flightOsc=null;
+function startFlightSound(){
+initAudio();
+flightOsc=audioCtx.createOscillator();
+let gain=audioCtx.createGain();
+flightOsc.type="sine";
+flightOsc.frequency.value=200;
+flightOsc.connect(gain);
+gain.connect(audioCtx.destination);
+gain.gain.value=0.15;
+flightOsc.start();
+}
+function stopFlightSound(){
+if(flightOsc){
+flightOsc.stop();
+flightOsc=null;
+}
+}
+
 let userRef=null;
 let balance=0;
 
@@ -263,13 +206,11 @@ window.addEventListener("resize",resize);
 resize();
 
 function drawGraph(){
-if(phase==="betting") return; // betting sırasında çizgi yok
-
+if(phase==="betting") return;
 ctx.clearRect(0,0,canvas.width,canvas.height);
 let progress=Math.min(multiplier/10,1);
 let x=progress*canvas.width;
 let y=canvas.height-(Math.log(multiplier+1)/Math.log(11))*canvas.height;
-
 ctx.beginPath();
 ctx.moveTo(0,canvas.height);
 ctx.lineTo(x,y);
@@ -278,34 +219,36 @@ ctx.lineWidth=4;
 ctx.stroke();
 }
 
+function explosion(){
+for(let i=0;i<30;i++){
+let x=Math.random()*canvas.width;
+let y=Math.random()*canvas.height;
+ctx.beginPath();
+ctx.arc(x,y,Math.random()*6,0,Math.PI*2);
+ctx.fillStyle="rgba(255,0,0,0.7)";
+ctx.fill();
+}
+}
+
 async function cashout(box){
 let active=box===1?activeBet1:activeBet2;
 if(!active) return;
-
 let win=Math.floor(active*multiplier);
 balance+=win;
 await updateDoc(userRef,{balance});
-
+cashSound();
 if(box===1) activeBet1=0;
 else activeBet2=0;
-
 updateUI();
 }
 
 function animate(){
 multiplier+=0.002 + multiplier*0.0006;
-
 multiplierEl.className="multiplier big";
 multiplierEl.innerText=multiplier.toFixed(2)+"x";
-
 drawGraph();
 updateUI();
-
-if(multiplier>=crashPoint){
-crash();
-return;
-}
-
+if(multiplier>=crashPoint){ crash(); return; }
 animationId=requestAnimationFrame(animate);
 }
 
@@ -313,6 +256,7 @@ function startFlight(){
 phase="flying";
 multiplier=1;
 crashPoint=1.5+Math.random()*4;
+startFlightSound();
 animationId=requestAnimationFrame(animate);
 updateUI();
 }
@@ -320,26 +264,26 @@ updateUI();
 function crash(){
 phase="crashed";
 cancelAnimationFrame(animationId);
+stopFlightSound();
+crashSound();
+explosion();
 addHistory(multiplier);
-
 activeBet1=0;
 activeBet2=0;
 updateUI();
-
 setTimeout(startCountdown,3000);
 }
 
 function startCountdown(){
 phase="betting";
 let count=5;
-
 multiplierEl.className="multiplier small";
 multiplierEl.innerText="Bahislerin Kapanmasına "+count+" Saniye";
-
 ctx.clearRect(0,0,canvas.width,canvas.height);
 
 let interval=setInterval(()=>{
 count--;
+countdownSound();
 if(count<=0){
 clearInterval(interval);
 startFlight();
@@ -367,29 +311,18 @@ updateButton("btn2",activeBet2);
 
 function updateButton(id,bet){
 let btn=document.getElementById(id);
-
-if(phase==="betting" && bet===0){
-btn.innerText="Bahis Yap";
-btn.className="";
-}
-else if(phase==="betting" && bet>0){
-btn.innerText="İptal";
-btn.className="cancel";
-}
+if(phase==="betting" && bet===0){ btn.innerText="Bahis Yap"; btn.className=""; }
+else if(phase==="betting" && bet>0){ btn.innerText="İptal"; btn.className="cancel"; }
 else if(phase==="flying" && bet>0){
 let live=Math.floor(bet*multiplier);
 btn.innerText="Çek (₺"+live+")";
 btn.className="cashout";
 }
-else{
-btn.innerText="Bahis Yap";
-btn.className="";
-}
+else{ btn.innerText="Bahis Yap"; btn.className=""; }
 }
 
 async function handleBet(box){
 if(phase!=="betting" && phase!=="flying") return;
-
 let amount=parseInt(document.getElementById("bet"+box).value);
 let active=box===1?activeBet1:activeBet2;
 
@@ -410,7 +343,6 @@ else activeBet2=0;
 else if(phase==="flying" && active>0){
 cashout(box);
 }
-
 updateUI();
 }
 
@@ -420,6 +352,5 @@ document.getElementById("btn2").onclick=()=>handleBet(2);
 updateUI();
 startCountdown();
 </script>
-
 </body>
 </html>
