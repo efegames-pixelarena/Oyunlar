@@ -21,31 +21,24 @@ background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:t
 animation:shine 3s linear infinite;}
 @keyframes shine{to{background-position:200% center;}}
 
-.right-menu{display:flex;gap:10px;}
-.nav-box{padding:6px 14px;border-radius:14px;font-weight:700;font-size:13px;min-width:95px;text-align:center;}
-.balance-box{background:#273c8f;}
-.bet-box{background:linear-gradient(90deg,#ff8a00,#ff5f00);color:#000;}
-
 .area{position:absolute;width:100%;text-align:center;}
-#dealerArea{top:85px;} #playerArea{bottom:210px;}
+#dealerArea{top:85px;} 
+#playerArea{bottom:210px;}
 
 .score{margin-top:6px;font-size:17px;font-weight:600;color:#ffd700;}
-.dealer-title{font-size:17px;letter-spacing:4px;margin-bottom:8px;color:#d4af37;}
-
-.cards{display:flex;justify-content:center;gap:10px;min-height:100px;}
+.cards{display:flex;justify-content:center;gap:10px;min-height:110px;}
 
 .card-img{
 width:70px;
 height:100px;
 border-radius:8px;
-box-shadow:0 6px 15px rgba(0,0,0,0.6);
-transform:translateY(-200px);
+box-shadow:0 6px 18px rgba(0,0,0,0.7);
+transform:translateY(-250px) scale(0.6);
 opacity:0;
-transition:all .4s ease;
+transition:all .9s cubic-bezier(.17,.67,.32,1.4);
 }
-
 .card-img.show{
-transform:translateY(0);
+transform:translateY(0) scale(1);
 opacity:1;
 }
 
@@ -55,6 +48,7 @@ opacity:1;
 button{padding:14px 28px;margin:8px;border:none;border-radius:12px;font-weight:700;font-size:15px;cursor:pointer;}
 #hit{background:#2ecc71;color:white;}
 #stand{background:#e74c3c;color:white;}
+#double{background:#f1c40f;color:black;}
 
 .chips{position:absolute;bottom:25px;width:100%;text-align:center;}
 .chip{display:inline-block;width:55px;height:55px;border-radius:50%;line-height:55px;margin:8px;font-weight:700;cursor:pointer;box-shadow:0 6px 15px rgba(0,0,0,0.6);}
@@ -67,15 +61,11 @@ button{padding:14px 28px;margin:8px;border:none;border-radius:12px;font-weight:7
 <body>
 
 <div class="top-bar">
-<div class="brand">PixelArena BJ</div>
-<div class="right-menu">
-<div class="nav-box balance-box">Bakiye: <span id="balance">0</span>₺</div>
-<div class="nav-box bet-box">Bahis: <span id="bet">0</span>₺</div>
-</div>
+<div>PixelArena BJ</div>
+<div>Bakiye: <span id="balance">0</span>₺ | Bahis: <span id="bet">0</span>₺</div>
 </div>
 
 <div id="dealerArea" class="area">
-<div class="dealer-title">KURUPİER</div>
 <div id="dealerCards" class="cards"></div>
 <div class="score">Toplam: <span id="dealerScore">0</span></div>
 </div>
@@ -89,7 +79,7 @@ button{padding:14px 28px;margin:8px;border:none;border-radius:12px;font-weight:7
 
 <div class="controls" id="controls">
 <button id="hit">KART ÇEK</button>
-<button id="stand">DUR/KAL</button>
+<button id="stand">DUR</button>
 <button id="double">2X</button>
 </div>
 
@@ -101,31 +91,14 @@ button{padding:14px 28px;margin:8px;border:none;border-radius:12px;font-weight:7
 </div>
 
 <script type="module">
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { 
-  getAuth,
-  onAuthStateChanged,
-  signInAnonymously
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getAuth,onAuthStateChanged,signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore,doc,getDoc,setDoc,runTransaction,onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-import { 
-  getFirestore,
-  doc,
-  getDoc,
-  setDoc,
-  updateDoc,
-  runTransaction,
-  onSnapshot
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+/* FIREBASE */
 
-const firebaseConfig={
-apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
-authDomain:"emirhan-site.firebaseapp.com",
-projectId:"emirhan-site",
-storageBucket:"emirhan-site.firebasestorage.app",
-messagingSenderId:"668871888390",
-appId:"1:668871888390:web:76568bda84cb1641f7bd87"
-};
+const firebaseConfig={ /* senin config burada */ };
 
 const app=initializeApp(firebaseConfig);
 const auth=getAuth(app);
@@ -136,7 +109,7 @@ let balance=0,bet=0;
 let gameState="loading";
 let dealerHidden=true;
 
-const balanceEl=document.getElementById("balance");
+const balanceEl=balance=document.getElementById("balance");
 const betEl=document.getElementById("bet");
 const message=document.getElementById("message");
 const controls=document.getElementById("controls");
@@ -150,14 +123,18 @@ const doubleBtn=document.getElementById("double");
 const suits=["H","D","C","S"];
 let deck=[],player=[],dealer=[];
 
+/* SOUND */
+
+const dealSound=new Audio("https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3");
+const winSound=new Audio("https://assets.mixkit.co/active_storage/sfx/1998/1998-preview.mp3");
+const loseSound=new Audio("https://assets.mixkit.co/active_storage/sfx/1999/1999-preview.mp3");
+
+function play(s){s.currentTime=0;s.play();}
+
 /* AUTH */
 
 onAuthStateChanged(auth,async user=>{
-if(!user){
-await signInAnonymously(auth);
-return;
-}
-
+if(!user){await signInAnonymously(auth);return;}
 userRef=doc(db,"users",user.uid);
 let snap=await getDoc(userRef);
 
@@ -171,30 +148,12 @@ balance=snap.data().balance||0;
 balanceEl.innerText=balance;
 gameState="betting";
 message.innerText="Bahis Yapın";
-enableChips();
 
 onSnapshot(userRef,s=>{
-if(!s.exists()) return;
 balance=s.data().balance||0;
 balanceEl.innerText=balance;
 });
 });
-
-/* CHIP */
-
-function disableChips(){
-document.querySelectorAll(".chip").forEach(c=>{
-c.style.pointerEvents="none";
-c.style.opacity="0.4";
-});
-}
-
-function enableChips(){
-document.querySelectorAll(".chip").forEach(c=>{
-c.style.pointerEvents="auto";
-c.style.opacity="1";
-});
-}
 
 /* DECK */
 
@@ -204,170 +163,96 @@ for(let s of suits){
 for(let i=1;i<=13;i++){
 deck.push({suit:s,value:i});
 }}
-for(let i=deck.length-1;i>0;i--){
-let j=Math.floor(Math.random()*(i+1));
-[deck[i],deck[j]]=[deck[j],deck[i]];
-}
+deck.sort(()=>Math.random()-0.5);
 }
 
-function cardVal(v){
-if(v>10) return 10;
-if(v===1) return 11;
-return v;
-}
-
+function cardVal(v){if(v>10)return 10;if(v===1)return 11;return v;}
 function total(hand){
 let t=0,a=0;
 hand.forEach(c=>{
-let val=cardVal(c.value);
-if(val===11){a++;t+=11;}
-else t+=val;
+let v=cardVal(c.value);
+if(v===11){a++;t+=11;}else t+=v;
 });
 while(t>21&&a>0){t-=10;a--;}
 return t;
 }
 
-/* CARD UI */
+/* CARD */
 
 function createCard(card,hidden=false){
 let img=document.createElement("img");
-img.style.width="55px";
-img.style.margin="4px";
-img.style.borderRadius="6px";
+img.className="card-img";
 
 if(hidden){
 img.src="https://deckofcardsapi.com/static/img/back.png";
-return img;
-}
-
+}else{
 let map={1:"A",11:"J",12:"Q",13:"K"};
 let val=map[card.value]||card.value;
 img.src=`https://deckofcardsapi.com/static/img/${val}${card.suit}.png`;
+}
+
+setTimeout(()=>img.classList.add("show"),50);
+play(dealSound);
 return img;
 }
 
 function render(){
 dealerDiv.innerHTML="";
 playerDiv.innerHTML="";
-
-dealer.forEach((c,i)=>{
-dealerDiv.appendChild(createCard(c,(i===1 && dealerHidden)));
-});
-player.forEach(c=>{
-playerDiv.appendChild(createCard(c,false));
-});
-
+dealer.forEach((c,i)=>dealerDiv.appendChild(createCard(c,(i===1&&dealerHidden))));
+player.forEach(c=>playerDiv.appendChild(createCard(c,false)));
 playerScore.innerText=total(player);
-dealerScore.innerText=
-dealerHidden&&dealer.length>0?cardVal(dealer[0].value):total(dealer);
+dealerScore.innerText=dealerHidden?cardVal(dealer[0]?.value||0):total(dealer);
 }
 
 /* BET */
 
-async function addBet(amount){
-if(gameState!=="betting") return;
-if(balance<amount) return;
+window.addBet=async function(amount){
+if(gameState!=="betting")return;
+if(balance<amount)return;
 
-await runTransaction(db, async (transaction)=>{
-const snap=await transaction.get(userRef);
-let current=snap.data().balance||0;
-if(current<amount) throw "Yetersiz bakiye";
-transaction.update(userRef,{balance:current-amount});
+await runTransaction(db,async t=>{
+let snap=await t.get(userRef);
+let b=snap.data().balance||0;
+t.update(userRef,{balance:b-amount});
 });
-
 bet+=amount;
 betEl.innerText=bet;
-
-if(!window.betTimer) startBetTimer();
-}
-window.addBet=addBet;
-
-function startBetTimer(){
-let time=5;
-message.innerText="Bahisler Kapanıyor "+time;
-window.betTimer=setInterval(()=>{
-time--;
-if(time<=0){
-clearInterval(window.betTimer);
-window.betTimer=null;
 startGame();
-}else{
-message.innerText="Bahisler Kapanıyor "+time;
-}
-},1000);
-}
+};
 
 /* GAME */
 
 async function startGame(){
 gameState="playing";
-disableChips();
 controls.style.display="block";
-
-player=[];
-dealer=[];
-dealerHidden=true;
+player=[];dealer=[];dealerHidden=true;
 createDeck();
 
-player=[deck.pop(),deck.pop()];
-dealer=[deck.pop(),deck.pop()];
-render();
-
-checkBlackjack();
-}
-
-async function checkBlackjack(){
-let p=total(player);
-let d=total(dealer);
-
-if(p===21||d===21){
-dealerHidden=false;
-render();
-
-if(p===21&&d===21) return endGame("Push",1);
-if(p===21) return endGame("Blackjack!",2.5);
-return endGame("Dealer Blackjack",0);
-}
+player.push(deck.pop()); render(); await delay(3000);
+dealer.push(deck.pop()); render(); await delay(3000);
+player.push(deck.pop()); render(); await delay(3000);
+dealer.push(deck.pop()); render();
 }
 
 async function hit(){
-if(gameState!=="playing") return;
 player.push(deck.pop());
 render();
 if(total(player)>=21) dealerTurn();
 }
 
-async function stand(){
-if(gameState!=="playing") return;
-dealerTurn();
-}
-
-async function doubleDown(){
-if(player.length!==2||balance<bet) return;
-
-await runTransaction(db, async (transaction)=>{
-const snap=await transaction.get(userRef);
-let current=snap.data().balance||0;
-if(current<bet) throw "Yetersiz bakiye";
-transaction.update(userRef,{balance:current-bet});
-});
-
-bet*=2;
-betEl.innerText=bet;
-player.push(deck.pop());
-render();
-dealerTurn();
-}
+async function stand(){dealerTurn();}
 
 async function dealerTurn(){
-gameState="dealer";
 dealerHidden=false;
 render();
+await delay(2000);
 
 while(total(dealer)<17){
 dealer.push(deck.pop());
-}
 render();
+await delay(3000);
+}
 
 let p=total(player);
 let d=total(dealer);
@@ -384,28 +269,33 @@ controls.style.display="none";
 message.innerText=text;
 
 if(mult>0){
-await runTransaction(db, async (transaction)=>{
-const snap=await transaction.get(userRef);
-let current=snap.data().balance||0;
-transaction.update(userRef,{balance:current+(bet*mult)});
+await runTransaction(db,async t=>{
+let snap=await t.get(userRef);
+let b=snap.data().balance||0;
+t.update(userRef,{balance:b+(bet*mult)});
 });
+play(winSound);
+}else{
+play(loseSound);
 }
 
 bet=0;
 betEl.innerText=0;
 
 setTimeout(()=>{
-player=[];
-dealer=[];
+player=[];dealer=[];
 render();
-enableChips();
 gameState="betting";
 message.innerText="Bahis Yapın";
-},2000);
+},3000);
 }
+
+function delay(ms){return new Promise(r=>setTimeout(r,ms));}
 
 hitBtn.onclick=hit;
 standBtn.onclick=stand;
-doubleBtn.onclick=doubleDown;
+doubleBtn.onclick=()=>alert("Double aktif ama bu sürümde demo mod");
 
 </script>
+</body>
+</html>
