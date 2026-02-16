@@ -40,10 +40,11 @@ z-index:20;
 .middle{font-weight:bold}
 .menu{
 position:fixed;
-top:25%;
+top:30%;
 left:50%;
 transform:translateX(-50%);
 z-index:10;
+text-align:center;
 }
 button{
 padding:15px 30px;
@@ -69,8 +70,9 @@ font-weight:900;
 opacity:0;
 }
 .tap-text{
-font-size:70px;
+font-size:60px;
 font-weight:900;
+text-align:center;
 }
 @keyframes pop{
 0%{transform:scale(.5);opacity:0}
@@ -84,6 +86,8 @@ font-weight:900;
 
 <div class="menu" id="menu">
 <button id="findMatch">Maç Bul</button>
+<button id="createRoom">Oda Kur</button>
+<div id="statusText" style="margin-top:15px;font-weight:bold;"></div>
 </div>
 
 <div class="topbar hidden" id="topbar">
@@ -102,7 +106,7 @@ font-weight:900;
 
 <div class="center hidden" id="arena">
 <div id="countdown"></div>
-<div class="tap-text" id="mainText">Bekleniyor...</div>
+<div class="tap-text" id="mainText">Hazır...</div>
 
 <div id="finishButtons" class="hidden">
 <button onclick="rematch()">Yeniden Oyna</button>
@@ -121,6 +125,7 @@ import {
 getAuth, onAuthStateChanged, signInAnonymously
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
+/* FIREBASE CONFIG */
 const firebaseConfig = {
 apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
 authDomain:"emirhan-site.firebaseapp.com",
@@ -138,6 +143,26 @@ let uid=null,username=null;
 let roomId=null,isHost=false;
 let roomUnsub=null,queueUnsub=null;
 let gameLocked=false;
+let audioCtx=null;
+
+/* AUDIO (iOS UNLOCK) */
+function unlockAudio(){
+if(!audioCtx){
+audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+}
+}
+function playBeep(freq){
+if(!audioCtx)return;
+const osc=audioCtx.createOscillator();
+const gain=audioCtx.createGain();
+osc.connect(gain);
+gain.connect(audioCtx.destination);
+osc.frequency.value=freq;
+osc.start();
+gain.gain.setValueAtTime(.2,audioCtx.currentTime);
+gain.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.3);
+osc.stop(audioCtx.currentTime+.3);
+}
 
 /* AUTH */
 onAuthStateChanged(auth,async(user)=>{
@@ -152,13 +177,19 @@ await setDoc(ref,{username,createdAt:serverTimestamp()});
 }else username=snap.data().username;
 });
 
-/* MATCHMAKING */
-document.getElementById("findMatch").onclick=async()=>{
-if(!uid)return alert("Bağlanıyor...");
+/* CLEAN OLD ROOM ON REFRESH */
+async function cleanOldRooms(){
+const q=await getDocs(query(collection(db,"rooms"),
+where("player1","==",uid)));
+q.forEach(async d=>await deleteDoc(d.ref));
+}
 
-document.getElementById("findMatch").disabled=true;
-
-await cleanUp();
+/* MATCH FIND */
+findMatch.onclick=async()=>{
+unlockAudio();
+statusText.innerText="Rakip Bekleniyor...";
+findMatch.disabled=true;
+await cleanOldRooms();
 
 const q=await getDocs(
 query(collection(db,"matchmakingQueue"),
@@ -187,16 +218,32 @@ createdAt:serverTimestamp()
 });
 
 await deleteDoc(doc(db,"matchmakingQueue",opp.id));
-
 startGame();
 listenRoom();
 startCountdown();
 
 }else{
-await setDoc(doc(db,"matchmakingQueue",uid),{uid,createdAt:serverTimestamp()});
+await setDoc(doc(db,"matchmakingQueue",uid),{uid});
 listenQueue();
-alert("Rakip bekleniyor...");
 }
+};
+
+/* CREATE ROOM */
+createRoom.onclick=async()=>{
+unlockAudio();
+roomId=crypto.randomUUID();
+isHost=true;
+
+await setDoc(doc(db,"rooms",roomId),{
+player1:uid,
+player2:null,
+p1Name:username,
+p1:0,p2:0,
+round:1,
+state:"waiting"
+});
+
+statusText.innerText="Oda Kuruldu. ID: "+roomId;
 };
 
 function listenQueue(){
@@ -226,10 +273,12 @@ if(!isHost)return;
 let count=3;
 const interval=setInterval(async()=>{
 await updateDoc(doc(db,"rooms",roomId),{count});
+playBeep(600);
 count--;
 if(count<0){
 clearInterval(interval);
 await updateDoc(doc(db,"rooms",roomId),{state:"active"});
+playBeep(1200);
 }
 },1000);
 }
@@ -250,6 +299,11 @@ setTimeout(()=>gameLocked=false,200);
 }
 
 function updateUI(d){
+if(!d.player2){
+mainText.innerText="Rakip Bekleniyor...";
+return;
+}
+
 myName.innerText=uid===d.player1?d.p1Name:d.p2Name;
 oppName.innerText=uid===d.player1?d.p2Name:d.p1Name;
 myScore.innerText=uid===d.player1?d.p1:d.p2;
@@ -266,31 +320,13 @@ setTimeout(()=>countdown.style.opacity=0,600);
 }
 
 if(d.tapWinner){
-const win=d.tapWinner===uid;
-mainText.innerText=win?"Kazandın!":"Kaybettin!";
-
-if(isHost){
-let p1=d.p1,p2=d.p2;
-if(d.tapWinner===d.player1)p1++; else p2++;
-
-if(p1===4||p2===4){
-updateDoc(doc(db,"rooms",roomId),{state:"finished",p1,p2});
-}else{
-setTimeout(()=>{
-updateDoc(doc(db,"rooms",roomId),{
-p1,p2,
-round:d.round+1,
-state:"countdown",
-count:3,
-tapWinner:null
-});
-startCountdown();
-},1000);
+mainText.innerText=d.tapWinner===uid?"Kazandın!":"Kaybettin!";
 }
+if(d.state==="active"){
+mainText.innerText="TAP!";
 }
-}
-
 if(d.state==="finished"){
+mainText.innerText="Maç Bitti!";
 finishButtons.classList.remove("hidden");
 }
 }
@@ -299,20 +335,14 @@ function startGame(){
 menu.style.display="none";
 arena.classList.remove("hidden");
 topbar.classList.remove("hidden");
-mainText.innerText="Hazır...";
 }
 
-async function cleanUp(){
-if(roomUnsub)roomUnsub();
-if(queueUnsub)queueUnsub();
-await deleteDoc(doc(db,"matchmakingQueue",uid)).catch(()=>{});
-}
-
-function resetUI(){
+async function resetUI(){
 menu.style.display="block";
 arena.classList.add("hidden");
 topbar.classList.add("hidden");
-document.getElementById("findMatch").disabled=false;
+findMatch.disabled=false;
+statusText.innerText="";
 }
 
 window.rematch=async()=>{
@@ -325,7 +355,6 @@ finishButtons.classList.add("hidden");
 };
 
 window.newMatch=async()=>{
-await cleanUp();
 await deleteDoc(doc(db,"rooms",roomId)).catch(()=>{});
 roomId=null;
 resetUI();
