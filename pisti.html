@@ -2,155 +2,269 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Pişti Casino PRO</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>PixelArena - Mines</title>
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;}
-body{
-height:100vh;overflow:hidden;
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
 font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
-background:#0b1023;color:white;
-display:flex;flex-direction:column;align-items:center;
+-webkit-tap-highlight-color:transparent;
 }
 
-.top-bar{
-position:fixed;top:0;width:100%;height:55px;
-display:flex;align-items:center;justify-content:space-between;
-padding:0 16px;
-background:linear-gradient(135deg,#1a2a6c,#16245c);
-box-shadow:0 4px 15px rgba(0,0,0,0.45);
-z-index:100;
-}
-.brand{
-font-size:18px;font-weight:800;
-background:linear-gradient(90deg,#4fd1ff,#fff,#4fd1ff);
-background-size:200% auto;
--webkit-background-clip:text;-webkit-text-fill-color:transparent;
-animation:shine 3s linear infinite;
-}
-@keyframes shine{to{background-position:200% center;}}
-.nav-box{
-padding:6px 14px;border-radius:14px;
-font-weight:700;font-size:13px;min-width:110px;text-align:center;
-background:#273c8f;
+html,body{
+height:100%;
+width:100%;
 }
 
-h1{margin-top:70px;margin-bottom:5px;}
-.score-board{margin-bottom:10px;}
-
-.table{
-width:95%;max-width:900px;height:520px;border-radius:40px;
-position:relative;
-background:radial-gradient(circle at center,#136f3a,#083d18 70%);
-box-shadow:inset 0 0 120px #000,0 0 80px #00ff99,0 20px 60px rgba(0,0,0,0.6);
+body{
+background:#0c111d;
+color:#fff;
 overflow:hidden;
-opacity:0.2;
-pointer-events:none;
-transition:0.4s;
-}
-.table.active{
-opacity:1;
-pointer-events:auto;
+padding-bottom:env(safe-area-inset-bottom);
 }
 
-.table-cards{
-position:absolute;top:50%;left:50%;
-transform:translate(-50%,-50%);
+/* TOP BAR */
+.top-bar{
+position:fixed;
+top:0;
+left:0;
+right:0;
+width:100%;
+height:60px;
 display:flex;
+align-items:center;
+justify-content:space-between;
+padding:0 15px;
+background:#141923;
+box-shadow:0 4px 20px rgba(0,0,0,0.6);
+z-index:1000;
 }
-.stack-card{width:95px;margin-left:-65px;}
-.stack-card:first-child{margin-left:0;}
 
-.hand{
-position:absolute;bottom:15px;left:50%;
-transform:translateX(-50%);
-display:flex;gap:10px;
+.brand{
+font-size:18px;
+font-weight:700;
+color:#fff;
 }
-.computer{
-position:absolute;top:15px;left:50%;
-transform:translateX(-50%);
-display:flex;gap:10px;
-}
-.card{width:80px;cursor:pointer;transition:0.3s;}
-.card:hover{transform:translateY(-10px);}
 
-.chips{
-position:fixed;bottom:70px;left:50%;
-transform:translateX(-50%);
-display:flex;gap:10px;
+.right-menu{
+display:flex;
+gap:8px;
 }
-.chip{
-width:60px;height:60px;border-radius:50%;
-display:flex;align-items:center;justify-content:center;
-font-weight:bold;cursor:pointer;
-box-shadow:0 6px 15px rgba(0,0,0,0.6);
-}
-.c1{background:#f0f0f0;color:black;}
-.c2{background:#1eaa00;}
-.c3{background:#ff1c1c;}
-.c4{background:black;color:white;}
 
-.start-btn{
-position:fixed;bottom:10px;left:50%;
-transform:translateX(-50%);
-padding:12px 30px;
-background:linear-gradient(90deg,#ffb300,#ff5e00);
-border:none;border-radius:20px;
-font-weight:bold;font-size:16px;
+.nav-box{
+background:#1e2533;
+padding:6px 12px;
+border-radius:12px;
+font-weight:600;
+font-size:13px;
+}
+
+.balance-box{
+color:#00d4ff;
+}
+
+.bet-box{
+color:#ffcc00;
+}
+
+/* MAIN CONTAINER */
+.container{
+position:fixed;
+top:60px;
+left:0;
+right:0;
+bottom:0;
+width:100%;
+height:calc(100% - 60px);
+display:flex;
+flex-direction:column;
+padding:15px;
+overflow:auto;
+}
+
+/* MINES HEADER */
+.mines-header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+background:#151b26;
+padding:12px 15px;
+border-radius:14px;
+margin-bottom:15px;
+box-shadow:0 0 20px rgba(0,0,0,0.5);
+}
+
+/* GRID */
+#grid{
+display:grid;
+grid-template-columns:repeat(5,1fr);
+gap:10px;
+margin-bottom:20px;
+}
+
+.tile{
+background:#1b2232;
+height:68px;
+border-radius:14px;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:22px;
 cursor:pointer;
+transition:0.25s;
+box-shadow:inset 0 0 8px rgba(0,0,0,0.6);
+position:relative;
+overflow:hidden;
 }
 
-.win-anim{
-position:fixed;top:0;left:0;width:100%;height:100%;
-display:flex;align-items:center;justify-content:center;
-background:rgba(0,0,0,0.85);
-font-size:40px;font-weight:900;
-color:#00ff99;
-z-index:999;
-animation:zoom 0.7s ease forwards;
+.tile.open{
+background:#16c784;
+box-shadow:0 0 15px #16c784;
 }
-@keyframes zoom{
-0%{transform:scale(0.5);opacity:0;}
-100%{transform:scale(1);opacity:1;}
+
+.tile.mine{
+background:#ff4d4f;
+box-shadow:0 0 18px red;
+animation:shake 0.3s;
+}
+
+@keyframes shake{
+0%{transform:translateX(0)}
+25%{transform:translateX(-4px)}
+50%{transform:translateX(4px)}
+75%{transform:translateX(-4px)}
+100%{transform:translateX(0)}
+}
+
+/* PATLAMA */
+.explosion{
+position:absolute;
+top:50%;
+left:50%;
+width:20px;
+height:20px;
+transform:translate(-50%,-50%);
+background:radial-gradient(circle,#fff 0%,#ff0000 40%,rgba(255,0,0,0) 70%);
+border-radius:50%;
+animation:explode 0.6s ease-out forwards;
+pointer-events:none;
+}
+
+@keyframes explode{
+0%{transform:translate(-50%,-50%) scale(0.2);opacity:1;}
+100%{transform:translate(-50%,-50%) scale(5);opacity:0;}
+}
+
+/* BET PANEL */
+.bet-panel{
+background:#151b26;
+border-radius:16px;
+padding:15px;
+box-shadow:0 0 20px rgba(0,0,0,0.6);
+margin-top:auto;
+}
+
+input,select{
+width:100%;
+background:#1e2533;
+border:none;
+border-radius:12px;
+padding:12px;
+color:white;
+margin-bottom:10px;
+font-size:15px;
+}
+
+button{
+width:100%;
+padding:14px;
+border-radius:12px;
+border:none;
+font-weight:bold;
+cursor:pointer;
+margin-top:5px;
+font-size:15px;
+}
+
+.start{
+background:#00c853;
+color:black;
+}
+
+button:disabled{
+background:#444;
+color:#999;
 }
 </style>
 </head>
 <body>
 
 <div class="top-bar">
-<div class="brand">Pişti Casino PRO</div>
-<div class="nav-box">
-Bakiye: <span id="balance">0</span>₺ | Bahis: <span id="bet">0</span>₺
+<div class="brand">PixelArena</div>
+<div class="right-menu">
+<div class="nav-box balance-box">₺ <span id="userBalance">0</span></div>
+<div class="nav-box bet-box">Bet: <span id="currentBet">0</span></div>
 </div>
 </div>
 
-<h1>🃏 Pişti</h1>
-<div class="score-board">
-Oyuncu: <span id="ps">0</span> | Kurupier: <span id="cs">0</span>
+<div class="container">
+
+<div class="mines-header">
+<div>Mines</div>
+<div>Mayın: <span id="mineDisplay">1</span></div>
 </div>
 
-<div class="table" id="tableArea">
-<div class="computer" id="computerHand"></div>
-<div class="table-cards" id="tableCards"></div>
-<div class="hand" id="playerHand"></div>
-</div>
+<div id="grid"></div>
 
-<div class="chips" id="chipsArea">
-<div class="chip c1" onclick="addBet(100)">100</div>
-<div class="chip c2" onclick="addBet(500)">500</div>
-<div class="chip c3" onclick="addBet(1000)">1K</div>
-<div class="chip c4" onclick="addBet(5000)">5K</div>
-</div>
+<div class="bet-panel">
 
-<button class="start-btn" id="startBtn" onclick="startGame()">BAŞLA</button>
+<input type="number" id="bet" placeholder="Bahis (250 - 3000)">
+<select id="mineCount"></select>
+
+<button id="startBtn" class="start">BET</button>
+
+</div>
+</div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth,onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore,doc,onSnapshot,updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore,doc,onSnapshot,runTransaction } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-/* FIREBASE */
+/* IOS DAHİL KESİN ÇALIŞAN SES SİSTEMİ */
+let audioCtx;
+let sounds={};
+
+async function initAudio(){
+if(audioCtx) return;
+audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+await audioCtx.resume();
+
+async function loadSound(name,url){
+const res=await fetch(url);
+const arrayBuffer=await res.arrayBuffer();
+sounds[name]=await audioCtx.decodeAudioData(arrayBuffer);
+}
+
+await loadSound("explode","https://assets.mixkit.co/sfx/preview/mixkit-arcade-retro-game-over-213.wav");
+await loadSound("win","https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.wav");
+await loadSound("open","https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-jump-coin-216.wav");
+}
+
+function playSound(name){
+if(!audioCtx||!sounds[name]) return;
+const source=audioCtx.createBufferSource();
+source.buffer=sounds[name];
+source.connect(audioCtx.destination);
+source.start(0);
+}
+
+document.body.addEventListener("touchstart",initAudio,{once:true});
+document.body.addEventListener("click",initAudio,{once:true});
+
 const firebaseConfig={
 apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
 authDomain:"emirhan-site.firebaseapp.com",
@@ -164,221 +278,144 @@ const app=initializeApp(firebaseConfig);
 const auth=getAuth(app);
 const db=getFirestore(app);
 
-/* AUDIO ENGINE (iOS SAFE) */
-let audioCtx;
-function initAudio(){
-if(!audioCtx){
-audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-}
-if(audioCtx.state==="suspended"){
-audioCtx.resume();
-}
-}
-document.body.addEventListener("touchstart",initAudio,{once:true});
-document.body.addEventListener("click",initAudio,{once:true});
+let mines=[],opened=0,betAmount=0,mineTotal=1,multiplier=1,gameActive=false;
 
-function playCardSound(){
-const o=audioCtx.createOscillator();
-const g=audioCtx.createGain();
-o.type="triangle";
-o.frequency.value=300;
-g.gain.value=0.2;
-o.connect(g); g.connect(audioCtx.destination);
-o.start();
-o.stop(audioCtx.currentTime+0.08);
+const grid=document.getElementById("grid");
+const balanceText=document.getElementById("userBalance");
+const currentBetText=document.getElementById("currentBet");
+const startBtn=document.getElementById("startBtn");
+const mineSelect=document.getElementById("mineCount");
+const betInput=document.getElementById("bet");
+const mineDisplay=document.getElementById("mineDisplay");
+
+for(let i=1;i<=24;i++){
+let opt=document.createElement("option");
+opt.value=i;
+opt.text=i+" Mayın";
+mineSelect.appendChild(opt);
 }
 
-function playCoinSound(){
-const o=audioCtx.createOscillator();
-const g=audioCtx.createGain();
-o.type="square";
-o.frequency.setValueAtTime(800,audioCtx.currentTime);
-o.frequency.exponentialRampToValueAtTime(1200,audioCtx.currentTime+0.1);
-g.gain.value=0.3;
-o.connect(g); g.connect(audioCtx.destination);
-o.start();
-o.stop(audioCtx.currentTime+0.15);
-}
+mineSelect.addEventListener("change",()=>{
+mineDisplay.innerText=mineSelect.value;
+});
 
-function playBigWin(){
-for(let i=0;i<3;i++){
-setTimeout(()=>{
-const o=audioCtx.createOscillator();
-const g=audioCtx.createGain();
-o.type="sawtooth";
-o.frequency.value=600+(i*200);
-g.gain.value=0.25;
-o.connect(g); g.connect(audioCtx.destination);
-o.start();
-o.stop(audioCtx.currentTime+0.2);
-},i*150);
+function createGrid(){
+grid.innerHTML="";
+for(let i=0;i<25;i++){
+let tile=document.createElement("div");
+tile.classList.add("tile");
+tile.addEventListener("click",()=>reveal(i,tile));
+grid.appendChild(tile);
 }
 }
 
-/* GAME LOGIC AYNI */
+function generateMines(){
+mines=[];
+while(mines.length<mineTotal){
+let r=Math.floor(Math.random()*25);
+if(!mines.includes(r)) mines.push(r);
+}
+}
 
-let balance=0,bet=0,userRef=null;
-let gameStarted=false;
+function updateMultiplier(){
+const safeLeft=(25-mineTotal)-(opened-1);
+const totalLeft=25-(opened-1);
+multiplier*=totalLeft/safeLeft;
+multiplier=Math.floor(multiplier*100)/100;
+startBtn.innerText="Çek ("+Math.floor(betAmount*multiplier)+"₺)";
+}
+
+startBtn.addEventListener("click",async()=>{
+if(!auth.currentUser) return;
+
+if(gameActive){
+if(opened===0) return;
+
+const win=Math.floor(betAmount*multiplier);
+const userRef=doc(db,"users",auth.currentUser.uid);
+
+await runTransaction(db,async(transaction)=>{
+const snap=await transaction.get(userRef);
+transaction.update(userRef,{balance:snap.data().balance+win});
+});
+
+playSound("win");
+
+gameActive=false;
+betInput.disabled=false;
+mineSelect.disabled=false;
+startBtn.innerText="BET";
+currentBetText.innerText="0";
+return;
+}
+
+betAmount=parseInt(betInput.value);
+if(betAmount<250){ alert("Minimum Bahis 250₺"); return; }
+if(betAmount>3000){ alert("Maksimum Bahis 3000₺"); return; }
+
+mineTotal=parseInt(mineSelect.value);
+
+const userRef=doc(db,"users",auth.currentUser.uid);
+try{
+await runTransaction(db,async(transaction)=>{
+const snap=await transaction.get(userRef);
+if(snap.data().balance<betAmount) throw "";
+transaction.update(userRef,{balance:snap.data().balance-betAmount});
+});
+}catch{ return;}
+
+opened=0; multiplier=1;
+generateMines();
+createGrid();
+
+gameActive=true;
+betInput.disabled=true;
+mineSelect.disabled=true;
+startBtn.innerText="Çek";
+currentBetText.innerText=betAmount;
+});
+
+function reveal(i,tile){
+if(!gameActive||tile.classList.contains("open")) return;
+
+if(mines.includes(i)){
+tile.classList.add("mine");
+tile.innerHTML="💣";
+
+const boom=document.createElement("div");
+boom.classList.add("explosion");
+tile.appendChild(boom);
+
+playSound("explode");
+
+gameActive=false;
+betInput.disabled=false;
+mineSelect.disabled=false;
+startBtn.innerText="BET";
+return;
+}
+
+opened++;
+tile.classList.add("open");
+tile.innerHTML="💎";
+
+playSound("open");
+
+updateMultiplier();
+}
 
 onAuthStateChanged(auth,user=>{
 if(!user) return;
-userRef=doc(db,"users",user.uid);
+const userRef=doc(db,"users",user.uid);
 onSnapshot(userRef,snap=>{
-balance=snap.data().balance||0;
-document.getElementById("balance").innerText=balance;
+if(snap.exists()){
+balanceText.innerText=parseInt(snap.data().balance);
+}
 });
 });
 
-window.addBet=async function(amount){
-if(gameStarted) return;
-if(balance<amount) return;
-balance-=amount;
-bet+=amount;
-await updateDoc(userRef,{balance});
-document.getElementById("balance").innerText=balance;
-document.getElementById("bet").innerText=bet;
-playCoinSound();
-}
-
-window.startGame=function(){
-if(bet<=0) return alert("Bahis koymadan oyun başlamaz!");
-gameStarted=true;
-document.getElementById("tableArea").classList.add("active");
-document.getElementById("chipsArea").style.display="none";
-document.getElementById("startBtn").style.display="none";
-createDeck();
-dealInitial();
-}
-
-const suits=["H","D","C","S"];
-const values=["A","2","3","4","5","6","7","8","9","0","J","Q","K"];
-let deck=[],player=[],computer=[],table=[];
-let ps=0,cs=0,round=0,totalRounds=6;
-
-function createDeck(){
-deck=[];
-for(let s of suits)
-for(let v of values)
-deck.push(v+s);
-deck.sort(()=>Math.random()-0.5);
-}
-
-function dealInitial(){
-table=[];
-for(let i=0;i<3;i++) table.push("BACK");
-table.push(deck.shift());
-renderTable();
-setTimeout(dealRound,500);
-}
-
-function dealRound(){
-if(round>=totalRounds){ endGame(); return; }
-player=[]; computer=[];
-for(let i=0;i<4;i++){
-player.push(deck.shift());
-computer.push(deck.shift());
-}
-round++;
-render();
-}
-
-function img(card){
-return "https://deckofcardsapi.com/static/img/"+card+".png";
-}
-
-function render(){
-if(!gameStarted) return;
-const ph=document.getElementById("playerHand");
-const ch=document.getElementById("computerHand");
-ph.innerHTML=""; ch.innerHTML="";
-player.forEach((c,i)=>{
-let im=document.createElement("img");
-im.src=img(c);
-im.className="card";
-im.onclick=()=>play(i);
-ph.appendChild(im);
-});
-computer.forEach(()=>{
-let im=document.createElement("img");
-im.src="https://deckofcardsapi.com/static/img/back.png";
-im.className="card";
-ch.appendChild(im);
-});
-document.getElementById("ps").innerText=ps;
-document.getElementById("cs").innerText=cs;
-renderTable();
-}
-
-function renderTable(){
-const tc=document.getElementById("tableCards");
-tc.innerHTML="";
-table.filter(c=>c!=="BACK").forEach(c=>{
-let im=document.createElement("img");
-im.src=img(c);
-im.className="stack-card";
-tc.appendChild(im);
-});
-}
-
-function play(i){
-playCardSound();
-let c=player.splice(i,1)[0];
-table.push(c);
-check("p");
-render();
-setTimeout(compPlay,500);
-}
-
-function compPlay(){
-if(computer.length===0){
-if(player.length===0) dealRound();
-return;
-}
-let chosen=computer.splice(0,1)[0];
-playCardSound();
-table.push(chosen);
-check("c");
-render();
-if(player.length===0 && computer.length===0)
-setTimeout(dealRound,500);
-}
-
-function check(owner){
-let real=table.filter(x=>x!=="BACK");
-if(real.length<2) return;
-let last=real[real.length-1];
-let prev=real[real.length-2];
-if(last[0]==="J"||last[0]===prev[0]){
-if(owner==="p") ps+=real.length;
-else cs+=real.length;
-table=[];
-playCoinSound();
-}
-}
-
-async function endGame(){
-if(ps>cs){
-balance+=bet*5;
-await updateDoc(userRef,{balance});
-showWin();
-}
-bet=0;
-document.getElementById("bet").innerText=0;
-gameStarted=false;
-document.getElementById("tableArea").classList.remove("active");
-round=0;ps=0;cs=0;
-document.getElementById("chipsArea").style.display="flex";
-document.getElementById("startBtn").style.display="block";
-}
-
-function showWin(){
-playBigWin();
-let div=document.createElement("div");
-div.className="win-anim";
-div.innerText="🎉 BÜYÜK KAZANÇ!";
-document.body.appendChild(div);
-setTimeout(()=>div.remove(),1500);
-}
+createGrid();
 </script>
+
 </body>
 </html>
