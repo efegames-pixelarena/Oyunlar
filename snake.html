@@ -19,7 +19,6 @@ display:flex;
 flex-direction:column;
 }
 
-/* TOP BAR */
 .top-bar{
 position:fixed;
 top:0;width:100%;height:55px;
@@ -29,12 +28,11 @@ background:linear-gradient(135deg,#1a2a6c,#16245c);
 z-index:100;
 }
 
-/* SCORE PANEL */
 .scoreboard{
 margin-top:55px;
 display:flex;
 justify-content:space-between;
-padding:8px 30px;
+padding:10px 40px;
 font-weight:bold;
 background:#111;
 }
@@ -79,7 +77,6 @@ box-shadow:0 10px 30px rgba(0,0,0,0.6);
 <div class="game-wrapper">
 <div id="info">Hazır</div>
 <button id="findBtn">Maç Bul</button>
-<div id="timer"></div>
 <canvas id="game"></canvas>
 </div>
 
@@ -106,7 +103,7 @@ const db=getFirestore(app);
 const auth=getAuth(app);
 
 let uid,roomId=null,unsubscribe=null,opponentId=null;
-let gameStart=0,gameDuration=60000,isPlaying=false;
+let isPlaying=false;
 
 const canvas=document.getElementById("game");
 const ctx=canvas.getContext("2d");
@@ -115,22 +112,16 @@ const ctx=canvas.getContext("2d");
 const COLS=40;
 const ROWS=150;
 
-let box;
-let size;
+let size=600;
+canvas.width=size;
+canvas.height=size;
+
+let box=size/COLS;
+
 let snake=[],opponentSnake=[];
 let dir="RIGHT";
 let food,score=0,oppScore=0;
-let moveInterval=200;
-
-/* CANVAS */
-function resizeCanvas(){
-size=Math.min(window.innerWidth,window.innerHeight-180)*0.9;
-canvas.width=size;
-canvas.height=size;
-box=size/COLS;
-}
-window.addEventListener("resize",resizeCanvas);
-resizeCanvas();
+let moveInterval=120;
 
 /* AUTH */
 onAuthStateChanged(auth,user=>{
@@ -172,18 +163,16 @@ listenRoom();
 function listenRoom(){
 unsubscribe=onSnapshot(doc(db,"snakeRooms",roomId),snap=>{
 const d=snap.data();
-if(!d) return;
+if(!d)return;
 
 if(d.state==="matched"){
 updateDoc(doc(db,"snakeRooms",roomId),{
-state:"playing",
-startTime:Date.now()
+state:"playing"
 });
 }
 
 if(d.state==="playing"){
 opponentId=(uid===d.player1)?d.player2:d.player1;
-gameStart=d.startTime;
 startGame();
 }
 
@@ -248,11 +237,13 @@ snake.unshift({x:headX,y:headY});
 
 document.getElementById("p1score").innerText=score;
 
-if(uid){
-await updateDoc(doc(db,"snakeRooms",roomId),
-uid===opponentId?
-{snake2:snake,score2:score}:
-{snake1:snake,score1:score});
+/* FIRESTORE SYNC */
+if(uid=== (uid===opponentId?opponentId:uid)){
+if(uid===opponentId){
+await updateDoc(doc(db,"snakeRooms",roomId),{snake2:snake,score2:score});
+}else{
+await updateDoc(doc(db,"snakeRooms",roomId),{snake1:snake,score1:score});
+}
 }
 }
 
@@ -278,9 +269,9 @@ ctx.fillText("🍎",food.x,food.y+box);
 
 /* WALL EXPLOSION */
 function explode(x,y){
-for(let i=0;i<20;i++){
+for(let i=0;i<25;i++){
 ctx.fillStyle="orange";
-ctx.fillRect(x+(Math.random()*30-15),y+(Math.random()*30-15),6,6);
+ctx.fillRect(x+(Math.random()*40-20),y+(Math.random()*40-20),6,6);
 }
 }
 
