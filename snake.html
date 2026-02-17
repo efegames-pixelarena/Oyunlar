@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>PixelArena Snake.io Multiplayer</title>
 <style>
-body, html { margin:0; padding:0; overflow:hidden; font-family:sans-serif; }
+body, html { margin:0; padding:0; overflow:hidden; font-family:sans-serif; background:#1e1e1e; }
 canvas { display:block; }
 #scoreboard {
   position:fixed; top:10px; right:10px;
@@ -55,14 +55,14 @@ canvas.width = W; canvas.height = H;
 
 const MAP_SIZE = 5000;
 const MAX_FOODS = 200;
-const MAX_WALLS = 20;
-let players = {}, foods = [], walls = [];
+let players = {}, foods = [];
 let bots = [];
 let inputDir = {x:0,y:0};
 const eatSound = document.getElementById("eatSound");
 const scoreboard = document.getElementById("scoreboard");
 const totalScoreEl = document.getElementById("totalScore");
 
+/* ---------------- MY SNAKE ---------------- */
 let mySnake = { body:[], x:Math.random()*MAP_SIZE, y:Math.random()*MAP_SIZE, speed:6, score:0, color:"#ffff00" };
 
 /* ---------------- TOUCH ---------------- */
@@ -92,7 +92,6 @@ onAuthStateChanged(auth, user=>{
   onValue(playersRef, snap=>{ players = snap.val() || {}; updateScoreboard(); });
 
   for(let i=0;i<MAX_FOODS;i++) foods.push(randomFood());
-  for(let i=0;i<MAX_WALLS;i++) walls.push(randomWall());
   for(let i=0;i<5;i++) bots.push(randomBot());
 
   requestAnimationFrame(gameLoop);
@@ -125,7 +124,7 @@ function updateBots(){
     let target = foods[Math.floor(Math.random()*foods.length)];
     let dx = target.x - bot.x;
     let dy = target.y - bot.y;
-    let len = Math.sqrt(dx*dx + dy*dy)||1;
+    let len = Math.sqrt(dx*dx + dy*dy) || 1;
     bot.x += dx/len*bot.speed;
     bot.y += dy/len*bot.speed;
     bot.body.unshift({x:bot.x, y:bot.y});
@@ -149,7 +148,7 @@ function checkCollisions(){
 function render(){
   ctx.clearRect(0,0,W,H);
 
-  // Arka plan grid (Snake.io tarzı)
+  // Snake.io tarzı grid
   ctx.fillStyle="#1e1e1e";
   ctx.fillRect(0,0,W,H);
   ctx.strokeStyle="#2a2a2a";
@@ -160,16 +159,14 @@ function render(){
   let camX = mySnake.x - W/2;
   let camY = mySnake.y - H/2;
 
-  // Duvarlar (renkli yanıp sönen)
-  walls.forEach((w,i)=>{
-    ctx.fillStyle = `hsl(${Date.now()/50+i*30%360}, 80%, 50%)`;
-    ctx.fillRect(w.x-camX, w.y-camY, w.w, w.h);
-  });
+  // Map boundaries (yanıp sönen)
+  let hue = (Date.now()/10)%360;
+  ctx.strokeStyle=`hsl(${hue},80%,50%)`;
+  ctx.lineWidth=12;
+  ctx.strokeRect(-camX, -camY, MAP_SIZE, MAP_SIZE);
 
   // Yemler
-  foods.forEach(f=>{
-    ctx.font="20px Arial"; ctx.fillText(f.type==="red"?"🍎":"🍏", f.x-camX, f.y-camY);
-  });
+  foods.forEach(f=>{ ctx.font="20px Arial"; ctx.fillText(f.type==="red"?"🍎":"🍏", f.x-camX, f.y-camY); });
 
   // Botlar
   bots.forEach(bot=> drawSnake(bot, camX, camY, "#ff6600") );
@@ -180,7 +177,7 @@ function render(){
   // Ben
   drawSnake(mySnake, camX, camY, mySnake.color);
 
-  // Toplam skor
+  // Skor
   totalScoreEl.innerText = `Score: ${Math.floor(mySnake.score)}`;
 }
 
@@ -207,7 +204,6 @@ function drawSnake(snake, camX, camY, color){
 
 function randomFood(){ return { x:Math.random()*MAP_SIZE, y:Math.random()*MAP_SIZE, type:Math.random()<0.1?"red":"green" }; }
 function randomBot(){ return { body:[{x:Math.random()*MAP_SIZE,y:Math.random()*MAP_SIZE}], x:Math.random()*MAP_SIZE, y:Math.random()*MAP_SIZE, speed:3+Math.random()*3, score:0 }; }
-function randomWall(){ return { x:Math.random()*MAP_SIZE-100, y:Math.random()*MAP_SIZE-100, w:80, h:20 }; }
 function distance(a,b){ return Math.hypot(a.x-b.x, a.y-b.y); }
 
 function updateScoreboard(){
