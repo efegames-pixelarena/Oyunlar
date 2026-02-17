@@ -123,7 +123,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-let uid, username, opponent="", roomId, unsubscribe;
+let uid, username, roomId, unsubscribe;
 
 /* DOM */
 const matchMessage=document.getElementById("matchMessage");
@@ -142,7 +142,7 @@ onAuthStateChanged(auth, async(user)=>{
   if(!user) location.href="index.html";
   uid=user.uid;
   const snap = await getDoc(doc(db,"users",uid));
-  username = snap.data().username || "Oyuncu";
+  username = snap.data()?.username || "Oyuncu";
   playerNameEl.innerText = username;
 });
 
@@ -160,22 +160,22 @@ findBtn.onclick = async()=>{
   lobbyBox.style.display="none";
   scoreContainer.style.display="none";
 
-  // Önce açık odaları kontrol et
-  const roomsQuery = query(collection(db,"rooms"), where("state","==","waiting"));
-  const roomsSnap = await getDocs(roomsQuery);
+  // Açık odaları kontrol et, kendi odasını atla
+  const q = query(collection(db,"rooms"), where("state","==","waiting"));
+  const snap = await getDocs(q);
+  let joined = false;
 
-  let joined=false;
-  for(const r of roomsSnap.docs){
+  for(const r of snap.docs){
     const d = r.data();
     if(d.player1 !== uid && !d.player2){
       roomId = r.id;
       await updateDoc(doc(db,"rooms",roomId),{
-        player2:uid,
-        player2Name:username,
-        state:"countdown",
-        startAt:Date.now()+5000
+        player2: uid,
+        player2Name: username,
+        state: "countdown",
+        startAt: Date.now()+5000
       });
-      joined=true;
+      joined = true;
       break;
     }
   }
@@ -185,11 +185,11 @@ findBtn.onclick = async()=>{
     const newRoom = doc(collection(db,"rooms"));
     roomId = newRoom.id;
     await setDoc(newRoom,{
-      player1:uid, player1Name:username,
-      player2:null, player2Name:null,
-      player1Score:0, player2Score:0,
-      state:"waiting",
-      createdAt:serverTimestamp()
+      player1: uid, player1Name: username,
+      player2: null, player2Name: null,
+      player1Score: 0, player2Score: 0,
+      state: "waiting",
+      createdAt: serverTimestamp()
     });
   }
 
@@ -207,7 +207,7 @@ function listenRoom(){
     if(d.player1Name) playerNameEl.innerText = d.player1Name;
     if(d.player2Name && d.player2Name!==username) opponentNameEl.innerText = d.player2Name;
 
-    // Rakip aranırken
+    // Rakip aranıyor
     if(d.state==="waiting"){
       scoreContainer.style.display="none";
       matchMessage.innerText="Rakip Aranıyor...";
@@ -228,7 +228,7 @@ function listenRoom(){
       scoreContainer.style.display="flex";
       canvas.style.display="block";
       matchMessage.style.display="none";
-      startSnakeGame(); // Oyun başlat
+      startSnakeGame();
     }
 
     if(d.state==="ended"){
@@ -239,13 +239,13 @@ function listenRoom(){
   });
 }
 
-/* Oyun - Yalnızca örnek */
+/* Oyun - Basit başlangıç */
 function startSnakeGame(){
-  // Burada oyunun tam mantığını ekleyebilirsin
   ctx.fillStyle="#9bbc0f";
   ctx.fillRect(0,0,canvas.width,canvas.height);
   ctx.fillStyle="#0f380f";
   ctx.font="20px Arial";
+  ctx.textAlign="center";
   ctx.fillText("Oyun Başladı!", canvas.width/2, canvas.height/2);
 }
 </script>
