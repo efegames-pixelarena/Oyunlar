@@ -2,146 +2,176 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Snake.io Clone Preview</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Snake.io Multiplayer Clone</title>
 <style>
 body, html { margin:0; padding:0; overflow:hidden; background:#181818; font-family:sans-serif; }
 canvas { display:block; background:#2b2b2b; }
-#scoreboard {
-  position: fixed;
-  top: 10px; right: 10px;
-  color: white;
-  background: rgba(0,0,0,0.6);
-  padding: 10px;
-  border-radius: 8px;
-  font-size: 14px;
-  max-height: 90vh;
-  overflow-y:auto;
-}
+#scoreboard { position:fixed; top:10px; right:10px; color:white; background:rgba(0,0,0,0.6); padding:10px; border-radius:8px; font-size:14px; max-height:90vh; overflow-y:auto; }
 </style>
 </head>
 <body>
 <canvas id="gameCanvas"></canvas>
 <div id="scoreboard"></div>
 
-<script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, onValue, set, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+// --- Firebase config (index.html ile aynı) ---
+const firebaseConfig = {
+  apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
+  authDomain:"emirhan-site.firebaseapp.com",
+  databaseURL:"https://emirhan-site-default-rtdb.firebaseio.com",
+  projectId:"emirhan-site",
+  storageBucket:"emirhan-site.appspot.com",
+  messagingSenderId:"668871888390",
+  appId:"1:668871888390:web:76568bda84cb1641f7bd87"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const auth = getAuth(app);
+
+// --- Game setup ---
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 let W = window.innerWidth, H = window.innerHeight;
 canvas.width = W; canvas.height = H;
 
 const MAP_SIZE = 5000;
-let camera = {x:0, y:0};
-let mySnake = { 
-  body:[{x:MAP_SIZE/2, y:MAP_SIZE/2}], 
-  dir: 'RIGHT', 
-  speed: 4, 
-  score: 0 
-};
-let foods = [];
-const MAX_FOODS = 100;
+const MAX_FOODS = 150;
+const MAX_BOTS = 50;
+let foods=[], bots=[], players={}, uid, username;
 const scoreboard = document.getElementById("scoreboard");
 
-function randomFood(){
-  return { x: Math.random()*MAP_SIZE, y: Math.random()*MAP_SIZE, type: Math.random()<0.2?"red":"green" };
-}
-
-// Spawn foods
+// --- Spawn foods ---
+function randomFood(){ return { x: Math.random()*MAP_SIZE, y: Math.random()*MAP_SIZE, type:Math.random()<0.2?"red":"green" }; }
 for(let i=0;i<MAX_FOODS;i++) foods.push(randomFood());
 
-// Input
-let inputDir = {x:1, y:0};
-window.addEventListener("keydown", e=>{
-  if(e.key==="ArrowUp" && inputDir.y!==1){ inputDir={x:0,y:-1}; }
-  if(e.key==="ArrowDown" && inputDir.y!==-1){ inputDir={x:0,y:1}; }
-  if(e.key==="ArrowLeft" && inputDir.x!==1){ inputDir={x:-1,y:0}; }
-  if(e.key==="ArrowRight" && inputDir.x!==-1){ inputDir={x:1,y:0}; }
-});
-
-// Touch for mobile swipe
-let touchStart = null;
-canvas.addEventListener("touchstart", e=>{ touchStart=e.touches[0]; });
+// --- Touch input ---
+let inputDir={x:1,y:0};
+let touchStart=null;
+canvas.addEventListener("touchstart", e=>touchStart=e.touches[0]);
 canvas.addEventListener("touchmove", e=>{
   if(!touchStart) return;
-  const touch = e.touches[0];
-  const dx = touch.clientX - touchStart.clientX;
-  const dy = touch.clientY - touchStart.clientY;
-  if(Math.abs(dx)>Math.abs(dy)){
-    inputDir = dx>0 ? {x:1,y:0} : {x:-1,y:0};
-  }else{
-    inputDir = dy>0 ? {x:0,y:1} : {x:0,y:-1};
-  }
+  const t=e.touches[0]; let dx=t.clientX-touchStart.clientX, dy=t.clientY-touchStart.clientY;
+  inputDir=Math.abs(dx)>Math.abs(dy)?(dx>0?{x:1,y:0}:{x:-1,y:0}): (dy>0?{x:0,y:1}:{x:0,y:-1});
 });
 
-// Game loop
+// --- Auth ---
+onAuthStateChanged(auth,user=>{
+  if(!user) location.href="index.html";
+  uid=user.uid;
+  username=user.displayName||"Oyuncu";
+  initPlayer();
+});
+
+// --- Init Player ---
+let mySnake;
+function initPlayer(){
+  mySnake = { body:[{x:Math.random()*MAP_SIZE, y:Math.random()*MAP_SIZE}], dir:'RIGHT', speed:4, score:0 };
+  const playerRef = ref(db, "players/"+uid);
+  set(playerRef, { username, x: mySnake.body[0].x, y: mySnake.body[0].y, score:0, alive:true });
+  playerRef.onDisconnect().remove();
+
+  // Listen all players
+  onValue(ref(db,"players"), snap=>{ players = snap.val()||{}; updateScoreboard(); });
+
+  // Spawn bots
+  for(let i=0;i<MAX_BOTS;i++) bots.push({ body:[{x:Math.random()*MAP_SIZE, y:Math.random()*MAP_SIZE}], speed:2, score:0 });
+
+  requestAnimationFrame(gameLoop);
+}
+
+// --- Game loop ---
 function gameLoop(){
-  updateSnake();
+  updateMySnake();
+  updateBots();
+  checkCollisions();
   render();
   requestAnimationFrame(gameLoop);
 }
 
-function updateSnake(){
-  const head = {...mySnake.body[0]};
+// --- Update player ---
+function updateMySnake(){
+  const head={...mySnake.body[0]};
   head.x += inputDir.x*mySnake.speed;
   head.y += inputDir.y*mySnake.speed;
-
-  // Keep inside map
-  head.x = Math.max(0, Math.min(MAP_SIZE, head.x));
-  head.y = Math.max(0, Math.min(MAP_SIZE, head.y));
-
+  head.x=Math.max(0,Math.min(MAP_SIZE,head.x));
+  head.y=Math.max(0,Math.min(MAP_SIZE,head.y));
   mySnake.body.unshift(head);
   if(mySnake.body.length>10+mySnake.score/10) mySnake.body.pop();
 
   // Eat foods
   foods.forEach((f,i)=>{
-    const dist = Math.hypot(f.x-head.x,f.y-head.y);
-    if(dist<20){
+    if(Math.hypot(f.x-head.x,f.y-head.y)<20){
       mySnake.score += (f.type==="red"?30:10);
-      foods[i] = randomFood();
-      // Yem yeme sesi
-      const audio = new Audio("https://freesound.org/data/previews/341/341695_6242976-lq.mp3");
-      audio.play();
+      foods[i]=randomFood();
+      new Audio("https://freesound.org/data/previews/341/341695_6242976-lq.mp3").play();
     }
   });
 
-  // Update camera
-  camera.x = head.x - W/2;
-  camera.y = head.y - H/2;
+  // Update Firebase
+  update(ref(db,"players/"+uid), { x:head.x, y:head.y, score: mySnake.score });
 }
 
+// --- Update bots ---
+function updateBots(){
+  bots.forEach(bot=>{
+    let head=bot.body[0];
+    let target=foods[Math.floor(Math.random()*foods.length)];
+    let dx=target.x-head.x, dy=target.y-head.y;
+    let len=Math.sqrt(dx*dx+dy*dy); dx/=len; dy/=len;
+    head={x:head.x+dx*bot.speed, y:head.y+dy*bot.speed};
+    bot.body.unshift(head); if(bot.body.length>10+bot.score/10) bot.body.pop();
+    foods.forEach((f,i)=>{ if(Math.hypot(f.x-head.x,f.y-head.y)<10){ bot.score+=(f.type==="red"?30:10); foods[i]=randomFood(); } });
+  });
+}
+
+// --- Check collisions ---
+function checkCollisions(){
+  // Bot collisions
+  bots.forEach(bot=>{
+    bot.body.forEach(seg=>{ if(Math.hypot(seg.x-mySnake.body[0].x,seg.y-mySnake.body[0].y)<10){ mySnake.body=[{x:Math.random()*MAP_SIZE,y:Math.random()*MAP_SIZE}]; mySnake.score=0; } });
+  });
+}
+
+// --- Render ---
 function render(){
-  // Background grid (Snake.io tarzı)
-  const gridSize = 50;
-  ctx.fillStyle="#181818";
-  ctx.fillRect(0,0,W,H);
-  ctx.strokeStyle="#222";
-  ctx.lineWidth=1;
-  for(let x=-camera.x%gridSize;x<W;x+=gridSize){
-    ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke();
-  }
-  for(let y=-camera.y%gridSize;y<H;y+=gridSize){
-    ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke();
-  }
+  const camX=mySnake.body[0].x-W/2, camY=mySnake.body[0].y-H/2;
+
+  // Grid background
+  ctx.fillStyle="#181818"; ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle="#222"; ctx.lineWidth=1;
+  const gridSize=50;
+  for(let x=-camX%gridSize;x<W;x+=gridSize){ ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
+  for(let y=-camY%gridSize;y<H;y+=gridSize){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
 
   // Draw foods
-  foods.forEach(f=>{
-    ctx.font="20px Arial";
-    ctx.fillText(f.type==="red"?"🍎":"🍏", f.x-camera.x, f.y-camera.y);
-  });
+  foods.forEach(f=>{ ctx.font="20px Arial"; ctx.fillText(f.type==="red"?"🍎":"🍏", f.x-camX, f.y-camY); });
 
-  // Draw snake
-  mySnake.body.forEach((seg,i)=>{
-    ctx.fillStyle = i===0 ? "#ffff00" : "#00ff00";
-    ctx.beginPath();
-    ctx.arc(seg.x-camera.x, seg.y-camera.y, 10,0,Math.PI*2);
-    ctx.fill();
-  });
+  // Draw bots
+  bots.forEach(bot=>{ ctx.fillStyle="green"; bot.body.forEach(seg=>{ ctx.beginPath(); ctx.arc(seg.x-camX, seg.y-camY, 10,0,Math.PI*2); ctx.fill(); }); });
 
-  // Update scoreboard
-  scoreboard.innerHTML = "Skor: "+Math.floor(mySnake.score);
+  // Draw players
+  for(let id in players){
+    const p=players[id]; if(!p.alive) continue;
+    ctx.fillStyle="blue"; ctx.beginPath(); ctx.arc(p.x-camX,p.y-camY,10,0,Math.PI*2); ctx.fill();
+  }
+
+  // Draw my snake
+  ctx.fillStyle="yellow"; mySnake.body.forEach(seg=>{ ctx.beginPath(); ctx.arc(seg.x-camX,seg.y-camY,10,0,Math.PI*2); ctx.fill(); });
 }
 
-gameLoop();
+// --- Scoreboard ---
+function updateScoreboard(){
+  let arr=[];
+  for(let id in players) arr.push({name:players[id].username, score:players[id].score});
+  arr.sort((a,b)=>b.score-b.score);
+  scoreboard.innerHTML = arr.map(p=>`${p.name}: ${Math.floor(p.score)}`).join("<br>");
+}
 </script>
 </body>
 </html>
