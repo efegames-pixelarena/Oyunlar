@@ -6,7 +6,6 @@
 <title>3310 Snake Multiplayer - Emirhan Efe</title>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
-/* Temel stiller aynı */
 html,body{margin:0;padding:0;height:100%;overflow:hidden;background:#7c8f00;font-family:'Press Start 2P', monospace;display:flex;justify-content:center;align-items:center;}
 .console{width:340px;height:480px;background:#8bac0f;border:14px solid #2f4f2f;box-shadow:0 0 40px black inset,0 0 30px black;padding:15px;display:flex;flex-direction:column;align-items:center;position:relative;}
 .score{font-size:12px;color:#0f380f;margin-bottom:10px;}
@@ -14,59 +13,38 @@ html,body{margin:0;padding:0;height:100%;overflow:hidden;background:#7c8f00;font
 canvas{background:#9bbc0f;image-rendering:pixelated;display:block;}
 .scanlines{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;background:repeating-linear-gradient(to bottom,rgba(0,0,0,0.05),rgba(0,0,0,0.05) 2px,transparent 2px,transparent 4px);}
 .gameover{position:absolute;top:0;left:0;width:300px;height:300px;background:rgba(139,172,15,0.95);display:flex;justify-content:center;align-items:center;flex-direction:column;font-size:12px;color:#0f380f;display:none;text-align:center;padding:20px;}
-.controls{display:grid;grid-template-columns:60px 60px 60px;grid-gap:5px;justify-content:center;margin-top:20px;}
-.btn{background:#2f4f2f;color:white;text-align:center;padding:15px;user-select:none;}
+.controls{display:flex;gap:10px;justify-content:center;margin-top:20px;}
+.btn{background:#2f4f2f;color:white;text-align:center;padding:15px;user-select:none;cursor:pointer;}
+.countdown{position:absolute;top:120px;width:100%;text-align:center;font-size:32px;color:#0f380f;font-weight:bold;display:none;}
 </style>
 </head>
 <body>
 
 <div class="console">
-<div class="score">
-Skor: <span id="score">0</span> | High: <span id="high">0</span>
-</div>
+  <div class="score">
+    Skor: <span id="score">0</span> | High: <span id="high">0</span>
+  </div>
 
-<div class="canvas-wrapper">
-<canvas id="game" width="300" height="300"></canvas>
-<div class="scanlines"></div>
-<div class="gameover" id="gameover">
-GAME OVER<br><br>
-Dokunarak Yeniden Başla
-</div>
-</div>
+  <div class="canvas-wrapper">
+    <canvas id="game" width="300" height="300"></canvas>
+    <div class="scanlines"></div>
+    <div class="gameover" id="gameover">
+      <div id="gameoverText">GAME OVER</div>
+      <div id="retryBtn" class="btn">Yeniden Oyna</div>
+    </div>
+    <div class="countdown" id="countdown"></div>
+  </div>
 
-<div class="controls">
-<div></div><div class="btn" onclick="setDir('UP')">↑</div><div></div>
-<div class="btn" onclick="setDir('LEFT')">←</div>
-<div class="btn" onclick="setDir('DOWN')">↓</div>
-<div class="btn" onclick="setDir('RIGHT')">→</div>
-</div>
+  <div class="controls" id="controls">
+    <div class="btn" id="matchBtn">Maç Bul</div>
+    <div class="btn" id="createBtn">Oda Kur</div>
+  </div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { 
-  getAuth, 
-  createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-
-import { 
-  getFirestore, 
-  doc, 
-  setDoc, 
-  onSnapshot
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-import { 
-  getDatabase, 
-  ref, 
-  set, 
-  update, 
-  onValue, 
-  onDisconnect 
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getDatabase, ref, set, onValue, onDisconnect, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 /* ---------------- FIREBASE CONFIG ---------------- */
 const firebaseConfig = {
@@ -81,126 +59,156 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db = getFirestore(app);
 const rtdb = getDatabase(app);
 
-/* ---------------- OYUN GİRİŞ KONTROLÜ ---------------- */
-window.checkLogin = function(page){
-  const user = auth.currentUser;
-  if(!user){
-    alert("Lütfen giriş yapın.");
-    openLogin(); // giriş modalını aç
-    return;
-  }
-  window.location.href = page;
-};
-
-/* ----------------- Multiplayer Snake ----------------- */
+/* ---------------- GAME VARIABLES ---------------- */
 let playerId = null;
-let snake = [{x:150,y:150}], direction = "RIGHT", food, score = 0;
-let otherSnake = [];
-let started = false;
+let snake = [{x:150,y:150}], direction = "RIGHT", score = 0;
+let otherSnake = [], food, gameStarted = false;
+let roomId = null;
+const box = 15, size = 300;
+
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+const controlsDiv = document.getElementById("controls");
+const matchBtn = document.getElementById("matchBtn");
+const createBtn = document.getElementById("createBtn");
+const countdownEl = document.getElementById("countdown");
+const gameoverDiv = document.getElementById("gameover");
+const retryBtn = document.getElementById("retryBtn");
+const gameoverText = document.getElementById("gameoverText");
+
 let lastMoveTime = 0;
 let baseSpeed = 220, currentSpeed = 220, minSpeed = 80;
 
+/* ---------------- AUTH ---------------- */
 onAuthStateChanged(auth, user => {
   if(user){
     playerId = user.uid;
-    joinGameRoom();
+  } else {
+    alert("Giriş yapınız!");
   }
 });
 
-/* Multiplayer Room */
-const roomRef = ref(rtdb,'snakeRoom');
+/* ---------------- BUTTON EVENTS ---------------- */
+matchBtn.onclick = findMatch;
+createBtn.onclick = createRoom;
+retryBtn.onclick = ()=>{ location.reload(); };
 
-function joinGameRoom(){
-  const playerRef = ref(rtdb,`snakeRoom/players/${playerId}`);
-  set(playerRef, {snake, dir:direction, score});
+/* ---------------- MULTIPLAYER FUNCTIONS ---------------- */
+function createRoom(){
+  roomId = "room_" + Math.random().toString(36).substring(2,8);
+  joinRoom(roomId,true);
+}
+
+function findMatch(){
+  controlsDiv.innerHTML = "Takip Bekleniyor...";
+  onValue(ref(rtdb,'snakeRoom/rooms'), snap=>{
+    const rooms = snap.val() || {};
+    for(const id in rooms){
+      if(Object.keys(rooms[id].players).length === 1){
+        joinRoom(id,false);
+        return;
+      }
+    }
+    // yoksa kendi oda
+    createRoom();
+  }, {onlyOnce:true});
+}
+
+function joinRoom(rId,isCreator){
+  roomId = rId;
+  const roomRef = ref(rtdb,'snakeRoom/rooms/'+roomId);
+  const playerRef = ref(rtdb,'snakeRoom/rooms/'+roomId+'/players/'+playerId);
+  set(playerRef,{snake,dir:direction,score});
   onDisconnect(playerRef).remove();
 
-  // Diğer oyuncuyu dinle
-  onValue(ref(rtdb,'snakeRoom/players'), snapshot=>{
-    const data = snapshot.val() || {};
+  if(isCreator){
+    set(roomRef,{players:{[playerId]:{snake,dir:direction,score}},food:randomFood()});
+  }
+
+  // diğer oyuncuyu izle
+  onValue(ref(rtdb,'snakeRoom/rooms/'+roomId+'/players'), snap=>{
+    const data = snap.val() || {};
     otherSnake = [];
     for(const id in data){
-      if(id !== playerId){
+      if(id!==playerId){
         otherSnake = data[id].snake;
       }
     }
-  });
 
-  // Food yönetimi
-  const foodRef = ref(rtdb,'snakeRoom/food');
-  onValue(foodRef, snap=>{
-    if(snap.exists()) food = snap.val();
-    else {
-      food = randomFood();
-      set(foodRef, food);
+    const playerCount = Object.keys(data).length;
+    if(playerCount===2 && !gameStarted){
+      countdownStart(10);
     }
   });
 
-  started = true;
-  requestAnimationFrame(gameLoop);
+  // yiyeceği izle
+  onValue(ref(rtdb,'snakeRoom/rooms/'+roomId+'/food'), snap=>{
+    if(snap.exists()) food = snap.val();
+    else {
+      food = randomFood();
+      set(ref(rtdb,'snakeRoom/rooms/'+roomId+'/food'), food);
+    }
+  });
+
+  controlsDiv.style.display = "none"; // match/oda tuşlarını gizle
 }
 
-/* Oyun Döngüsü ve Fonksiyonları */
-function setDir(dir){
-  if(!started) return;
-  if(dir==="UP" && direction!=="DOWN") direction="UP";
-  if(dir==="DOWN" && direction!=="UP") direction="DOWN";
-  if(dir==="LEFT" && direction!=="RIGHT") direction="LEFT";
-  if(dir==="RIGHT" && direction!=="LEFT") direction="RIGHT";
+/* ---------------- COUNTDOWN ---------------- */
+function countdownStart(seconds){
+  countdownEl.style.display = "block";
+  let s = seconds;
+  countdownEl.innerText = s;
+  const interval = setInterval(()=>{
+    s--;
+    countdownEl.innerText = s;
+    if(s<=0){
+      clearInterval(interval);
+      countdownEl.style.display="none";
+      gameStarted = true;
+      requestAnimationFrame(gameLoop);
+    }
+  },1000);
 }
+
+/* ---------------- GAME LOOP ---------------- */
 document.addEventListener("keydown", e=>{
-  if(e.key==="ArrowUp") setDir("UP");
-  if(e.key==="ArrowDown") setDir("DOWN");
-  if(e.key==="ArrowLeft") setDir("LEFT");
-  if(e.key==="ArrowRight") setDir("RIGHT");
+  if(!gameStarted) return;
+  if(e.key==="ArrowUp" && direction!=="DOWN") direction="UP";
+  if(e.key==="ArrowDown" && direction!=="UP") direction="DOWN";
+  if(e.key==="ArrowLeft" && direction!=="RIGHT") direction="LEFT";
+  if(e.key==="ArrowRight" && direction!=="LEFT") direction="RIGHT";
 });
 
-const canvas = document.createElement("canvas");
-canvas.width = 300;
-canvas.height = 300;
-canvas.style.position="fixed";
-canvas.style.bottom="20px";
-canvas.style.right="20px";
-document.body.appendChild(canvas);
-const ctx = canvas.getContext("2d");
-
-function gameLoop(timestamp){
-  if(!started) return;
-  if(timestamp - lastMoveTime > currentSpeed){
-    update();
-    lastMoveTime = timestamp;
-  }
+function gameLoop(ts){
+  if(!gameStarted) return;
+  if(ts - lastMoveTime > currentSpeed){ update(); lastMoveTime=ts; }
   draw();
   requestAnimationFrame(gameLoop);
 }
 
 function update(){
-  let headX=snake[0].x;
-  let headY=snake[0].y;
-  if(direction==="UP") headY-=15;
-  if(direction==="DOWN") headY+=15;
-  if(direction==="LEFT") headX-=15;
-  if(direction==="RIGHT") headX+=15;
+  let headX=snake[0].x, headY=snake[0].y;
+  if(direction==="UP") headY-=box;
+  if(direction==="DOWN") headY+=box;
+  if(direction==="LEFT") headX-=box;
+  if(direction==="RIGHT") headX+=box;
 
-  if(headX<0||headY<0||headX>=300||headY>=300||collision(headX,headY)||collisionOther(headX,headY)){
-    started=false;
+  if(headX<0||headY<0||headX>=size||headY>=size||collision(headX,headY)||collisionOther(headX,headY)){
+    gameOver();
     return;
   }
 
   if(headX===food.x && headY===food.y){
     score += food.type==="red"?3:1;
     food = randomFood();
-    set(ref(rtdb,'snakeRoom/food'), food);
+    set(ref(rtdb,'snakeRoom/rooms/'+roomId+'/food'), food);
     updateSpeed();
-  } else {
-    snake.pop();
-  }
+  } else { snake.pop(); }
 
   snake.unshift({x:headX,y:headY});
-  update(ref(rtdb,`snakeRoom/players/${playerId}`), {snake, dir:direction, score});
+  set(ref(rtdb,'snakeRoom/rooms/'+roomId+'/players/'+playerId), {snake,dir:direction,score});
 }
 
 function collision(x,y){ return snake.some(s=>s.x===x && s.y===y); }
@@ -210,14 +218,20 @@ function randomFood(){ return {x:Math.floor(Math.random()*20)*15, y:Math.floor(M
 
 function draw(){
   ctx.fillStyle="#9bbc0f";
-  ctx.fillRect(0,0,300,300);
-
-  snake.forEach(s=>{ ctx.fillStyle="#0f380f"; ctx.fillRect(s.x,s.y,15,15); });
-  otherSnake.forEach(s=>{ ctx.fillStyle="#003300"; ctx.fillRect(s.x,s.y,15,15); });
-
-  ctx.font="14px Arial";
-  ctx.textAlign="center";
-  ctx.textBaseline="middle";
-  ctx.fillText(food?.type==="red"?"🍎":"🍏", food?.x+7.5, food?.y+7.5);
+  ctx.fillRect(0,0,size,size);
+  snake.forEach(s=>{ ctx.fillStyle="#0f380f"; ctx.fillRect(s.x,s.y,box,box); });
+  otherSnake.forEach(s=>{ ctx.fillStyle="#003300"; ctx.fillRect(s.x,s.y,box,box); });
+  ctx.font="14px Arial"; ctx.textAlign="center"; ctx.textBaseline="middle";
+  ctx.fillText(food?.type==="red"?"🍎":"🍏", food?.x+box/2, food?.y+box/2);
 }
+
+function gameOver(){
+  gameStarted=false;
+  gameoverDiv.style.display="flex";
+  if(otherSnake.length>0) gameoverText.innerText="Diğer Oyuncu Kazandı!";
+  else gameoverText.innerText="Yandın!";
+}
+
 </script>
+</body>
+</html>
