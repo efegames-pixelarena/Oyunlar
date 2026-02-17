@@ -376,7 +376,7 @@ switchMode.onclick = () => {
 window.checkLogin = function(page){
   const user = auth.currentUser;
   if(!user){
-    window.location.href = "login.html"; // Giriş sayfasına yönlendir
+    window.location.href = "logout-btn"; // Giriş sayfasına yönlendir
     return;
   }
   window.location.href = page;
