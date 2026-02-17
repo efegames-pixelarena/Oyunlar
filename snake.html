@@ -2,290 +2,343 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>PixelArena Snake Ranked 1v1</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PixselArena 3310 Snake</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;}
-
-body{
-height:100vh;
+html,body{
+margin:0;
+padding:0;
+height:100%;
 overflow:hidden;
-font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
-background:radial-gradient(circle at center, rgba(255,180,60,0.15) 0%, transparent 40%),
-linear-gradient(to bottom,#000 0%,#000 46%,#ff7b00 47%,#0b5d2a 48%,#063d1c 100%);
-color:white;
+background:#7c8f00;
+font-family:'Press Start 2P', monospace;
 display:flex;
+justify-content:center;
+align-items:center;
+}
+
+.startup{
+position:absolute;
+width:100%;
+height:100%;
+background:#8bac0f;
+display:flex;
+justify-content:center;
+align-items:center;
 flex-direction:column;
+color:#0f380f;
+z-index:50;
+transition:1s;
 }
+.hidden{opacity:0;visibility:hidden;}
 
-.top-bar{
-position:fixed;
-top:0;width:100%;height:55px;
-display:flex;align-items:center;justify-content:space-between;
-padding:0 16px;
-background:linear-gradient(135deg,#1a2a6c,#16245c);
-z-index:100;
+.producer{
+position:absolute;
+top:40px;
+font-size:14px;
+color:#0f380f;
+letter-spacing:2px;
+animation: blink 1s infinite;
 }
+@keyframes blink{50%{opacity:0;}}
 
-.scoreboard{
-margin-top:55px;
-display:flex;
-justify-content:space-between;
-padding:10px 40px;
-font-weight:bold;
-background:#111;
-}
-
-.scoreboard div{
-text-align:center;
-}
-
-.game-wrapper{
-flex:1;
+.console{
+width:340px;
+height:480px;
+background:#8bac0f;
+border:14px solid #2f4f2f;
+box-shadow:0 0 40px black inset, 0 0 30px black;
+padding:15px;
 display:flex;
 flex-direction:column;
 align-items:center;
-justify-content:center;
+position:relative;
+}
+
+.score{
+font-size:12px;
+color:#0f380f;
+margin-bottom:10px;
+}
+
+.canvas-wrapper{
+position:relative;
+width:300px;
+height:300px;
 }
 
 canvas{
 background:#9bbc0f;
-border-radius:8px;
-box-shadow:0 10px 30px rgba(0,0,0,0.6);
+image-rendering: pixelated;
+display:block;
+}
+
+.scanlines{
+position:absolute;
+top:0;
+left:0;
+width:100%;
+height:100%;
+pointer-events:none;
+background: repeating-linear-gradient(
+to bottom,
+rgba(0,0,0,0.05),
+rgba(0,0,0,0.05) 2px,
+transparent 2px,
+transparent 4px
+);
+}
+
+.gameover{
+position:absolute;
+top:0;
+left:0;
+width:300px;
+height:300px;
+background:rgba(139,172,15,0.95);
+display:flex;
+justify-content:center;
+align-items:center;
+flex-direction:column;
+font-size:12px;
+color:#0f380f;
+display:none;
+text-align:center;
+padding:20px;
+}
+
+.controls{
+display:grid;
+grid-template-columns:60px 60px 60px;
+grid-gap:5px;
+justify-content:center;
+margin-top:20px;
+}
+
+.btn{
+background:#2f4f2f;
+color:white;
+text-align:center;
+padding:15px;
+user-select:none;
 }
 </style>
 </head>
 <body>
 
-<div class="top-bar">
-<div>PixelArena Snake</div>
-<div>Ranked 1v1</div>
+<div class="startup" id="startup">
+<h1>NOKIA</h1>
+<div>Connecting People</div>
 </div>
 
-<div class="scoreboard">
-<div>
-<div id="p1name">Player</div>
-<div id="p1score">0</div>
-</div>
-<div>
-<div id="p2name">Player2</div>
-<div id="p2score">0</div>
-</div>
+<div class="producer">YAPIMCI: PixselArena</div>
+
+<div class="console">
+
+<div class="score">
+Skor: <span id="score">0</span> | High: <span id="high">0</span>
 </div>
 
-<div class="game-wrapper">
-<div id="info">Hazır</div>
-<button id="findBtn">Maç Bul</button>
-<canvas id="game"></canvas>
+<div class="canvas-wrapper">
+<canvas id="game" width="300" height="300"></canvas>
+<div class="scanlines"></div>
+<div class="gameover" id="gameover">
+GAME OVER<br><br>
+Dokunarak Yeniden Başla
+</div>
 </div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import {
-getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc,
-collection, query, where, getDocs,
-onSnapshot, increment, serverTimestamp
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+<div class="controls">
+<div></div>
+<div class="btn" onclick="setDir('UP')">↑</div>
+<div></div>
+<div class="btn" onclick="setDir('LEFT')">←</div>
+<div class="btn" onclick="setDir('DOWN')">↓</div>
+<div class="btn" onclick="setDir('RIGHT')">→</div>
+</div>
 
-const firebaseConfig={
-apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
-authDomain:"emirhan-site.firebaseapp.com",
-projectId:"emirhan-site",
-storageBucket:"emirhan-site.firebasestorage.app",
-messagingSenderId:"668871888390",
-appId:"1:668871888390:web:76568bda84cb1641f7bd87"
-};
+</div>
 
-const app=initializeApp(firebaseConfig);
-const db=getFirestore(app);
-const auth=getAuth(app);
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+const box = 15;
+const size = 300;
 
-let uid,roomId=null,unsubscribe=null,opponentId=null;
-let isPlaying=false;
+let snake, direction, food, score;
+let started = false;
 
-const canvas=document.getElementById("game");
-const ctx=canvas.getContext("2d");
+let baseSpeed = 220;
+let currentSpeed = baseSpeed;
+let minSpeed = 80;
 
-/* 40x150 GRID */
-const COLS=40;
-const ROWS=150;
+let lastMoveTime = 0;
 
-let size=600;
-canvas.width=size;
-canvas.height=size;
+let highScore = localStorage.getItem("snakeHigh") || 0;
+document.getElementById("high").innerText = highScore;
 
-let box=size/COLS;
-
-let snake=[],opponentSnake=[];
-let dir="RIGHT";
-let food,score=0,oppScore=0;
-let moveInterval=120;
-
-/* AUTH */
-onAuthStateChanged(auth,user=>{
-if(!user){alert("Giriş gerekli");return;}
-uid=user.uid;
-});
-
-/* MATCH */
-document.getElementById("findBtn").onclick=async()=>{
-document.getElementById("info").innerText="Rakip aranıyor...";
-document.getElementById("findBtn").style.display="none";
-
-const q=query(collection(db,"snakeRooms"),where("state","==","waiting"));
-const snap=await getDocs(q);
-let joined=false;
-
-for(const r of snap.docs){
-const d=r.data();
-if(d.player1!==uid && !d.player2){
-roomId=r.id;
-await updateDoc(doc(db,"snakeRooms",roomId),{player2:uid,state:"matched"});
-joined=true;break;
-}}
-
-if(!joined){
-const newRoom=doc(collection(db,"snakeRooms"));
-roomId=newRoom.id;
-await setDoc(newRoom,{
-player1:uid,player2:null,
-score1:0,score2:0,
-snake1:[],snake2:[],
-state:"waiting",
-createdAt:serverTimestamp()
-});
+/* AUDIO */
+let audioCtx;
+function initAudio(){
+if(!audioCtx){
+audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 }
-listenRoom();
-};
-
-function listenRoom(){
-unsubscribe=onSnapshot(doc(db,"snakeRooms",roomId),snap=>{
-const d=snap.data();
-if(!d)return;
-
-if(d.state==="matched"){
-updateDoc(doc(db,"snakeRooms",roomId),{
-state:"playing"
-});
+}
+function beep(freq,duration){
+if(!audioCtx) return;
+const osc = audioCtx.createOscillator();
+const gain = audioCtx.createGain();
+osc.type="square";
+osc.frequency.value=freq;
+gain.gain.setValueAtTime(0.15,audioCtx.currentTime);
+gain.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+duration/1000);
+osc.connect(gain);
+gain.connect(audioCtx.destination);
+osc.start();
+osc.stop(audioCtx.currentTime+duration/1000);
 }
 
-if(d.state==="playing"){
-opponentId=(uid===d.player1)?d.player2:d.player1;
+/* BOOT */
+if(!sessionStorage.getItem("booted")){
+document.body.addEventListener("click", boot,{once:true});
+document.body.addEventListener("touchstart", boot,{once:true});
+}else{
+document.getElementById("startup").style.display="none";
+initAudio();
 startGame();
 }
 
-if(d.snake1 && d.snake2){
-if(uid===d.player1){
-opponentSnake=d.snake2||[];
-oppScore=d.score2||0;
-}else{
-opponentSnake=d.snake1||[];
-oppScore=d.score1||0;
-}
-document.getElementById("p2score").innerText=oppScore;
-}
-});
+function boot(){
+initAudio();
+beep(700,250);
+setTimeout(()=>{
+document.getElementById("startup").classList.add("hidden");
+sessionStorage.setItem("booted","true");
+setTimeout(()=>{startGame();},2000);
+},1000);
 }
 
 function startGame(){
-snake=[{x:5*box,y:5*box}];
+snake=[{x:150,y:150}];
+direction="RIGHT";
 food=randomFood();
 score=0;
-isPlaying=true;
-loop();
+currentSpeed = baseSpeed;
+lastMoveTime=0;
+document.getElementById("score").innerText=0;
+document.getElementById("gameover").style.display="none";
+started=true;
+requestAnimationFrame(gameLoop);
+}
+
+function updateSpeed(){
+let newSpeed = baseSpeed - Math.floor(score/5)*15;
+if(newSpeed < minSpeed) newSpeed = minSpeed;
+currentSpeed = newSpeed;
 }
 
 function randomFood(){
+let isRed = Math.random() < 0.15;
 return{
-x:Math.floor(Math.random()*COLS)*box,
-y:Math.floor(Math.random()*ROWS)*box
-};
+x:Math.floor(Math.random()*(size/box))*box,
+y:Math.floor(Math.random()*(size/box))*box,
+type:isRed?"red":"green"
+}
 }
 
-function loop(){
-if(!isPlaying)return;
+function setDir(dir){
+if(!started)return;
+if(dir==="UP"&&direction!=="DOWN")direction="UP";
+if(dir==="DOWN"&&direction!=="UP")direction="DOWN";
+if(dir==="LEFT"&&direction!=="RIGHT")direction="LEFT";
+if(dir==="RIGHT"&&direction!=="LEFT")direction="RIGHT";
+}
+
+document.addEventListener("keydown",(e)=>{
+if(e.key==="ArrowUp")setDir("UP");
+if(e.key==="ArrowDown")setDir("DOWN");
+if(e.key==="ArrowLeft")setDir("LEFT");
+if(e.key==="ArrowRight")setDir("RIGHT");
+});
+
+function gameLoop(timestamp){
+if(!started) return;
+
+if(timestamp - lastMoveTime > currentSpeed){
 update();
+lastMoveTime = timestamp;
+}
 draw();
-setTimeout(loop,moveInterval);
+requestAnimationFrame(gameLoop);
 }
 
-async function update(){
+function update(){
 let headX=snake[0].x;
 let headY=snake[0].y;
 
-if(dir==="UP")headY-=box;
-if(dir==="DOWN")headY+=box;
-if(dir==="LEFT")headX-=box;
-if(dir==="RIGHT")headX+=box;
+if(direction==="UP")headY-=box;
+if(direction==="DOWN")headY+=box;
+if(direction==="LEFT")headX-=box;
+if(direction==="RIGHT")headX+=box;
 
-if(headX<0||headY<0||headX>=COLS*box||headY>=ROWS*box){
-explode(headX,headY);
-endGame();
+if(headX<0||headY<0||headX>=size||headY>=size||collision(headX,headY)){
+gameOver();
 return;
 }
 
 if(headX===food.x&&headY===food.y){
-score++;
+if(food.type==="red"){
+score+=3;
+beep(900,120);
+}else{
+score+=1;
+beep(600,100);
+}
 food=randomFood();
+updateSpeed();
 }else{
 snake.pop();
 }
 
 snake.unshift({x:headX,y:headY});
-
-document.getElementById("p1score").innerText=score;
-
-/* FIRESTORE SYNC */
-if(uid=== (uid===opponentId?opponentId:uid)){
-if(uid===opponentId){
-await updateDoc(doc(db,"snakeRooms",roomId),{snake2:snake,score2:score});
-}else{
-await updateDoc(doc(db,"snakeRooms",roomId),{snake1:snake,score1:score});
-}
-}
+document.getElementById("score").innerText=score;
 }
 
 function draw(){
 ctx.fillStyle="#9bbc0f";
 ctx.fillRect(0,0,size,size);
 
-/* PLAYER RED */
 snake.forEach(s=>{
-ctx.fillStyle="red";
+ctx.fillStyle="#0f380f";
 ctx.fillRect(s.x,s.y,box,box);
 });
 
-/* OPPONENT BLUE */
-opponentSnake.forEach(s=>{
-ctx.fillStyle="blue";
-ctx.fillRect(s.x,s.y,box,box);
-});
-
-ctx.font=box+"px Arial";
-ctx.fillText("🍎",food.x,food.y+box);
+ctx.font="14px Arial";
+ctx.textAlign="center";
+ctx.textBaseline="middle";
+ctx.fillText(food.type==="red"?"🍎":"🍏",food.x+box/2,food.y+box/2);
 }
 
-/* WALL EXPLOSION */
-function explode(x,y){
-for(let i=0;i<25;i++){
-ctx.fillStyle="orange";
-ctx.fillRect(x+(Math.random()*40-20),y+(Math.random()*40-20),6,6);
-}
+function collision(x,y){
+return snake.some(s=>s.x===x&&s.y===y);
 }
 
-document.addEventListener("keydown",e=>{
-if(e.key==="ArrowUp"&&dir!=="DOWN")dir="UP";
-if(e.key==="ArrowDown"&&dir!=="UP")dir="DOWN";
-if(e.key==="ArrowLeft"&&dir!=="RIGHT")dir="LEFT";
-if(e.key==="ArrowRight"&&dir!=="LEFT")dir="RIGHT";
-});
+function gameOver(){
+started=false;
 
-async function endGame(){
-isPlaying=false;
-await updateDoc(doc(db,"snakeRooms",roomId),{state:"finished"});
+if(score>highScore){
+localStorage.setItem("snakeHigh",score);
+document.getElementById("high").innerText=score;
 }
+
+document.getElementById("gameover").style.display="flex";
+}
+
+document.getElementById("gameover").addEventListener("click",startGame);
+document.getElementById("gameover").addEventListener("touchstart",startGame);
 </script>
+
 </body>
 </html>
