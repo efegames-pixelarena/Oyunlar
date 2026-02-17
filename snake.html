@@ -12,14 +12,12 @@ canvas { display:block; }
   color:white; background:rgba(0,0,0,0.6);
   padding:10px; border-radius:8px;
   font-size:14px; max-height:90vh; overflow-y:auto;
-  transition: all 0.3s;
 }
 #totalScore {
   position:fixed; top:10px; left:10px;
   color:white; background:rgba(0,0,0,0.6);
   padding:10px; border-radius:8px;
   font-size:16px;
-  transition: all 0.3s;
 }
 </style>
 </head>
@@ -32,7 +30,7 @@ canvas { display:block; }
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getDatabase, ref, onValue, set, update, onDisconnect, get, child } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { getDatabase, ref, onValue, set, update, onDisconnect, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 /* ---------------- FIREBASE ---------------- */
@@ -56,6 +54,7 @@ let W = window.innerWidth, H = window.innerHeight;
 canvas.width = W; canvas.height = H;
 
 const MAP_SIZE = 100000; 
+const SEGMENT_SIZE = 2000; // segment tabanlı render
 const MAX_FOODS = 500; 
 let players = {}, foods = [];
 let inputDir = {x:0,y:0};
@@ -85,7 +84,6 @@ async function joinRoom(uid, username){
   const snapshot = await get(roomsRef);
   let rooms = snapshot.val() || {};
   let joined = false;
-  // 150 kişilik boş yer varsa katıl
   for(let rid in rooms){
     if(Object.keys(rooms[rid].players||{}).length < 150){
       roomId = rid;
@@ -95,7 +93,6 @@ async function joinRoom(uid, username){
       break;
     }
   }
-  // Yoksa yeni oda oluştur
   if(!joined){
     roomId = 'room_' + Date.now();
     set(ref(db, `rooms/${roomId}`), { players: {[uid]: {username, x:mySnake.x, y:mySnake.y, score:0, alive:true} }});
@@ -152,7 +149,6 @@ function checkCollisions(){
     if(distance(f, mySnake.body[0])<15){
       mySnake.score += (f.type==="red"?30:10);
       eatSound.currentTime=0; eatSound.play();
-      // 30 saniye sonra aynı yerde tekrar yem spawn
       setTimeout(()=>{ foods.push(f); }, 30000);
       foods = foods.filter(x=>x!==f);
     }
@@ -161,7 +157,6 @@ function checkCollisions(){
 
 function render(){
   ctx.clearRect(0,0,W,H);
-
   ctx.fillStyle="#1e1e1e";
   ctx.fillRect(0,0,W,H);
 
@@ -177,13 +172,22 @@ function render(){
   ctx.lineWidth=16;
   ctx.strokeRect(-camX, -camY, MAP_SIZE, MAP_SIZE);
 
-  const visibleFoods = foods.filter(f=>Math.abs(f.x-mySnake.x)<W && Math.abs(f.y-mySnake.y)<H);
+  // Segment tabanlı görünür alan optimizasyonu
+  const segX = Math.floor(mySnake.x/SEGMENT_SIZE);
+  const segY = Math.floor(mySnake.y/SEGMENT_SIZE);
+  const visibleFoods = foods.filter(f=>{
+    const fx = Math.floor(f.x/SEGMENT_SIZE);
+    const fy = Math.floor(f.y/SEGMENT_SIZE);
+    return Math.abs(fx-segX)<=1 && Math.abs(fy-segY)<=1;
+  });
   visibleFoods.forEach(f=>{ ctx.font="24px Arial"; ctx.fillText(f.type==="red"?"🍎":"🍏", f.x-camX, f.y-camY); });
 
   let onlineCount = 0;
   for(let id in players){
     const p = players[id];
-    if(Math.abs(p.x-mySnake.x)<W && Math.abs(p.y-mySnake.y)<H){
+    const pxSeg = Math.floor(p.x/SEGMENT_SIZE);
+    const pySeg = Math.floor(p.y/SEGMENT_SIZE);
+    if(Math.abs(pxSeg-segX)<=1 && Math.abs(pySeg-segY)<=1){
       drawSnake(p, camX, camY, id===auth.currentUser.uid?mySnake.color:"#00ffff");
     }
     if(players[id].alive) onlineCount++;
@@ -227,11 +231,10 @@ function updateScoreboard(){
   let arr=[];
   for(let id in players) arr.push({name:players[id].username, score:players[id].score});
   arr.sort((a,b)=>b.score-b.score);
-  arr = arr.slice(0,10); // en yüksek 10
+  arr = arr.slice(0,10);
   scoreboard.innerHTML = arr.map(p=>`${p.name}: ${Math.floor(p.score)}`).join("<br>");
 }
 
-/* ---------------- ORIENTATION LOCK ---------------- */
 window.addEventListener("load", ()=>{
   if(window.screen.orientation && window.screen.orientation.lock){
     window.screen.orientation.lock('landscape').catch(()=>{});
