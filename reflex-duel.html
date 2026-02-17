@@ -48,28 +48,48 @@ animation:shine 3s linear infinite;
 }
 @keyframes shine{to{background-position:200% center;}}
 .right-menu{display:flex;gap:10px;align-items:center;}
-.nav-box{padding:6px 14px;border-radius:14px;font-weight:700;font-size:13px;background:#273c8f;}
-.btn{padding:6px 12px;border-radius:12px;border:none;cursor:pointer;font-weight:700;font-size:13px;}
+.nav-box{
+padding:6px 14px;
+border-radius:14px;
+font-weight:700;
+font-size:13px;
+background:#273c8f;
+min-width:90px;
+text-align:center;
+}
+.btn{
+padding:6px 12px;
+border-radius:12px;
+border:none;
+cursor:pointer;
+font-weight:700;
+font-size:13px;
+}
 .logout-btn{background:#ff3b3b;color:white;}
+
+/* ===== SCOREBOARD (TOP BAR ALTINDA) ===== */
+.scoreboard{
+margin-top:55px;
+width:100%;
+background:rgba(0,0,0,0.5);
+backdrop-filter:blur(8px);
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:10px 20px;
+font-weight:bold;
+font-size:14px;
+border-bottom:1px solid rgba(255,255,255,0.1);
+}
 
 /* ===== GAME ===== */
 #game{
 flex:1;
-margin-top:55px;
 display:flex;
 flex-direction:column;
 justify-content:center;
 align-items:center;
 text-align:center;
-}
-
-.scoreboard{
-display:flex;
-justify-content:space-between;
-width:100%;
-max-width:500px;
-padding:10px 20px;
-font-weight:bold;
 }
 
 button{
@@ -90,9 +110,11 @@ margin-top:20px;
 }
 
 .lobby{
-margin-top:10px;
+margin-top:15px;
 display:flex;
 gap:10px;
+flex-wrap:wrap;
+justify-content:center;
 }
 
 input{
@@ -101,6 +123,7 @@ border-radius:8px;
 border:none;
 outline:none;
 }
+
 canvas{
 position:fixed;
 pointer-events:none;
@@ -120,15 +143,16 @@ left:0;
 </div>
 </div>
 
+<!-- SCOREBOARD -->
+<div class="scoreboard">
+<div id="p1">Player1 (0)</div>
+<div id="roundInfo">Round 1 / 7</div>
+<div id="p2">Player2 (0)</div>
+</div>
+
 <canvas id="confetti"></canvas>
 
 <div id="game">
-
-<div class="scoreboard">
-<div id="p1">...</div>
-<div id="roundInfo">Round 1 / 7</div>
-<div id="p2">...</div>
-</div>
 
 <button id="findBtn">Maç Bul</button>
 
@@ -175,8 +199,9 @@ let username=null;
 let roomId=null;
 let unsubscribe=null;
 let tapLock=false;
-let matching=false;
+let countdownInterval=null;
 
+/* ELEMENTS */
 const findBtn=document.getElementById("findBtn");
 const createRoomBtn=document.getElementById("createRoomBtn");
 const joinCodeBtn=document.getElementById("joinCodeBtn");
@@ -200,7 +225,7 @@ userBox.innerText=username;
 /* LOGOUT */
 logoutBtn.onclick=async()=>{ await signOut(auth); location.href="index.html"; };
 
-/* OLD ROOM CLEAN */
+/* ===== CLEAN OLD ROOM ===== */
 async function cleanOldRooms(){
 const q=query(collection(db,"rooms"),where("players","array-contains",uid));
 const snap=await getDocs(q);
@@ -209,18 +234,16 @@ await deleteDoc(r.ref);
 }
 }
 
-/* ===== MATCHMAKING (SELF MATCH FIX) ===== */
+/* ===== MATCHMAKING QUEUE ===== */
 findBtn.onclick=async()=>{
-if(matching) return;
-matching=true;
 await cleanOldRooms();
 bigText.innerText="Eşleşme aranıyor...";
 
 await runTransaction(db,async(t)=>{
 const queueRef=collection(db,"queue");
 const qSnap=await getDocs(queueRef);
-
 let opponent=null;
+
 qSnap.forEach(docu=>{
 if(docu.data().uid!==uid && !opponent){
 opponent=docu;
@@ -238,7 +261,8 @@ players:[opponent.data().uid,uid],
 score1:0,score2:0,
 round:1,
 state:"countdown",
-startAt:Date.now()+3000
+startAt:Date.now()+3000,
+lastWinner:null
 });
 t.delete(opponent.ref);
 roomId=roomRef.id;
@@ -249,7 +273,6 @@ t.set(myQueue,{uid,username,createdAt:serverTimestamp()});
 });
 
 listenQueue();
-matching=false;
 };
 
 /* QUEUE LISTEN */
@@ -265,7 +288,7 @@ listenRoom();
 });
 }
 
-/* ROOM CODE */
+/* ===== ROOM CODE SYSTEM ===== */
 createRoomBtn.onclick=async()=>{
 await cleanOldRooms();
 const code=Math.random().toString(36).substring(2,8).toUpperCase();
@@ -285,13 +308,14 @@ listenRoom();
 };
 
 joinCodeBtn.onclick=async()=>{
-const code=roomCodeInput.value.trim();
+const code=roomCodeInput.value.trim().toUpperCase();
 if(!code) return;
 const ref=doc(db,"rooms",code);
 const snap=await getDoc(ref);
 if(!snap.exists()) return alert("Oda yok");
 const d=snap.data();
 if(d.player2) return alert("Oda dolu");
+
 await updateDoc(ref,{
 player2:uid,
 player2Name:username,
@@ -303,7 +327,7 @@ roomId=code;
 listenRoom();
 };
 
-/* ROOM LISTENER */
+/* ===== ROOM LISTENER ===== */
 function listenRoom(){
 if(unsubscribe) unsubscribe();
 
@@ -313,16 +337,20 @@ const d=snap.data();
 if(!d.players.includes(uid)) return reset();
 
 p1.innerText=d.player1Name+" ("+d.score1+")";
-p2.innerText=(d.player2Name||"...")+" ("+d.score2+")";
+p2.innerText=d.player2Name+" ("+d.score2+")";
 roundInfo.innerText="Round "+d.round+" / 7";
 
 if(d.state==="countdown"){
+clearInterval(countdownInterval);
+countdownInterval=setInterval(()=>{
 const diff=d.startAt-Date.now();
 if(diff<=0){
-await updateDoc(doc(db,"rooms",roomId),{state:"active"});
+clearInterval(countdownInterval);
+updateDoc(doc(db,"rooms",roomId),{state:"active"});
 }else{
 bigText.innerText=Math.ceil(diff/1000);
 }
+},250);
 }
 
 if(d.state==="active"){
@@ -347,7 +375,7 @@ startAt:Date.now()+2000
 });
 }
 
-/* TAP */
+/* ===== TAP SYSTEM (SERVER LOCKED) ===== */
 document.addEventListener("pointerdown",async()=>{
 if(tapLock||!roomId) return;
 tapLock=true;
@@ -365,7 +393,7 @@ score1:d.score1+1,
 state:"result",
 lastWinner:d.player1Name
 });
-}else{
+}else if(uid===d.player2){
 t.update(ref,{
 score2:d.score2+1,
 state:"result",
