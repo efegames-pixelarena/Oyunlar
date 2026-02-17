@@ -6,7 +6,8 @@
 <title>Pattern Master</title>
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;}
+*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;-webkit-tap-highlight-color:transparent;user-select:none;}
+
 body{
 background:#0f0f1a;
 color:white;
@@ -18,21 +19,53 @@ height:100vh;
 overflow:hidden;
 }
 
-h1{
-font-weight:800;
-letter-spacing:2px;
-margin-bottom:10px;
-background:linear-gradient(90deg,#00f5ff,#ff00c8);
--webkit-background-clip:text;
--webkit-text-fill-color:transparent;
+/* ===== TOP BAR (BLACKJACK STYLE) ===== */
+.top-bar{
+position:fixed;
+top:0;
+width:100%;
+height:55px;
+display:flex;
+align-items:center;
+justify-content:center;
+background:linear-gradient(135deg,#1a2a6c,#16245c);
+box-shadow:0 4px 15px rgba(0,0,0,0.45);
+z-index:100;
 }
 
+.brand{
+font-size:18px;
+font-weight:800;
+letter-spacing:2px;
+background:linear-gradient(90deg,#00f5ff,#ff00c8);
+background-size:200% auto;
+-webkit-background-clip:text;
+-webkit-text-fill-color:transparent;
+animation:shine 3s linear infinite;
+}
+
+@keyframes shine{
+to{background-position:200% center;}
+}
+
+/* GAME WRAPPER */
+.game-wrapper{
+margin-top:55px;
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:center;
+height:calc(100vh - 55px);
+}
+
+/* INFO */
 #info{
 margin-bottom:20px;
 text-align:center;
 opacity:.8;
 }
 
+/* GRID */
 #grid{
 display:grid;
 grid-template-columns:repeat(2,120px);
@@ -53,9 +86,7 @@ background:#1a1a2e;
 box-shadow:0 0 15px rgba(0,255,255,.2);
 }
 
-.btn:active{
-transform:scale(.95);
-}
+.btn:active{transform:scale(.95);}
 
 .neon-up{color:#00f5ff;}
 .neon-down{color:#ff00c8;}
@@ -93,8 +124,17 @@ font-size:14px;
 </head>
 <body>
 
-<h1>PATTERN MASTER</h1>
-<div id="info">Level: <span id="level">1</span> | Combo: <span id="combo">0</span></div>
+<div class="top-bar">
+<div class="brand">PATTERN MASTER</div>
+</div>
+
+<div class="game-wrapper">
+
+<div id="info">
+Level: <span id="level">1</span> | 
+Combo: <span id="combo">0</span>
+</div>
+
 <div id="status"></div>
 
 <div id="grid">
@@ -106,6 +146,8 @@ font-size:14px;
 
 <button id="startBtn">Başla</button>
 <div id="highscore"></div>
+
+</div>
 
 <script>
 const buttons=document.querySelectorAll(".btn");
@@ -189,6 +231,7 @@ level++;
 speed=Math.max(300,speed-40);
 setTimeout(()=>{
 combo+=5;
+comboEl.innerText=combo;
 nextRound();
 },600);
 }
