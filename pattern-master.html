@@ -2,8 +2,6 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-
-<!-- ✅ DOUBLE TAP ZOOM FIX -->
 <meta name="viewport"
 content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 
@@ -37,16 +35,11 @@ overflow:hidden;
 transition:background .2s, transform .1s;
 }
 
-/* ===== SCREEN FLASH ===== */
-.flash{
-background:#ffffff !important;
-}
+/* FLASH */
+.flash{ background:#fff !important; }
 
-/* ===== SHAKE ===== */
-.shake{
-animation:shakeAnim .35s ease;
-}
-
+/* SHAKE */
+.shake{ animation:shakeAnim .35s ease; }
 @keyframes shakeAnim{
 0%{transform:translateX(0);}
 20%{transform:translateX(-8px);}
@@ -56,7 +49,7 @@ animation:shakeAnim .35s ease;
 100%{transform:translateX(0);}
 }
 
-/* ===== TOP BAR ===== */
+/* TOP BAR */
 .top-bar{
 position:fixed;
 top:0;
@@ -80,12 +73,8 @@ background-size:200% auto;
 -webkit-text-fill-color:transparent;
 animation:shine 3s linear infinite;
 }
+@keyframes shine{ to{background-position:200% center;} }
 
-@keyframes shine{
-to{background-position:200% center;}
-}
-
-/* ===== GAME ===== */
 .game-wrapper{
 margin-top:55px;
 display:flex;
@@ -112,11 +101,10 @@ justify-content:center;
 font-size:40px;
 border-radius:20px;
 cursor:pointer;
-transition:all .2s ease;
+transition:.2s;
 background:#1a1a2e;
 box-shadow:0 0 15px rgba(0,255,255,.2);
 }
-
 .btn:active{transform:scale(.95);}
 
 .neon-up{color:#00f5ff;}
@@ -130,10 +118,7 @@ background:#111;
 transform:scale(1.1);
 }
 
-.perfect{
-animation:perfectGlow .6s ease;
-}
-
+.perfect{ animation:perfectGlow .6s ease; }
 @keyframes perfectGlow{
 0%{box-shadow:0 0 0px #fff;}
 50%{box-shadow:0 0 40px #fff;}
@@ -155,6 +140,8 @@ color:white;
 font-weight:700;
 cursor:pointer;
 }
+
+.hidden{ display:none; }
 
 #highscore{
 margin-top:10px;
@@ -204,15 +191,15 @@ let level=1;
 let combo=0;
 let speed=800;
 let isShowing=false;
-let perfectStreak=true;
+let gameActive=false;
 
 let highScore=localStorage.getItem("patternHigh")||0;
 highscoreEl.innerText="High Score: "+highScore;
 
-/* ===== ULTRA STABLE IOS AUDIO ===== */
-let audioCtx=null;
+/* ===== MAX STABLE AUDIO (IOS SAFE) ===== */
+let audioCtx;
 
-function initAudio(){
+function unlockAudio(){
 if(!audioCtx){
 audioCtx=new (window.AudioContext||window.webkitAudioContext)();
 }
@@ -223,17 +210,14 @@ audioCtx.resume();
 
 function playBeep(freq,duration=0.15){
 if(!audioCtx)return;
-if(audioCtx.state==="suspended"){
-audioCtx.resume();
-}
 
 const osc=audioCtx.createOscillator();
 const gain=audioCtx.createGain();
 
 osc.type="sine";
-osc.frequency.setValueAtTime(freq,audioCtx.currentTime);
+osc.frequency.value=freq;
 
-gain.gain.setValueAtTime(0.25,audioCtx.currentTime);
+gain.gain.value=0.25;
 gain.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+duration);
 
 osc.connect(gain);
@@ -243,6 +227,7 @@ osc.start();
 osc.stop(audioCtx.currentTime+duration);
 }
 
+document.addEventListener("pointerdown",unlockAudio,{once:true});
 document.addEventListener("visibilitychange",()=>{
 if(audioCtx && audioCtx.state==="suspended"){
 audioCtx.resume();
@@ -274,23 +259,16 @@ isShowing=false;
 statusEl.innerText="Sıranı Yap!";
 }
 
-function screenFlash(){
-document.body.classList.add("flash");
-setTimeout(()=>document.body.classList.remove("flash"),150);
-}
-
-function screenShake(){
-document.body.classList.add("shake");
-setTimeout(()=>document.body.classList.remove("shake"),350);
-}
-
 function startGame(){
-initAudio();
+unlockAudio();
+gameActive=true;
+startBtn.classList.add("hidden");
+
 pattern=[];
 level=1;
 combo=0;
 speed=800;
-perfectStreak=true;
+
 nextRound();
 }
 
@@ -303,30 +281,17 @@ showPattern();
 }
 
 function levelUp(){
-screenFlash();
 playBeep(900,.18);
-
-if(perfectStreak){
-combo+=10;
-statusEl.innerText="🔥 PERFECT!";
-document.querySelectorAll(".btn").forEach(b=>{
-b.classList.add("perfect");
-setTimeout(()=>b.classList.remove("perfect"),600);
-});
-}else{
-statusEl.innerText="Level Up!";
-}
-
 level++;
 speed=Math.max(300,speed-40);
 setTimeout(nextRound,700);
 }
 
 function gameOver(){
-screenShake();
+gameActive=false;
 playBeep(140,.4);
 statusEl.innerText="Yanlış! Oyun Bitti";
-perfectStreak=false;
+startBtn.classList.remove("hidden");
 
 if(level-1>highScore){
 highScore=level-1;
@@ -337,9 +302,8 @@ highscoreEl.innerText="High Score: "+highScore;
 
 buttons.forEach(btn=>{
 btn.addEventListener("pointerdown",()=>{
-if(isShowing)return;
+if(!gameActive || isShowing)return;
 
-initAudio();
 const dir=btn.dataset.dir;
 flashButton(dir);
 playBeep(550,0.12);
@@ -353,16 +317,12 @@ if(playerIndex===pattern.length){
 levelUp();
 }
 }else{
-perfectStreak=false;
 gameOver();
 }
 });
 });
 
-startBtn.addEventListener("pointerdown",()=>{
-initAudio();
-startGame();
-});
+startBtn.addEventListener("pointerdown",startGame);
 </script>
 
 </body>
