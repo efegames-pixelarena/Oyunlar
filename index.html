@@ -287,7 +287,7 @@ window.addEventListener("resize",resizeCanvas);
 </script>
 
 
-<script type="module">
+ <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { 
   getAuth, 
@@ -313,6 +313,20 @@ const firebaseConfig = {
   appId:"1:668871888390:web:76568bda84cb1641f7bd87"
 };
 
+  /* OYUN GİRİŞ KONTROLÜ */
+window.checkLogin = function(page){
+  const user = auth.currentUser;
+  if(!user){
+    alert("Lütfen giriş yapın.");
+    document.getElementById("authOverlay").style.display = "flex"; // Giriş modalını aç
+    return;
+  }
+  window.location.href = page;
+};
+
+  window.location.href = page;
+};
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -334,8 +348,12 @@ const backBtn = document.getElementById("authBack");
 
 let isLogin = true;
 
-backBtn.onclick = () => { overlay.style.display = "none"; };
+/* GERİ TUŞU */
+backBtn.onclick = () => {
+  overlay.style.display = "none";
+};
 
+/* MODAL AÇMA FONKSİYONLARI */
 function openLogin(){
   overlay.style.display="flex";
   isLogin=true;
@@ -359,20 +377,29 @@ function openRegister(){
 loginBtn.onclick = openLogin;
 registerBtn.onclick = openRegister;
 
-switchMode.onclick = () => { isLogin ? openRegister() : openLogin(); };
+/* SWITCH DÜZELTİLDİ */
+switchMode.onclick = () => {
+  if(isLogin){
+    openRegister();
+  }else{
+    openLogin();
+  }
+};
 
+/* SUBMIT */
 authSubmit.onclick = async () => {
   const email = authEmail.value;
   const password = authPassword.value;
   const username = authUsername.value;
 
-  if(!email || !password) return;
+  if(!email || !password) return alert("Tüm alanları doldur.");
 
   try{
     if(isLogin){
       await signInWithEmailAndPassword(auth,email,password);
+      alert("Giriş başarılı.");
     }else{
-      if(!username) return;
+      if(!username) return alert("Kullanıcı adı gir.");
       const userCredential = await createUserWithEmailAndPassword(auth,email,password);
       await setDoc(doc(db,"users",userCredential.user.uid),{
         balance:10000,
@@ -380,23 +407,19 @@ authSubmit.onclick = async () => {
         email:email,
         createdAt:new Date()
       });
+      alert("Kayıt başarılı. 10.000₺ yüklendi.");
     }
+
     overlay.style.display="none";
     authEmail.value="";
     authPassword.value="";
     authUsername.value="";
-  }catch(e){}
-};
-
-window.checkLogin = function(page){
-  const user = auth.currentUser;
-  if(!user){
-    window.location.href = "index.html";
-    return;
+  }catch(e){
+    alert(e.message);
   }
-  window.location.href = page;
 };
 
+/* AUTH STATE */
 onAuthStateChanged(auth,(user)=>{
   if(user){
     loginBtn.style.display="none";
@@ -410,6 +433,7 @@ onAuthStateChanged(auth,(user)=>{
         balanceText.innerText="💵 "+snap.data().balance+"₺";
       }
     });
+
   }else{
     loginBtn.style.display="inline-block";
     registerBtn.style.display="inline-block";
@@ -419,8 +443,12 @@ onAuthStateChanged(auth,(user)=>{
   }
 });
 
+/* ÇIKIŞ */
 logoutBtn.onclick = async ()=>{
   await signOut(auth);
-  window.location.href = "index.html";
+  alert("Çıkış yapıldı.");
 };
 </script>
+
+</body>
+</html>
