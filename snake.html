@@ -5,13 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>PixelArena Snake.io Multiplayer</title>
 <style>
-body, html { margin:0; padding:0; overflow:hidden; background:#1e1e1e; font-family:sans-serif; }
-canvas { display:block; background:#1e1e1e; }
+body, html { margin:0; padding:0; overflow:hidden; font-family:sans-serif; }
+canvas { display:block; }
 #scoreboard {
   position:fixed; top:10px; right:10px;
   color:white; background:rgba(0,0,0,0.6);
   padding:10px; border-radius:8px;
   font-size:14px; max-height:90vh; overflow-y:auto;
+}
+#totalScore {
+  position:fixed; top:10px; left:10px;
+  color:white; background:rgba(0,0,0,0.6);
+  padding:10px; border-radius:8px;
+  font-size:16px;
 }
 </style>
 </head>
@@ -19,6 +25,7 @@ canvas { display:block; background:#1e1e1e; }
 
 <canvas id="gameCanvas"></canvas>
 <div id="scoreboard"></div>
+<div id="totalScore">Score: 0</div>
 <audio id="eatSound" src="https://freesound.org/data/previews/342/342756_3248244-lq.mp3"></audio>
 
 <script type="module">
@@ -48,16 +55,17 @@ canvas.width = W; canvas.height = H;
 
 const MAP_SIZE = 5000;
 const MAX_FOODS = 200;
-let players = {}, foods = [];
+const MAX_WALLS = 20;
+let players = {}, foods = [], walls = [];
 let bots = [];
-const scoreboard = document.getElementById("scoreboard");
 let inputDir = {x:0,y:0};
 const eatSound = document.getElementById("eatSound");
+const scoreboard = document.getElementById("scoreboard");
+const totalScoreEl = document.getElementById("totalScore");
 
-/* ---------------- MY SNAKE ---------------- */
 let mySnake = { body:[], x:Math.random()*MAP_SIZE, y:Math.random()*MAP_SIZE, speed:6, score:0, color:"#ffff00" };
 
-/* ---------------- TOUCH CONTROLS ---------------- */
+/* ---------------- TOUCH ---------------- */
 canvas.addEventListener("touchstart", handleTouch);
 canvas.addEventListener("touchmove", handleTouch);
 function handleTouch(e){
@@ -66,11 +74,10 @@ function handleTouch(e){
   let dx = touch.clientX - W/2;
   let dy = touch.clientY - H/2;
   let len = Math.sqrt(dx*dx + dy*dy);
-  inputDir.x = dx/len;
-  inputDir.y = dy/len;
+  inputDir.x = dx/len; inputDir.y = dy/len;
 }
 
-/* ---------------- START GAME ---------------- */
+/* ---------------- START ---------------- */
 onAuthStateChanged(auth, user=>{
   if(!user) location.href="index.html";
   const uid = user.uid;
@@ -78,13 +85,14 @@ onAuthStateChanged(auth, user=>{
 
   mySnake.body = [{x:mySnake.x, y:mySnake.y}];
   const playerRef = ref(db, "players/" + uid);
-  set(playerRef, { username:username, x:mySnake.x, y:mySnake.y, score:0, alive:true });
+  set(playerRef, { username, x:mySnake.x, y:mySnake.y, score:0, alive:true });
   onDisconnect(playerRef).remove();
 
   const playersRef = ref(db, "players");
   onValue(playersRef, snap=>{ players = snap.val() || {}; updateScoreboard(); });
 
   for(let i=0;i<MAX_FOODS;i++) foods.push(randomFood());
+  for(let i=0;i<MAX_WALLS;i++) walls.push(randomWall());
   for(let i=0;i<5;i++) bots.push(randomBot());
 
   requestAnimationFrame(gameLoop);
@@ -104,7 +112,6 @@ function updateMySnake(){
   if(inputDir.x!==0||inputDir.y!==0){
     mySnake.x += inputDir.x*mySnake.speed;
     mySnake.y += inputDir.y*mySnake.speed;
-    // Duvar engeli
     mySnake.x = Math.max(0, Math.min(MAP_SIZE, mySnake.x));
     mySnake.y = Math.max(0, Math.min(MAP_SIZE, mySnake.y));
     mySnake.body.unshift({x:mySnake.x,y:mySnake.y});
@@ -115,22 +122,16 @@ function updateMySnake(){
 
 function updateBots(){
   bots.forEach(bot=>{
-    // Rastgele hedef yem
     let target = foods[Math.floor(Math.random()*foods.length)];
     let dx = target.x - bot.x;
     let dy = target.y - bot.y;
-    let len = Math.sqrt(dx*dx + dy*dy) || 1;
+    let len = Math.sqrt(dx*dx + dy*dy)||1;
     bot.x += dx/len*bot.speed;
     bot.y += dy/len*bot.speed;
     bot.body.unshift({x:bot.x, y:bot.y});
     if(bot.body.length>10+bot.score/10) bot.body.pop();
-
-    // Yem yeme
     foods.forEach((f,i)=>{
-      if(distance(f, bot.body[0])<15){
-        bot.score += (f.type==="red"?30:10);
-        foods[i]=randomFood();
-      }
+      if(distance(f, bot.body[0])<15){ bot.score += (f.type==="red"?30:10); foods[i]=randomFood(); }
     });
   });
 }
@@ -147,31 +148,40 @@ function checkCollisions(){
 
 function render(){
   ctx.clearRect(0,0,W,H);
+
+  // Arka plan grid (Snake.io tarzı)
+  ctx.fillStyle="#1e1e1e";
+  ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle="#2a2a2a";
+  ctx.lineWidth=1;
+  for(let x=0;x<W;x+=40){ ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
+  for(let y=0;y<H;y+=40){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+
   let camX = mySnake.x - W/2;
   let camY = mySnake.y - H/2;
 
-  // Draw map boundaries
-  ctx.strokeStyle="#555"; ctx.lineWidth=8;
-  ctx.strokeRect(-camX, -camY, MAP_SIZE, MAP_SIZE);
-
-  // Draw foods
-  foods.forEach(f=>{
-    ctx.font="20px Arial";
-    ctx.fillText(f.type==="red"?"🍎":"🍏", f.x-camX, f.y-camY);
+  // Duvarlar (renkli yanıp sönen)
+  walls.forEach((w,i)=>{
+    ctx.fillStyle = `hsl(${Date.now()/50+i*30%360}, 80%, 50%)`;
+    ctx.fillRect(w.x-camX, w.y-camY, w.w, w.h);
   });
 
-  // Draw bots
+  // Yemler
+  foods.forEach(f=>{
+    ctx.font="20px Arial"; ctx.fillText(f.type==="red"?"🍎":"🍏", f.x-camX, f.y-camY);
+  });
+
+  // Botlar
   bots.forEach(bot=> drawSnake(bot, camX, camY, "#ff6600") );
 
-  // Draw other players
-  for(let id in players){
-    if(id===auth.currentUser.uid) continue;
-    let p = players[id];
-    drawSnake(p, camX, camY, "#00ffff");
-  }
+  // Diğer oyuncular
+  for(let id in players){ if(id!==auth.currentUser.uid) drawSnake(players[id], camX, camY, "#00ffff"); }
 
-  // Draw my snake
+  // Ben
   drawSnake(mySnake, camX, camY, mySnake.color);
+
+  // Toplam skor
+  totalScoreEl.innerText = `Score: ${Math.floor(mySnake.score)}`;
 }
 
 function drawSnake(snake, camX, camY, color){
@@ -197,6 +207,7 @@ function drawSnake(snake, camX, camY, color){
 
 function randomFood(){ return { x:Math.random()*MAP_SIZE, y:Math.random()*MAP_SIZE, type:Math.random()<0.1?"red":"green" }; }
 function randomBot(){ return { body:[{x:Math.random()*MAP_SIZE,y:Math.random()*MAP_SIZE}], x:Math.random()*MAP_SIZE, y:Math.random()*MAP_SIZE, speed:3+Math.random()*3, score:0 }; }
+function randomWall(){ return { x:Math.random()*MAP_SIZE-100, y:Math.random()*MAP_SIZE-100, w:80, h:20 }; }
 function distance(a,b){ return Math.hypot(a.x-b.x, a.y-b.y); }
 
 function updateScoreboard(){
