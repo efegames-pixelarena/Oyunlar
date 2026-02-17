@@ -2,264 +2,239 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Snake.io Multiplayer</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Snake.io Clone Multiplayer</title>
 <style>
-body { margin:0; overflow:hidden; background:#111; font-family:sans-serif; }
-#gameCanvas { display:block; margin:0 auto; background:#1a1a1a; touch-action:none; }
-#scoreBoard {
-  position:absolute; top:10px; right:10px; z-index:1000; color:white;
-  background: rgba(0,0,0,0.5); padding:10px; border-radius:8px; max-height:90vh; overflow:auto;
+body, html { margin:0; padding:0; overflow:hidden; font-family:sans-serif; background:#222; }
+canvas { display:block; background: #1e1e1e; }
+#scoreboard {
+  position: fixed;
+  top: 10px; right: 10px;
+  color: white;
+  background: rgba(0,0,0,0.6);
+  padding: 10px; border-radius: 8px;
+  font-size: 14px; max-height: 90vh; overflow-y:auto;
 }
-#scoreBoard h3{margin:0 0 5px 0; font-size:14px;}
-#scoreBoard div{font-size:12px;}
 </style>
 </head>
 <body>
-<canvas id="gameCanvas" width="800" height="600"></canvas>
-<div id="scoreBoard"><h3>Skor Tablosu</h3></div>
+<canvas id="gameCanvas"></canvas>
+<div id="scoreboard"></div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, doc, setDoc, onSnapshot, updateDoc, serverTimestamp, collection } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getDatabase, ref, onValue, set, update, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-// Firebase config
+/* ---------------- FIREBASE ---------------- */
 const firebaseConfig = {
   apiKey: "AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
   authDomain: "emirhan-site.firebaseapp.com",
+  databaseURL: "https://emirhan-site-default-rtdb.firebaseio.com",
   projectId: "emirhan-site",
-  storageBucket: "emirhan-site.firebasestorage.app",
+  storageBucket: "emirhan-site.appspot.com",
   messagingSenderId: "668871888390",
   appId: "1:668871888390:web:76568bda84cb1641f7bd87"
 };
-
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const db = getDatabase(app);
 const auth = getAuth(app);
 
-let uid, playerData, roomRef;
-let players = {}; // Tüm oyuncuların bilgisi
-let food = [];    // Yiyecekler
-const MAX_PLAYERS = 150;
-const MAP_WIDTH = 4000;
-const MAP_HEIGHT = 4000;
+let uid, username;
 
-const canvas = document.getElementById("gameCanvas");
-const ctx = canvas.getContext("2d");
-const VIEW_WIDTH = canvas.width;
-const VIEW_HEIGHT = canvas.height;
-let cameraX=0, cameraY=0;
-
-let direction = {x:1, y:0}; // Başlangıç yön
-let lastTouch = null;
-
-const scoreBoard = document.getElementById("scoreBoard");
-
-// Giriş anonim
-onAuthStateChanged(auth, async(user)=>{
-    if(!user) {
-        await signInAnonymously(auth);
-        return;
-    }
-    uid = user.uid;
-    await joinGame();
+/* ---------------- AUTH ---------------- */
+onAuthStateChanged(auth, user=>{
+  if(!user) location.href="index.html";
+  uid = user.uid;
+  username = user.displayName || "Oyuncu";
+  startGame();
 });
 
-// Oyuna Katıl
-async function joinGame(){
-    // Kendi yılanımız
-    playerData = {
-        snake: [{x: Math.random()*MAP_WIDTH, y: Math.random()*MAP_HEIGHT}],
-        color: 'lime',
-        score: 0,
-        username: 'Oyuncu_'+Math.floor(Math.random()*1000),
-        alive: true,
-        lastUpdate: serverTimestamp()
-    };
+/* ---------------- GAME ---------------- */
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+let W = window.innerWidth, H = window.innerHeight;
+canvas.width = W; canvas.height = H;
 
-    roomRef = doc(collection(db,"snakePlayers"), uid);
-    await setDoc(roomRef, playerData);
+const MAP_SIZE = 5000;
+let players = {};
+let mySnake = { body: [], dir: 'RIGHT', speed: 3, score: 0, x: Math.random()*MAP_SIZE, y: Math.random()*MAP_SIZE };
+let foods = [];
+let bots = [];
+const MAX_BOTS = 50;
+const MAX_FOODS = 200;
+const scoreboard = document.getElementById("scoreboard");
 
-    // Mevcut yiyecekleri oluştur
-    if(food.length===0){
-      for(let i=0;i<500;i++){
-          food.push({
-              id:'f'+i,
-              x: Math.random()*MAP_WIDTH,
-              y: Math.random()*MAP_HEIGHT,
-              type: Math.random()<0.1?'red':'green'
-          });
+/* ---------------- INPUT ---------------- */
+let inputDir = {x:0, y:0};
+canvas.addEventListener("touchstart", handleTouch);
+canvas.addEventListener("touchmove", handleTouch);
+function handleTouch(e){
+  e.preventDefault();
+  let touch = e.touches[0];
+  let dx = touch.clientX - W/2;
+  let dy = touch.clientY - H/2;
+  let len = Math.sqrt(dx*dx + dy*dy);
+  inputDir.x = dx/len;
+  inputDir.y = dy/len;
+}
+
+/* ---------------- INITIALIZE ---------------- */
+function startGame(){
+  mySnake.body = [{x:mySnake.x, y:mySnake.y}];
+
+  // Add player to Firebase
+  const playerRef = ref(db, "players/" + uid);
+  set(playerRef, { username: username, x: mySnake.x, y: mySnake.y, score: 0, alive:true });
+
+  // Remove on disconnect
+  playerRef.onDisconnect().remove();
+
+  // Listen other players
+  const playersRef = ref(db, "players");
+  onValue(playersRef, snapshot=>{
+    players = snapshot.val() || {};
+    updateScoreboard();
+  });
+
+  // Spawn foods
+  for(let i=0;i<MAX_FOODS;i++){
+    foods.push(randomFood());
+  }
+
+  // Spawn bots
+  for(let i=0;i<MAX_BOTS;i++){
+    bots.push({ body:[{x:Math.random()*MAP_SIZE, y:Math.random()*MAP_SIZE}], dir:'RIGHT', speed:2, score:0 });
+  }
+
+  requestAnimationFrame(gameLoop);
+}
+
+/* ---------------- GAME LOOP ---------------- */
+function gameLoop(){
+  updateMySnake();
+  updateBots();
+  checkCollisions();
+  render();
+  requestAnimationFrame(gameLoop);
+}
+
+/* ---------------- FUNCTIONS ---------------- */
+function updateMySnake(){
+  if(inputDir.x!==0 || inputDir.y!==0){
+    mySnake.x += inputDir.x * mySnake.speed;
+    mySnake.y += inputDir.y * mySnake.speed;
+    // Keep inside map
+    mySnake.x = Math.max(0, Math.min(MAP_SIZE, mySnake.x));
+    mySnake.y = Math.max(0, Math.min(MAP_SIZE, mySnake.y));
+    mySnake.body.unshift({x: mySnake.x, y: mySnake.y});
+    if(mySnake.body.length > 10 + mySnake.score/10) mySnake.body.pop();
+  }
+
+  // Update Firebase
+  update(ref(db, "players/"+uid), { x: mySnake.x, y: mySnake.y, score: mySnake.score });
+}
+
+function updateBots(){
+  bots.forEach(bot=>{
+    let head = bot.body[0];
+    // Random simple AI
+    let targetFood = foods[Math.floor(Math.random()*foods.length)];
+    let dx = targetFood.x - head.x;
+    let dy = targetFood.y - head.y;
+    let len = Math.sqrt(dx*dx + dy*dy);
+    dx /= len; dy /= len;
+    bot.body.unshift({x: head.x + dx*bot.speed, y: head.y + dy*bot.speed});
+    if(bot.body.length>10 + bot.score/10) bot.body.pop();
+
+    // Eat food
+    foods.forEach((f,i)=>{
+      if(distance(f, bot.body[0])<10){
+        bot.score += (f.type==="red"?30:10);
+        foods[i] = randomFood();
       }
-    }
-
-    // Oyuncuları dinle
-    onSnapshot(collection(db,"snakePlayers"), snap=>{
-        players = {};
-        snap.docs.forEach(doc=>{
-            players[doc.id] = doc.data();
-        });
     });
-
-    // Input (klavye)
-    window.addEventListener('keydown', e=>{
-        if(e.key==='ArrowUp') direction={x:0,y:-1};
-        if(e.key==='ArrowDown') direction={x:0,y:1};
-        if(e.key==='ArrowLeft') direction={x:-1,y:0};
-        if(e.key==='ArrowRight') direction={x:1,y:0};
-    });
-
-    // Mobil dokunmatik
-    canvas.addEventListener('touchstart', e=>{
-        lastTouch = e.touches[0];
-    });
-    canvas.addEventListener('touchmove', e=>{
-        if(!lastTouch) return;
-        const t = e.touches[0];
-        const dx = t.clientX - lastTouch.clientX;
-        const dy = t.clientY - lastTouch.clientY;
-        if(Math.abs(dx)>Math.abs(dy)){
-            direction.x = dx>0?1:-1; direction.y=0;
-        } else {
-            direction.y = dy>0?1:-1; direction.x=0;
-        }
-        lastTouch = t;
-    });
-
-    requestAnimationFrame(gameLoop);
+  });
 }
 
-// Hareket
-function moveSnake(player, dir){
-    if(!player.alive) return;
-    let head = {...player.snake[0]};
-    head.x += dir.x*5;
-    head.y += dir.y*5;
-
-    // Harita sınırları
-    head.x = Math.max(0, Math.min(MAP_WIDTH, head.x));
-    head.y = Math.max(0, Math.min(MAP_HEIGHT, head.y));
-
-    player.snake.unshift(head);
-    player.snake.pop();
-}
-
-// Yiyecek yeme
-function eatFood(player){
-    let head = player.snake[0];
-    for(let i=0;i<food.length;i++){
-        let f = food[i];
-        if(Math.abs(head.x-f.x)<10 && Math.abs(head.y-f.y)<10){
-            player.snake.push({...player.snake[player.snake.length-1]});
-            player.score += (f.type==='red'?5:1);
-            food.splice(i,1);
-            break;
-        }
-    }
-}
-
-// Çarpışma kontrolü
 function checkCollisions(){
-    const allPlayers = Object.values(players);
-    for(let pId in players){
-        let p = players[pId];
-        if(!p.alive) continue;
-        const head = p.snake[0];
-        // Kendine çarpma
-        for(let i=1;i<p.snake.length;i++){
-            if(distance(head, p.snake[i])<10){
-                p.alive=false;
-                break;
-            }
-        }
-        // Başkalarına çarpma
-        for(let other of allPlayers){
-            if(other===p || !other.alive) continue;
-            for(let s of other.snake){
-                if(distance(head, s)<10){
-                    p.alive=false;
-                    other.score += Math.floor(p.score/2); // otomatik skor
-                    break;
-                }
-            }
-        }
+  // Player eats food
+  foods.forEach((f,i)=>{
+    if(distance(f, mySnake.body[0])<10){
+      mySnake.score += (f.type==="red"?30:10);
+      foods[i] = randomFood();
     }
+  });
+
+  // Collision with bots
+  bots.forEach(bot=>{
+    bot.body.forEach(seg=>{
+      if(distance(seg, mySnake.body[0])<10){
+        mySnake.body = [];
+        mySnake.score = 0;
+        set(ref(db, "players/"+uid), { username: username, x: Math.random()*MAP_SIZE, y: Math.random()*MAP_SIZE, score:0, alive:true });
+      }
+    });
+  });
 }
 
-// Mesafe hesaplama
+function render(){
+  // Clear
+  ctx.clearRect(0,0,W,H);
+
+  // Camera offset
+  let camX = mySnake.x - W/2;
+  let camY = mySnake.y - H/2;
+
+  // Draw foods
+  foods.forEach(f=>{
+    ctx.font = "14px Arial";
+    ctx.fillText(f.type==="red"?"🍎":"🍏", f.x - camX, f.y - camY);
+  });
+
+  // Draw bots
+  bots.forEach(bot=>{
+    ctx.fillStyle = "green";
+    bot.body.forEach(seg=>{
+      ctx.fillRect(seg.x - camX, seg.y - camY, 10,10);
+    });
+  });
+
+  // Draw players
+  for(let id in players){
+    let p = players[id];
+    if(!p.alive) continue;
+    ctx.fillStyle = "blue";
+    ctx.beginPath();
+    ctx.arc(p.x - camX, p.y - camY, 10, 0, Math.PI*2);
+    ctx.fill();
+  }
+
+  // Draw my snake
+  ctx.fillStyle = "yellow";
+  mySnake.body.forEach(seg=>{
+    ctx.fillRect(seg.x - camX, seg.y - camY, 10,10);
+  });
+}
+
+/* ---------------- UTIL ---------------- */
+function randomFood(){
+  return { x: Math.random()*MAP_SIZE, y: Math.random()*MAP_SIZE, type: Math.random()<0.1?"red":"green" };
+}
+
 function distance(a,b){
-    return Math.sqrt((a.x-b.x)**2 + (a.y-b.y)**2);
+  return Math.hypot(a.x-b.x, a.y-b.y);
 }
 
-// Bot yılanlar
-function botMovement(){
-    for(let pId in players){
-        let p = players[pId];
-        if(!p.alive || !p.bot) continue;
-        let head = p.snake[0];
-        if(food.length===0) break;
-        let target = food[Math.floor(Math.random()*food.length)];
-        directionBot = {x: Math.sign(target.x-head.x), y: Math.sign(target.y-head.y)};
-        moveSnake(p, directionBot);
-        eatFood(p);
-    }
+function updateScoreboard(){
+  let arr = [];
+  for(let id in players){
+    arr.push({name: players[id].username, score: players[id].score});
+  }
+  arr.sort((a,b)=>b.score - a.score);
+  scoreboard.innerHTML = arr.map(p=>`${p.name}: ${Math.floor(p.score)}`).join("<br>");
 }
 
-// Oyun döngüsü
-async function gameLoop(){
-    // Kamera
-    const player = players[uid];
-    if(player){
-        cameraX = player.snake[0].x - VIEW_WIDTH/2;
-        cameraY = player.snake[0].y - VIEW_HEIGHT/2;
-        moveSnake(player,direction);
-        eatFood(player);
-    }
-
-    botMovement();
-    checkCollisions();
-
-    // Firebase güncelle
-    for(let pId in players){
-        let p = players[pId];
-        await updateDoc(doc(db,"snakePlayers",pId), {
-            snake: p.snake,
-            score: p.score,
-            alive: p.alive,
-            lastUpdate: serverTimestamp()
-        });
-    }
-
-    // Temizle
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-
-    // Yiyecekler
-    for(let f of food){
-        ctx.font="16px Arial";
-        ctx.textAlign="center";
-        ctx.textBaseline="middle";
-        ctx.fillText(f.type==="red"?"🍎":"🍏", f.x - cameraX, f.y - cameraY);
-    }
-
-    // Yılanlar
-    for(let pId in players){
-        let p = players[pId];
-        ctx.fillStyle = p.color || 'white';
-        for(let s of p.snake){
-            ctx.fillRect(s.x - cameraX, s.y - cameraY, 10, 10);
-        }
-    }
-
-    // Skor tablosu
-    let scoreHtml = '<h3>Skor Tablosu</h3>';
-    const sorted = Object.values(players).sort((a,b)=>b.score - a.score);
-    for(let p of sorted.slice(0,10)){
-        scoreHtml += `<div>${p.username||'Bot'} : ${p.score}</div>`;
-    }
-    scoreBoard.innerHTML = scoreHtml;
-
-    requestAnimationFrame(gameLoop);
-}
 </script>
 </body>
 </html>
