@@ -23,76 +23,111 @@ touch-action:manipulation;
 100%{background-position:100% 50%}
 }
 
-/* TOP */
 .top-bar{
-position:fixed;top:0;width:100%;height:55px;
+position:fixed;
+top:0;width:100%;height:55px;
 display:flex;align-items:center;justify-content:space-between;
 padding:0 16px;background:linear-gradient(135deg,#1a2a6c,#16245c);
 box-shadow:0 4px 15px rgba(0,0,0,0.45);z-index:1000;
 }
-.brand{font-weight:800}
-.nav-box{background:#273c8f;padding:6px 14px;border-radius:14px;font-weight:700}
-.logout-btn{background:#ff3b3b;color:white;border:none;padding:6px 12px;border-radius:12px;font-weight:700}
+.brand{font-size:clamp(14px,2vw,18px);font-weight:800;}
+.right-menu{display:flex;gap:10px;align-items:center;}
+.nav-box{padding:6px 14px;border-radius:14px;font-weight:700;font-size:clamp(11px,2vw,13px);background:#273c8f;min-width:70px;text-align:center;}
+.btn{padding:6px 12px;border-radius:12px;border:none;cursor:pointer;font-weight:700;font-size:clamp(11px,2vw,13px);}
+.logout-btn{background:#ff3b3b;color:white;}
 
-/* SCOREBOARD */
 .scoreboard{
 display:none;
-margin-top:55px;
-width:100%;
+margin-top:55px;width:100%;
 background:rgba(0,0,0,0.5);
-display:flex;
-justify-content:space-between;
-align-items:center;
-padding:8px 14px;
-font-weight:bold;
+justify-content:space-between;align-items:center;
+padding:8px 14px;font-weight:bold;font-size:clamp(12px,2.5vw,14px);
 }
 
-/* GAME */
-#game{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}
-button{padding:10px 18px;border:none;border-radius:8px;font-weight:bold;cursor:pointer;background:linear-gradient(90deg,#ffb300,#ff8c00);margin-top:10px}
-#bigText{font-size:60px;margin-top:20px;font-weight:800}
+#game{
+flex:1;display:flex;flex-direction:column;
+justify-content:center;align-items:center;
+text-align:center;padding:10px;
+}
+
+button{
+padding:10px 18px;border:none;border-radius:8px;
+font-weight:bold;cursor:pointer;
+font-size:clamp(12px,2.5vw,15px);
+background:linear-gradient(90deg,#ffb300,#ff8c00);
+margin-top:10px;
+}
+
+#bigText{
+font-size:clamp(32px,10vw,70px);
+min-height:90px;margin-top:20px;font-weight:800;
+}
+
 .neon{
 color:#ff2b2b;
-text-shadow:0 0 5px red,0 0 10px red,0 0 20px red;
-font-size:22px;margin-top:10px
+text-shadow:0 0 5px #ff0000,0 0 10px #ff0000,0 0 20px #ff0000,0 0 40px #ff0000;
+font-size:20px;margin-top:10px;
 }
-.winEffect{animation:win 0.6s infinite alternate}
-@keyframes win{from{transform:scale(1)}to{transform:scale(1.2)}}
-canvas{position:fixed;top:0;left:0;pointer-events:none}
+
+.winEffect{animation:winAnim 0.8s ease-in-out infinite alternate;}
+@keyframes winAnim{
+0%{transform:scale(1);text-shadow:0 0 10px gold;}
+100%{transform:scale(1.2);text-shadow:0 0 30px gold;}
+}
+
+/* Konfeti */
+.confetti{
+position:fixed;width:8px;height:8px;
+background:red;top:-10px;z-index:2000;
+animation:fall 2s linear forwards;
+}
+@keyframes fall{
+to{transform:translateY(100vh) rotate(720deg);}
+}
+
+.lobby{margin-top:15px;display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
+input{padding:8px;border-radius:8px;border:none;outline:none;font-size:clamp(12px,2.5vw,14px);}
 </style>
 </head>
 <body>
 
 <div class="top-bar">
 <div class="brand">PixelArena</div>
-<div style="display:flex;gap:10px;align-items:center">
+<div class="right-menu">
 <div class="nav-box" id="userBox">...</div>
-<button class="logout-btn" id="logoutBtn">Çıkış</button>
+<button class="btn logout-btn" id="logoutBtn">Çıkış</button>
 </div>
 </div>
 
 <div class="scoreboard" id="scoreboard">
-<div id="p1"></div>
-<div id="roundInfo"></div>
-<div id="p2"></div>
+<div id="p1">Player1 (0)</div>
+<div id="roundInfo">Round 1 / 7</div>
+<div id="p2">Player2 (0)</div>
 </div>
 
 <div id="game">
 <button id="findBtn">Maç Bul</button>
+
+<div class="lobby" id="lobbyBox">
+<input id="roomCodeInput" placeholder="Oda Kodu">
 <button id="createRoomBtn">Oda Kur</button>
+<button id="joinCodeBtn">Katıl</button>
+</div>
+
 <div id="bigText"></div>
 <div id="subText"></div>
 </div>
 
-<canvas id="confetti"></canvas>
-
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, doc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, getDocs, serverTimestamp, runTransaction, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, setDoc, updateDoc, deleteDoc,
+onSnapshot, collection, query, where, getDocs,
+serverTimestamp, runTransaction, getDoc } 
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth, onAuthStateChanged, signOut } 
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-/* FIREBASE */
 const firebaseConfig={
 apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
 authDomain:"emirhan-site.firebaseapp.com",
@@ -106,56 +141,40 @@ const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 const auth=getAuth(app);
 
-/* GLOBAL */
-let uid=null, username=null, roomId=null, unsubscribe=null;
-let tapLock=false, audioUnlocked=false;
+let uid=null,username=null,roomId=null,unsubscribe=null,tapLock=false;
 
-/* AUDIO (iOS uyumlu) */
-const ctx=new (window.AudioContext||window.webkitAudioContext)();
-function unlockAudio(){if(!audioUnlocked){ctx.resume();audioUnlocked=true}}
-document.addEventListener("pointerdown",unlockAudio,{once:true});
-
-function beep(freq,duration){
-const osc=ctx.createOscillator();
-const gain=ctx.createGain();
-osc.connect(gain);gain.connect(ctx.destination);
-osc.frequency.value=freq;
-osc.start();
-gain.gain.setValueAtTime(0.3,ctx.currentTime);
-gain.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+duration);
-osc.stop(ctx.currentTime+duration);
-}
-
-/* CONFETTI */
-const canvas=document.getElementById("confetti");
-const c=canvas.getContext("2d");
-canvas.width=innerWidth;canvas.height=innerHeight;
-let pieces=[];
-function fireConfetti(){
-for(let i=0;i<150;i++){
-pieces.push({x:innerWidth/2,y:innerHeight/2,vx:(Math.random()-0.5)*10,vy:(Math.random()-0.5)*10,size:Math.random()*6});
-}
-}
-function animate(){
-c.clearRect(0,0,canvas.width,canvas.height);
-pieces.forEach(p=>{
-p.x+=p.vx;p.y+=p.vy;p.vy+=0.2;
-c.fillStyle="hsl("+Math.random()*360+",100%,50%)";
-c.fillRect(p.x,p.y,p.size,p.size);
-});
-requestAnimationFrame(animate);
-}
-animate();
-
-/* UI */
-const scoreboard=document.getElementById("scoreboard");
 const bigText=document.getElementById("bigText");
 const subText=document.getElementById("subText");
 const p1=document.getElementById("p1");
 const p2=document.getElementById("p2");
 const roundInfo=document.getElementById("roundInfo");
+const scoreboard=document.getElementById("scoreboard");
 
-/* AUTH */
+/* SES SİSTEMİ (iOS uyumlu) */
+const ctx=new (window.AudioContext||window.webkitAudioContext)();
+function beep(freq,dur){
+const osc=ctx.createOscillator();
+const gain=ctx.createGain();
+osc.connect(gain);gain.connect(ctx.destination);
+osc.frequency.value=freq;
+osc.start();
+gain.gain.setValueAtTime(0.2,ctx.currentTime);
+osc.stop(ctx.currentTime+dur);
+}
+document.addEventListener("pointerdown",()=>ctx.resume(),{once:true});
+
+/* KONFETİ */
+function confettiBlast(){
+for(let i=0;i<60;i++){
+let div=document.createElement("div");
+div.className="confetti";
+div.style.left=Math.random()*100+"vw";
+div.style.background=`hsl(${Math.random()*360},100%,50%)`;
+document.body.appendChild(div);
+setTimeout(()=>div.remove(),2000);
+}
+}
+
 onAuthStateChanged(auth,async(user)=>{
 if(!user){location.href="index.html";return;}
 uid=user.uid;
@@ -163,105 +182,106 @@ const snap=await getDoc(doc(db,"users",uid));
 username=snap.data().username;
 document.getElementById("userBox").innerText=username;
 });
-document.getElementById("logoutBtn").onclick=()=>signOut(auth);
+
+document.getElementById("logoutBtn").onclick=async()=>{await signOut(auth);location.href="index.html";};
 
 /* ODA KUR */
 document.getElementById("createRoomBtn").onclick=async()=>{
-const roomRef=doc(collection(db,"rooms"));
-await setDoc(roomRef,{
-player1:uid,
-player1Name:username,
-player2:null,
-player2Name:null,
+const code=document.getElementById("roomCodeInput").value.trim();
+if(!code) return alert("Kod gir");
+roomId=code;
+await setDoc(doc(db,"rooms",roomId),{
+player1:uid,player1Name:username,
+player2:null,player2Name:null,
+players:[uid],
 score1:0,score2:0,
-round:1,
-state:"waiting",
-createdAt:serverTimestamp()
+round:1,state:"waiting"
 });
-roomId=roomRef.id;
 listenRoom();
-bigText.innerText="Rakip Bekleniyor...";
 };
 
-/* MAÇ BUL */
-document.getElementById("findBtn").onclick=async()=>{
-const snap=await getDocs(collection(db,"rooms"));
-let found=null;
-snap.forEach(r=>{
-const d=r.data();
-if(d.state==="waiting" && d.player1!==uid && !found) found=r;
-});
-if(found){
-await updateDoc(found.ref,{
-player2:uid,
-player2Name:username,
+/* KATIL */
+document.getElementById("joinCodeBtn").onclick=async()=>{
+const code=document.getElementById("roomCodeInput").value.trim();
+const ref=doc(db,"rooms",code);
+const snap=await getDoc(ref);
+if(!snap.exists()) return alert("Oda yok");
+await updateDoc(ref,{
+player2:uid,player2Name:username,
+players:[snap.data().player1,uid],
 state:"countdown",
-startAt:Date.now()+10000
+startAt:Date.now()+5000
 });
-roomId=found.id;
+roomId=code;
 listenRoom();
-}else alert("Açık oda yok.");
 };
 
-/* ROOM LISTENER */
 function listenRoom(){
 if(unsubscribe) unsubscribe();
-unsubscribe=onSnapshot(doc(db,"rooms",roomId),async snap=>{
+unsubscribe=onSnapshot(doc(db,"rooms",roomId),async(snap)=>{
 if(!snap.exists()) return;
 const d=snap.data();
 
-if(d.player2){
-scoreboard.style.display="flex";
-p1.innerText=d.player1Name+" ("+d.score1+")";
-p2.innerText=d.player2Name+" ("+d.score2+")";
-roundInfo.innerText="Round "+d.round+" / 7";
-}
+if(d.state!=="waiting") scoreboard.style.display="flex";
 
+p1.innerText=d.player1Name+" ("+d.score1+")";
+p2.innerText=(d.player2Name||"...")+" ("+d.score2+")";
+roundInfo.innerText="Round "+d.round+" / 7";
+
+/* COUNTDOWN */
 if(d.state==="countdown"){
-let int=setInterval(()=>{
+let interval=setInterval(()=>{
 let diff=d.startAt-Date.now();
 if(diff<=0){
-clearInterval(int);
-bigText.innerText="HAZIR OL";
-setTimeout(()=>updateDoc(doc(db,"rooms",roomId),{
-state:"active",
-roundStart:Date.now()
-}),3000);
+clearInterval(interval);
+bigText.innerText="TAP!";
+updateDoc(doc(db,"rooms",roomId),{state:"active",roundStart:Date.now()});
 }else{
 bigText.innerText=Math.ceil(diff/1000);
-beep(800,0.1);
+beep(600,0.05);
 }
 },1000);
 }
 
+/* ACTIVE */
 if(d.state==="active"){
 bigText.innerText="TAP!";
-subText.innerText="";
 }
 
+/* RESULT */
 if(d.state==="result"){
 bigText.classList.add("winEffect");
 bigText.innerText=d.lastWinner+" Kazandı!";
 subText.className="neon";
 subText.innerText=d.reaction+" ms";
-beep(200,0.2);
-fireConfetti();
+beep(1200,0.2);
+confettiBlast();
 
-setTimeout(()=>{
-bigText.classList.remove("winEffect");
+/* 3 saniye ms */
+setTimeout(()=>subText.innerText="",3000);
+
 if(d.score1===4||d.score2===4){
-beep(600,0.5);
-deleteDoc(doc(db,"rooms",roomId));
-scoreboard.style.display="none";
-bigText.innerText="Maç Bitti!";
-}else{
+bigText.innerText=d.lastWinner+" MAÇI KAZANDI!";
+confettiBlast();
+beep(800,0.3);
+return;
+}
+
+/* 5 saniye sonraki round */
+let count=5;
+let interval=setInterval(()=>{
+subText.innerText="Round "+d.round+" - Sıradaki Raund'a "+count+" saniye";
+count--;
+if(count<0){
+clearInterval(interval);
+bigText.classList.remove("winEffect");
 updateDoc(doc(db,"rooms",roomId),{
 round:d.round+1,
 state:"countdown",
-startAt:Date.now()+10000
+startAt:Date.now()+5000
 });
 }
-},5000);
+},1000);
 }
 });
 }
@@ -270,7 +290,7 @@ startAt:Date.now()+10000
 document.addEventListener("pointerdown",async()=>{
 if(tapLock||!roomId) return;
 tapLock=true;
-await runTransaction(db,async t=>{
+await runTransaction(db,async(t)=>{
 const ref=doc(db,"rooms",roomId);
 const snap=await t.get(ref);
 if(!snap.exists()) return;
@@ -281,7 +301,7 @@ let reaction=Date.now()-d.roundStart;
 
 if(uid===d.player1){
 t.update(ref,{score1:d.score1+1,state:"result",lastWinner:d.player1Name,reaction});
-}else{
+}else if(uid===d.player2){
 t.update(ref,{score2:d.score2+1,state:"result",lastWinner:d.player2Name,reaction});
 }
 });
