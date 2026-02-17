@@ -5,10 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PixelArena Snake.io Multiplayer</title>
 <style>
-body,html{margin:0;padding:0;overflow:hidden;background:#1e1e1e;font-family:sans-serif;}
+/* --- Temel Stil --- */
+body,html{margin:0;padding:0;overflow:hidden;font-family:sans-serif;background:#0a0a0a;}
 canvas{display:block;}
-#scoreboard{position:fixed;top:10px;right:10px;color:white;background:rgba(0,0,0,0.6);padding:10px;border-radius:8px;font-size:14px;max-height:90vh;overflow-y:auto;}
-#totalScore{position:fixed;top:10px;left:10px;color:white;background:rgba(0,0,0,0.6);padding:10px;border-radius:8px;font-size:16px;}
+#scoreboard{position:fixed;top:10px;right:10px;color:white;background:rgba(0,0,0,0.7);padding:10px;border-radius:8px;font-size:14px;max-height:90vh;overflow-y:auto;}
+#totalScore{position:fixed;top:10px;left:10px;color:white;background:rgba(0,0,0,0.7);padding:10px;border-radius:8px;font-size:16px;}
 </style>
 </head>
 <body>
@@ -19,7 +20,7 @@ canvas{display:block;}
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getDatabase, ref, onValue, set, update, onDisconnect, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { getDatabase, ref, onValue, set, update, onDisconnect, get, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 /* ---------------- FIREBASE ---------------- */
@@ -37,29 +38,30 @@ const db = getDatabase(app);
 const auth = getAuth(app);
 
 /* ---------------- CANVAS ---------------- */
-const canvas = document.getElementById("gameCanvas");
-const ctx = canvas.getContext("2d");
+const canvas=document.getElementById("gameCanvas");
+const ctx=canvas.getContext("2d");
 let W=window.innerWidth,H=window.innerHeight;
 canvas.width=W; canvas.height=H;
 
+/* ---------------- OYUN AYARLARI ---------------- */
 const MAP_SIZE=100000,SEGMENT_SIZE=2000,MAX_FOODS=500;
-let players={},foods=[],inputDir={x:0,y:0};
+let players={},foods=[],inputDir={x:0,y:0},roomId=null;
 const eatSound=document.getElementById("eatSound");
 const scoreboard=document.getElementById("scoreboard");
 const totalScoreEl=document.getElementById("totalScore");
-let roomId=null;
 
-/* ---------------- MY SNAKE ---------------- */
-let mySnake={body:[],x:Math.random()*MAP_SIZE,y:Math.random()*MAP_SIZE,speed:6,maxSpeed:12,score:0,color:"#ffff00",alive:true};
+/* ---------------- BENİM SNAKE ---------------- */
+let mySnake={body:[],x:Math.random()*MAP_SIZE,y:Math.random()*MAP_SIZE,speed:6,maxSpeed:12,score:0,color:"#ffff00",alive:true,boost:false};
 
-/* ---------------- TOUCH ---------------- */
+/* ---------------- TOUCH & MOUSE ---------------- */
 canvas.addEventListener("touchstart",handleTouch);
 canvas.addEventListener("touchmove",handleTouch);
-function handleTouch(e){
-  e.preventDefault();
-  let t=e.touches[0],dx=t.clientX-W/2,dy=t.clientY-H/2,len=Math.sqrt(dx*dx+dy*dy);
-  inputDir.x=dx/len; inputDir.y=dy/len;
-}
+canvas.addEventListener("mousedown",handleMouse);
+canvas.addEventListener("mousemove",handleMouse);
+
+function handleTouch(e){ e.preventDefault(); const t=e.touches[0]; moveDir(t.clientX,t.clientY); }
+function handleMouse(e){ moveDir(e.clientX,e.clientY); }
+function moveDir(mx,my){ let dx=mx-W/2,dy=my-H/2,len=Math.sqrt(dx*dx+dy*dy); inputDir.x=dx/len; inputDir.y=dy/len; }
 
 /* ---------------- ODA SİSTEMİ ---------------- */
 async function joinRoom(uid,username){
@@ -72,8 +74,7 @@ async function joinRoom(uid,username){
       const playerRef=ref(db,`rooms/${rid}/players/${uid}`);
       set(playerRef,{username,x:mySnake.x,y:mySnake.y,score:0,alive:true,body:[{x:mySnake.x,y:mySnake.y}]});
       onDisconnect(playerRef).remove();
-      joined=true;
-      break;
+      joined=true; break;
     }
   }
   if(!joined){
@@ -85,7 +86,7 @@ async function joinRoom(uid,username){
   }
 }
 
-/* ---------------- START ---------------- */
+/* ---------------- OYUN BAŞLAT ---------------- */
 onAuthStateChanged(auth,async user=>{
   if(!user) location.href="index.html";
   const uid=user.uid;
@@ -94,16 +95,14 @@ onAuthStateChanged(auth,async user=>{
   await joinRoom(uid,username);
 
   const playersRef=ref(db,`rooms/${roomId}/players`);
-  onValue(playersRef,snap=>{
-    players=snap.val()||{};
-    updateScoreboard();
-  });
+  onValue(playersRef,snap=>{ players=snap.val()||{}; updateScoreboard(); });
 
   for(let i=0;i<MAX_FOODS;i++) foods.push(randomFood());
+
   requestAnimationFrame(gameLoop);
 });
 
-/* ---------------- GAME LOOP ---------------- */
+/* ---------------- OYUN DÖNGÜSÜ ---------------- */
 function gameLoop(){
   if(mySnake.alive){
     if(mySnake.speed<mySnake.maxSpeed) mySnake.speed+=0.002;
@@ -114,7 +113,7 @@ function gameLoop(){
   requestAnimationFrame(gameLoop);
 }
 
-/* ---------------- UPDATE ---------------- */
+/* ---------------- SNAKE GÜNCELLE ---------------- */
 function updateMySnake(){
   if(inputDir.x!==0||inputDir.y!==0){
     mySnake.x+=inputDir.x*mySnake.speed;
@@ -127,76 +126,47 @@ function updateMySnake(){
   update(ref(db,`rooms/${roomId}/players/${auth.currentUser.uid}`),{x:mySnake.x,y:mySnake.y,score:mySnake.score,body:mySnake.body,alive:mySnake.alive});
 }
 
-/* ---------------- COLLISIONS ---------------- */
+/* ---------------- ÇARPIŞMA & ÖLÜM ---------------- */
 function checkCollisions(){
-  foods.forEach(f=>{
-    if(distance(f,mySnake.body[0])<15){
-      mySnake.score+=(f.type==="red"?30:10);
-      eatSound.currentTime=0; eatSound.play();
-      setTimeout(()=>{ foods.push(f); },30000);
-      foods=foods.filter(x=>x!==f);
-    }
-  });
-
-  // Kendi vücuduna çarpma
-  for(let i=1;i<mySnake.body.length;i++){
-    if(distance(mySnake.body[0],mySnake.body[i])<12){
-      mySnake.alive=false;
-      break;
-    }
-  }
-
-  // Başka oyuncuya çarpma
-  for(let id in players){
-    if(id===auth.currentUser.uid) continue;
-    const p=players[id];
-    if(!p.alive) continue;
-    for(let seg of p.body){
-      if(distance(mySnake.body[0],seg)<12){
-        mySnake.alive=false;
-      }
-    }
-  }
+  // Yem toplama
+  foods.forEach(f=>{ if(distance(f,mySnake.body[0])<15){ mySnake.score+=(f.type==="red"?30:10); eatSound.currentTime=0; eatSound.play(); setTimeout(()=>{foods.push(f);},30000); foods=foods.filter(x=>x!==f); } });
+  // Kendine çarpma
+  for(let i=1;i<mySnake.body.length;i++){ if(distance(mySnake.body[0],mySnake.body[i])<12){ mySnake.alive=false; break; } }
+  // Başkalarına çarpma
+  for(let id in players){ if(id===auth.currentUser.uid) continue; const p=players[id]; if(!p.alive) continue; for(let seg of p.body){ if(distance(mySnake.body[0],seg)<12){ mySnake.alive=false; } } }
+  // Ölünce yeniden doğma
+  if(!mySnake.alive){ setTimeout(()=>{ mySnake.alive=true; mySnake.x=Math.random()*MAP_SIZE; mySnake.y=Math.random()*MAP_SIZE; mySnake.body=[{x:mySnake.x,y:mySnake.y}]; mySnake.score=0; },3000); }
 }
 
-/* ---------------- RENDER ---------------- */
+/* ---------------- ÇİZİM ---------------- */
 function render(){
   ctx.clearRect(0,0,W,H);
-  ctx.fillStyle="#1e1e1e"; ctx.fillRect(0,0,W,H);
+  ctx.fillStyle="#0a0a0a"; ctx.fillRect(0,0,W,H);
 
   // Grid
-  ctx.strokeStyle="#2a2a2a"; ctx.lineWidth=1;
+  ctx.strokeStyle="#1f1f1f"; ctx.lineWidth=1;
   for(let x=0;x<W;x+=40){ ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
   for(let y=0;y<H;y+=40){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
 
-  let camX=mySnake.x-W/2;
-  let camY=mySnake.y-H/2;
+  let camX=mySnake.x-W/2,camY=mySnake.y-H/2;
 
   // MAP BORDER
   let hue=(Date.now()/10)%360;
-  ctx.strokeStyle=`hsl(${hue},80%,50%)`;
-  ctx.lineWidth=16;
+  ctx.strokeStyle=`hsl(${hue},80%,50%)`; ctx.lineWidth=16;
   ctx.strokeRect(-camX,-camY,MAP_SIZE,MAP_SIZE);
 
   const segX=Math.floor(mySnake.x/SEGMENT_SIZE);
   const segY=Math.floor(mySnake.y/SEGMENT_SIZE);
 
-  const visibleFoods=foods.filter(f=>{
-    const fx=Math.floor(f.x/SEGMENT_SIZE);
-    const fy=Math.floor(f.y/SEGMENT_SIZE);
-    return Math.abs(fx-segX)<=1 && Math.abs(fy-segY)<=1;
-  });
+  const visibleFoods=foods.filter(f=>{ const fx=Math.floor(f.x/SEGMENT_SIZE),fy=Math.floor(f.y/SEGMENT_SIZE); return Math.abs(fx-segX)<=1 && Math.abs(fy-segY)<=1; });
   visibleFoods.forEach(f=>{ ctx.font="24px Arial"; ctx.fillText(f.type==="red"?"🍎":"🍏",f.x-camX,f.y-camY); });
 
   let onlineCount=0;
   for(let id in players){
     const p=players[id];
     if(!p.alive) continue;
-    const pxSeg=Math.floor(p.x/SEGMENT_SIZE);
-    const pySeg=Math.floor(p.y/SEGMENT_SIZE);
-    if(Math.abs(pxSeg-segX)<=1 && Math.abs(pySeg-segY)<=1){
-      drawSnake(p,camX,camY,id===auth.currentUser.uid?mySnake.color:"#00ffff");
-    }
+    const pxSeg=Math.floor(p.x/SEGMENT_SIZE),pySeg=Math.floor(p.y/SEGMENT_SIZE);
+    if(Math.abs(pxSeg-segX)<=1 && Math.abs(pySeg-segY)<=1){ drawSnake(p,camX,camY,id===auth.currentUser.uid?mySnake.color:"#00ffff"); }
     onlineCount++;
   }
 
@@ -208,7 +178,7 @@ function render(){
   updateScoreboard();
 }
 
-/* ---------------- DRAW SNAKE ---------------- */
+/* ---------------- SNAKE ÇİZİM ---------------- */
 function drawSnake(snake,camX,camY,color){
   if(!snake.body) return;
   snake.body.forEach((seg,i)=>{
@@ -217,18 +187,12 @@ function drawSnake(snake,camX,camY,color){
     ctx.beginPath();
     ctx.arc(seg.x-camX,seg.y-camY,radius,0,Math.PI*2);
     ctx.fillStyle=i===0?color:`rgba(255,255,0,${alpha})`;
-    ctx.shadowColor="black"; ctx.shadowBlur=6; ctx.fill(); ctx.shadowBlur=0;
+    ctx.shadowColor="black"; ctx.shadowBlur=6;
+    ctx.fill(); ctx.shadowBlur=0;
   });
-  let head=snake.body[0];
-  if(head){
-    ctx.fillStyle="black";
-    ctx.beginPath();
-    ctx.arc(head.x-camX+5,head.y-camY-3,3,0,Math.PI*2);
-    ctx.arc(head.x-camX-5,head.y-camY-3,3,0,Math.PI*2);
-    ctx.fill();
-  }
 }
 
+/* ---------------- UTILITY ---------------- */
 function randomFood(){ return {x:Math.random()*MAP_SIZE,y:Math.random()*MAP_SIZE,type:Math.random()<0.1?"red":"green"}; }
 function distance(a,b){ return Math.hypot(a.x-b.x,a.y-b.y); }
 
