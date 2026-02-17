@@ -33,7 +33,6 @@ body{
   flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:10px;
 }
 #matchMessage{font-size:clamp(32px,10vw,60px);margin-top:20px;font-weight:800;min-height:60px;}
-.lobby{margin-top:15px;display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
 button{padding:12px 20px;border:none;border-radius:10px;font-weight:bold;cursor:pointer;background:linear-gradient(90deg,#ffb300,#ff5500);margin-top:10px;}
 #scoreContainer{display:flex;justify-content:space-around;width:100%;margin-top:10px;font-weight:bold;font-size:16px;display:none;}
 canvas{display:none;background:#9bbc0f;image-rendering:pixelated;margin-top:10px;border-radius:10px;}
@@ -151,6 +150,17 @@ function listenRoom(){
     const d = snap.data();
     if(!d) return;
 
+    // Rakip yoksa otomatik kazan
+    if(d.player2===null && d.state==="active"){
+      matchMessage.innerHTML = "Rakip Oyundan Düştü!<br>Sen Kazandın 🏆";
+      scoreContainer.style.display="none";
+      canvas.style.display="none";
+      if(gameInterval) clearInterval(gameInterval);
+      await updateDoc(doc(db,"rooms",roomId),{state:"ended"});
+      showReplayButton();
+      return;
+    }
+
     if(d.state==="waiting"){
       scoreContainer.style.display="none";
       matchMessage.innerText="Rakip Aranıyor...";
@@ -175,17 +185,19 @@ function listenRoom(){
       clearInterval(gameInterval);
       canvas.style.display="none";
       scoreContainer.style.display="none";
-
-      // Tekrar Oyna Butonu
-      matchMessage.innerHTML = `Oyun Bitti!<br>⌛️ <button id="replayBtn">Tekrar Oyna</button>`;
-      const replayBtn = document.getElementById("replayBtn");
-      replayBtn.onclick = ()=>{
-        findBtn.style.display="inline-block";
-        matchMessage.innerText="Maç Bul";
-        findMatch();
-      };
+      showReplayButton();
     }
   });
+}
+
+/* Tekrar Oyna Butonu */
+function showReplayButton(){
+  matchMessage.innerHTML = `Oyun Bitti!<br>⌛️ <button id="replayBtn">Tekrar Oyna</button>`;
+  document.getElementById("replayBtn").onclick = ()=>{
+    findBtn.style.display="inline-block";
+    matchMessage.innerText="Maç Bul";
+    findMatch();
+  };
 }
 
 /* ---------------- SNAKE GAME ---------------- */
@@ -225,6 +237,7 @@ function gameLoop(){
   if(direction==="LEFT") headX-=box;
   if(direction==="RIGHT") headX+=box;
 
+  // Çarpışma veya sınır
   if(headX<0 || headY<0 || headX>=size || headY>=size || snake.some(s=>s.x===headX && s.y===headY)){
     endGame();
     return;
