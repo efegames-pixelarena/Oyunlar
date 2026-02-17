@@ -2,40 +2,137 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>PixelArena Snake Ranked 1v1</title>
 
 <style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;}
+
 body{
-margin:0;
-background:#7c8f00;
-font-family:monospace;
-text-align:center;
-color:black;
+height:100vh;
+overflow:hidden;
+font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
+background:radial-gradient(circle at center, rgba(255,180,60,0.15) 0%, transparent 40%),
+linear-gradient(to bottom,#000 0%,#000 46%,#ff7b00 47%,#0b5d2a 48%,#063d1c 100%);
+color:white;
+touch-action:manipulation;
+display:flex;
+flex-direction:column;
 }
-canvas{
-background:#9bbc0f;
-margin-top:15px;
+
+/* ====== TOP BAR (BLACKJACK İLE AYNI) ====== */
+.top-bar{
+position:fixed;
+top:0;width:100%;height:55px;
+display:flex;align-items:center;justify-content:space-between;
+padding:0 16px;
+background:linear-gradient(135deg,#1a2a6c,#16245c);
+box-shadow:0 4px 15px rgba(0,0,0,0.45);
+z-index:100;
 }
+.brand{
+font-size:18px;font-weight:800;
+background:linear-gradient(90deg,#4fd1ff,#fff,#4fd1ff);
+background-size:200% auto;
+-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+animation:shine 3s linear infinite;
+}
+@keyframes shine{to{background-position:200% center;}}
+.right-menu{display:flex;gap:10px;}
+.nav-box{padding:6px 14px;border-radius:14px;font-weight:700;font-size:13px;min-width:95px;text-align:center;}
+.balance-box{background:#273c8f;}
+.bet-box{background:linear-gradient(90deg,#ff8a00,#ff5f00);color:#000;}
+
+/* ====== GAME AREA ====== */
+.game-wrapper{
+flex:1;
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:center;
+margin-top:55px;
+}
+
 #info{margin-top:10px;font-weight:bold}
 #timer{margin-top:5px}
+
+canvas{
+background:#9bbc0f;
+border-radius:8px;
+box-shadow:0 10px 30px rgba(0,0,0,0.6);
+}
+
 button{
-padding:8px 15px;
+padding:10px 20px;
 margin-top:10px;
 border:none;
-border-radius:6px;
+border-radius:8px;
 font-weight:bold;
 cursor:pointer;
 }
+
+/* ====== MOBILE CONTROLS ====== */
+.controls{
+position:absolute;
+bottom:20px;
+width:100%;
+display:flex;
+flex-direction:column;
+align-items:center;
+gap:8px;
+}
+
+.row{
+display:flex;
+gap:8px;
+}
+
+.ctrl-btn{
+width:60px;
+height:60px;
+border-radius:12px;
+background:linear-gradient(90deg,#ffb300,#ff5500);
+color:black;
+font-weight:bold;
+font-size:18px;
+display:flex;
+align-items:center;
+justify-content:center;
+}
+
+@media(min-width:900px){
+.controls{display:none;}
+}
+
 </style>
 </head>
 <body>
 
-<h2>🐍 PixelArena Snake Ranked 1v1</h2>
+<div class="top-bar">
+<div class="brand">PixelArena Snake</div>
+<div class="right-menu">
+<div class="nav-box balance-box">Ranked</div>
+<div class="nav-box bet-box">1v1</div>
+</div>
+</div>
+
+<div class="game-wrapper">
 <div id="info">Hazır</div>
 <button id="findBtn">Maç Bul</button>
 <div id="timer"></div>
-<canvas id="game" width="300" height="300"></canvas>
+<canvas id="game"></canvas>
+</div>
+
+<div class="controls">
+<div class="row">
+<div class="ctrl-btn" onclick="setDir('UP')">▲</div>
+</div>
+<div class="row">
+<div class="ctrl-btn" onclick="setDir('LEFT')">◀</div>
+<div class="ctrl-btn" onclick="setDir('DOWN')">▼</div>
+<div class="ctrl-btn" onclick="setDir('RIGHT')">▶</div>
+</div>
+</div>
 
 <script type="module">
 
@@ -60,28 +157,30 @@ const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 const auth=getAuth(app);
 
-let uid;
-let roomId=null;
-let unsubscribe=null;
-let opponentId=null;
-
-let gameStart=0;
-let gameDuration=60000;
-let isPlaying=false;
+let uid,roomId=null,unsubscribe=null,opponentId=null;
+let gameStart=0,gameDuration=60000,isPlaying=false;
 
 const canvas=document.getElementById("game");
 const ctx=canvas.getContext("2d");
-const box=15;
-const size=300;
 
+let box;
+let size;
 let snake,dir,food,score;
+let moveInterval=220; // başlangıç yavaş
+
+/* ===== RESPONSIVE CANVAS ===== */
+function resizeCanvas(){
+size=Math.min(window.innerWidth,window.innerHeight-180)*0.9;
+canvas.width=size;
+canvas.height=size;
+box=size/20;
+}
+window.addEventListener("resize",resizeCanvas);
+resizeCanvas();
 
 /* AUTH */
 onAuthStateChanged(auth,user=>{
-if(!user){
-alert("Giriş gerekli");
-return;
-}
+if(!user){alert("Giriş gerekli");return;}
 uid=user.uid;
 });
 
@@ -92,30 +191,22 @@ document.getElementById("findBtn").style.display="none";
 
 const q=query(collection(db,"snakeRooms"),where("state","==","waiting"));
 const snap=await getDocs(q);
-
 let joined=false;
 
 for(const r of snap.docs){
 const d=r.data();
 if(d.player1!==uid && !d.player2){
 roomId=r.id;
-await updateDoc(doc(db,"snakeRooms",roomId),{
-player2:uid,
-state:"matched"
-});
-joined=true;
-break;
-}
-}
+await updateDoc(doc(db,"snakeRooms",roomId),{player2:uid,state:"matched"});
+joined=true;break;
+}}
 
 if(!joined){
 const newRoom=doc(collection(db,"snakeRooms"));
 roomId=newRoom.id;
 await setDoc(newRoom,{
-player1:uid,
-player2:null,
-score1:0,
-score2:0,
+player1:uid,player2:null,
+score1:0,score2:0,
 state:"waiting",
 createdAt:serverTimestamp()
 });
@@ -124,17 +215,10 @@ createdAt:serverTimestamp()
 listenRoom();
 };
 
-/* ROOM LISTENER */
 function listenRoom(){
 if(unsubscribe)unsubscribe();
-
 unsubscribe=onSnapshot(doc(db,"snakeRooms",roomId),async(snap)=>{
-
-if(!snap.exists()){
-location.reload();
-return;
-}
-
+if(!snap.exists()){location.reload();return;}
 const d=snap.data();
 
 if(d.state==="matched"){
@@ -145,7 +229,7 @@ startTime:Date.now()
 }
 
 if(d.state==="playing"){
-opponentId = (uid===d.player1)? d.player2 : d.player1;
+opponentId=(uid===d.player1)?d.player2:d.player1;
 gameStart=d.startTime;
 startGame();
 }
@@ -153,28 +237,29 @@ startGame();
 if(d.state==="finished"){
 finishLocal(d);
 }
-
 });
 }
 
 /* START GAME */
 function startGame(){
-snake=[{x:150,y:150}];
+snake=[{x:10*box,y:10*box}];
 dir="RIGHT";
 food=randomFood();
 score=0;
+moveInterval=220;
 isPlaying=true;
 document.getElementById("info").innerText="Maç Başladı!";
-requestAnimationFrame(loop);
+loop();
 }
 
 function randomFood(){
 return{
-x:Math.floor(Math.random()*(size/box))*box,
-y:Math.floor(Math.random()*(size/box))*box
+x:Math.floor(Math.random()*20)*box,
+y:Math.floor(Math.random()*20)*box
 };
 }
 
+/* ===== STABLE SPEED SYSTEM ===== */
 function loop(){
 if(!isPlaying) return;
 
@@ -184,12 +269,9 @@ draw();
 let timeLeft=Math.max(0,Math.floor((gameDuration-(Date.now()-gameStart))/1000));
 document.getElementById("timer").innerText="Süre: "+timeLeft;
 
-if(timeLeft<=0){
-endGame();
-return;
-}
+if(timeLeft<=0){endGame();return;}
 
-requestAnimationFrame(loop);
+setTimeout(loop,moveInterval);
 }
 
 function update(){
@@ -210,6 +292,12 @@ return;
 if(headX===food.x&&headY===food.y){
 score++;
 food=randomFood();
+
+/* hız artışı (stabil) */
+if(moveInterval>80){
+moveInterval-=8;
+}
+
 }else{
 snake.pop();
 }
@@ -226,13 +314,15 @@ ctx.fillStyle="#0f380f";
 ctx.fillRect(s.x,s.y,box,box);
 });
 
-ctx.fillText("🍎",food.x+5,food.y+12);
+ctx.font=box+"px Arial";
+ctx.fillText("🍎",food.x,food.y+box);
 }
 
 function collision(x,y){
 return snake.some(s=>s.x===x&&s.y===y);
 }
 
+/* KEYBOARD */
 document.addEventListener("keydown",e=>{
 if(e.key==="ArrowUp"&&dir!=="DOWN")dir="UP";
 if(e.key==="ArrowDown"&&dir!=="UP")dir="DOWN";
@@ -240,16 +330,22 @@ if(e.key==="ArrowLeft"&&dir!=="RIGHT")dir="LEFT";
 if(e.key==="ArrowRight"&&dir!=="LEFT")dir="RIGHT";
 });
 
+/* MOBILE */
+window.setDir=function(newDir){
+if(newDir==="UP"&&dir!=="DOWN")dir="UP";
+if(newDir==="DOWN"&&dir!=="UP")dir="DOWN";
+if(newDir==="LEFT"&&dir!=="RIGHT")dir="LEFT";
+if(newDir==="RIGHT"&&dir!=="LEFT")dir="RIGHT";
+};
+
 /* END GAME */
 async function endGame(){
-if(!roomId) return;
-
+if(!roomId)return;
 isPlaying=false;
 
 const roomRef=doc(db,"snakeRooms",roomId);
 const snap=await getDoc(roomRef);
-if(!snap.exists()) return;
-
+if(!snap.exists())return;
 const d=snap.data();
 
 if(uid===d.player1){
@@ -261,25 +357,19 @@ await updateDoc(roomRef,{score2:score});
 await updateDoc(roomRef,{state:"finished"});
 }
 
-/* FINISH LOCAL */
 async function finishLocal(d){
-
-let myScore = (uid===d.player1)? d.score1 : d.score2;
-let oppScore = (uid===d.player1)? d.score2 : d.score1;
+let myScore=(uid===d.player1)?d.score1:d.score2;
+let oppScore=(uid===d.player1)?d.score2:d.score1;
 
 if(myScore>oppScore){
 alert("Kazandın!");
 await updateDoc(doc(db,"users",uid),{
-elo:increment(25),
-wins:increment(1),
-totalGames:increment(1)
+elo:increment(25),wins:increment(1),totalGames:increment(1)
 });
 }else{
 alert("Kaybettin!");
 await updateDoc(doc(db,"users",uid),{
-elo:increment(-20),
-losses:increment(1),
-totalGames:increment(1)
+elo:increment(-20),losses:increment(1),totalGames:increment(1)
 });
 }
 
