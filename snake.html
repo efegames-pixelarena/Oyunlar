@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PixelArena Snake.io Multiplayer</title>
 <style>
 body, html { margin:0; padding:0; overflow:hidden; font-family:sans-serif; background:#1e1e1e; }
@@ -54,7 +54,7 @@ let W = window.innerWidth, H = window.innerHeight;
 canvas.width = W; canvas.height = H;
 
 const MAP_SIZE = 100000; 
-const SEGMENT_SIZE = 2000; // segment tabanlı render
+const SEGMENT_SIZE = 2000;
 const MAX_FOODS = 500; 
 let players = {}, foods = [];
 let inputDir = {x:0,y:0};
@@ -78,25 +78,30 @@ function handleTouch(e){
   inputDir.x = dx/len; inputDir.y = dy/len;
 }
 
-/* ---------------- ODA YÖNETİMİ ---------------- */
+/* ---------------- ODA SİSTEMİ ---------------- */
 async function joinRoom(uid, username){
   const roomsRef = ref(db, 'rooms');
   const snapshot = await get(roomsRef);
   let rooms = snapshot.val() || {};
   let joined = false;
+
   for(let rid in rooms){
     if(Object.keys(rooms[rid].players||{}).length < 150){
       roomId = rid;
-      set(ref(db, `rooms/${rid}/players/${uid}`), { username, x:mySnake.x, y:mySnake.y, score:0, alive:true });
-      onDisconnect(ref(db, `rooms/${rid}/players/${uid}`)).remove();
+      const playerRef = ref(db, `rooms/${rid}/players/${uid}`);
+      set(playerRef, { username, x:mySnake.x, y:mySnake.y, score:0, alive:true });
+      onDisconnect(playerRef).remove();
       joined = true;
       break;
     }
   }
+
   if(!joined){
     roomId = 'room_' + Date.now();
-    set(ref(db, `rooms/${roomId}`), { players: {[uid]: {username, x:mySnake.x, y:mySnake.y, score:0, alive:true} }});
-    onDisconnect(ref(db, `rooms/${roomId}/players/${uid}`)).remove();
+    const roomRef = ref(db, `rooms/${roomId}`);
+    set(roomRef, { players: {[uid]: {username, x:mySnake.x, y:mySnake.y, score:0, alive:true} } });
+    const playerRef = ref(db, `rooms/${roomId}/players/${uid}`);
+    onDisconnect(playerRef).remove();
   }
 }
 
@@ -107,7 +112,6 @@ onAuthStateChanged(auth, async user=>{
   const username = user.displayName || "Oyuncu";
 
   mySnake.body = [{x:mySnake.x, y:mySnake.y}];
-
   await joinRoom(uid, username);
 
   const playersRef = ref(db, `rooms/${roomId}/players`);
@@ -124,26 +128,26 @@ onAuthStateChanged(auth, async user=>{
 /* ---------------- GAME LOOP ---------------- */
 function gameLoop(){
   if(mySnake.speed < mySnake.maxSpeed) mySnake.speed += 0.002;
-
   updateMySnake();
   checkCollisions();
   render();
   requestAnimationFrame(gameLoop);
 }
 
-/* ---------------- FUNCTIONS ---------------- */
+/* ---------------- UPDATE ---------------- */
 function updateMySnake(){
   if(inputDir.x!==0||inputDir.y!==0){
     mySnake.x += inputDir.x*mySnake.speed;
     mySnake.y += inputDir.y*mySnake.speed;
     mySnake.x = Math.max(0, Math.min(MAP_SIZE, mySnake.x));
     mySnake.y = Math.max(0, Math.min(MAP_SIZE, mySnake.y));
-    mySnake.body.unshift({x:mySnake.x,y:mySnake.y});
+    mySnake.body.unshift({x:mySnake.x, y:mySnake.y});
     if(mySnake.body.length>10+mySnake.score/5) mySnake.body.pop();
   }
   update(ref(db, `rooms/${roomId}/players/${auth.currentUser.uid}`), { x:mySnake.x, y:mySnake.y, score:mySnake.score });
 }
 
+/* ---------------- COLLISIONS ---------------- */
 function checkCollisions(){
   foods.forEach((f)=>{
     if(distance(f, mySnake.body[0])<15){
@@ -155,11 +159,12 @@ function checkCollisions(){
   });
 }
 
+/* ---------------- RENDER ---------------- */
 function render(){
   ctx.clearRect(0,0,W,H);
-  ctx.fillStyle="#1e1e1e";
-  ctx.fillRect(0,0,W,H);
+  ctx.fillStyle="#1e1e1e"; ctx.fillRect(0,0,W,H);
 
+  // Grid
   ctx.strokeStyle="#2a2a2a"; ctx.lineWidth=1;
   for(let x=0;x<W;x+=40){ ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
   for(let y=0;y<H;y+=40){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
@@ -172,9 +177,9 @@ function render(){
   ctx.lineWidth=16;
   ctx.strokeRect(-camX, -camY, MAP_SIZE, MAP_SIZE);
 
-  // Segment tabanlı görünür alan optimizasyonu
   const segX = Math.floor(mySnake.x/SEGMENT_SIZE);
   const segY = Math.floor(mySnake.y/SEGMENT_SIZE);
+
   const visibleFoods = foods.filter(f=>{
     const fx = Math.floor(f.x/SEGMENT_SIZE);
     const fy = Math.floor(f.y/SEGMENT_SIZE);
@@ -202,6 +207,7 @@ function render(){
   updateScoreboard();
 }
 
+/* ---------------- DRAW SNAKE ---------------- */
 function drawSnake(snake, camX, camY, color){
   if(!snake.body) return;
   snake.body.forEach((seg,i)=>{
