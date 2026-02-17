@@ -2,121 +2,55 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PixelArena Snake Battle - Emirhan Efe</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Pixel Arena Snake Battle</title>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 
 <style>
-html,body{
-margin:0;
-padding:0;
-height:100%;
-overflow:hidden;
-background:#7c8f00;
-font-family:'Press Start 2P', monospace;
-display:flex;
-justify-content:center;
-align-items:center;
-flex-direction:column;
-}
-
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Press Start 2P', monospace;}
+body{overflow:hidden;background:#7c8f00;display:flex;flex-direction:column;height:100vh;touch-action:manipulation;color:#0f380f;}
 .top-bar{
-position:fixed;
-top:0;
-width:100%;
-height:50px;
-display:flex;
-justify-content:space-between;
-align-items:center;
-padding:0 15px;
-background:linear-gradient(135deg,#1a2a6c,#16245c);
-color:white;
-font-weight:bold;
-z-index:100;
+height:55px;width:100%;display:flex;justify-content:space-between;align-items:center;padding:0 16px;
+background:linear-gradient(135deg,#1a2a6c,#16245c);color:white;
 }
-
-.top-bar .player-name{color:#4fd1ff;}
-.top-bar .opponent-name{color:#ff4f4f;}
-
-.canvas-wrapper{
-margin-top:60px;
-position:relative;
-}
-
-canvas{
-background:#9bbc0f;
-image-rendering: pixelated;
-display:block;
-border:4px solid #2f4f2f;
-}
-
-.gameover{
-position:absolute;
-top:0;
-left:0;
-width:600px;
-height:600px;
-background:rgba(139,172,15,0.95);
-display:flex;
-justify-content:center;
-align-items:center;
-flex-direction:column;
-font-size:24px;
-color:#0f380f;
-display:none;
-text-align:center;
-padding:20px;
-z-index:50;
-}
-
-.controls{
-display:grid;
-grid-template-columns:60px 60px 60px;
-grid-gap:5px;
-justify-content:center;
-margin-top:15px;
-}
-
-.btn{
-background:#2f4f2f;
-color:white;
-text-align:center;
-padding:15px;
-user-select:none;
-cursor:pointer;
-}
+.brand{font-weight:800;background:linear-gradient(90deg,#4fd1ff,#fff,#4fd1ff);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:shine 3s linear infinite;}
+@keyframes shine{to{background-position:200% center;}}
+.right-menu{display:flex;gap:10px;}
+.nav-box{padding:6px 12px;border-radius:14px;font-weight:700;font-size:13px;background:#273c8f;text-align:center;}
+.btn-logout{padding:6px 12px;border-radius:12px;border:none;background:#ff3b3b;color:white;font-weight:700;cursor:pointer;}
+#scoreboard{display:flex;justify-content:space-between;padding:6px 16px;margin-top:4px;font-size:14px;}
+#gameWrapper{flex:1;display:flex;justify-content:center;align-items:center;position:relative;}
+canvas{background:#9bbc0f;image-rendering:pixelated;}
+.gameover{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(139,172,15,0.95);display:flex;justify-content:center;align-items:center;flex-direction:column;font-size:16px;color:#0f380f;display:none;text-align:center;}
 </style>
 </head>
 <body>
 
 <div class="top-bar">
-<span class="player-name" id="playerName">Sen</span>
-<span class="opponent-name" id="opponentName">Rakip</span>
-</div>
-
-<div class="canvas-wrapper">
-<canvas id="game" width="600" height="600"></canvas>
-<div class="gameover" id="gameover">
-GAME OVER<br><br>
-Dokunarak Yeniden Başla
+<div class="brand">Pixel Arena Snake Battle</div>
+<div class="right-menu">
+<div class="nav-box" id="playerName">...</div>
+<div class="nav-box" id="opponentName">...</div>
+<div class="btn-logout" id="logoutBtn">Çıkış</div>
 </div>
 </div>
 
-<div class="controls">
-<div></div>
-<div class="btn" onclick="setDir('UP')">↑</div>
-<div></div>
-<div class="btn" onclick="setDir('LEFT')">←</div>
-<div class="btn" onclick="setDir('DOWN')">↓</div>
-<div class="btn" onclick="setDir('RIGHT')">→</div>
+<div id="scoreboard">
+<div>Round: <span id="roundNum">1</span></div>
+<div>Sen: <span id="playerScore">0</span></div>
+<div>Rakip: <span id="opponentScore">0</span></div>
+</div>
+
+<div id="gameWrapper">
+<canvas id="game" width="500" height="500"></canvas>
+<div class="gameover" id="gameover">GAME OVER<br><br>Rakip kazandı veya çarpışma!<br>Bekleniyor...</div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth,onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore,doc,setDoc,getDoc,onSnapshot,updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, doc, setDoc, onSnapshot, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-// Firebase config
 const firebaseConfig = {
 apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
 authDomain:"emirhan-site.firebaseapp.com",
@@ -127,107 +61,104 @@ appId:"1:668871888390:web:76568bda84cb1641f7bd87"
 };
 
 const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
 const db = getFirestore(app);
+const auth = getAuth(app);
 
-const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
-const box = 20;
-const gridSize = 30; // 600/20
+let uid, username, roomId, unsubscribe;
+let gameState="lobby";
+let round=1;
+let playerSnake=[], opponentSnake=[], direction="RIGHT", opponentDirection="RIGHT";
+let playerScore=0, opponentScore=0;
+let food;
+const box=20, canvas=document.getElementById("game"), ctx=canvas.getContext("2d");
+const foodEmojis=["🍏","🍎","🍐","🍋","🍌","🍉","🍊","🥝","🌽"];
+document.getElementById("logoutBtn").onclick=async()=>{ if(roomId) await updateDoc(doc(db,"rooms",roomId),{state:"ended"}); await signOut(auth); location.href="index.html";};
 
-let playerID = null;
-let snake = [{x:5,y:5}], opponentSnake = [];
-let direction = "RIGHT";
-let food = {x:10,y:10,type:"🍏"};
-let emojis = ["🍏","🍎","🍐","🍋","🍌","🍉","🍊","🥝","🌽"];
-let score = 0;
+onAuthStateChanged(auth,user=>{
+    if(!user) location.href="index.html";
+    uid=user.uid;
+    setDoc(doc(db,"users",uid),{username:"Oyuncu"+uid.substring(0,4)},{merge:true});
+    username="Oyuncu"+uid.substring(0,4);
+    document.getElementById("playerName").innerText=username;
+    findOrCreateRoom();
+});
 
-let userRef = null;
-let gameRef = doc(db,"snakeBattle","game");
+async function findOrCreateRoom(){
+    const roomsRef = doc(db,"rooms","snake-room");
+    const snap = await roomsRef.get();
+    if(!snap.exists()) await setDoc(roomsRef,{
+        player1:uid, player1Name:username,
+        player2:null, player2Name:null,
+        state:"waiting", round:1,
+        player1Snake:[], player2Snake:[], food:{x:0,y:0,type:"🍏"},
+        player1Score:0, player2Score:0,
+        startAt:serverTimestamp()
+    });
+    roomId="snake-room";
+    listenRoom();
+}
+
+function listenRoom(){
+    if(unsubscribe) unsubscribe();
+    unsubscribe = onSnapshot(doc(db,"rooms",roomId), snap=>{
+        const d = snap.data();
+        if(!d) return;
+        if(d.player1 && !d.player2 && uid!==d.player1) { 
+            updateDoc(doc(db,"rooms",roomId),{player2:uid, player2Name:username, state:"countdown", startAt:Date.now()+3000});
+        }
+        if(d.state==="countdown"){
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            ctx.font="40px Arial"; ctx.fillText("Başlıyor...",canvas.width/2-100,canvas.height/2);
+            setTimeout(()=>{updateDoc(doc(db,"rooms",roomId),{state:"active",player1Snake:[{x:100,y:100}],player2Snake:[{x:400,y:400}],food:randomFood()});},3000);
+        }
+        if(d.state==="active"){
+            playerSnake = uid===d.player1 ? d.player1Snake : d.player2Snake;
+            opponentSnake = uid===d.player1 ? d.player2Snake : d.player1Snake;
+            direction = d.direction || "RIGHT";
+            opponentDirection = d.opponentDirection || "LEFT";
+            food=d.food;
+            playerScore = uid===d.player1 ? d.player1Score : d.player2Score;
+            opponentScore = uid===d.player1 ? d.player2Score : d.player1Score;
+            document.getElementById("playerScore").innerText=playerScore;
+            document.getElementById("opponentScore").innerText=opponentScore;
+            document.getElementById("opponentName").innerText=uid===d.player1 ? d.player2Name||"Rakip" : d.player1Name||"Rakip";
+            drawGame();
+        }
+        if(d.state==="ended"){
+            document.getElementById("gameover").style.display="flex";
+        }
+    });
+}
 
 function randomFood(){
-return {x: Math.floor(Math.random()*gridSize), y: Math.floor(Math.random()*gridSize), type: emojis[Math.floor(Math.random()*emojis.length)]};
+    return {x:Math.floor(Math.random()*(canvas.width/box))*box, y:Math.floor(Math.random()*(canvas.height/box))*box, type:foodEmojis[Math.floor(Math.random()*foodEmojis.length)]};
 }
 
-function draw(){
-ctx.fillStyle="#9bbc0f";
-ctx.fillRect(0,0,canvas.width,canvas.height);
+function drawGame(){
+    ctx.fillStyle="#9bbc0f";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
 
-// Yem
-ctx.font="20px Arial";
-ctx.textAlign="center";
-ctx.textBaseline="middle";
-ctx.fillText(food.type, food.x*box + box/2, food.y*box + box/2);
+    playerSnake.forEach(s=>{
+        ctx.fillStyle="#0066ff";
+        ctx.fillRect(s.x,s.y,box,box);
+    });
+    opponentSnake.forEach(s=>{
+        ctx.fillStyle="#ff0000";
+        ctx.fillRect(s.x,s.y,box,box);
+    });
 
-// Kendi yılan
-snake.forEach(s=>{ctx.fillStyle="blue"; ctx.fillRect(s.x*box,s.y*box,box,box);});
-// Rakip yılan
-opponentSnake.forEach(s=>{ctx.fillStyle="red"; ctx.fillRect(s.x*box,s.y*box,box,box);});
+    ctx.font="20px Arial"; ctx.textAlign="center"; ctx.textBaseline="middle";
+    ctx.fillText(food.type,food.x+box/2,food.y+box/2);
 }
 
-function collision(x,y,snakeArr){return snakeArr.some(s=>s.x===x&&s.y===y);}
-
-function gameOver(){
-document.getElementById("gameover").style.display="flex";
-snake = [{x:5,y:5}]; direction="RIGHT"; score=0;
-updateDoc(userRef,{snake,score,direction});
-}
-
-function setDir(dir){
-if(dir==="UP" && direction!=="DOWN") direction="UP";
-if(dir==="DOWN" && direction!=="UP") direction="DOWN";
-if(dir==="LEFT" && direction!=="RIGHT") direction="LEFT";
-if(dir==="RIGHT" && direction!=="LEFT") direction="RIGHT";
-}
-
-document.addEventListener("keydown",(e)=>{
-if(e.key==="ArrowUp") setDir("UP");
-if(e.key==="ArrowDown") setDir("DOWN");
-if(e.key==="ArrowLeft") setDir("LEFT");
-if(e.key==="ArrowRight") setDir("RIGHT");
+document.addEventListener("keydown",e=>{
+    if(e.key==="ArrowUp" && direction!=="DOWN") direction="UP";
+    if(e.key==="ArrowDown" && direction!=="UP") direction="DOWN";
+    if(e.key==="ArrowLeft" && direction!=="RIGHT") direction="LEFT";
+    if(e.key==="ArrowRight" && direction!=="LEFT") direction="RIGHT";
+    updateDoc(doc(db,"rooms",roomId), {direction});
 });
 
-// Firebase auth
-onAuthStateChanged(auth,user=>{
-if(!user){alert("Giriş yapmalısın"); return;}
-playerID = user.uid;
-document.getElementById("playerName").innerText = user.displayName || "Sen";
-userRef = doc(db,"snakeBattle","players",playerID);
-
-setDoc(userRef,{snake,direction,score,name:user.displayName||"Sen"});
-
-// Game snapshot
-onSnapshot(gameRef, snap=>{
-if(snap.exists()){
-const data = snap.data();
-food = data.food || food;
-opponentSnake = data[playerID==="p1"?"p2":"p1"]?.snake || [];
-document.getElementById("opponentName").innerText = data[playerID==="p1"?"p2":"p1"]?.name || "Rakip";
-}
-});
-
-// Kendi konumunu Firebase'e gönder
-setInterval(async ()=>{
-let headX=snake[0].x, headY=snake[0].y;
-if(direction==="UP") headY--; if(direction==="DOWN") headY++;
-if(direction==="LEFT") headX--; if(direction==="RIGHT") headX++;
-
-if(headX<0 || headY<0 || headX>=gridSize || headY>=gridSize || collision(headX,headY,snake)){gameOver(); return;}
-snake.unshift({x:headX,y:headY});
-
-if(headX===food.x && headY===food.y){score++; food=randomFood();}
-else{snake.pop();}
-
-await updateDoc(userRef,{snake,direction,score});
-await updateDoc(gameRef,{food});
-},200);
-
-function loop(){draw(); requestAnimationFrame(loop);}
-loop();
-
-document.getElementById("gameover").addEventListener("click",()=>{document.getElementById("gameover").style.display="none"; snake=[{x:5,y:5}]; direction="RIGHT"; score=0;});
-});
 </script>
-
 </body>
 </html>
