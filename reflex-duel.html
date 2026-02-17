@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>PixelArena - Reflex Duel</title>
-
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;}
 body{
@@ -19,9 +18,9 @@ height:100vh;
 touch-action:manipulation;
 }
 @keyframes bg{0%{background-position:0% 50%}100%{background-position:100% 50%}}
-
 .top-bar{
-position:fixed;top:0;width:100%;height:55px;
+position:fixed;
+top:0;width:100%;height:55px;
 display:flex;align-items:center;justify-content:space-between;
 padding:0 16px;
 background:linear-gradient(135deg,#1a2a6c,#16245c);
@@ -36,46 +35,61 @@ background-size:200% auto;
 animation:shine 3s linear infinite;
 }
 @keyframes shine{to{background-position:200% center;}}
-
 .right-menu{display:flex;gap:10px;align-items:center;}
-.nav-box{padding:6px 14px;border-radius:14px;font-weight:700;font-size:13px;min-width:95px;text-align:center;background:#273c8f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.nav-box{padding:6px 14px;border-radius:14px;font-weight:700;font-size:13px;min-width:95px;text-align:center;background:#273c8f;}
 .btn{padding:6px 12px;border-radius:12px;border:none;cursor:pointer;font-weight:700;font-size:13px;}
 .logout-btn{background:#ff3b3b;color:white;}
-
 .scoreboard{
 margin-top:55px;
 width:100%;
 display:none;
 flex-direction:column;
 font-weight:bold;
+overflow:hidden;
 }
 .score-top{
 display:flex;
 justify-content:space-between;
-align-items:center;
-padding:8px 10px;
-gap:6px;
-flex-wrap:nowrap;
+padding:10px 14px;
+flex-wrap:wrap;
 }
-.player1Box,.player2Box,.roundBox{
-flex:1;
-min-width:0;
+.player1Box, .player2Box, .roundBox{
+flex:1 1 auto;
 text-align:center;
-padding:6px 4px;
-border-radius:8px;
 white-space:nowrap;
 overflow:hidden;
 text-overflow:ellipsis;
-font-size:14px;
 }
-.player1Box{background:#0d47a1;}
-.player2Box{background:#8b0000;}
-.roundBox{background:#000;}
-
-.round-bar{display:flex;height:6px;width:100%;}
-.round-blue{background:#0066ff;width:50%;transition:.3s;}
-.round-red{background:#ff0000;width:50%;transition:.3s;}
-
+.player1Box{
+background:#0d47a1;
+padding:6px 12px;
+border-radius:8px;
+animation:blueAnim 1.2s infinite alternate;
+}
+.player2Box{
+background:#8b0000;
+padding:6px 12px;
+border-radius:8px;
+animation:redAnim 1.2s infinite alternate;
+}
+.roundBox{
+background:#000;
+padding:6px 12px;
+border-radius:8px;
+animation:blackAnim 1.2s infinite alternate;
+}
+@keyframes blueAnim{0%{box-shadow:0 0 5px #007bff;}100%{box-shadow:0 0 20px #00c3ff;}}
+@keyframes redAnim{0%{box-shadow:0 0 5px #ff0000;}100%{box-shadow:0 0 20px #ff4d4d;}}
+@keyframes blackAnim{0%{box-shadow:0 0 5px #000;}100%{box-shadow:0 0 20px #222;}}
+.round-bar{
+display:flex;
+height:6px;
+width:100%;
+overflow:hidden;
+border-radius:3px;
+}
+.round-blue{flex:1;background:#0066ff;}
+.round-red{flex:1;background:#ff0000;}
 #game{
 flex:1;
 display:flex;
@@ -114,8 +128,8 @@ input{padding:8px;border-radius:8px;border:none;}
 <div id="p2" class="player2Box"></div>
 </div>
 <div class="round-bar">
-<div id="blueBar" class="round-blue"></div>
-<div id="redBar" class="round-red"></div>
+<div class="round-blue"></div>
+<div class="round-red"></div>
 </div>
 </div>
 
@@ -128,22 +142,19 @@ input{padding:8px;border-radius:8px;border:none;}
 </div>
 <div id="bigText"></div>
 <div id="subText"></div>
+<div id="afterMatch"></div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import {
-getFirestore, doc, updateDoc, deleteDoc,
-onSnapshot, collection, query, where, getDocs,
-serverTimestamp, runTransaction, getDoc, setDoc
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, doc, updateDoc, deleteDoc, onSnapshot, collection, query, where, getDocs, serverTimestamp, runTransaction, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const firebaseConfig={
-apiKey:"AIzaSy...",
+apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
 authDomain:"emirhan-site.firebaseapp.com",
 projectId:"emirhan-site",
-storageBucket:"emirhan-site.appspot.com",
+storageBucket:"emirhan-site.firebasestorage.app",
 messagingSenderId:"668871888390",
 appId:"1:668871888390:web:76568bda84cb1641f7bd87"
 };
@@ -152,30 +163,20 @@ const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 const auth=getAuth(app);
 
-let uid,username,roomId,unsubscribe,tapLock=false;
-let audioCtx,beepBuffer,goBuffer;
+let uid,username,roomId,unsubscribe,tapLock=false,countdownInterval=null;
 
-function initAudio(){
-audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-const osc=audioCtx.createOscillator();
-const gain=audioCtx.createGain();
-osc.connect(gain);
-gain.connect(audioCtx.destination);
-osc.frequency.value=600;
-osc.start();
-osc.stop(audioCtx.currentTime+0.05);
-}
+const scoreboard=document.getElementById("scoreboard");
+const bigText=document.getElementById("bigText");
+const subText=document.getElementById("subText");
+const p1=document.getElementById("p1");
+const p2=document.getElementById("p2");
+const roundInfo=document.getElementById("roundInfo");
+const findBtn=document.getElementById("findBtn");
+const lobbyBox=document.getElementById("lobbyBox");
+const afterMatch=document.getElementById("afterMatch");
 
-function playBeep(freq=600,dur=0.1){
-if(!audioCtx)return;
-const osc=audioCtx.createOscillator();
-const gain=audioCtx.createGain();
-osc.frequency.value=freq;
-osc.connect(gain);
-gain.connect(audioCtx.destination);
-osc.start();
-osc.stop(audioCtx.currentTime+dur);
-}
+const tickAudio=new Audio("https://www.soundjay.com/button/sounds/button-16.mp3");
+const goAudio=new Audio("https://www.soundjay.com/button/sounds/button-09.mp3");
 
 onAuthStateChanged(auth,async(user)=>{
 if(!user){location.href="index.html";return;}
@@ -185,8 +186,6 @@ username=snap.data().username;
 document.getElementById("userBox").innerText=username;
 });
 
-document.addEventListener("pointerdown",()=>{if(!audioCtx)initAudio();},{once:true});
-
 document.getElementById("logoutBtn").onclick=async()=>{
 if(roomId) await deleteDoc(doc(db,"rooms",roomId));
 await signOut(auth);
@@ -194,24 +193,13 @@ location.href="index.html";
 };
 
 window.addEventListener("beforeunload",async()=>{
-if(roomId){
-await updateDoc(doc(db,"rooms",roomId),{state:"ended",winner:"opponent_left"});
-}
+if(roomId) await deleteDoc(doc(db,"rooms",roomId));
 });
 
-const scoreboard=document.getElementById("scoreboard");
-const bigText=document.getElementById("bigText");
-const subText=document.getElementById("subText");
-const p1=document.getElementById("p1");
-const p2=document.getElementById("p2");
-const roundInfo=document.getElementById("roundInfo");
-const blueBar=document.getElementById("blueBar");
-const redBar=document.getElementById("redBar");
-
-document.getElementById("findBtn").onclick=async()=>{
+findBtn.onclick=async()=>{
+findBtn.style.display="none";
+lobbyBox.style.display="none";
 bigText.innerText="Rakip Aranıyor...";
-document.getElementById("findBtn").style.display="none";
-document.getElementById("lobbyBox").style.display="none";
 
 const q=query(collection(db,"rooms"),where("state","==","waiting"));
 const snap=await getDocs(q);
@@ -244,21 +232,13 @@ score1:0,
 score2:0,
 round:1,
 state:"waiting",
+rematchRequest:null,
 createdAt:serverTimestamp()
 });
 }
 
 listenRoom();
 };
-
-function updateBars(s1,s2){
-let total=s1+s2;
-if(total===0){blueBar.style.width="50%";redBar.style.width="50%";return;}
-let b=(s1/7)*100;
-let r=(s2/7)*100;
-blueBar.style.width=b+"%";
-redBar.style.width=r+"%";
-}
 
 function listenRoom(){
 if(unsubscribe)unsubscribe();
@@ -267,69 +247,69 @@ if(!snap.exists()){location.reload();return;}
 const d=snap.data();
 scoreboard.style.display="flex";
 
-let myScore,oppScore,myName,oppName;
+let displayP1,diplayP2;
 if(uid===d.player1){
-myScore=d.score1;oppScore=d.score2;
-myName=d.player1Name;oppName=d.player2Name||"...";
+displayP1=d.player1Name+" ("+d.score1+")";
+displayP2=(d.player2Name||"...")+" ("+d.score2+")";
 }else{
-myScore=d.score2;oppScore=d.score1;
-myName=d.player2Name;oppName=d.player1Name;
+displayP1=d.player2Name+" ("+d.score2+")";
+displayP2=d.player1Name+" ("+d.score1+")";
 }
-
-p1.innerText=myName+" ("+myScore+")";
-p2.innerText=oppName+" ("+oppScore+")";
+p1.innerText=displayP1;
+p2.innerText=displayP2;
 roundInfo.innerText="Round "+d.round+" / 7";
-updateBars(d.score1,d.score2);
 
-if(d.state==="matched"){
-await updateDoc(doc(db,"rooms",roomId),{
-state:"countdown",
-startAt:Date.now()+4000
-});
+/* Rakip düşerse kazan */
+if((d.state==="waiting" || d.state==="matched") && ((d.player1 && !d.player2) || (!d.player1 && d.player2))){
+await updateDoc(doc(db,"rooms",roomId),{state:"result",lastWinner:uid===d.player1?d.player1Name:d.player2Name});
 }
 
+/* Countdown */
 if(d.state==="countdown"){
-let interval=setInterval(()=>{
+if(countdownInterval) clearInterval(countdownInterval);
+countdownInterval=setInterval(()=>{
 let diff=d.startAt-Date.now();
 if(diff<=0){
-clearInterval(interval);
-playBeep(1000,0.2);
-updateDoc(doc(db,"rooms",roomId),{
-state:"active",
-roundStart:Date.now()
-});
+clearInterval(countdownInterval);
+bigText.innerText="TAP!";
+subText.innerText="";
+goAudio.play();
+updateDoc(doc(db,"rooms",roomId),{state:"active",roundStart:Date.now()});
 }else{
 bigText.innerText=Math.ceil(diff/1000);
-playBeep(600,0.05);
+tickAudio.play();
 }
-},1000);
+},250);
 }
 
+/* Active */
 if(d.state==="active"){
 bigText.innerText="TAP!";
 subText.innerText="";
+afterMatch.innerHTML="";
 }
 
+/* Result */
 if(d.state==="result"){
 bigText.innerText=d.lastWinner+" Kazandı!";
-subText.innerText=d.reaction+" ms";
+subText.innerText=d.reaction?"Reaksiyon: "+d.reaction+" ms":"";
+afterMatch.innerHTML=`
+<button id="newMatchBtn">⚽️ Yeni Maç Bul</button>
+`;
+document.getElementById("newMatchBtn").onclick=async()=>{
+await deleteDoc(doc(db,"rooms",roomId));
+location.reload();
+};
 
-if(d.score1===4||d.score2===4){
-bigText.innerText="MAÇ BİTTİ";
-return;
-}
+if(d.score1===4||d.score2===4) return;
 
 setTimeout(async()=>{
 await updateDoc(doc(db,"rooms",roomId),{
 round:d.round+1,
 state:"countdown",
-startAt:Date.now()+4000
+startAt:Date.now()+5000
 });
-},2500);
-}
-
-if(d.state==="ended"){
-bigText.innerText="Rakip Oyundan Ayrıldı";
+},3000);
 }
 });
 }
