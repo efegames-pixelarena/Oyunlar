@@ -27,21 +27,23 @@ touch-action:manipulation;
 position:fixed;
 top:0;width:100%;height:55px;
 display:flex;align-items:center;justify-content:space-between;
-padding:0 16px;background:linear-gradient(135deg,#1a2a6c,#16245c);
-box-shadow:0 4px 15px rgba(0,0,0,0.45);z-index:1000;
+padding:0 16px;
+background:linear-gradient(135deg,#1a2a6c,#16245c);
+box-shadow:0 4px 15px rgba(0,0,0,0.45);
+z-index:1000;
 }
-.brand{font-size:clamp(14px,2vw,18px);font-weight:800;}
+.brand{font-weight:800;}
 .right-menu{display:flex;gap:10px;align-items:center;}
-.nav-box{padding:6px 14px;border-radius:14px;font-weight:700;font-size:clamp(11px,2vw,13px);background:#273c8f;min-width:70px;text-align:center;}
-.btn{padding:6px 12px;border-radius:12px;border:none;cursor:pointer;font-weight:700;font-size:clamp(11px,2vw,13px);}
-.logout-btn{background:#ff3b3b;color:white;}
+.nav-box{padding:6px 14px;border-radius:14px;font-weight:700;background:#273c8f;}
+.logout-btn{background:#ff3b3b;color:white;border:none;padding:6px 12px;border-radius:12px;}
 
 .scoreboard{
 display:none;
 margin-top:55px;width:100%;
 background:rgba(0,0,0,0.5);
-justify-content:space-between;align-items:center;
-padding:8px 14px;font-weight:bold;font-size:clamp(12px,2.5vw,14px);
+justify-content:space-between;
+align-items:center;padding:8px 14px;
+font-weight:bold;
 }
 
 #game{
@@ -53,40 +55,43 @@ text-align:center;padding:10px;
 button{
 padding:10px 18px;border:none;border-radius:8px;
 font-weight:bold;cursor:pointer;
-font-size:clamp(12px,2.5vw,15px);
 background:linear-gradient(90deg,#ffb300,#ff8c00);
 margin-top:10px;
 }
 
 #bigText{
-font-size:clamp(32px,10vw,70px);
-min-height:90px;margin-top:20px;font-weight:800;
+font-size:60px;
+min-height:90px;margin-top:20px;
+font-weight:800;
 }
 
 .neon{
 color:#ff2b2b;
-text-shadow:0 0 5px #ff0000,0 0 10px #ff0000,0 0 20px #ff0000,0 0 40px #ff0000;
-font-size:20px;margin-top:10px;
+text-shadow:0 0 10px red,0 0 20px red;
+font-size:22px;margin-top:10px;
 }
 
-.winEffect{animation:winAnim 0.8s ease-in-out infinite alternate;}
+.winEffect{
+animation:winAnim 0.8s ease-in-out infinite alternate;
+}
 @keyframes winAnim{
-0%{transform:scale(1);text-shadow:0 0 10px gold;}
-100%{transform:scale(1.2);text-shadow:0 0 30px gold;}
+0%{transform:scale(1);}
+100%{transform:scale(1.2);}
 }
 
-/* Konfeti */
+/* Confetti */
 .confetti{
-position:fixed;width:8px;height:8px;
-background:red;top:-10px;z-index:2000;
-animation:fall 2s linear forwards;
+position:fixed;
+width:10px;height:10px;
+top:-10px;
+animation:fall 3s linear forwards;
 }
 @keyframes fall{
 to{transform:translateY(100vh) rotate(720deg);}
 }
 
 .lobby{margin-top:15px;display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
-input{padding:8px;border-radius:8px;border:none;outline:none;font-size:clamp(12px,2.5vw,14px);}
+input{padding:8px;border-radius:8px;border:none;}
 </style>
 </head>
 <body>
@@ -95,14 +100,14 @@ input{padding:8px;border-radius:8px;border:none;outline:none;font-size:clamp(12p
 <div class="brand">PixelArena</div>
 <div class="right-menu">
 <div class="nav-box" id="userBox">...</div>
-<button class="btn logout-btn" id="logoutBtn">Çıkış</button>
+<button class="logout-btn" id="logoutBtn">Çıkış</button>
 </div>
 </div>
 
 <div class="scoreboard" id="scoreboard">
-<div id="p1">Player1 (0)</div>
-<div id="roundInfo">Round 1 / 7</div>
-<div id="p2">Player2 (0)</div>
+<div id="p1"></div>
+<div id="roundInfo"></div>
+<div id="p2"></div>
 </div>
 
 <div id="game">
@@ -119,14 +124,16 @@ input{padding:8px;border-radius:8px;border:none;outline:none;font-size:clamp(12p
 </div>
 
 <script type="module">
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, doc, setDoc, updateDoc, deleteDoc,
+import {
+getFirestore, doc, updateDoc, deleteDoc,
 onSnapshot, collection, query, where, getDocs,
-serverTimestamp, runTransaction, getDoc } 
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { getAuth, onAuthStateChanged, signOut } 
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+serverTimestamp, runTransaction, getDoc, setDoc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+import {
+getAuth, onAuthStateChanged, signOut
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const firebaseConfig={
 apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
@@ -141,40 +148,44 @@ const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 const auth=getAuth(app);
 
-let uid=null,username=null,roomId=null,unsubscribe=null,tapLock=false;
+let uid,username,roomId,unsubscribe;
+let tapLock=false;
 
+const scoreboard=document.getElementById("scoreboard");
 const bigText=document.getElementById("bigText");
 const subText=document.getElementById("subText");
-const p1=document.getElementById("p1");
-const p2=document.getElementById("p2");
-const roundInfo=document.getElementById("roundInfo");
-const scoreboard=document.getElementById("scoreboard");
 
-/* SES SİSTEMİ (iOS uyumlu) */
+function showBoard(){scoreboard.style.display="flex";}
+function hideBoard(){scoreboard.style.display="none";}
+
+/* AUDIO (iOS compatible) */
 const ctx=new (window.AudioContext||window.webkitAudioContext)();
-function beep(freq,dur){
+function beep(freq,duration){
 const osc=ctx.createOscillator();
 const gain=ctx.createGain();
 osc.connect(gain);gain.connect(ctx.destination);
 osc.frequency.value=freq;
 osc.start();
 gain.gain.setValueAtTime(0.2,ctx.currentTime);
-osc.stop(ctx.currentTime+dur);
+osc.stop(ctx.currentTime+duration);
 }
-document.addEventListener("pointerdown",()=>ctx.resume(),{once:true});
+function applause(){beep(600,0.3);setTimeout(()=>beep(800,0.3),300);}
+function confettiSound(){beep(200,0.2);}
 
-/* KONFETİ */
-function confettiBlast(){
-for(let i=0;i<60;i++){
-let div=document.createElement("div");
-div.className="confetti";
-div.style.left=Math.random()*100+"vw";
-div.style.background=`hsl(${Math.random()*360},100%,50%)`;
-document.body.appendChild(div);
-setTimeout(()=>div.remove(),2000);
+/* CONFETTI */
+function launchConfetti(){
+for(let i=0;i<50;i++){
+let c=document.createElement("div");
+c.className="confetti";
+c.style.left=Math.random()*100+"vw";
+c.style.background=`hsl(${Math.random()*360},100%,50%)`;
+document.body.appendChild(c);
+setTimeout(()=>c.remove(),3000);
 }
+confettiSound();
 }
 
+/* AUTH */
 onAuthStateChanged(auth,async(user)=>{
 if(!user){location.href="index.html";return;}
 uid=user.uid;
@@ -183,31 +194,35 @@ username=snap.data().username;
 document.getElementById("userBox").innerText=username;
 });
 
-document.getElementById("logoutBtn").onclick=async()=>{await signOut(auth);location.href="index.html";};
+document.getElementById("logoutBtn").onclick=()=>signOut(auth);
 
-/* ODA KUR */
+/* ROOM CREATE */
 document.getElementById("createRoomBtn").onclick=async()=>{
 const code=document.getElementById("roomCodeInput").value.trim();
-if(!code) return alert("Kod gir");
-roomId=code;
-await setDoc(doc(db,"rooms",roomId),{
-player1:uid,player1Name:username,
-player2:null,player2Name:null,
+if(!code)return alert("Kod gir");
+await setDoc(doc(db,"rooms",code),{
+player1:uid,
+player1Name:username,
+player2:null,
+player2Name:null,
 players:[uid],
 score1:0,score2:0,
-round:1,state:"waiting"
+round:1,
+state:"waiting"
 });
+roomId=code;
 listenRoom();
 };
 
-/* KATIL */
+/* JOIN */
 document.getElementById("joinCodeBtn").onclick=async()=>{
 const code=document.getElementById("roomCodeInput").value.trim();
 const ref=doc(db,"rooms",code);
 const snap=await getDoc(ref);
-if(!snap.exists()) return alert("Oda yok");
+if(!snap.exists())return alert("Oda yok");
 await updateDoc(ref,{
-player2:uid,player2Name:username,
+player2:uid,
+player2Name:username,
 players:[snap.data().player1,uid],
 state:"countdown",
 startAt:Date.now()+5000
@@ -217,97 +232,104 @@ listenRoom();
 };
 
 function listenRoom(){
-if(unsubscribe) unsubscribe();
+if(unsubscribe)unsubscribe();
 unsubscribe=onSnapshot(doc(db,"rooms",roomId),async(snap)=>{
-if(!snap.exists()) return;
+if(!snap.exists())return;
 const d=snap.data();
 
-if(d.state!=="waiting") scoreboard.style.display="flex";
+if(d.state==="waiting"){
+bigText.innerText="Rakip Bekleniyor...";
+}
 
-p1.innerText=d.player1Name+" ("+d.score1+")";
-p2.innerText=(d.player2Name||"...")+" ("+d.score2+")";
-roundInfo.innerText="Round "+d.round+" / 7";
-
-/* COUNTDOWN */
 if(d.state==="countdown"){
+showBoard();
 let interval=setInterval(()=>{
 let diff=d.startAt-Date.now();
 if(diff<=0){
 clearInterval(interval);
-bigText.innerText="TAP!";
-updateDoc(doc(db,"rooms",roomId),{state:"active",roundStart:Date.now()});
+updateDoc(doc(db,"rooms",roomId),{
+state:"active",
+roundStart:Date.now()
+});
 }else{
 bigText.innerText=Math.ceil(diff/1000);
-beep(600,0.05);
+beep(400,0.1);
 }
 },1000);
 }
 
-/* ACTIVE */
 if(d.state==="active"){
 bigText.innerText="TAP!";
+subText.innerText="";
 }
 
-/* RESULT */
 if(d.state==="result"){
 bigText.classList.add("winEffect");
 bigText.innerText=d.lastWinner+" Kazandı!";
 subText.className="neon";
 subText.innerText=d.reaction+" ms";
-beep(1200,0.2);
-confettiBlast();
+launchConfetti();
+applause();
 
-/* 3 saniye ms */
-setTimeout(()=>subText.innerText="",3000);
+setTimeout(()=>{subText.innerText="";},3000);
 
-if(d.score1===4||d.score2===4){
-bigText.innerText=d.lastWinner+" MAÇI KAZANDI!";
-confettiBlast();
-beep(800,0.3);
-return;
-}
-
-/* 5 saniye sonraki round */
 let count=5;
 let interval=setInterval(()=>{
-subText.innerText="Round "+d.round+" - Sıradaki Raund'a "+count+" saniye";
+subText.innerText="Raund "+d.round+" - Sıradaki Raund'a "+count+" Saniye";
 count--;
 if(count<0){
 clearInterval(interval);
-bigText.classList.remove("winEffect");
+
+if(d.score1===4||d.score2===4){
+updateDoc(doc(db,"rooms",roomId),{state:"gameOver"});
+}else{
 updateDoc(doc(db,"rooms",roomId),{
 round:d.round+1,
 state:"countdown",
 startAt:Date.now()+5000
 });
 }
+}
 },1000);
+}
+
+if(d.state==="gameOver"){
+bigText.innerText="MAÇ BİTTİ!";
 }
 });
 }
 
-/* TAP */
 document.addEventListener("pointerdown",async()=>{
-if(tapLock||!roomId) return;
+if(tapLock||!roomId)return;
 tapLock=true;
+
 await runTransaction(db,async(t)=>{
 const ref=doc(db,"rooms",roomId);
 const snap=await t.get(ref);
-if(!snap.exists()) return;
+if(!snap.exists())return;
 const d=snap.data();
-if(d.state!=="active") return;
+if(d.state!=="active")return;
 
 let reaction=Date.now()-d.roundStart;
 
 if(uid===d.player1){
-t.update(ref,{score1:d.score1+1,state:"result",lastWinner:d.player1Name,reaction});
-}else if(uid===d.player2){
-t.update(ref,{score2:d.score2+1,state:"result",lastWinner:d.player2Name,reaction});
+t.update(ref,{
+score1:d.score1+1,
+state:"result",
+lastWinner:d.player1Name,
+reaction:reaction
+});
+}else{
+t.update(ref,{
+score2:d.score2+1,
+state:"result",
+lastWinner:d.player2Name,
+reaction:reaction
+});
 }
 });
 tapLock=false;
 });
-
 </script>
 </body>
 </html>
