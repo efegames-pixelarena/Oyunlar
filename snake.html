@@ -13,44 +13,29 @@ body{
   color:white;touch-action:manipulation;
 }
 @keyframes bg{0%{background-position:0 0;}100%{background-position:100% 100%;}}
-
-/* TOP BAR */
 .top-bar{
   position:fixed;top:0;width:100%;height:55px;
   display:flex;align-items:center;justify-content:space-between;
-  padding:0 16px;
-  background:linear-gradient(135deg,#1a2a6c,#16245c);
-  box-shadow:0 4px 15px rgba(0,0,0,0.45);
-  z-index:1000;
+  padding:0 16px;background:linear-gradient(135deg,#1a2a6c,#16245c);
+  box-shadow:0 4px 15px rgba(0,0,0,0.45);z-index:1000;
 }
 .brand{
   font-size:18px;font-weight:800;
   background:linear-gradient(90deg,#4fd1ff,#fff,#4fd1ff);
-  background-size:200% auto;
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;
   animation:shine 3s linear infinite;
 }
 @keyframes shine{to{background-position:200% center;}}
 .right-menu{display:flex;align-items:center;}
 .btn{padding:6px 12px;border-radius:12px;border:none;cursor:pointer;font-weight:700;font-size:13px;}
 .logout-btn{background:#ff3b3b;color:white;}
-
-/* GAME SCREEN */
 #gameScreen{
   flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:10px;
 }
 #matchMessage{font-size:clamp(32px,10vw,60px);margin-top:20px;font-weight:800;min-height:60px;}
 .lobby{margin-top:15px;display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
-input{padding:8px;border-radius:8px;border:none;}
-button{
-  padding:12px 20px;border:none;border-radius:10px;
-  font-weight:bold;cursor:pointer;
-  background:linear-gradient(90deg,#ffb300,#ff5500);
-  margin-top:10px;
-}
-#scoreContainer{
-  display:flex;justify-content:space-around;width:100%;margin-top:10px;font-weight:bold;font-size:16px;display:none;
-}
+button{padding:12px 20px;border:none;border-radius:10px;font-weight:bold;cursor:pointer;background:linear-gradient(90deg,#ffb300,#ff5500);margin-top:10px;}
+#scoreContainer{display:flex;justify-content:space-around;width:100%;margin-top:10px;font-weight:bold;font-size:16px;display:none;}
 canvas{display:none;background:#9bbc0f;image-rendering:pixelated;margin-top:10px;border-radius:10px;}
 </style>
 </head>
@@ -64,13 +49,8 @@ canvas{display:none;background:#9bbc0f;image-rendering:pixelated;margin-top:10px
 </div>
 
 <div id="gameScreen">
-  <div id="matchMessage">Maç Bul / Oda Kur</div>
+  <div id="matchMessage">Maç Bul</div>
   <button id="findBtn">Maç Bul</button>
-  <div class="lobby" id="lobbyBox">
-    <input id="roomCodeInput" placeholder="Oda Kodu">
-    <button id="createRoomBtn">Oda Kur</button>
-    <button id="joinCodeBtn">Katıl</button>
-  </div>
   <div id="scoreContainer">
     <div>Sen: <span id="playerScore">0</span></div>
     <div>Rakip: <span id="opponentScore">0</span></div>
@@ -96,12 +76,11 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-let uid, username, roomId, unsubscribe;
+let uid, username, roomId, unsubscribe, gameInterval;
 
 /* DOM */
 const matchMessage=document.getElementById("matchMessage");
 const findBtn=document.getElementById("findBtn");
-const lobbyBox=document.getElementById("lobbyBox");
 const scoreContainer=document.getElementById("scoreContainer");
 const playerScoreEl=document.getElementById("playerScore");
 const opponentScoreEl=document.getElementById("opponentScore");
@@ -123,11 +102,10 @@ document.getElementById("logoutBtn").onclick=async()=>{
   location.href="index.html";
 };
 
-/* MATCH FIND */
-findBtn.onclick = async()=>{
+/* ---------------- MATCH FIND ---------------- */
+async function findMatch(){
   matchMessage.innerText = "Rakip Aranıyor...";
   findBtn.style.display="none";
-  lobbyBox.style.display="none";
   scoreContainer.style.display="none";
 
   const q = query(collection(db,"rooms"), where("state","==","waiting"));
@@ -136,7 +114,6 @@ findBtn.onclick = async()=>{
 
   for(const r of snap.docs){
     const d = r.data();
-    // Kendi odasına katılma engeli
     if(d.player1!==uid && !d.player2){
       roomId = r.id;
       await updateDoc(doc(db,"rooms",roomId),{
@@ -163,12 +140,14 @@ findBtn.onclick = async()=>{
   }
 
   listenRoom();
-};
+}
 
-/* ROOM LISTENER */
+findBtn.onclick = findMatch;
+
+/* ---------------- ROOM LISTENER ---------------- */
 function listenRoom(){
   if(unsubscribe) unsubscribe();
-  unsubscribe = onSnapshot(doc(db,"rooms",roomId), snap=>{
+  unsubscribe = onSnapshot(doc(db,"rooms",roomId), async snap=>{
     const d = snap.data();
     if(!d) return;
 
@@ -180,8 +159,7 @@ function listenRoom(){
 
     if(d.state==="countdown"){
       scoreContainer.style.display="none";
-      let diff = Math.ceil((d.startAt - Date.now())/1000);
-      if(diff<0) diff=0;
+      let diff = Math.ceil((d.startAt - Date.now())/1000); if(diff<0) diff=0;
       matchMessage.innerText = "Başlıyor... "+diff;
       canvas.style.display="none";
     }
@@ -194,10 +172,18 @@ function listenRoom(){
     }
 
     if(d.state==="ended"){
-      matchMessage.innerText="Rakip Oyundan Çıktı / Oyun Bitti";
-      scoreContainer.style.display="none";
+      clearInterval(gameInterval);
       canvas.style.display="none";
-      if(gameInterval) clearInterval(gameInterval);
+      scoreContainer.style.display="none";
+
+      // Tekrar Oyna Butonu
+      matchMessage.innerHTML = `Oyun Bitti!<br>⌛️ <button id="replayBtn">Tekrar Oyna</button>`;
+      const replayBtn = document.getElementById("replayBtn");
+      replayBtn.onclick = ()=>{
+        findBtn.style.display="inline-block";
+        matchMessage.innerText="Maç Bul";
+        findMatch();
+      };
     }
   });
 }
@@ -205,7 +191,6 @@ function listenRoom(){
 /* ---------------- SNAKE GAME ---------------- */
 let snake, direction, food, score;
 let box = 15, size = 300;
-let gameInterval;
 
 function startSnakeGame(){
   snake=[{x:150,y:150}];
@@ -225,11 +210,12 @@ function startSnakeGame(){
 }
 
 function randomFood(){
-  return {
-    x: Math.floor(Math.random()*(size/box))*box,
-    y: Math.floor(Math.random()*(size/box))*box,
-    type: Math.random()<0.1?"red":"green"
-  };
+  return { x: Math.floor(Math.random()*(size/box))*box, y: Math.floor(Math.random()*(size/box))*box, type: Math.random()<0.1?"red":"green" };
+}
+
+function endGame(){
+  clearInterval(gameInterval);
+  updateDoc(doc(db,"rooms",roomId),{state:"ended"});
 }
 
 function gameLoop(){
@@ -240,14 +226,13 @@ function gameLoop(){
   if(direction==="RIGHT") headX+=box;
 
   if(headX<0 || headY<0 || headX>=size || headY>=size || snake.some(s=>s.x===headX && s.y===headY)){
-    clearInterval(gameInterval);
-    alert("Oyun Bitti! Skor: "+score);
+    endGame();
     return;
   }
 
   if(headX===food.x && headY===food.y){
     score += food.type==="red"?30:10;
-    playerScoreEl.innerText = score;
+    playerScoreEl.innerText=score;
     food=randomFood();
   } else { snake.pop(); }
 
@@ -257,9 +242,7 @@ function gameLoop(){
 
 function draw(){
   ctx.fillStyle="#9bbc0f"; ctx.fillRect(0,0,size,size);
-  snake.forEach(s=>{
-    ctx.fillStyle="#0f380f"; ctx.fillRect(s.x,s.y,box,box);
-  });
+  snake.forEach(s=>{ctx.fillStyle="#0f380f"; ctx.fillRect(s.x,s.y,box,box);});
   ctx.font="14px Arial"; ctx.textAlign="center"; ctx.textBaseline="middle";
   ctx.fillText(food.type==="red"?"🍎":"🍏",food.x+box/2,food.y+box/2);
 }
