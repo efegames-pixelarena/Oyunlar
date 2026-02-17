@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Reflex Duel V2</title>
+<title>Reflex Duel V3</title>
 <style>
 body{
 margin:0;
@@ -38,19 +38,17 @@ cursor:pointer;
 
 <script type="module">
 
-/* FIREBASE IMPORTS */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
 getFirestore, doc, setDoc, updateDoc,
 deleteDoc, onSnapshot,
-collection, getDocs,
 serverTimestamp, runTransaction
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {
 getAuth, signInAnonymously, onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-/* FIREBASE CONFIG (SENİN PROJE) */
+/* CONFIG */
 const firebaseConfig={
 apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
 authDomain:"emirhan-site.firebaseapp.com",
@@ -64,21 +62,24 @@ const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 const auth=getAuth(app);
 
-/* ELEMENTS */
 const findBtn=document.getElementById("findBtn");
 const status=document.getElementById("status");
 const bigText=document.getElementById("bigText");
 
-/* GLOBALS */
 let uid=null;
 let roomId=null;
 let isHost=false;
 let roomUnsub=null;
-let queueUnsub=null;
 let audioCtx=null;
 let tapLock=false;
 
-/* AUDIO (iOS UYUMLU) */
+/* AUTH */
+onAuthStateChanged(auth,async(user)=>{
+if(!user){await signInAnonymously(auth);return;}
+uid=user.uid;
+});
+
+/* AUDIO */
 function unlockAudio(){
 if(!audioCtx){
 audioCtx=new (window.AudioContext||window.webkitAudioContext)();
@@ -96,94 +97,65 @@ g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.2);
 o.stop(audioCtx.currentTime+.2);
 }
 
-/* AUTH */
-onAuthStateChanged(auth,async(user)=>{
-if(!user){
-await signInAnonymously(auth);
-return;
-}
-uid=user.uid;
-
-/* Eski queue temizle */
-await deleteDoc(doc(db,"matchQueue",uid)).catch(()=>{});
-});
-
-/* FIND MATCH */
+/* MATCHMAKING (GLOBAL LOCK) */
 findBtn.onclick=async()=>{
 if(!uid)return;
 unlockAudio();
 status.innerText="Rakip aranıyor...";
-await cleanUp();
-
-/* Kuyrukta biri var mı */
-const snap=await getDocs(collection(db,"matchQueue"));
-let opponent=null;
-
-snap.forEach(d=>{
-if(d.id!==uid && !opponent){
-opponent=d;
-}
-});
-
-if(opponent){
+findBtn.disabled=true;
 
 await runTransaction(db,async(t)=>{
-const fresh=await t.get(opponent.ref);
-if(!fresh.exists())return;
+const queueRef=doc(db,"system","matchmaking");
+const queueSnap=await t.get(queueRef);
+
+if(!queueSnap.exists()){
+t.set(queueRef,{waiting:uid});
+return;
+}
+
+const data=queueSnap.data();
+
+if(!data.waiting){
+t.update(queueRef,{waiting:uid});
+}
+else if(data.waiting!==uid){
 
 roomId=crypto.randomUUID();
 isHost=true;
 
 t.set(doc(db,"rooms",roomId),{
-player1:uid,
-player2:fresh.id,
-round:1,
-score1:0,
-score2:0,
+player1:data.waiting,
+player2:uid,
 state:"countdown",
 count:3,
 winner:null,
 createdAt:serverTimestamp()
 });
 
-t.delete(opponent.ref);
-});
-
-startGame();
-listenRoom();
-
-}else{
-
-await setDoc(doc(db,"matchQueue",uid),{
-createdAt:serverTimestamp()
-});
-
-listenQueue();
+t.update(queueRef,{waiting:null});
 }
+});
+
+listenForRoom();
 };
 
-/* QUEUE LISTENER */
-function listenQueue(){
-queueUnsub=onSnapshot(doc(db,"matchQueue",uid),async(snap)=>{
+/* ROOM LISTENER */
+function listenForRoom(){
+roomUnsub=onSnapshot(doc(db,"system","matchmaking"),async(snap)=>{
 if(!snap.exists())return;
 
-const rooms=await getDocs(collection(db,"rooms"));
-rooms.forEach(r=>{
-if(r.data().player2===uid){
-roomId=r.id;
-isHost=false;
-startGame();
-listenRoom();
-}
+const roomsSnap=await onSnapshotRoomSearch();
 });
-});
+
 }
 
-/* ROOM LISTENER */
-function listenRoom(){
-roomUnsub=onSnapshot(doc(db,"rooms",roomId),(snap)=>{
+async function onSnapshotRoomSearch(){
+const roomRef=doc(db,"rooms",roomId);
+if(!roomId)return;
+
+roomUnsub=onSnapshot(roomRef,(snap)=>{
 if(!snap.exists()){
-resetUI();
+reset();
 return;
 }
 updateUI(snap.data());
@@ -243,36 +215,15 @@ bigText.innerText=d.winner===uid?"Kazandın":"Kaybettin";
 }
 }
 
-function startGame(){
-findBtn.classList.add("hidden");
-status.innerText="";
-}
-
-function resetUI(){
+function reset(){
+findBtn.disabled=false;
 findBtn.classList.remove("hidden");
 bigText.classList.add("hidden");
 bigText.innerText="";
 roomId=null;
 }
 
-/* CLEANUP */
-async function cleanUp(){
-if(roomUnsub)roomUnsub();
-if(queueUnsub)queueUnsub();
-if(roomId && isHost){
-await deleteDoc(doc(db,"rooms",roomId)).catch(()=>{});
-}
-roomId=null;
-}
-
-/* Sayfa kapanınca temizle */
-window.addEventListener("beforeunload",async()=>{
-if(roomId && isHost){
-await deleteDoc(doc(db,"rooms",roomId)).catch(()=>{});
-}
-});
-
-/* TAP EVENTS */
+/* EVENTS */
 document.addEventListener("touchstart",tap);
 document.addEventListener("mousedown",tap);
 document.addEventListener("keydown",e=>{if(e.code==="Space")tap();});
