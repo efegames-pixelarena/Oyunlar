@@ -21,7 +21,6 @@ touch-action:manipulation;
 }
 @keyframes bg{0%{background-position:0% 50%}100%{background-position:100% 50%}}
 
-/* TOP BAR */
 .top-bar{
 position:fixed;
 top:0;width:100%;height:55px;
@@ -40,11 +39,10 @@ animation:shine 3s linear infinite;
 }
 @keyframes shine{to{background-position:200% center;}}
 .right-menu{display:flex;gap:10px;align-items:center;}
-.nav-box{padding:6px 14px;border-radius:14px;font-weight:700;font-size:13px;min-width:95px;text-align:center;background:#273c8f;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
+.nav-box{padding:6px 14px;border-radius:14px;font-weight:700;font-size:13px;min-width:95px;text-align:center;background:#273c8f;}
 .btn{padding:6px 12px;border-radius:12px;border:none;cursor:pointer;font-weight:700;font-size:13px;}
 .logout-btn{background:#ff3b3b;color:white;}
 
-/* SCOREBOARD */
 .scoreboard{
 margin-top:55px;
 width:100%;
@@ -57,7 +55,7 @@ font-weight:bold;
 display:flex;
 justify-content:space-between;
 align-items:center;
-padding:10px 10px;
+padding:10px 8px;
 gap:6px;
 flex-wrap:nowrap;
 }
@@ -65,26 +63,26 @@ flex-wrap:nowrap;
 .player1Box,.player2Box,.roundBox{
 flex:1;
 min-width:0;
-text-align:center;
-font-size:14px;
-overflow:hidden;
 white-space:nowrap;
+overflow:hidden;
 text-overflow:ellipsis;
-padding:6px 6px;
+text-align:center;
+padding:6px 8px;
 border-radius:8px;
+font-size:14px;
 }
 
-.player1Box{background:#0d47a1;animation:blueAnim 1.2s infinite alternate;}
-.player2Box{background:#8b0000;animation:redAnim 1.2s infinite alternate;}
-.roundBox{background:#000;animation:blackAnim 1.2s infinite alternate;}
+.player1Box{background:#0d47a1;}
+.player2Box{background:#8b0000;}
+.roundBox{background:#000;}
 
-@keyframes blueAnim{0%{box-shadow:0 0 5px #007bff;}100%{box-shadow:0 0 20px #00c3ff;}}
-@keyframes redAnim{0%{box-shadow:0 0 5px #ff0000;}100%{box-shadow:0 0 20px #ff4d4d;}}
-@keyframes blackAnim{0%{box-shadow:0 0 5px #000;}100%{box-shadow:0 0 20px #222;}}
-
-.round-bar{display:flex;height:6px;width:100%;}
-.round-blue{flex:1;background:#0066ff;}
-.round-red{flex:1;background:#ff0000;}
+.round-bar{
+display:flex;
+height:6px;
+width:100%;
+}
+.round-blue{flex:1;background:#0066ff;transition:0.3s;}
+.round-red{flex:1;background:#ff0000;transition:0.3s;}
 
 #game{
 flex:1;
@@ -95,12 +93,14 @@ align-items:center;
 text-align:center;
 padding:10px;
 }
+
 button{
 padding:12px 20px;border:none;border-radius:10px;
 font-weight:bold;cursor:pointer;
 background:linear-gradient(90deg,#ffb300,#ff5500);
 margin-top:10px;
 }
+
 #bigText{font-size:clamp(32px,10vw,70px);min-height:90px;margin-top:20px;font-weight:800;}
 #subText{margin-top:10px;font-size:18px;}
 .lobby{margin-top:15px;display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
@@ -124,8 +124,8 @@ input{padding:8px;border-radius:8px;border:none;}
 <div id="p2" class="player2Box"></div>
 </div>
 <div class="round-bar">
-<div class="round-blue"></div>
-<div class="round-red"></div>
+<div class="round-blue" id="blueBar"></div>
+<div class="round-red" id="redBar"></div>
 </div>
 </div>
 
@@ -152,7 +152,6 @@ serverTimestamp, runTransaction, getDoc, setDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-/* FIREBASE CONFIG */
 const firebaseConfig={
 apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
 authDomain:"emirhan-site.firebaseapp.com",
@@ -166,32 +165,11 @@ const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 const auth=getAuth(app);
 
-/* VARIABLES */
-let uid,username,roomId,unsubscribe,tapLock=false;
+let uid,username,roomId,unsubscribe;
+let tapLock=false;
 let countdownInterval=null;
 let audioCtx=null;
 
-/* AUDIO (iOS Compatible) */
-function initAudio(){
-if(!audioCtx){
-audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-}
-}
-
-function beep(freq,duration){
-if(!audioCtx)return;
-const osc=audioCtx.createOscillator();
-const gain=audioCtx.createGain();
-osc.frequency.value=freq;
-osc.connect(gain);
-gain.connect(audioCtx.destination);
-osc.start();
-gain.gain.setValueAtTime(1,audioCtx.currentTime);
-gain.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+duration);
-osc.stop(audioCtx.currentTime+duration);
-}
-
-/* DOM */
 const scoreboard=document.getElementById("scoreboard");
 const bigText=document.getElementById("bigText");
 const subText=document.getElementById("subText");
@@ -201,8 +179,28 @@ const roundInfo=document.getElementById("roundInfo");
 const findBtn=document.getElementById("findBtn");
 const lobbyBox=document.getElementById("lobbyBox");
 const afterMatch=document.getElementById("afterMatch");
+const blueBar=document.getElementById("blueBar");
+const redBar=document.getElementById("redBar");
 
-/* AUTH */
+function initAudio(){
+if(!audioCtx){
+audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+}
+}
+
+function playBeep(freq,duration){
+if(!audioCtx)return;
+const osc=audioCtx.createOscillator();
+const gain=audioCtx.createGain();
+osc.connect(gain);
+gain.connect(audioCtx.destination);
+osc.frequency.value=freq;
+osc.start();
+gain.gain.setValueAtTime(0.2,audioCtx.currentTime);
+gain.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+duration);
+osc.stop(audioCtx.currentTime+duration);
+}
+
 onAuthStateChanged(auth,async(user)=>{
 if(!user){location.href="index.html";return;}
 uid=user.uid;
@@ -211,14 +209,12 @@ username=snap.data().username;
 document.getElementById("userBox").innerText=username;
 });
 
-/* LOGOUT */
 document.getElementById("logoutBtn").onclick=async()=>{
 if(roomId) await deleteDoc(doc(db,"rooms",roomId));
 await signOut(auth);
 location.href="index.html";
 };
 
-/* DISCONNECT AUTO WIN */
 window.addEventListener("beforeunload",async()=>{
 if(roomId){
 const ref=doc(db,"rooms",roomId);
@@ -226,16 +222,17 @@ const snap=await getDoc(ref);
 if(snap.exists()){
 const d=snap.data();
 if(d.state!=="finished"){
-await updateDoc(ref,{
-state:"finished",
-winner: uid===d.player1 ? d.player2Name : d.player1Name
-});
+if(uid===d.player1 && d.player2){
+await updateDoc(ref,{state:"finished",winner:d.player2Name});
+}
+if(uid===d.player2 && d.player1){
+await updateDoc(ref,{state:"finished",winner:d.player1Name});
+}
 }
 }
 }
 });
 
-/* FIND MATCH */
 findBtn.onclick=async()=>{
 initAudio();
 findBtn.style.display="none";
@@ -244,7 +241,6 @@ bigText.innerText="Rakip Aranıyor...";
 
 const q=query(collection(db,"rooms"),where("state","==","waiting"));
 const snap=await getDocs(q);
-let joined=false;
 
 for(const r of snap.docs){
 const d=r.data();
@@ -253,14 +249,14 @@ roomId=r.id;
 await updateDoc(doc(db,"rooms",roomId),{
 player2:uid,
 player2Name:username,
-state:"matched"
+state:"matched",
+matchedAt:Date.now()
 });
-joined=true;
-break;
+listenRoom();
+return;
 }
 }
 
-if(!joined){
 const newRoom=doc(collection(db,"rooms"));
 roomId=newRoom.id;
 await setDoc(newRoom,{
@@ -274,25 +270,22 @@ round:1,
 state:"waiting",
 createdAt:serverTimestamp()
 });
-}
-
 listenRoom();
 };
 
-/* LISTEN ROOM */
+function updateBars(d){
+const total=7;
+blueBar.style.flex=d.score1;
+redBar.style.flex=d.score2;
+}
+
 function listenRoom(){
 if(unsubscribe)unsubscribe();
 
 unsubscribe=onSnapshot(doc(db,"rooms",roomId),async(snap)=>{
 if(!snap.exists()){location.reload();return;}
 const d=snap.data();
-
 scoreboard.style.display="flex";
-
-if(!d.player2 && d.state!=="waiting"){
-bigText.innerText="Rakip Ayrıldı - Kazandın!";
-return;
-}
 
 if(uid===d.player1){
 p1.innerText=d.player1Name+" ("+d.score1+")";
@@ -302,11 +295,9 @@ p1.innerText=d.player2Name+" ("+d.score2+")";
 p2.innerText=d.player1Name+" ("+d.score1+")";
 }
 
-/* ROUND SYNC */
-let lead=Math.max(d.score1,d.score2)+1;
-roundInfo.innerText="Round "+lead+" / 7";
+roundInfo.innerText="Round "+d.round+" / 7";
+updateBars(d);
 
-/* STATES */
 if(d.state==="matched"){
 await updateDoc(doc(db,"rooms",roomId),{
 state:"countdown",
@@ -320,22 +311,22 @@ countdownInterval=setInterval(async()=>{
 let diff=d.startAt-Date.now();
 if(diff<=0){
 clearInterval(countdownInterval);
-beep(900,0.3); // GO sound
+playBeep(900,0.3);
 await updateDoc(doc(db,"rooms",roomId),{
 state:"active",
 roundStart:Date.now()
 });
 }else{
-let sec=Math.ceil(diff/1000);
-bigText.innerText=sec;
-beep(400,0.1); // countdown tick
+bigText.innerText=Math.ceil(diff/1000);
+playBeep(600,0.1);
 }
 },1000);
 }
 
 if(d.state==="active"){
-bigText.innerText="GO!";
+bigText.innerText="TAP!";
 subText.innerText="";
+afterMatch.innerHTML="";
 }
 
 if(d.state==="result"){
@@ -343,18 +334,16 @@ bigText.innerText=d.lastWinner+" Kazandı!";
 subText.innerText=d.reaction+" ms";
 
 if(d.score1===4||d.score2===4){
-afterMatch.innerHTML=`
-<button id="newMatchBtn">⚽️ Yeni Maç Bul</button>
-`;
-document.getElementById("newMatchBtn").onclick=async()=>{
-await deleteDoc(doc(db,"rooms",roomId));
-location.reload();
-};
+await updateDoc(doc(db,"rooms",roomId),{
+state:"finished",
+winner:d.lastWinner
+});
 return;
 }
 
 setTimeout(async()=>{
 await updateDoc(doc(db,"rooms",roomId),{
+round:d.round+1,
 state:"countdown",
 startAt:Date.now()+4000
 });
@@ -362,18 +351,17 @@ startAt:Date.now()+4000
 }
 
 if(d.state==="finished"){
-bigText.innerText=d.winner+" Kazandı!";
-afterMatch.innerHTML=`
-<button onclick="location.reload()">⚽️ Yeni Maç Bul</button>
-`;
+bigText.innerText=d.winner+" Maçı Kazandı!";
+subText.innerText="";
+afterMatch.innerHTML=`<button onclick="location.reload()">⚽️ Yeni Maç Bul</button>`;
 }
 });
 }
 
-/* TAP */
 document.addEventListener("pointerdown",async()=>{
 if(tapLock||!roomId)return;
 tapLock=true;
+initAudio();
 
 await runTransaction(db,async(t)=>{
 const ref=doc(db,"rooms",roomId);
