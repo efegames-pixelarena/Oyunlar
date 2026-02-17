@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PixelArena Snake 1v1</title>
+<title>PixelArena Snake Ranked 1v1</title>
 <style>
 body{margin:0;background:#7c8f00;font-family:monospace;text-align:center}
 canvas{background:#9bbc0f;margin-top:20px}
@@ -45,6 +45,7 @@ let opponentId=null;
 let gameStartTime=null;
 let gameDuration=60000;
 let isPlaying=false;
+let alreadyMatched=false;
 
 const canvas=document.getElementById("game");
 const ctx=canvas.getContext("2d");
@@ -56,7 +57,6 @@ let snake,dir,food,score;
 onAuthStateChanged(auth,user=>{
 if(!user){
 alert("Giriş gerekli");
-window.location.href="index.html";
 return;
 }
 currentUser=user;
@@ -64,33 +64,58 @@ joinQueue();
 });
 
 async function joinQueue(){
-document.getElementById("info").innerText="Rakip aranıyor...";
+
 const userRef=doc(db,"users",currentUser.uid);
 const snap=await getDoc(userRef);
-const elo=snap.data().elo||1000;
+
+if(!snap.exists()){
+alert("Firestore users dokümanı yok!");
+return;
+}
+
+const elo=snap.data().elo || 1000;
 
 await set(ref(rtdb,"rankedQueue/"+currentUser.uid),{
 elo:elo,
 joinedAt:Date.now()
 });
-searchMatch(elo);
+
+listenForMatch(elo);
 }
 
-async function searchMatch(myElo){
-const snap=await get(ref(rtdb,"rankedQueue"));
-if(!snap.exists()) return;
+function listenForMatch(myElo){
 
-const queue=snap.val();
+const queueRef = ref(rtdb,"rankedQueue");
+
+onValue(queueRef, snap=>{
+if(!snap.exists() || alreadyMatched) return;
+
+const queue = snap.val();
+
 for(let uid in queue){
-if(uid===currentUser.uid) continue;
-if(Math.abs(queue[uid].elo-myElo)<=100){
+
+if(uid === currentUser.uid) continue;
+
+if(Math.abs(queue[uid].elo - myElo) <= 100){
+
+// küçük UID oda kurar (çakışma önleme)
+if(currentUser.uid < uid){
 createRoom(uid);
+}
+
+alreadyMatched=true;
 break;
 }
+
 }
+
+});
 }
 
 async function createRoom(opponent){
+
+if(roomId) return;
+
 roomId="room_"+Date.now();
 opponentId=opponent;
 
@@ -111,6 +136,7 @@ startLocalGame();
 }
 
 function listenRoom(){
+
 const roomRef=ref(rtdb,"gameRooms/"+roomId);
 
 onDisconnect(ref(rtdb,"gameRooms/"+roomId+"/players/"+currentUser.uid))
@@ -118,24 +144,24 @@ onDisconnect(ref(rtdb,"gameRooms/"+roomId+"/players/"+currentUser.uid))
 
 onValue(roomRef,snap=>{
 if(!snap.exists()) return;
+
 const data=snap.val();
 gameStartTime=data.startTime;
-
 const players=data.players;
 
 for(let uid in players){
 if(uid!==currentUser.uid){
 opponentId=uid;
+
 if(players[uid].connected===false){
 alert("Rakip bağlantıyı kaybetti. Kazandın!");
-updateElo(currentUser.uid,opponentId);
-remove(ref(rtdb,"gameRooms/"+roomId));
+finishMatch(true);
 }
 }
 }
 
 if(Date.now()-data.startTime>gameDuration){
-decideWinner(players);
+finishMatch(null);
 }
 });
 }
@@ -220,30 +246,47 @@ if(e.key==="ArrowLeft"&&dir!=="RIGHT")dir="LEFT";
 if(e.key==="ArrowRight"&&dir!=="LEFT")dir="RIGHT";
 });
 
-async function decideWinner(players){
+async function finishMatch(forceWin){
+
+if(!roomId) return;
+
 isPlaying=false;
 
-let myScore=players[currentUser.uid].score;
-let oppScore=players[opponentId].score;
+const snap=await get(ref(rtdb,"gameRooms/"+roomId));
+if(!snap.exists()) return;
 
-if(myScore>oppScore){
-alert("Kazandın!");
-await updateElo(currentUser.uid,opponentId);
-}else if(myScore<oppScore){
-alert("Kaybettin!");
-}else{
-alert("Berabere!");
+const players=snap.val().players;
+
+let myScore=players[currentUser.uid].score;
+let oppScore=players[opponentId]?.score || 0;
+
+let win=false;
+
+if(forceWin===true){
+win=true;
+}else if(forceWin===null){
+if(myScore>oppScore) win=true;
 }
 
-remove(ref(rtdb,"gameRooms/"+roomId));
+if(win){
+alert("Kazandın!");
+await updateElo(currentUser.uid,opponentId);
+}else{
+alert("Kaybettin!");
+}
+
+await remove(ref(rtdb,"gameRooms/"+roomId));
+roomId=null;
 }
 
 async function updateElo(winner,loser){
+
 await updateDoc(doc(db,"users",winner),{
 elo:increment(25),
 wins:increment(1),
 totalGames:increment(1)
 });
+
 await updateDoc(doc(db,"users",loser),{
 elo:increment(-20),
 losses:increment(1),
