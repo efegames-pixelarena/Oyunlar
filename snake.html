@@ -158,17 +158,17 @@ findBtn.onclick = async()=>{
   matchMessage.innerText = "Rakip Aranıyor...";
   findBtn.style.display="none";
   lobbyBox.style.display="none";
+  scoreContainer.style.display="none";
 
-  scoreContainer.style.display="none"; // SKOR ARANIRKEN GÖZÜKMEZ
+  // Önce açık odaları kontrol et
+  const roomsQuery = query(collection(db,"rooms"), where("state","==","waiting"));
+  const roomsSnap = await getDocs(roomsQuery);
 
-  const q=query(collection(db,"rooms"),where("state","==","waiting"));
-  const snap = await getDocs(q);
   let joined=false;
-
-  for(const r of snap.docs){
-    const d=r.data();
-    if(d.player1!==uid && !d.player2){
-      roomId=r.id;
+  for(const r of roomsSnap.docs){
+    const d = r.data();
+    if(d.player1 !== uid && !d.player2){
+      roomId = r.id;
       await updateDoc(doc(db,"rooms",roomId),{
         player2:uid,
         player2Name:username,
@@ -180,9 +180,10 @@ findBtn.onclick = async()=>{
     }
   }
 
+  // Eğer uygun oda yoksa yeni oda aç
   if(!joined){
     const newRoom = doc(collection(db,"rooms"));
-    roomId=newRoom.id;
+    roomId = newRoom.id;
     await setDoc(newRoom,{
       player1:uid, player1Name:username,
       player2:null, player2Name:null,
@@ -202,22 +203,32 @@ function listenRoom(){
     const d = snap.data();
     if(!d) return;
 
-    /* Kullanıcı adları */
+    // Kullanıcı adları
     if(d.player1Name) playerNameEl.innerText = d.player1Name;
     if(d.player2Name && d.player2Name!==username) opponentNameEl.innerText = d.player2Name;
 
-    /* Rakip aranırken */
-    if(d.state==="waiting" || d.state==="countdown"){
+    // Rakip aranırken
+    if(d.state==="waiting"){
       scoreContainer.style.display="none";
-      matchMessage.innerText = d.state==="waiting" ? "Rakip Aranıyor..." : "Başlıyor... 5";
+      matchMessage.innerText="Rakip Aranıyor...";
+      canvas.style.display="none";
     }
 
-    /* Oyun başlıyor */
+    // Countdown
+    if(d.state==="countdown"){
+      scoreContainer.style.display="none";
+      let diff = Math.ceil((d.startAt - Date.now())/1000);
+      if(diff<0) diff=0;
+      matchMessage.innerText = "Başlıyor... "+diff;
+      canvas.style.display="none";
+    }
+
+    // Oyun başlıyor
     if(d.state==="active"){
       scoreContainer.style.display="flex";
       canvas.style.display="block";
       matchMessage.style.display="none";
-      // Oyun döngüsü burada başlatılabilir
+      startSnakeGame(); // Oyun başlat
     }
 
     if(d.state==="ended"){
@@ -226,6 +237,16 @@ function listenRoom(){
       canvas.style.display="none";
     }
   });
+}
+
+/* Oyun - Yalnızca örnek */
+function startSnakeGame(){
+  // Burada oyunun tam mantığını ekleyebilirsin
+  ctx.fillStyle="#9bbc0f";
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle="#0f380f";
+  ctx.font="20px Arial";
+  ctx.fillText("Oyun Başladı!", canvas.width/2, canvas.height/2);
 }
 </script>
 </body>
