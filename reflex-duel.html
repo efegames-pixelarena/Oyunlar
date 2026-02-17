@@ -7,6 +7,7 @@
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;}
+
 body{
 background:linear-gradient(-45deg,#ff0000,#001eff,#8b0000,#00008b);
 background-size:400% 400%;
@@ -37,10 +38,7 @@ background:linear-gradient(135deg,#1a2a6c,#16245c);
 box-shadow:0 4px 15px rgba(0,0,0,0.45);
 z-index:1000;
 }
-.brand{
-font-size:clamp(14px,2vw,18px);
-font-weight:800;
-}
+.brand{font-size:clamp(14px,2vw,18px);font-weight:800;}
 .right-menu{display:flex;gap:10px;align-items:center;}
 .nav-box{
 padding:6px 14px;
@@ -103,6 +101,18 @@ margin-top:20px;
 font-weight:800;
 }
 
+#subText{
+margin-top:10px;
+font-size:clamp(14px,4vw,22px);
+font-weight:700;
+color:#ff2b2b;
+text-shadow:
+0 0 5px #ff0000,
+0 0 10px #ff0000,
+0 0 20px #ff0000;
+min-height:30px;
+}
+
 .lobby{
 margin-top:15px;
 display:flex;
@@ -117,13 +127,6 @@ border-radius:8px;
 border:none;
 outline:none;
 font-size:clamp(12px,2.5vw,14px);
-}
-
-canvas{
-position:fixed;
-pointer-events:none;
-top:0;
-left:0;
 }
 </style>
 </head>
@@ -154,6 +157,7 @@ left:0;
 </div>
 
 <div id="bigText"></div>
+<div id="subText"></div>
 
 </div>
 
@@ -172,7 +176,7 @@ getAuth, onAuthStateChanged, signOut
 
 /* FIREBASE */
 const firebaseConfig={
-apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
+apiKey:"AIzaSy...",
 authDomain:"emirhan-site.firebaseapp.com",
 projectId:"emirhan-site",
 storageBucket:"emirhan-site.firebasestorage.app",
@@ -190,7 +194,7 @@ let username=null;
 let roomId=null;
 let unsubscribe=null;
 let tapLock=false;
-let countdownInterval=null;
+let interval=null;
 
 /* ELEMENTS */
 const findBtn=document.getElementById("findBtn");
@@ -198,6 +202,7 @@ const createRoomBtn=document.getElementById("createRoomBtn");
 const joinCodeBtn=document.getElementById("joinCodeBtn");
 const roomCodeInput=document.getElementById("roomCodeInput");
 const bigText=document.getElementById("bigText");
+const subText=document.getElementById("subText");
 const p1=document.getElementById("p1");
 const p2=document.getElementById("p2");
 const roundInfo=document.getElementById("roundInfo");
@@ -205,129 +210,95 @@ const logoutBtn=document.getElementById("logoutBtn");
 const userBox=document.getElementById("userBox");
 const lobbyBox=document.getElementById("lobbyBox");
 
-/* UI CONTROL */
-function hideLobby(){
-findBtn.style.display="none";
-lobbyBox.style.display="none";
-}
-function showLobby(){
-findBtn.style.display="block";
-lobbyBox.style.display="flex";
-}
+function hideLobby(){findBtn.style.display="none";lobbyBox.style.display="none";}
+function showLobby(){findBtn.style.display="block";lobbyBox.style.display="flex";}
 
 /* AUTH */
 onAuthStateChanged(auth,async(user)=>{
-if(!user){ location.href="index.html"; return; }
+if(!user){location.href="index.html";return;}
 uid=user.uid;
 const snap=await getDoc(doc(db,"users",uid));
 username=snap.data().username;
 userBox.innerText=username;
 });
 
-logoutBtn.onclick=async()=>{ await signOut(auth); location.href="index.html"; };
+logoutBtn.onclick=async()=>{await signOut(auth);location.href="index.html";};
 
-/* CLEAN OLD ROOM */
-async function cleanOldRooms(){
-const q=query(collection(db,"rooms"),where("players","array-contains",uid));
-const snap=await getDocs(q);
-for(const r of snap.docs){ await deleteDoc(r.ref); }
-}
-
-/* MATCHMAKING */
-findBtn.onclick=async()=>{
-hideLobby();
-await cleanOldRooms();
-bigText.innerText="Eşleşme aranıyor...";
-await runTransaction(db,async(t)=>{
-const queueRef=collection(db,"queue");
-const qSnap=await getDocs(queueRef);
-let opponent=null;
-qSnap.forEach(docu=>{
-if(docu.data().uid!==uid && !opponent){ opponent=docu; }
-});
-if(opponent){
-const roomRef=doc(collection(db,"rooms"));
-t.set(roomRef,{
-player1:opponent.data().uid,
-player1Name:opponent.data().username,
-player2:uid,
-player2Name:username,
-players:[opponent.data().uid,uid],
-score1:0,score2:0,
-round:1,
-state:"countdown",
-startAt:Date.now()+5000,
-lastWinner:null
-});
-t.delete(opponent.ref);
-roomId=roomRef.id;
-}else{
-const myQueue=doc(collection(db,"queue"));
-t.set(myQueue,{uid,username,createdAt:serverTimestamp()});
-}
-});
-listenQueue();
-};
-
-/* ROOM LISTENER */
-function listenQueue(){
-onSnapshot(collection(db,"rooms"),snap=>{
-snap.forEach(docu=>{
-const d=docu.data();
-if(d.players && d.players.includes(uid)){
-roomId=docu.id;
-listenRoom();
-}
-});
-});
-}
-
+/* LISTEN ROOM */
 function listenRoom(){
 if(unsubscribe) unsubscribe();
+
 unsubscribe=onSnapshot(doc(db,"rooms",roomId),async(snap)=>{
 if(!snap.exists()) return reset();
 const d=snap.data();
-if(!d.players.includes(uid)) return reset();
 
 p1.innerText=d.player1Name+" ("+d.score1+")";
 p2.innerText=d.player2Name+" ("+d.score2+")";
 roundInfo.innerText="Round "+d.round+" / 7";
 
+clearInterval(interval);
+
+/* 1️⃣ 10 Saniye Countdown */
 if(d.state==="countdown"){
-clearInterval(countdownInterval);
-countdownInterval=setInterval(()=>{
+interval=setInterval(()=>{
 const diff=d.startAt-Date.now();
 if(diff<=0){
-clearInterval(countdownInterval);
-bigText.innerText="HAZIR";
-setTimeout(()=>{
+clearInterval(interval);
+
+/* 2️⃣ 3 Saniye HAZIR OL */
+bigText.innerText="HAZIR OL";
+let readyTime=3;
+subText.innerText=readyTime;
+
+const readyInt=setInterval(()=>{
+readyTime--;
+subText.innerText=readyTime;
+if(readyTime<=0){
+clearInterval(readyInt);
+subText.innerText="";
 updateDoc(doc(db,"rooms",roomId),{state:"active"});
-},800);
+}
+},1000);
+
 }else{
 bigText.innerText=Math.ceil(diff/1000);
 }
-},200);
+},250);
 }
 
 if(d.state==="active"){
 bigText.innerText="TAP!";
+subText.innerText="";
 }
 
+/* 3️⃣ SONUÇ EKRANI */
 if(d.state==="result"){
+
 bigText.innerText=d.lastWinner+" Kazandı!";
+
+let nextRound=5;
+subText.innerText="Round "+(d.round+1)+" Kalan Süre: "+nextRound;
+
+interval=setInterval(()=>{
+nextRound--;
+subText.innerText="Round "+(d.round+1)+" Kalan Süre: "+nextRound;
+if(nextRound<=0){
+clearInterval(interval);
+
 if(d.score1===4||d.score2===4){
-setTimeout(async()=>{
-await deleteDoc(doc(db,"rooms",roomId));
+deleteDoc(doc(db,"rooms",roomId));
 reset();
-},2000);
 }else{
-await updateDoc(doc(db,"rooms",roomId),{
+updateDoc(doc(db,"rooms",roomId),{
 round:d.round+1,
 state:"countdown",
-startAt:Date.now()+5000
+startAt:Date.now()+10000
 });
 }
 }
+},1000);
+}
+
 });
 }
 
@@ -335,26 +306,29 @@ startAt:Date.now()+5000
 document.addEventListener("pointerdown",async()=>{
 if(tapLock||!roomId) return;
 tapLock=true;
+
 await runTransaction(db,async(t)=>{
 const ref=doc(db,"rooms",roomId);
 const snap=await t.get(ref);
 if(!snap.exists()) return;
 const d=snap.data();
 if(d.state!=="active") return;
+
 if(uid===d.player1){
 t.update(ref,{score1:d.score1+1,state:"result",lastWinner:d.player1Name});
 }else if(uid===d.player2){
 t.update(ref,{score2:d.score2+1,state:"result",lastWinner:d.player2Name});
 }
 });
+
 tapLock=false;
 });
 
-/* RESET */
 function reset(){
 if(unsubscribe) unsubscribe();
 roomId=null;
 bigText.innerText="";
+subText.innerText="";
 showLobby();
 }
 
