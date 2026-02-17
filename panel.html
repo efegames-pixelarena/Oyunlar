@@ -14,6 +14,7 @@ background-size:400% 400%;
 animation:bgMove 15s ease infinite;
 color:white;
 overflow-x:hidden;
+position:relative;
 }
 @keyframes bgMove{
 0%{background-position:0% 50%}
@@ -21,28 +22,42 @@ overflow-x:hidden;
 100%{background-position:0% 50%}
 }
 
+/* KAR */
+.snowflake{
+position:fixed;
+top:-10px;
+color:white;
+font-size:10px;
+opacity:0.8;
+pointer-events:none;
+animation:fall linear infinite;
+}
+@keyframes fall{to{transform:translateY(110vh);}}
+
 /* TOP BAR */
 .top-bar{
 position:fixed;
-top:0;width:100%;height:60px;
+top:0;width:100%;height:55px;
 display:flex;align-items:center;justify-content:center;
 background:linear-gradient(135deg,#1a2a6c,#16245c);
 box-shadow:0 0 25px #00f5ff55;
 z-index:1000;
 }
 .brand{
-font-size:20px;
-font-weight:900;
-letter-spacing:1px;
-background:linear-gradient(90deg,#00f5ff,#ffffff,#00f5ff);
+font-size:18px;font-weight:800;
+background:linear-gradient(90deg,#4fd1ff,#fff,#4fd1ff);
+background-size:200% auto;
 -webkit-background-clip:text;
 -webkit-text-fill-color:transparent;
 animation:shine 3s linear infinite;
 }
 @keyframes shine{to{background-position:200% center;}}
 
+/* BAKİYE TAMAMEN GİZLİ */
+.balance-box{display:none !important;}
+
 /* PANEL */
-.panel-container{margin-top:110px;padding:20px;padding-bottom:120px;}
+.panel-container{margin-top:90px;padding:20px;padding-bottom:120px;}
 
 .animated-btn{
 position:relative;
@@ -55,8 +70,8 @@ font-weight:bold;
 margin-bottom:25px;
 background:#111936;
 overflow:hidden;
+z-index:1;
 }
-
 .animated-btn::before{
 content:"";
 position:absolute;
@@ -79,8 +94,7 @@ z-index:-1;
 /* FOOTER */
 .footer{
 position:fixed;
-bottom:0;
-width:100%;
+bottom:0;width:100%;
 background:#0d1333;
 text-align:center;
 padding:12px;
@@ -98,23 +112,25 @@ z-index:5000;
 }
 .modal-content{
 background:linear-gradient(145deg,#1c2455,#12183c);
-padding:30px;border-radius:25px;width:90%;max-width:420px;
+padding:30px;border-radius:20px;width:90%;max-width:400px;
 position:relative;
 box-shadow:0 0 40px #00f5ff55;
 }
-.close{
-position:absolute;right:15px;top:10px;
-cursor:pointer;font-size:18px;
+.close{position:absolute;right:15px;top:10px;cursor:pointer;}
+
+input{
+width:100%;padding:12px;margin-bottom:10px;
+border-radius:12px;border:none;background:#1f285c;color:white;
 }
 .action-btn{
-width:100%;padding:14px;border:none;border-radius:15px;
+width:100%;padding:12px;border:none;border-radius:12px;
 background:linear-gradient(90deg,#ffb300,#ff8c00);
 font-weight:bold;cursor:pointer;
-margin-top:15px;
+margin-top:10px;
 }
 
 /* PREMIUM NEON WHEEL */
-.wheel-container{position:relative;width:280px;height:280px;margin:20px auto;}
+.wheel-container{position:relative;width:300px;height:300px;margin:20px auto;}
 
 #wheel{
 width:100%;height:100%;
@@ -124,18 +140,16 @@ box-shadow:
 0 0 25px #00f5ff,
 0 0 50px #00f5ff,
 0 0 80px #9333ea;
-transition:transform 4s cubic-bezier(0.17,0.67,0.83,0.67);
+transition:transform 4.5s cubic-bezier(0.17,0.67,0.83,0.67);
+background:#111;
 }
 
 .pointer{
-position:absolute;
-top:-20px;
-left:50%;
-transform:translateX(-50%);
+position:absolute;top:-20px;left:50%;transform:translateX(-50%);
 border-left:18px solid transparent;
 border-right:18px solid transparent;
 border-bottom:35px solid #ffb300;
-filter:drop-shadow(0 0 10px #ffb300);
+filter:drop-shadow(0 0 15px #ffb300);
 }
 </style>
 </head>
@@ -143,37 +157,43 @@ filter:drop-shadow(0 0 10px #ffb300);
 
 <div class="top-bar">
 <div class="brand">PixelArena Bonus</div>
+<div class="balance-box" id="balanceBox">
+Bakiye: <span id="balance">0₺</span>
+</div>
 </div>
 
 <div class="panel-container">
-<div class="animated-btn" onclick="openModal('wheelModal')">
-🎡 GÜNLÜK ÇARK ÇEVİR
+<div class="animated-btn" onclick="openModal('codeModal')">🎁 BONUS KOD GİR</div>
+<div class="animated-btn" onclick="openModal('wheelModal')">🎡 GÜNLÜK ÇARK ÇEVİR</div>
+<div class="animated-btn" onclick="window.location.href='index.html'">🏠 ANA SAYFAYA DÖN</div>
 </div>
 
-<div class="animated-btn" onclick="window.location.href='index.html'">
-🏠 ANA SAYFAYA DÖN
+<div class="footer">© 2026 PixelArena - Tüm Hakları Saklıdır</div>
+
+<!-- MODALS -->
+<div class="modal" id="codeModal">
+<div class="modal-content">
+<div class="close" onclick="closeModal('codeModal')">✖</div>
+<h3>Kod Gir</h3>
+<input id="codeInput" placeholder="Kodu yaz">
+<button class="action-btn" onclick="useCode()">Kullan</button>
 </div>
 </div>
 
-<div class="footer">
-© 2026 PixelArena
-</div>
-
-<!-- MODAL -->
 <div class="modal" id="wheelModal">
 <div class="modal-content">
 <div class="close" onclick="closeModal('wheelModal')">✖</div>
-<h3 style="text-align:center;margin-bottom:15px;">VIP Günlük Çark</h3>
+<h3>Günlük Çark</h3>
 <div class="wheel-container">
 <div class="pointer"></div>
-<canvas id="wheel" width="280" height="280"></canvas>
+<canvas id="wheel" width="300" height="300"></canvas>
 </div>
 <button class="action-btn" onclick="spinWheel()">Çevir</button>
 </div>
 </div>
 
-<!-- SPIN SOUND -->
-<audio id="spinSound" preload="auto">
+<!-- iOS UYUMLU SES -->
+<audio id="spinSound" preload="auto" playsinline>
 <source src="https://assets.mixkit.co/sfx/preview/mixkit-slot-machine-wheel-1934.mp3" type="audio/mpeg">
 </audio>
 
@@ -198,16 +218,33 @@ const db=getFirestore(app);
 
 let currentUser=null;
 
-onAuthStateChanged(auth,(user)=>{
-if(!user){window.location="index.html";}
+onAuthStateChanged(auth,async(user)=>{
+if(!user){window.location="index.html";return;}
 currentUser=user;
 });
+
+/* iOS SES UNLOCK */
+const spinSound=document.getElementById("spinSound");
+document.body.addEventListener("click",()=>{
+spinSound.play().then(()=>spinSound.pause()).catch(()=>{});
+},{once:true});
 
 /* MODAL */
 window.openModal=id=>document.getElementById(id).style.display="flex";
 window.closeModal=id=>document.getElementById(id).style.display="none";
 
-/* WHEEL DRAW */
+/* KAR */
+setInterval(()=>{
+const snow=document.createElement("div");
+snow.classList.add("snowflake");
+snow.innerText="❄";
+snow.style.left=Math.random()*100+"vw";
+snow.style.animationDuration=(3+Math.random()*5)+"s";
+document.body.appendChild(snow);
+setTimeout(()=>snow.remove(),8000);
+},300);
+
+/* PREMIUM WHEEL */
 const canvas=document.getElementById("wheel");
 const ctx=canvas.getContext("2d");
 
@@ -216,27 +253,28 @@ const angle=2*Math.PI/rewards.length;
 
 for(let i=0;i<rewards.length;i++){
 ctx.beginPath();
-ctx.moveTo(140,140);
-ctx.arc(140,140,140,i*angle,(i+1)*angle);
+ctx.moveTo(150,150);
+ctx.arc(150,150,150,i*angle,(i+1)*angle);
 ctx.fillStyle=i%2?"#00f5ff":"#9333ea";
 ctx.fill();
 
 ctx.save();
-ctx.translate(140,140);
+ctx.translate(150,150);
 ctx.rotate(i*angle+angle/2);
 ctx.fillStyle="white";
-ctx.font="bold 20px Arial";
+ctx.strokeStyle="black";
+ctx.lineWidth=4;
+ctx.font="bold 24px Arial";
 ctx.textAlign="center";
-ctx.fillText(rewards[i]+"₺",80,8);
+ctx.strokeText(rewards[i]+"₺",100,10);
+ctx.fillText(rewards[i]+"₺",100,10);
 ctx.restore();
 }
 
 let rotation=0;
-
 window.spinWheel=async()=>{
-const sound=document.getElementById("spinSound");
-sound.currentTime=0;
-await sound.play().catch(()=>{}); // iOS için user interaction sonrası
+spinSound.currentTime=0;
+spinSound.play().catch(()=>{});
 
 const index=Math.floor(Math.random()*rewards.length);
 const prize=rewards[index];
@@ -250,7 +288,20 @@ balance:increment(prize)
 });
 alert(prize+"₺ kazandın!");
 closeModal("wheelModal");
-},4000);
+},4500);
+};
+
+window.useCode=async()=>{
+const code=document.getElementById("codeInput").value.trim().toUpperCase();
+if(!code) return alert("Kod gir.");
+const ref=doc(db,"codes",code);
+const snap=await getDoc(ref);
+if(!snap.exists()) return alert("Kod yok.");
+await updateDoc(doc(db,"users",currentUser.uid),{
+balance:increment(snap.data().reward)
+});
+alert(snap.data().reward+"₺ kazandın!");
+closeModal("codeModal");
 };
 </script>
 
