@@ -17,6 +17,7 @@ color:white;
 background:linear-gradient(-45deg,#ff0000,#001eff,#8b0000,#00008b);
 background-size:400% 400%;
 animation:bg 6s infinite alternate ease-in-out;
+touch-action:manipulation;
 }
 
 @keyframes bg{
@@ -76,6 +77,7 @@ left:0;
 
 <div id="game">
 <button id="findBtn">Maç Bul</button>
+<div id="status"></div>
 <div id="bigText"></div>
 </div>
 
@@ -106,19 +108,9 @@ const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 const auth=getAuth(app);
 
-/* GLOBALS */
-let uid=null;
-let username="Player";
-let roomId=null;
-let isHost=false;
-let tapLock=false;
-let countdownInterval=null;
-let lastSecond=null;
-
-/* AUDIO (iOS UYUMLU) */
+/* AUDIO SYSTEM */
 let audioCtx=null;
-
-function initAudio(){
+function unlockAudio(){
 if(!audioCtx){
 audioCtx=new (window.AudioContext||window.webkitAudioContext)();
 }
@@ -126,22 +118,30 @@ if(audioCtx.state==="suspended"){
 audioCtx.resume();
 }
 }
-
-function beep(freq,duration){
+function playBeep(freq,duration){
+unlockAudio();
 const osc=audioCtx.createOscillator();
 const gain=audioCtx.createGain();
+osc.type="square";
+osc.frequency.value=freq;
+gain.gain.value=0.2;
 osc.connect(gain);
 gain.connect(audioCtx.destination);
-osc.frequency.value=freq;
-osc.type="square";
-gain.gain.value=0.2;
 osc.start();
-setTimeout(()=>osc.stop(),duration);
+osc.stop(audioCtx.currentTime+duration);
 }
+function countdownSound(){ playBeep(700,0.12); }
+function goSound(){ playBeep(1200,0.25); }
+function winSound(){ playBeep(200,0.4); }
 
-function playCountdown(){ beep(600,120); }
-function playGo(){ beep(1200,200); }
-function playWin(){ beep(200,150); setTimeout(()=>beep(500,200),150); }
+/* GLOBALS */
+let uid=null;
+let username="Player";
+let roomId=null;
+let isHost=false;
+let tapLock=false;
+let countdownInterval=null;
+let unsubscribe=null;
 
 /* ELEMENTS */
 const findBtn=document.getElementById("findBtn");
@@ -168,7 +168,7 @@ username="Player_"+uid.substring(0,4);
 
 /* MATCH */
 findBtn.onclick=async()=>{
-initAudio();
+unlockAudio();
 findBtn.style.display="none";
 
 const q=query(collection(db,"rooms"),where("state","==","waiting"));
@@ -194,6 +194,7 @@ if(!joined){
 const newRoom=doc(collection(db,"rooms"));
 roomId=newRoom.id;
 isHost=true;
+
 await setDoc(newRoom,{
 player1:uid,
 player1Name:username,
@@ -203,6 +204,7 @@ score1:0,
 score2:0,
 round:1,
 state:"waiting",
+winner:null,
 createdAt:serverTimestamp()
 });
 }
@@ -210,10 +212,13 @@ createdAt:serverTimestamp()
 listenRoom();
 };
 
-/* ROOM LISTENER */
+/* ROOM */
 function listenRoom(){
-onSnapshot(doc(db,"rooms",roomId),async(snap)=>{
+if(unsubscribe) unsubscribe();
+
+unsubscribe=onSnapshot(doc(db,"rooms",roomId),async(snap)=>{
 if(!snap.exists()) return reset();
+
 const d=snap.data();
 
 p1.innerText=d.player1Name+" ("+d.score1+")";
@@ -232,27 +237,27 @@ return;
 if(d.startAt){
 clearInterval(countdownInterval);
 
-countdownInterval=setInterval(async()=>{
+countdownInterval=setInterval(()=>{
 const diff=d.startAt-Date.now();
 const sec=Math.ceil(diff/1000);
 
-if(sec!==lastSecond && sec>0){
-playCountdown();
-lastSecond=sec;
+if(sec>0){
+bigText.innerText=sec;
+countdownSound();
+}else{
+bigText.innerText="GO!";
+goSound();
 }
-
-bigText.innerText=sec>0?sec:"GO!";
 
 if(diff<=0){
 clearInterval(countdownInterval);
-playGo();
-lastSecond=null;
 if(isHost){
-await updateDoc(doc(db,"rooms",roomId),{state:"active"});
+updateDoc(doc(db,"rooms",roomId),{state:"active"});
 }
 }
-},50);
+},1000);
 }
+
 }
 
 else if(d.state==="active"){
@@ -260,16 +265,18 @@ bigText.innerText="TAP!";
 }
 
 else if(d.state==="result"){
+
 if(d.score1===4 || d.score2===4){
 const winnerName=d.score1===4?d.player1Name:d.player2Name;
 bigText.innerText="Kazanan: "+winnerName;
-playWin();
 launchConfetti();
+winSound();
 
 setTimeout(async()=>{
 await deleteDoc(doc(db,"rooms",roomId));
 reset();
 },4000);
+
 }else{
 setTimeout(async()=>{
 if(isHost){
@@ -285,30 +292,31 @@ startAt:null
 });
 }
 
-/* TAP – ANINDA ALGILAMA */
-function tap(e){
+/* TAP */
+async function tap(e){
 e.preventDefault();
-if(tapLock||!roomId) return;
+if(tapLock||!roomId)return;
+
 tapLock=true;
 
-runTransaction(db,async(t)=>{
+await runTransaction(db,async(t)=>{
 const ref=doc(db,"rooms",roomId);
 const snap=await t.get(ref);
 if(!snap.exists()) return;
 const d=snap.data();
 if(d.state!=="active") return;
 
-if(uid===d.player1)
+if(uid===d.player1){
 t.update(ref,{score1:d.score1+1,state:"result"});
-else
+}else{
 t.update(ref,{score2:d.score2+1,state:"result"});
+}
 });
 
-setTimeout(()=>tapLock=false,100);
+tapLock=false;
 }
 
-document.addEventListener("touchstart",tap,{passive:false});
-document.addEventListener("mousedown",tap);
+document.addEventListener("pointerdown",tap,{passive:false});
 
 /* CONFETTI */
 const canvas=document.getElementById("confetti");
@@ -347,6 +355,7 @@ findBtn.style.display="block";
 bigText.innerText="";
 roomId=null;
 clearInterval(countdownInterval);
+if(unsubscribe) unsubscribe();
 }
 
 </script>
