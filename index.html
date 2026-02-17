@@ -334,12 +334,8 @@ const backBtn = document.getElementById("authBack");
 
 let isLogin = true;
 
-/* GERİ TUŞU */
-backBtn.onclick = () => {
-  overlay.style.display = "none";
-};
+backBtn.onclick = () => { overlay.style.display = "none"; };
 
-/* MODAL AÇMA FONKSİYONLARI */
 function openLogin(){
   overlay.style.display="flex";
   isLogin=true;
@@ -363,26 +359,8 @@ function openRegister(){
 loginBtn.onclick = openLogin;
 registerBtn.onclick = openRegister;
 
-/* SWITCH */
-switchMode.onclick = () => {
-  if(isLogin){
-    openRegister();
-  }else{
-    openLogin();
-  }
-};
+switchMode.onclick = () => { isLogin ? openRegister() : openLogin(); };
 
-/* OYUN GİRİŞ KONTROLÜ */
-window.checkLogin = function(page){
-  const user = auth.currentUser;
-  if(!user){
-    window.location.href = "logout-btn"; // Giriş sayfasına yönlendir
-    return;
-  }
-  window.location.href = page;
-};
-
-/* SUBMIT */
 authSubmit.onclick = async () => {
   const email = authEmail.value;
   const password = authPassword.value;
@@ -403,17 +381,22 @@ authSubmit.onclick = async () => {
         createdAt:new Date()
       });
     }
-
     overlay.style.display="none";
     authEmail.value="";
     authPassword.value="";
     authUsername.value="";
-  }catch(e){
-    console.error(e.message);
-  }
+  }catch(e){}
 };
 
-/* AUTH STATE */
+window.checkLogin = function(page){
+  const user = auth.currentUser;
+  if(!user){
+    window.location.href = "index.html";
+    return;
+  }
+  window.location.href = page;
+};
+
 onAuthStateChanged(auth,(user)=>{
   if(user){
     loginBtn.style.display="none";
@@ -436,9 +419,8 @@ onAuthStateChanged(auth,(user)=>{
   }
 });
 
-/* ÇIKIŞ */
 logoutBtn.onclick = async ()=>{
   await signOut(auth);
-  window.location.href = "login.html"; // çıkış sonrası giriş sayfasına yönlendir
+  window.location.href = "index.html";
 };
 </script>
