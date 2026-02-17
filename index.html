@@ -84,6 +84,65 @@ main{padding-top:20px;}
 .game-card:hover{transform:translateY(-10px) scale(1.03);box-shadow:0 0 30px #ffb300;border:1px solid #ffb300;}
 .game-icon{font-size:45px;margin-bottom:15px;}
 
+/* SIDE MENU */
+.side-menu{
+position:fixed;
+top:0;
+left:-260px;
+width:260px;
+height:100%;
+background:linear-gradient(180deg,#12183c,#0d1333);
+padding:20px;
+transition:0.4s;
+z-index:3000;
+box-shadow:5px 0 25px rgba(0,0,0,0.5);
+}
+
+.side-menu.active{
+left:0;
+}
+
+.side-menu a{
+display:block;
+padding:14px 10px;
+margin:8px 0;
+border-radius:10px;
+text-decoration:none;
+color:white;
+font-weight:600;
+background:#1e2a5a;
+transition:0.3s;
+}
+
+.side-menu a:hover{
+background:#ffb300;
+color:black;
+}
+
+.menu-header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+font-weight:bold;
+font-size:18px;
+margin-bottom:20px;
+}
+
+.menu-overlay{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.6);
+display:none;
+z-index:2500;
+}
+
+.menu-overlay.active{
+display:block;
+}
+
 /* FOOTER */
 .footer{background:linear-gradient(180deg,#0a0f1f,#0c1328);padding:40px 20px 20px;margin-top:60px;border-top:1px solid #1e2a5a;}
 .footer-links{display:flex;justify-content:center;margin-bottom:20px;text-align:center;}
@@ -123,14 +182,34 @@ main{padding-top:20px;}
 
 <!-- TOP BAR -->
 <div class="top-bar">
-<div class="brand">PixelArena</div>
-<div class="right-menu">
-<div class="nav-box balance-box" id="balanceBox">Bakiye: <span id="userBalance"></span></div>
-<button class="btn login-btn">Giriş</button>
-<button class="btn register-btn">Kayıt</button>
-<button class="btn logout-btn" style="display:none;">Çıkış</button>
+  <div style="display:flex;align-items:center;gap:12px;">
+    <div id="menuBtn" style="font-size:22px;cursor:pointer;">☰</div>
+    <div class="brand">PixelArena</div>
+  </div>
+
+  <div class="right-menu">
+    <div class="nav-box balance-box" id="balanceBox">
+      Bakiye: <span id="userBalance"></span>
+    </div>
+    <button class="btn login-btn">Giriş</button>
+    <button class="btn register-btn">Kayıt</button>
+    <button class="btn logout-btn" style="display:none;">Çıkış</button>
+  </div>
 </div>
+<!-- SIDE MENU -->
+<div id="sideMenu" class="side-menu">
+  <div class="menu-header">
+    Menü
+    <span id="closeMenu" style="cursor:pointer;">✖</span>
+  </div>
+
+  <a href="index.html">🏠 Ana Sayfa</a>
+  <a href="panel.html">💎 Bonus Kod / Çark</a>
+  <a href="#guncel">🕹️ Güncel Oyunlar</a>
+  <a href="https://www.instagram.com/o6emirlx" target="_blank">🚔 İletişim</a>
 </div>
+
+<div id="menuOverlay" class="menu-overlay"></div>
 
 <div class="search-bar">
 <input type="text" id="searchInput" placeholder="🕹️ Oyun Ara">
@@ -459,6 +538,27 @@ onAuthStateChanged(auth,(user)=>{
 logoutBtn.onclick = async ()=>{
   await signOut(auth);
   alert("Çıkış yapıldı.");
+};
+
+/* MENU */
+const menuBtn = document.getElementById("menuBtn");
+const sideMenu = document.getElementById("sideMenu");
+const closeMenu = document.getElementById("closeMenu");
+const menuOverlay = document.getElementById("menuOverlay");
+
+menuBtn.onclick = () => {
+  sideMenu.classList.add("active");
+  menuOverlay.classList.add("active");
+};
+
+closeMenu.onclick = () => {
+  sideMenu.classList.remove("active");
+  menuOverlay.classList.remove("active");
+};
+
+menuOverlay.onclick = () => {
+  sideMenu.classList.remove("active");
+  menuOverlay.classList.remove("active");
 };
 </script>
 
