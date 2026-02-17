@@ -2,125 +2,96 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>Premium Panel</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bonus Soft</title>
 
 <style>
 *{
 margin:0;
 padding:0;
 box-sizing:border-box;
-font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
--webkit-tap-highlight-color:transparent;
+font-family:Arial, Helvetica, sans-serif;
 }
 
 body{
-background:linear-gradient(180deg,#0b0f1e,#151c30);
+background:linear-gradient(180deg,#0f172a,#111827);
 color:white;
-min-height:100vh;
-overflow-x:hidden;
 }
 
-/* TOPBAR */
-.topbar{
-position:fixed;
-top:0;
-width:100%;
-height:60px;
-display:flex;
-align-items:center;
-justify-content:center;
-background:rgba(15,20,35,.95);
-backdrop-filter:blur(10px);
-z-index:1000;
-font-weight:700;
-}
-
-/* CONTENT */
-.content{
-padding:80px 20px 30px;
-}
-
-.card{
-background:linear-gradient(145deg,#171f36,#1f2945);
-border-radius:20px;
-padding:20px;
-margin-bottom:20px;
+/* ===== ÜST BAR ===== */
+.header{
 display:flex;
 justify-content:space-between;
 align-items:center;
-box-shadow:0 8px 25px rgba(0,0,0,.5);
+padding:15px;
+background:#0b1220;
 }
 
-.card button{
-background:#ffb300;
+.logo{
+font-size:22px;
+font-weight:bold;
+background:linear-gradient(45deg,#00c6ff,#ff8c00);
+-webkit-background-clip:text;
+-webkit-text-fill-color:transparent;
+}
+
+.header-buttons button{
+margin-left:10px;
+padding:8px 15px;
 border:none;
-padding:10px 18px;
-border-radius:15px;
-font-weight:600;
+border-radius:8px;
+font-weight:bold;
 cursor:pointer;
 }
 
-/* MODAL */
-.modal{
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-background:rgba(0,0,0,.6);
-backdrop-filter:blur(8px);
-display:flex;
-align-items:center;
-justify-content:center;
-opacity:0;
-pointer-events:none;
-transition:.3s;
-z-index:2000;
-}
-
-.modal.active{
-opacity:1;
-pointer-events:auto;
-}
-
-.modal-box{
-width:90%;
-max-width:420px;
-background:linear-gradient(145deg,#1a2238,#222c48);
-padding:25px;
-border-radius:20px;
-text-align:center;
-position:relative;
-}
-
-.close{
-position:absolute;
-right:15px;
-top:15px;
-cursor:pointer;
-font-size:20px;
-}
-
-input{
-width:100%;
-padding:12px;
-margin:15px 0;
-border-radius:12px;
-border:none;
-background:#2b3555;
+.login{
+background:#1f2937;
 color:white;
 }
 
-.result{
-margin-top:10px;
-font-weight:600;
+.register{
+background:#f59e0b;
+color:black;
 }
 
-.success{color:#00ff99;}
-.error{color:#ff4d4d;}
+/* ===== BANNER ===== */
+.banner{
+width:100%;
+height:150px;
+background:url('https://picsum.photos/800/300') center/cover;
+border-radius:10px;
+margin:15px auto;
+}
 
-/* WHEEL */
+/* ===== CARD ===== */
+.card{
+background:#1f2937;
+margin:15px;
+padding:20px;
+border-radius:15px;
+box-shadow:0 5px 15px rgba(0,0,0,0.4);
+}
+
+.card h2{
+margin-bottom:10px;
+}
+
+.card p{
+color:#9ca3af;
+margin-bottom:15px;
+}
+
+.btn{
+background:#f59e0b;
+color:black;
+padding:10px 15px;
+border:none;
+border-radius:8px;
+cursor:pointer;
+font-weight:bold;
+}
+
+/* ===== ÇARK ===== */
 .wheel-container{
 position:relative;
 width:250px;
@@ -132,14 +103,8 @@ margin:20px auto;
 width:100%;
 height:100%;
 border-radius:50%;
-border:6px solid #ffb300;
-background:conic-gradient(
-#1e90ff 0deg 90deg,
-#555 90deg 180deg,
-#1e90ff 180deg 270deg,
-#777 270deg 360deg
-);
-transition:transform 4s cubic-bezier(.17,.67,.83,.67);
+border:8px solid #f59e0b;
+transition:transform 4s ease-out;
 }
 
 .pointer{
@@ -149,164 +114,94 @@ left:50%;
 transform:translateX(-50%);
 width:0;
 height:0;
-border-left:12px solid transparent;
-border-right:12px solid transparent;
+border-left:10px solid transparent;
+border-right:10px solid transparent;
 border-bottom:20px solid white;
-}
-
-.spin-btn{
-margin-top:20px;
-background:#ffb300;
-padding:12px;
-border:none;
-border-radius:15px;
-font-weight:600;
-cursor:pointer;
-width:100%;
 }
 </style>
 </head>
-
 <body>
 
-<div class="topbar">BonusStyle Panel</div>
+<!-- ===== ÜST BAR ===== -->
+<div class="header">
+<div class="logo">BonusSoft</div>
+<div class="header-buttons">
+<button class="login">Giriş</button>
+<button class="register">Kayıt</button>
+</div>
+</div>
 
-<div class="content">
+<!-- ===== BANNER ===== -->
+<div class="banner"></div>
 
+<!-- ===== KOD GİR ALANI ===== -->
 <div class="card">
-<div>Kod Gir</div>
-<button onclick="openCode()">Aç</button>
-</div>
-
-<div class="card">
-<div>Çark Çevir</div>
-<button onclick="openWheel()">Aç</button>
-</div>
-
-</div>
-
-<!-- KOD MODAL -->
-<div class="modal" id="codeModal">
-<div class="modal-box">
-<span class="close" onclick="closeCode()">✕</span>
 <h2>Kod Gir</h2>
-<input type="text" id="codeInput" placeholder="Kod Yazınız">
-<button onclick="submitCode()" class="spin-btn">Kodu Gönder</button>
-<div class="result" id="codeResult"></div>
-</div>
+<p>Canlı yayında paylaşılan kodu gir</p>
+<input type="text" placeholder="Kodu buraya yaz" style="padding:10px;border-radius:8px;border:none;width:100%;margin-bottom:10px;">
+<button class="btn">Kodu Gir</button>
 </div>
 
-<!-- WHEEL MODAL -->
-<div class="modal" id="wheelModal">
-<div class="modal-box">
-<span class="close" onclick="closeWheel()">✕</span>
-<h2>Şans Çarkı</h2>
+<!-- ===== ÇARK ÇEVİR ALANI ===== -->
+<div class="card">
+<h2>Çarkı Çevir</h2>
+<p>Günlük çarkını çevir.</p>
 
 <div class="wheel-container">
 <div class="pointer"></div>
-<div id="wheel"></div>
+<canvas id="wheel" width="250" height="250"></canvas>
 </div>
 
-<button class="spin-btn" onclick="spinWheel()">Çevir</button>
-<div class="result" id="wheelResult"></div>
-
-</div>
+<button class="btn" onclick="spinWheel()">Çarkı Çevir</button>
 </div>
 
 <script>
+const canvas = document.getElementById("wheel");
+const ctx = canvas.getContext("2d");
 
-/* ===== KOD SİSTEMİ ===== */
+const segments = [
+{color:"#3b82f6", text:"50"},
+{color:"#6b7280", text:"100"},
+{color:"#2563eb", text:"1000"},
+{color:"#9ca3af", text:"2000"}
+];
 
-function openCode(){
-document.getElementById("codeModal").classList.add("active");
-}
+const angle = 2 * Math.PI / segments.length;
 
-function closeCode(){
-document.getElementById("codeModal").classList.remove("active");
-document.getElementById("codeResult").innerText="";
-}
-
-function submitCode(){
-const input=document.getElementById("codeInput").value.trim();
-const result=document.getElementById("codeResult");
-
-const valid=["SOFT100","BONUS50","VIP2025"];
-
-if(valid.includes(input.toUpperCase())){
-result.innerText="Kod Başarılı 🎉";
-result.className="result success";
-}else{
-result.innerText="Kod Hatalı";
-result.className="result error";
-}
-}
-
-/* ===== ÇARK SİSTEMİ ===== */
-
-let spinning=false;
-
-function openWheel(){
-document.getElementById("wheelModal").classList.add("active");
-checkCooldown();
-}
-
-function closeWheel(){
-document.getElementById("wheelModal").classList.remove("active");
-document.getElementById("wheelResult").innerText="";
-}
-
-function checkCooldown(){
-const lastSpin=localStorage.getItem("lastSpin");
-if(!lastSpin) return;
-
-const now=Date.now();
-const diff=now - parseInt(lastSpin);
-
-if(diff < 86400000){
-document.getElementById("wheelResult").innerText="24 saat dolmadan tekrar çeviremezsiniz.";
+function drawWheel(){
+for(let i=0;i<segments.length;i++){
+ctx.beginPath();
+ctx.moveTo(125,125);
+ctx.arc(125,125,125,i*angle,(i+1)*angle);
+ctx.fillStyle = segments[i].color;
+ctx.fill();
+ctx.save();
+ctx.translate(125,125);
+ctx.rotate(i*angle + angle/2);
+ctx.fillStyle="white";
+ctx.font="bold 16px Arial";
+ctx.fillText(segments[i].text+" PUAN",60,5);
+ctx.restore();
 }
 }
+
+drawWheel();
+
+let rotation = 0;
 
 function spinWheel(){
+const random = Math.floor(Math.random()*segments.length);
+const extraSpins = 5;
+const totalRotation = (360*extraSpins) + (360/segments.length)*random;
 
-if(spinning) return;
+rotation += totalRotation;
 
-const lastSpin=localStorage.getItem("lastSpin");
-const now=Date.now();
-
-if(lastSpin && now - parseInt(lastSpin) < 86400000){
-document.getElementById("wheelResult").innerText="24 saat dolmadan tekrar çeviremezsiniz.";
-return;
-}
-
-spinning=true;
-
-const wheel=document.getElementById("wheel");
-const resultEl=document.getElementById("wheelResult");
-
-const prizes=["50 Puan","100 Puan","1000 Puan","2000 Puan"];
-const index=Math.floor(Math.random()*4);
-
-const rotate=360*5 + (index*90) + 45;
-
-wheel.style.transform=`rotate(${rotate}deg)`;
+canvas.style.transform = `rotate(${rotation}deg)`;
 
 setTimeout(()=>{
-resultEl.innerText="Kazandınız: "+prizes[index]+" 🎉";
-localStorage.setItem("lastSpin",Date.now());
-spinning=false;
+alert("Kazandınız: " + segments[random].text + " PUAN");
 },4000);
 }
-
-/* MODAL DIŞI TIKLAMA */
-document.querySelectorAll(".modal").forEach(mod=>{
-mod.addEventListener("click",function(e){
-if(e.target===this){
-this.classList.remove("active");
-}
-});
-});
-
 </script>
 
 </body>
