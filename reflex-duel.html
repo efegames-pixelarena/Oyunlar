@@ -39,8 +39,9 @@ background-size:200% auto;
 animation:shine 3s linear infinite;
 }
 @keyframes shine{to{background-position:200% center;}}
+
 .right-menu{display:flex;gap:10px;align-items:center;}
-.nav-box{padding:6px 14px;border-radius:14px;font-weight:700;font-size:13px;min-width:95px;text-align:center;background:#273c8f;}
+.nav-box{padding:6px 14px;border-radius:14px;font-weight:700;font-size:13px;text-align:center;background:#273c8f;}
 .btn{padding:6px 12px;border-radius:12px;border:none;cursor:pointer;font-weight:700;font-size:13px;}
 .logout-btn{background:#ff3b3b;color:white;}
 
@@ -55,11 +56,26 @@ font-weight:bold;
 
 .score-top{
 display:flex;
+align-items:center;
 justify-content:space-between;
-padding:10px 14px;
+gap:8px;
+padding:8px;
+width:100%;
 }
 
-/* ANIMATIONS */
+.player1Box,
+.player2Box,
+.roundBox{
+flex:1;
+text-align:center;
+padding:8px 4px;
+border-radius:10px;
+font-size:14px;
+white-space:nowrap;
+overflow:hidden;
+text-overflow:ellipsis;
+}
+
 @keyframes blueAnim{
 0%{box-shadow:0 0 5px #007bff;}
 100%{box-shadow:0 0 20px #00c3ff;}
@@ -73,26 +89,9 @@ padding:10px 14px;
 100%{box-shadow:0 0 20px #222;}
 }
 
-.player1Box{
-background:#0d47a1;
-padding:6px 12px;
-border-radius:8px;
-animation:blueAnim 1.2s infinite alternate;
-}
-
-.player2Box{
-background:#8b0000;
-padding:6px 12px;
-border-radius:8px;
-animation:redAnim 1.2s infinite alternate;
-}
-
-.roundBox{
-background:#000;
-padding:6px 12px;
-border-radius:8px;
-animation:blackAnim 1.2s infinite alternate;
-}
+.player1Box{background:#0d47a1;animation:blueAnim 1.2s infinite alternate;}
+.player2Box{background:#8b0000;animation:redAnim 1.2s infinite alternate;}
+.roundBox{background:#000;animation:blackAnim 1.2s infinite alternate;}
 
 .round-bar{
 display:flex;
@@ -100,8 +99,8 @@ height:6px;
 width:100%;
 }
 
-.round-blue{flex:1;background:#0066ff;}
-.round-red{flex:1;background:#ff0000;}
+.round-blue{background:#0066ff;width:50%;transition:0.3s;}
+.round-red{background:#ff0000;width:50%;transition:0.3s;}
 
 #game{
 flex:1;
@@ -112,12 +111,14 @@ align-items:center;
 text-align:center;
 padding:10px;
 }
+
 button{
 padding:12px 20px;border:none;border-radius:10px;
 font-weight:bold;cursor:pointer;
 background:linear-gradient(90deg,#ffb300,#ff5500);
 margin-top:10px;
 }
+
 #bigText{font-size:clamp(32px,10vw,70px);min-height:90px;margin-top:20px;font-weight:800;}
 #subText{margin-top:10px;font-size:18px;}
 .lobby{margin-top:15px;display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
@@ -141,20 +142,13 @@ input{padding:8px;border-radius:8px;border:none;}
 <div id="p2" class="player2Box"></div>
 </div>
 <div class="round-bar">
-<div class="round-blue"></div>
-<div class="round-red"></div>
+<div class="round-blue" id="blueBar"></div>
+<div class="round-red" id="redBar"></div>
 </div>
 </div>
 
 <div id="game">
 <button id="findBtn">Maç Bul</button>
-
-<div class="lobby" id="lobbyBox">
-<input id="roomCodeInput" placeholder="Oda Kodu">
-<button id="createRoomBtn">Oda Kur</button>
-<button id="joinCodeBtn">Katıl</button>
-</div>
-
 <div id="bigText"></div>
 <div id="subText"></div>
 <div id="afterMatch"></div>
@@ -192,9 +186,11 @@ const p1=document.getElementById("p1");
 const p2=document.getElementById("p2");
 const roundInfo=document.getElementById("roundInfo");
 const findBtn=document.getElementById("findBtn");
-const lobbyBox=document.getElementById("lobbyBox");
 const afterMatch=document.getElementById("afterMatch");
+const blueBar=document.getElementById("blueBar");
+const redBar=document.getElementById("redBar");
 
+/* AUTH */
 onAuthStateChanged(auth,async(user)=>{
 if(!user){location.href="index.html";return;}
 uid=user.uid;
@@ -213,9 +209,9 @@ window.addEventListener("beforeunload",async()=>{
 if(roomId) await deleteDoc(doc(db,"rooms",roomId));
 });
 
+/* MATCH FIND FIX */
 findBtn.onclick=async()=>{
-findBtn.style.display="none";
-lobbyBox.style.display="none";
+findBtn.disabled=true;
 bigText.innerText="Rakip Aranıyor...";
 
 const q=query(collection(db,"rooms"),where("state","==","waiting"));
@@ -249,7 +245,7 @@ score1:0,
 score2:0,
 round:1,
 state:"waiting",
-rematchRequest:null,
+rematchVotes:[],
 createdAt:serverTimestamp()
 });
 }
@@ -257,6 +253,7 @@ createdAt:serverTimestamp()
 listenRoom();
 };
 
+/* ROOM LISTENER */
 function listenRoom(){
 if(unsubscribe)unsubscribe();
 
@@ -265,6 +262,7 @@ if(!snap.exists()){location.reload();return;}
 const d=snap.data();
 scoreboard.style.display="flex";
 
+/* Score render */
 if(uid===d.player1){
 p1.innerText=d.player1Name+" ("+d.score1+")";
 p2.innerText=(d.player2Name||"...")+" ("+d.score2+")";
@@ -275,34 +273,56 @@ p2.innerText=d.player1Name+" ("+d.score1+")";
 
 roundInfo.innerText="Round "+d.round+" / 7";
 
-/* REMATCH FIX */
-if(d.rematchRequest && d.rematchRequest!==uid){
+/* ROUND BAR SYNC */
+let total=d.score1+d.score2;
+if(total===0){blueBar.style.width="50%";redBar.style.width="50%";}
+else{
+let bluePercent=(d.score1/7)*100;
+let redPercent=(d.score2/7)*100;
+blueBar.style.width=bluePercent+"%";
+redBar.style.width=redPercent+"%";
+}
+
+/* REMATCH FULL FIX */
+if(d.rematchVotes && d.rematchVotes.length===1 && !d.rematchVotes.includes(uid)){
 afterMatch.innerHTML=`
-<div>Rakip Seninle Tekrar Oynamak İstiyor</div>
+<div>Rakip Yeniden Oynamak İstiyor</div>
 <button id="acceptRematch">Oyna</button>
 <button id="declineRematch">Yeni Maç Bul</button>
 `;
-
 document.getElementById("acceptRematch").onclick=async()=>{
 await updateDoc(doc(db,"rooms",roomId),{
+rematchVotes:[d.player1,d.player2],
 score1:0,
 score2:0,
 round:1,
 state:"countdown",
-startAt:Date.now()+5000,
-rematchRequest:null
+startAt:Date.now()+5000
 });
-afterMatch.innerHTML="";
 };
-
 document.getElementById("declineRematch").onclick=async()=>{
 await deleteDoc(doc(db,"rooms",roomId));
 location.reload();
 };
 }
 
-/* STATES */
+if(d.state==="result" && (d.score1===4||d.score2===4)){
+afterMatch.innerHTML=`
+<button id="rematchBtn">⌛️ Rakiple Yeniden Oyna</button>
+<button id="newMatchBtn">⚽️ Yeni Maç Bul</button>
+`;
+document.getElementById("rematchBtn").onclick=async()=>{
+await updateDoc(doc(db,"rooms",roomId),{
+rematchVotes:[uid]
+});
+};
+document.getElementById("newMatchBtn").onclick=async()=>{
+await deleteDoc(doc(db,"rooms",roomId));
+location.reload();
+};
+}
 
+/* STATES */
 if(d.state==="matched"){
 await updateDoc(doc(db,"rooms",roomId),{
 state:"countdown",
@@ -336,25 +356,7 @@ if(d.state==="result"){
 bigText.innerText=d.lastWinner+" Kazandı!";
 subText.innerText=d.reaction+" ms";
 
-if(d.score1===4||d.score2===4){
-afterMatch.innerHTML=`
-<button id="rematchBtn">⌛️ Rakiple Yeniden Oyna</button>
-<button id="newMatchBtn">⚽️ Yeni Maç Bul</button>
-`;
-
-document.getElementById("rematchBtn").onclick=async()=>{
-await updateDoc(doc(db,"rooms",roomId),{
-rematchRequest:uid
-});
-};
-
-document.getElementById("newMatchBtn").onclick=async()=>{
-await deleteDoc(doc(db,"rooms",roomId));
-location.reload();
-};
-return;
-}
-
+if(d.score1<4 && d.score2<4){
 setTimeout(async()=>{
 await updateDoc(doc(db,"rooms",roomId),{
 round:d.round+1,
@@ -363,9 +365,11 @@ startAt:Date.now()+5000
 });
 },3000);
 }
+}
 });
 }
 
+/* TAP */
 document.addEventListener("pointerdown",async()=>{
 if(tapLock||!roomId)return;
 tapLock=true;
@@ -376,14 +380,14 @@ const snap=await t.get(ref);
 if(!snap.exists())return;
 const d=snap.data();
 if(d.state!=="active")return;
+if(uid!==d.player1 && uid!==d.player2)return;
 
 let reaction=Date.now()-d.roundStart;
 if(reaction<80)return;
 
 if(uid===d.player1){
 t.update(ref,{score1:d.score1+1,state:"result",lastWinner:d.player1Name,reaction});
-}
-if(uid===d.player2){
+}else{
 t.update(ref,{score2:d.score2+1,state:"result",lastWinner:d.player2Name,reaction});
 }
 });
