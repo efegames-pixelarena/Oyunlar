@@ -48,13 +48,13 @@ font-size:16px;
 }
 
 #bigText{
-font-size:80px;
+font-size:90px;
 margin-top:20px;
 transition:transform .3s ease, opacity .3s ease;
 }
 
 .countAnim{
-animation:pop .8s ease;
+animation:pop .7s ease;
 }
 
 @keyframes pop{
@@ -111,6 +111,7 @@ let isHost=false;
 let roomUnsub=null;
 let tapLock=false;
 let audioCtx=null;
+let countdownRunning=false;
 
 const findBtn=document.getElementById("findBtn");
 const status=document.getElementById("status");
@@ -124,8 +125,11 @@ function unlockAudio(){
 if(!audioCtx){
 audioCtx=new (window.AudioContext||window.webkitAudioContext)();
 }
+if(audioCtx.state==="suspended"){
+audioCtx.resume();
 }
-function beep(freq,dur=200){
+}
+function beep(freq,dur=180){
 if(!audioCtx)return;
 const o=audioCtx.createOscillator();
 const g=audioCtx.createGain();
@@ -153,31 +157,46 @@ findBtn.onclick=async()=>{
 unlockAudio();
 status.innerText="Rakip aranıyor...";
 
-/* Açık oda var mı */
+/* Açık oda var mı (kendi odası hariç) */
 const q=query(collection(db,"rooms"),
 where("state","==","waiting"),
 where("player2","==",null));
 
 const snap=await getDocs(q);
 
-if(!snap.empty){
+let joined=false;
 
-const openRoom=snap.docs[0];
-roomId=openRoom.id;
+for(const docSnap of snap.docs){
+if(docSnap.data().player1 !== uid){
+roomId=docSnap.id;
 isHost=false;
 
-await updateDoc(doc(db,"rooms",roomId),{
+await runTransaction(db,async(t)=>{
+const ref=doc(db,"rooms",roomId);
+const s=await t.get(ref);
+if(!s.exists())return;
+const d=s.data();
+if(d.player2==null && d.player1!==uid){
+t.update(ref,{
 player2:uid,
 player2Name:username,
 state:"countdown",
 count:3
 });
+joined=true;
+}
+});
+if(joined) break;
+}
+}
 
+if(joined){
 listenRoom();
 startGame();
+return;
+}
 
-}else{
-
+/* Yeni oda oluştur */
 const newRoom=doc(collection(db,"rooms"));
 roomId=newRoom.id;
 isHost=true;
@@ -198,7 +217,6 @@ createdAt:serverTimestamp()
 
 listenRoom();
 startGame();
-}
 };
 
 function listenRoom(){
@@ -213,8 +231,8 @@ roundInfo.innerText="Round "+d.round+" / 7";
 
 if(d.state==="countdown"){
 renderCountdown(d.count);
-
-if(isHost){
+if(isHost && !countdownRunning){
+countdownRunning=true;
 startCountdown();
 }
 }
@@ -229,6 +247,7 @@ if(d.score1===7||d.score2===7){
 await deleteDoc(doc(db,"rooms",roomId));
 reset();
 }else{
+countdownRunning=false;
 await updateDoc(doc(db,"rooms",roomId),{
 round:d.round+1,
 winner:null,
@@ -241,35 +260,35 @@ count:3
 });
 }
 
-/* HOST COUNTDOWN (TEK TIMER) */
+/* HOST COUNTDOWN */
 function startCountdown(){
 let c=3;
 
 const interval=setInterval(async()=>{
 await updateDoc(doc(db,"rooms",roomId),{count:c});
+
+if(c>0){
 beep(600);
+}else{
+beep(1300);
+}
+
 c--;
 
 if(c<0){
 clearInterval(interval);
 await updateDoc(doc(db,"rooms",roomId),{state:"active"});
-beep(1200);
 }
 },1000);
 }
 
-/* RENDER COUNT */
+/* RENDER */
 function renderCountdown(c){
 bigText.classList.remove("countAnim");
 void bigText.offsetWidth;
 bigText.classList.add("countAnim");
 
-if(c>0){
-bigText.innerText=c;
-}
-else{
-bigText.innerText="GO!";
-}
+bigText.innerText = c>0 ? c : "GO!";
 }
 
 /* TAP */
@@ -292,7 +311,7 @@ t.update(ref,{score2:d.score2+1,winner:uid,state:"result"});
 }
 });
 
-setTimeout(()=>tapLock=false,200);
+setTimeout(()=>tapLock=false,150);
 }
 
 function startGame(){
@@ -303,6 +322,7 @@ function reset(){
 findBtn.style.display="block";
 bigText.innerText="";
 roomId=null;
+countdownRunning=false;
 }
 
 document.addEventListener("mousedown",tap);
