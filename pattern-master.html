@@ -42,7 +42,7 @@ transition:background .2s, transform .1s;
 background:#ffffff !important;
 }
 
-/* ===== SHAKE ANIMATION ===== */
+/* ===== SHAKE ===== */
 .shake{
 animation:shakeAnim .35s ease;
 }
@@ -209,27 +209,48 @@ let perfectStreak=true;
 let highScore=localStorage.getItem("patternHigh")||0;
 highscoreEl.innerText="High Score: "+highScore;
 
-/* ===== IOS SAFE AUDIO ===== */
-let audioCtx;
+/* ===== ULTRA STABLE IOS AUDIO ===== */
+let audioCtx=null;
+
 function initAudio(){
 if(!audioCtx){
 audioCtx=new (window.AudioContext||window.webkitAudioContext)();
 }
+if(audioCtx.state==="suspended"){
+audioCtx.resume();
 }
+}
+
 function playBeep(freq,duration=0.15){
 if(!audioCtx)return;
+if(audioCtx.state==="suspended"){
+audioCtx.resume();
+}
+
 const osc=audioCtx.createOscillator();
 const gain=audioCtx.createGain();
-osc.frequency.value=freq;
+
 osc.type="sine";
+osc.frequency.setValueAtTime(freq,audioCtx.currentTime);
+
+gain.gain.setValueAtTime(0.25,audioCtx.currentTime);
+gain.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+duration);
+
 osc.connect(gain);
 gain.connect(audioCtx.destination);
-gain.gain.setValueAtTime(0.2,audioCtx.currentTime);
+
 osc.start();
 osc.stop(audioCtx.currentTime+duration);
 }
 
+document.addEventListener("visibilitychange",()=>{
+if(audioCtx && audioCtx.state==="suspended"){
+audioCtx.resume();
+}
+});
+
 /* ===== GAME ===== */
+
 function randomDir(){
 const dirs=["up","down","left","right"];
 return dirs[Math.floor(Math.random()*4)];
@@ -246,7 +267,7 @@ isShowing=true;
 statusEl.innerText="İzle...";
 for(let i=0;i<pattern.length;i++){
 flashButton(pattern[i]);
-playBeep(300+i*40);
+playBeep(300+i*60,0.12);
 await new Promise(r=>setTimeout(r,speed));
 }
 isShowing=false;
@@ -283,7 +304,7 @@ showPattern();
 
 function levelUp(){
 screenFlash();
-playBeep(800,.2);
+playBeep(900,.18);
 
 if(perfectStreak){
 combo+=10;
@@ -303,7 +324,7 @@ setTimeout(nextRound,700);
 
 function gameOver(){
 screenShake();
-playBeep(120,.5);
+playBeep(140,.4);
 statusEl.innerText="Yanlış! Oyun Bitti";
 perfectStreak=false;
 
@@ -321,7 +342,7 @@ if(isShowing)return;
 initAudio();
 const dir=btn.dataset.dir;
 flashButton(dir);
-playBeep(500);
+playBeep(550,0.12);
 
 if(dir===pattern[playerIndex]){
 playerIndex++;
@@ -338,7 +359,10 @@ gameOver();
 });
 });
 
-startBtn.onclick=startGame;
+startBtn.addEventListener("pointerdown",()=>{
+initAudio();
+startGame();
+});
 </script>
 
 </body>
