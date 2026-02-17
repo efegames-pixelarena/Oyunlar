@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Premium Panel</title>
+
+<style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
+-webkit-tap-highlight-color:transparent;
+}
+
+body{
+background:linear-gradient(180deg,#0b0f1e,#151c30);
+color:white;
+min-height:100vh;
+overflow-x:hidden;
+}
+
+/* ===== TOP BAR ===== */
+.topbar{
+position:fixed;
+top:0;
+width:100%;
+height:60px;
+display:flex;
+align-items:center;
+justify-content:space-between;
+padding:0 20px;
+background:rgba(15,20,35,.95);
+backdrop-filter:blur(10px);
+z-index:1000;
+}
+
+.menu-btn{
+font-size:22px;
+cursor:pointer;
+}
+
+.logo{
+font-weight:800;
+font-size:18px;
+}
+
+.auth{
+display:flex;
+gap:10px;
+}
+
+.btn{
+padding:8px 14px;
+border-radius:15px;
+font-weight:600;
+cursor:pointer;
+border:none;
+}
+
+.btn-login{
+background:#1e2742;
+color:white;
+}
+
+.btn-register{
+background:#ffb300;
+color:black;
+}
+
+/* ===== SIDEBAR ===== */
+.sidebar{
+position:fixed;
+top:0;
+left:-260px;
+width:250px;
+height:100%;
+background:#121829;
+padding-top:70px;
+transition:.3s;
+z-index:999;
+box-shadow:5px 0 20px rgba(0,0,0,.5);
+}
+
+.sidebar.active{
+left:0;
+}
+
+.sidebar a{
+display:block;
+padding:15px 20px;
+color:#ccc;
+text-decoration:none;
+border-bottom:1px solid rgba(255,255,255,.05);
+}
+
+.sidebar a:hover{
+background:rgba(255,255,255,.05);
+color:#ffb300;
+}
+
+/* ===== CONTENT ===== */
+.content{
+padding:80px 20px 30px;
+}
+
+.card{
+background:linear-gradient(145deg,#171f36,#1f2945);
+border-radius:20px;
+padding:20px;
+margin-bottom:20px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+box-shadow:0 8px 25px rgba(0,0,0,.5);
+transition:.2s;
+}
+
+.card:hover{
+transform:translateY(-3px);
+}
+
+.card-left{
+display:flex;
+align-items:center;
+gap:15px;
+}
+
+.icon{
+font-size:38px;
+}
+
+.card h3{
+font-size:20px;
+margin-bottom:5px;
+}
+
+.card p{
+font-size:14px;
+opacity:.7;
+}
+
+.card button{
+background:#ffb300;
+border:none;
+padding:10px 18px;
+border-radius:15px;
+font-weight:600;
+cursor:pointer;
+}
+
+/* ===== FLOAT BUTTON ===== */
+.float-btn{
+position:fixed;
+right:20px;
+bottom:25px;
+width:55px;
+height:55px;
+background:#ffb300;
+border-radius:15px;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:22px;
+color:black;
+cursor:pointer;
+box-shadow:0 5px 15px rgba(0,0,0,.5);
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+<div class="menu-btn" onclick="toggleMenu()">☰</div>
+<div class="logo">PremiumPanel</div>
+<div class="auth">
+<button class="btn btn-login">Giriş</button>
+<button class="btn btn-register">Kayıt</button>
+</div>
+</div>
+
+<div class="sidebar" id="sidebar">
+<a href="#">Sponsorlar</a>
+<a href="#">Market</a>
+<a href="#">Oyunlar</a>
+<a href="#">Sizden Gelenler</a>
+<a href="#">Liderlik Tablosu</a>
+<a href="#">SoftTV</a>
+<a href="#">Diğer</a>
+</div>
+
+<div class="content">
+
+<div class="card">
+<div class="card-left">
+<div class="icon">🎁</div>
+<div>
+<h3>Kod Gir</h3>
+<p>Canlı yayında paylaşılan kodu gir</p>
+</div>
+</div>
+<button>Kodu Gir</button>
+</div>
+
+<div class="card">
+<div class="card-left">
+<div class="icon">🎡</div>
+<div>
+<h3>Çark Çevir</h3>
+<p>Günlük çarkını çevir</p>
+</div>
+</div>
+<button>Çevir</button>
+</div>
+
+<div class="card">
+<div class="card-left">
+<div class="icon">🚀</div>
+<div>
+<h3>Günlük Puan</h3>
+<p>Günlük giriş puanını al</p>
+</div>
+</div>
+<button>Al</button>
+</div>
+
+</div>
+
+<div class="float-btn">💬</div>
+
+<script>
+function toggleMenu(){
+document.getElementById("sidebar").classList.toggle("active");
+}
+</script>
+
+</body>
+</html>
