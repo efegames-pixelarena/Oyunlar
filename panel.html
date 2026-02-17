@@ -7,24 +7,133 @@
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:Arial;}
-body{background:linear-gradient(180deg,#0f172a,#111827);color:white;}
+body{
+background:linear-gradient(180deg,#0f172a,#111827);
+color:white;
+}
 
-.header{display:flex;justify-content:space-between;align-items:center;padding:15px;background:#0b1220;}
-.logo{font-size:22px;font-weight:bold;background:linear-gradient(45deg,#00c6ff,#ff8c00);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-.balance{font-weight:bold}
+/* HEADER */
+.header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:15px;
+background:#0b1220;
+}
+.logo{
+font-size:22px;
+font-weight:bold;
+background:linear-gradient(45deg,#00c6ff,#ff8c00);
+-webkit-background-clip:text;
+-webkit-text-fill-color:transparent;
+}
+.balance{
+background:#1f2937;
+padding:8px 12px;
+border-radius:8px;
+font-weight:bold;
+}
 
-.banner{width:100%;height:150px;background:url('https://picsum.photos/800/300') center/cover;border-radius:10px;margin:15px auto;}
+/* PROMO BANNER */
+.promo{
+margin:15px;
+background:linear-gradient(90deg,#1e293b,#0f172a);
+border-radius:15px;
+padding:15px;
+display:flex;
+gap:10px;
+overflow-x:auto;
+}
+.promo-box{
+min-width:120px;
+background:#111827;
+border-radius:12px;
+padding:10px;
+text-align:center;
+box-shadow:0 5px 15px rgba(0,0,0,0.4);
+}
+.promo-box h3{
+color:#f59e0b;
+font-size:16px;
+}
+.promo-box p{
+font-size:12px;
+color:#9ca3af;
+}
 
-.card{background:#1f2937;margin:15px;padding:20px;border-radius:15px;box-shadow:0 5px 15px rgba(0,0,0,0.4);}
+/* CARD */
+.card{
+background:#1f2937;
+margin:15px;
+padding:20px;
+border-radius:15px;
+box-shadow:0 5px 15px rgba(0,0,0,0.4);
+}
 .card h2{margin-bottom:10px;}
 .card p{color:#9ca3af;margin-bottom:15px;}
 
-.btn{background:#f59e0b;color:black;padding:10px 15px;border:none;border-radius:8px;cursor:pointer;font-weight:bold;width:100%;}
-input{padding:10px;border-radius:8px;border:none;width:100%;margin-bottom:10px;}
+.btn{
+background:#f59e0b;
+color:black;
+padding:12px;
+border:none;
+border-radius:10px;
+cursor:pointer;
+font-weight:bold;
+width:100%;
+font-size:15px;
+}
+input{
+padding:12px;
+border-radius:10px;
+border:none;
+width:100%;
+margin-bottom:10px;
+background:#111827;
+color:white;
+}
 
-.wheel-container{position:relative;width:250px;height:250px;margin:20px auto;}
-#wheel{width:100%;height:100%;border-radius:50%;border:8px solid #f59e0b;transition:transform 4s ease-out;}
-.pointer{position:absolute;top:-10px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:10px solid transparent;border-right:10px solid transparent;border-bottom:20px solid white;}
+/* ÇARK */
+.wheel-container{
+position:relative;
+width:260px;
+height:260px;
+margin:20px auto;
+}
+#wheel{
+width:100%;
+height:100%;
+border-radius:50%;
+border:8px solid #f59e0b;
+transition:transform 4s ease-out;
+}
+.pointer{
+position:absolute;
+top:-10px;
+left:50%;
+transform:translateX(-50%);
+width:0;height:0;
+border-left:12px solid transparent;
+border-right:12px solid transparent;
+border-bottom:25px solid white;
+}
+
+/* FOOTER NAV */
+.footer{
+position:fixed;
+bottom:0;
+left:0;
+width:100%;
+background:#0b1220;
+display:flex;
+justify-content:space-around;
+padding:12px 0;
+}
+.footer div{
+text-align:center;
+font-size:12px;
+color:#9ca3af;
+}
 </style>
 </head>
 <body>
@@ -34,133 +143,83 @@ input{padding:10px;border-radius:8px;border:none;width:100%;margin-bottom:10px;}
 <div class="balance">Bakiye: <span id="balance">0</span> ₺</div>
 </div>
 
-<div class="banner"></div>
+<!-- PROMO ALANI -->
+<div class="promo">
+<div class="promo-box">
+<h3>1000₺</h3>
+<p>Deneme Bonusu</p>
+</div>
+<div class="promo-box">
+<h3>%100</h3>
+<p>Hoş Geldin</p>
+</div>
+<div class="promo-box">
+<h3>%20</h3>
+<p>Kayıp Bonusu</p>
+</div>
+<div class="promo-box">
+<h3>VIP</h3>
+<p>Özel Kampanya</p>
+</div>
+</div>
 
+<!-- KOD -->
 <div class="card">
 <h2>Kod Gir</h2>
-<p>Aktif bonus kodunu gir</p>
+<p>Canlı yayında verilen bonus kodunu gir</p>
 <input type="text" id="codeInput" placeholder="Kodu yaz">
 <button class="btn" onclick="useCode()">Kodu Kullan</button>
 </div>
 
+<!-- ÇARK -->
 <div class="card">
 <h2>Çarkı Çevir</h2>
-<p>Günlük ödül kazan</p>
+<p>Günlük ödülünü kazan</p>
 
 <div class="wheel-container">
 <div class="pointer"></div>
-<canvas id="wheel" width="250" height="250"></canvas>
+<canvas id="wheel" width="260" height="260"></canvas>
 </div>
 
 <button class="btn" onclick="spinWheel()">Çarkı Çevir</button>
 </div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { 
-  getFirestore, doc, getDoc, updateDoc, increment, setDoc 
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+<!-- ALT MENÜ -->
+<div class="footer">
+<div>Ana Sayfa</div>
+<div>Bonuslar</div>
+<div>Profil</div>
+</div>
 
-const firebaseConfig = {
-  apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
-  authDomain:"emirhan-site.firebaseapp.com",
-  projectId:"emirhan-site",
-  storageBucket:"emirhan-site.firebasestorage.app",
-  messagingSenderId:"668871888390",
-  appId:"1:668871888390:web:76568bda84cb1641f7bd87"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-let currentUser = null;
-
-onAuthStateChanged(auth, async(user)=>{
-if(!user){
-alert("Giriş yapmanız gerekiyor.");
-window.location.href="index.html";
-}else{
-currentUser = user;
-const snap = await getDoc(doc(db,"users",user.uid));
-document.getElementById("balance").innerText = snap.data().balance;
-}
-});
-
-/* ==================== ÇARK ==================== */
-
+<script>
+/* ÇARK GÖRSEL */
 const canvas = document.getElementById("wheel");
 const ctx = canvas.getContext("2d");
 
-const rewards = [50,100,1000,2000];
+const rewards = [50,100,500,1000];
 const angle = 2*Math.PI/rewards.length;
 
 for(let i=0;i<rewards.length;i++){
 ctx.beginPath();
-ctx.moveTo(125,125);
-ctx.arc(125,125,125,i*angle,(i+1)*angle);
+ctx.moveTo(130,130);
+ctx.arc(130,130,130,i*angle,(i+1)*angle);
 ctx.fillStyle = i%2==0 ? "#3b82f6" : "#6b7280";
 ctx.fill();
 ctx.save();
-ctx.translate(125,125);
+ctx.translate(130,130);
 ctx.rotate(i*angle+angle/2);
 ctx.fillStyle="white";
 ctx.font="bold 16px Arial";
-ctx.fillText(rewards[i]+"₺",60,5);
+ctx.fillText(rewards[i]+"₺",70,5);
 ctx.restore();
 }
 
 let rotation = 0;
 
-window.spinWheel = async function(){
+function spinWheel(){
 const index = Math.floor(Math.random()*rewards.length);
-const prize = rewards[index];
-
 rotation += 360*5 + (360/rewards.length)*index;
 canvas.style.transform = `rotate(${rotation}deg)`;
-
-setTimeout(async()=>{
-await updateDoc(doc(db,"users",currentUser.uid),{
-balance: increment(prize)
-});
-alert(prize+"₺ bakiyene eklendi!");
-},4000);
-}
-
-/* ==================== KOD SİSTEMİ ==================== */
-
-window.useCode = async function(){
-const code = document.getElementById("codeInput").value.trim().toUpperCase();
-if(!code) return alert("Kod gir.");
-
-const codeRef = doc(db,"codes",code);
-const codeSnap = await getDoc(codeRef);
-
-if(!codeSnap.exists()) return alert("Kod geçersiz.");
-
-const data = codeSnap.data();
-
-if(!data.active) return alert("Kod pasif.");
-if(data.limit <= 0) return alert("Kod kullanım hakkı dolmuş.");
-
-/* Kullanıcı daha önce kullanmış mı */
-if(data.usedBy && data.usedBy.includes(currentUser.uid)){
-return alert("Bu kodu zaten kullandın.");
-}
-
-/* Bakiyeye ekle */
-await updateDoc(doc(db,"users",currentUser.uid),{
-balance: increment(data.reward)
-});
-
-/* Kod limit azalt */
-await updateDoc(codeRef,{
-limit: increment(-1),
-usedBy: [...(data.usedBy || []), currentUser.uid]
-});
-
-alert(data.reward+"₺ bakiyene eklendi!");
 }
 </script>
 
