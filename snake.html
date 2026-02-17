@@ -19,6 +19,7 @@ canvas { display:block; background:#1e1e1e; }
 
 <canvas id="gameCanvas"></canvas>
 <div id="scoreboard"></div>
+<audio id="eatSound" src="https://freesound.org/data/previews/342/342756_3248244-lq.mp3"></audio>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -47,13 +48,11 @@ canvas.width = W; canvas.height = H;
 
 const MAP_SIZE = 5000;
 const MAX_FOODS = 200;
-const MAX_BOTS = 50;
-
-let players = {}, foods = [], bots = [];
-let mySnake = { body:[], x:Math.random()*MAP_SIZE, y:Math.random()*MAP_SIZE, dir:'RIGHT', speed:4, score:0 };
+let players = {}, foods = [];
+let mySnake = { body:[], x:Math.random()*MAP_SIZE, y:Math.random()*MAP_SIZE, dir:'RIGHT', speed:6, score:0 };
 const scoreboard = document.getElementById("scoreboard");
-
 let inputDir = {x:0,y:0};
+const eatSound = document.getElementById("eatSound");
 
 /* ---------------- TOUCH CONTROLS ---------------- */
 canvas.addEventListener("touchstart", handleTouch);
@@ -86,7 +85,6 @@ onAuthStateChanged(auth, user=>{
   });
 
   for(let i=0;i<MAX_FOODS;i++) foods.push(randomFood());
-  for(let i=0;i<MAX_BOTS;i++) bots.push({ body:[{x:Math.random()*MAP_SIZE, y:Math.random()*MAP_SIZE}], dir:'RIGHT', speed:2, score:0 });
 
   requestAnimationFrame(gameLoop);
 });
@@ -94,7 +92,6 @@ onAuthStateChanged(auth, user=>{
 /* ---------------- GAME LOOP ---------------- */
 function gameLoop(){
   updateMySnake();
-  updateBots();
   checkCollisions();
   render();
   requestAnimationFrame(gameLoop);
@@ -113,28 +110,13 @@ function updateMySnake(){
   update(ref(db, "players/"+auth.currentUser.uid), { x:mySnake.x, y:mySnake.y, score:mySnake.score });
 }
 
-function updateBots(){
-  bots.forEach(bot=>{
-    let head = bot.body[0];
-    let targetFood = foods[Math.floor(Math.random()*foods.length)];
-    let dx = targetFood.x-head.x, dy=targetFood.y-head.y;
-    let len = Math.sqrt(dx*dx+dy*dy); dx/=len; dy/=len;
-    bot.body.unshift({x:head.x+dx*bot.speed, y:head.y+dy*bot.speed});
-    if(bot.body.length>10+bot.score/10) bot.body.pop();
-    foods.forEach((f,i)=>{ if(distance(f, bot.body[0])<15){ bot.score += (f.type==="red"?30:10); foods[i]=randomFood(); } });
-  });
-}
-
 function checkCollisions(){
-  foods.forEach((f,i)=>{ if(distance(f, mySnake.body[0])<15){ mySnake.score += (f.type==="red"?30:10); foods[i]=randomFood(); } });
-  bots.forEach(bot=>{
-    bot.body.forEach(seg=>{
-      if(distance(seg,mySnake.body[0])<10){
-        mySnake.body=[{x:Math.random()*MAP_SIZE, y:Math.random()*MAP_SIZE}];
-        mySnake.score=0;
-        set(ref(db, "players/"+auth.currentUser.uid), { username:auth.currentUser.displayName||"Oyuncu", x:mySnake.x, y:mySnake.y, score:0, alive:true });
-      }
-    });
+  foods.forEach((f,i)=>{
+    if(distance(f, mySnake.body[0])<15){
+      mySnake.score += (f.type==="red"?30:10);
+      foods[i]=randomFood();
+      eatSound.currentTime=0; eatSound.play();
+    }
   });
 }
 
@@ -145,34 +127,32 @@ function render(){
 
   // Draw foods
   foods.forEach(f=>{
-    ctx.font="16px Arial";
+    ctx.font="20px Arial";
     ctx.fillText(f.type==="red"?"🍎":"🍏", f.x-camX, f.y-camY);
   });
 
-  // Draw bots
-  bots.forEach(bot=>{
-    ctx.fillStyle="green";
-    bot.body.forEach(seg=>ctx.fillRect(seg.x-camX, seg.y-camY, 12,12));
-  });
-
-  // Draw players
-  for(let id in players){
-    let p = players[id];
-    if(!p.alive) continue;
-    ctx.fillStyle="blue";
-    ctx.beginPath();
-    ctx.arc(p.x-camX, p.y-camY, 12, 0, Math.PI*2);
-    ctx.fill();
-  }
-
-  // Draw my snake
+  // Draw my snake with gradient & shadow
   mySnake.body.forEach((seg,i)=>{
     let alpha = 1 - i/mySnake.body.length;
-    ctx.fillStyle = `rgba(255,255,0,${alpha})`;
+    let radius = 12*(1-alpha*0.5);
     ctx.beginPath();
-    ctx.arc(seg.x-camX, seg.y-camY, 12, 0, Math.PI*2);
+    ctx.arc(seg.x-camX, seg.y-camY, radius, 0, Math.PI*2);
+    ctx.fillStyle = i===0 ? "#ffff00" : `rgba(255,255,0,${alpha})`;
+    ctx.shadowColor="black";
+    ctx.shadowBlur = 6;
     ctx.fill();
+    ctx.shadowBlur=0;
   });
+
+  // Draw head eyes
+  let head = mySnake.body[0];
+  if(head){
+    ctx.fillStyle="black";
+    ctx.beginPath();
+    ctx.arc(head.x-camX+5, head.y-camY-3, 3,0,Math.PI*2);
+    ctx.arc(head.x-camX-5, head.y-camY-3, 3,0,Math.PI*2);
+    ctx.fill();
+  }
 }
 
 function randomFood(){ return { x:Math.random()*MAP_SIZE, y:Math.random()*MAP_SIZE, type:Math.random()<0.1?"red":"green" }; }
