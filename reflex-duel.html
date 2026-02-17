@@ -19,6 +19,7 @@ flex-direction:column;
 height:100vh;
 touch-action:manipulation;
 }
+
 @keyframes bg{
 0%{background-position:0% 50%}
 100%{background-position:100% 50%}
@@ -38,8 +39,11 @@ background:linear-gradient(135deg,#1a2a6c,#16245c);
 box-shadow:0 4px 15px rgba(0,0,0,0.45);
 z-index:1000;
 }
+
 .brand{font-size:clamp(14px,2vw,18px);font-weight:800;}
+
 .right-menu{display:flex;gap:10px;align-items:center;}
+
 .nav-box{
 padding:6px 14px;
 border-radius:14px;
@@ -49,6 +53,7 @@ background:#273c8f;
 min-width:70px;
 text-align:center;
 }
+
 .btn{
 padding:6px 12px;
 border-radius:12px;
@@ -57,6 +62,7 @@ cursor:pointer;
 font-weight:700;
 font-size:clamp(11px,2vw,13px);
 }
+
 .logout-btn{background:#ff3b3b;color:white;}
 
 /* SCOREBOARD */
@@ -99,34 +105,32 @@ font-size:clamp(32px,10vw,70px);
 min-height:90px;
 margin-top:20px;
 font-weight:800;
+transition:0.3s;
 }
 
-#subText{
+.neonRed{
+color:#ff0000;
+text-shadow:0 0 5px #ff0000,0 0 15px #ff0000,0 0 30px #ff0000;
+animation:pulse 1s infinite;
+}
+
+@keyframes pulse{
+0%{opacity:1}
+50%{opacity:0.6}
+100%{opacity:1}
+}
+
+.reaction{
+font-size:18px;
 margin-top:10px;
-font-size:clamp(14px,4vw,22px);
-font-weight:700;
-color:#ff2b2b;
-text-shadow:
-0 0 5px #ff0000,
-0 0 10px #ff0000,
-0 0 20px #ff0000;
-min-height:30px;
+opacity:0.9;
 }
 
-.lobby{
-margin-top:15px;
-display:flex;
-gap:10px;
-flex-wrap:wrap;
-justify-content:center;
-}
-
-input{
-padding:8px;
-border-radius:8px;
-border:none;
-outline:none;
-font-size:clamp(12px,2.5vw,14px);
+canvas{
+position:fixed;
+pointer-events:none;
+top:0;
+left:0;
 }
 </style>
 </head>
@@ -147,25 +151,18 @@ font-size:clamp(12px,2.5vw,14px);
 </div>
 
 <div id="game">
-
 <button id="findBtn">Maç Bul</button>
-
-<div class="lobby" id="lobbyBox">
-<input id="roomCodeInput" placeholder="Oda Kodu">
-<button id="createRoomBtn">Oda Kur</button>
-<button id="joinCodeBtn">Katıl</button>
-</div>
-
 <div id="bigText"></div>
-<div id="subText"></div>
-
+<div id="reactionText" class="reaction"></div>
 </div>
+
+<canvas id="fx"></canvas>
 
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
-getFirestore, doc, setDoc, updateDoc, deleteDoc,
+getFirestore, doc, updateDoc, deleteDoc,
 onSnapshot, collection, query, where, getDocs,
 serverTimestamp, runTransaction, getDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -176,7 +173,7 @@ getAuth, onAuthStateChanged, signOut
 
 /* FIREBASE */
 const firebaseConfig={
-apiKey:"AIzaSy...",
+apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
 authDomain:"emirhan-site.firebaseapp.com",
 projectId:"emirhan-site",
 storageBucket:"emirhan-site.firebasestorage.app",
@@ -194,109 +191,121 @@ let username=null;
 let roomId=null;
 let unsubscribe=null;
 let tapLock=false;
-let interval=null;
+let startMs=0;
 
 /* ELEMENTS */
-const findBtn=document.getElementById("findBtn");
-const createRoomBtn=document.getElementById("createRoomBtn");
-const joinCodeBtn=document.getElementById("joinCodeBtn");
-const roomCodeInput=document.getElementById("roomCodeInput");
 const bigText=document.getElementById("bigText");
-const subText=document.getElementById("subText");
+const reactionText=document.getElementById("reactionText");
 const p1=document.getElementById("p1");
 const p2=document.getElementById("p2");
 const roundInfo=document.getElementById("roundInfo");
-const logoutBtn=document.getElementById("logoutBtn");
-const userBox=document.getElementById("userBox");
-const lobbyBox=document.getElementById("lobbyBox");
-
-function hideLobby(){findBtn.style.display="none";lobbyBox.style.display="none";}
-function showLobby(){findBtn.style.display="block";lobbyBox.style.display="flex";}
+const findBtn=document.getElementById("findBtn");
 
 /* AUTH */
 onAuthStateChanged(auth,async(user)=>{
-if(!user){location.href="index.html";return;}
+if(!user){ location.href="index.html"; return; }
 uid=user.uid;
 const snap=await getDoc(doc(db,"users",uid));
 username=snap.data().username;
-userBox.innerText=username;
+document.getElementById("userBox").innerText=username;
 });
 
-logoutBtn.onclick=async()=>{await signOut(auth);location.href="index.html";};
+/* MATCH */
+findBtn.onclick=async()=>{
+bigText.innerText="Eşleşme aranıyor...";
+await runTransaction(db,async(t)=>{
+const qRef=collection(db,"queue");
+const qSnap=await getDocs(qRef);
+let opponent=null;
+qSnap.forEach(d=>{ if(d.data().uid!==uid&&!opponent) opponent=d; });
+if(opponent){
+const roomRef=doc(collection(db,"rooms"));
+t.set(roomRef,{
+player1:opponent.data().uid,
+player1Name:opponent.data().username,
+player2:uid,
+player2Name:username,
+players:[opponent.data().uid,uid],
+score1:0,score2:0,
+round:1,
+state:"countdown",
+startAt:Date.now()+10000,
+lastWinner:null
+});
+t.delete(opponent.ref);
+roomId=roomRef.id;
+}else{
+const myQ=doc(collection(db,"queue"));
+t.set(myQ,{uid,username,createdAt:serverTimestamp()});
+}
+});
+listenRooms();
+};
 
-/* LISTEN ROOM */
+function listenRooms(){
+onSnapshot(collection(db,"rooms"),snap=>{
+snap.forEach(docu=>{
+if(docu.data().players.includes(uid)){
+roomId=docu.id;
+listenRoom();
+}
+});
+});
+}
+
 function listenRoom(){
 if(unsubscribe) unsubscribe();
-
 unsubscribe=onSnapshot(doc(db,"rooms",roomId),async(snap)=>{
-if(!snap.exists()) return reset();
+if(!snap.exists()) return;
 const d=snap.data();
 
 p1.innerText=d.player1Name+" ("+d.score1+")";
 p2.innerText=d.player2Name+" ("+d.score2+")";
 roundInfo.innerText="Round "+d.round+" / 7";
 
-clearInterval(interval);
-
-/* 1️⃣ 10 Saniye Countdown */
+/* 10 Saniye Countdown */
 if(d.state==="countdown"){
-interval=setInterval(()=>{
 const diff=d.startAt-Date.now();
-if(diff<=0){
-clearInterval(interval);
-
-/* 2️⃣ 3 Saniye HAZIR OL */
-bigText.innerText="HAZIR OL";
-let readyTime=3;
-subText.innerText=readyTime;
-
-const readyInt=setInterval(()=>{
-readyTime--;
-subText.innerText=readyTime;
-if(readyTime<=0){
-clearInterval(readyInt);
-subText.innerText="";
-updateDoc(doc(db,"rooms",roomId),{state:"active"});
-}
-},1000);
-
-}else{
+if(diff>0){
 bigText.innerText=Math.ceil(diff/1000);
+}else{
+bigText.innerText="HAZIR OL";
+setTimeout(()=>{
+updateDoc(doc(db,"rooms",roomId),{
+state:"active",
+activeStart:Date.now()
+});
+},3000);
 }
-},250);
 }
 
+/* ACTIVE */
 if(d.state==="active"){
 bigText.innerText="TAP!";
-subText.innerText="";
+startMs=d.activeStart;
 }
 
-/* 3️⃣ SONUÇ EKRANI */
+/* RESULT */
 if(d.state==="result"){
+bigText.classList.add("neonRed");
+bigText.innerText=d.lastWinner;
+reactionText.innerHTML="Raund "+(d.round+1)+" kalan süre 5 saniye";
 
-bigText.innerText=d.lastWinner+" Kazandı!";
+confettiEffect();
 
-let nextRound=5;
-subText.innerText="Round "+(d.round+1)+" Kalan Süre: "+nextRound;
-
-interval=setInterval(()=>{
-nextRound--;
-subText.innerText="Round "+(d.round+1)+" Kalan Süre: "+nextRound;
-if(nextRound<=0){
-clearInterval(interval);
-
+setTimeout(async()=>{
+bigText.classList.remove("neonRed");
+reactionText.innerHTML="";
 if(d.score1===4||d.score2===4){
-deleteDoc(doc(db,"rooms",roomId));
-reset();
+await deleteDoc(doc(db,"rooms",roomId));
 }else{
-updateDoc(doc(db,"rooms",roomId),{
+await updateDoc(doc(db,"rooms",roomId),{
 round:d.round+1,
 state:"countdown",
 startAt:Date.now()+10000
 });
 }
-}
-},1000);
+},5000);
 }
 
 });
@@ -314,22 +323,40 @@ if(!snap.exists()) return;
 const d=snap.data();
 if(d.state!=="active") return;
 
+const reaction=Date.now()-d.activeStart;
+
 if(uid===d.player1){
-t.update(ref,{score1:d.score1+1,state:"result",lastWinner:d.player1Name});
-}else if(uid===d.player2){
-t.update(ref,{score2:d.score2+1,state:"result",lastWinner:d.player2Name});
+t.update(ref,{
+score1:d.score1+1,
+state:"result",
+lastWinner:d.player1Name+" ("+reaction+"ms)"
+});
+}else{
+t.update(ref,{
+score2:d.score2+1,
+state:"result",
+lastWinner:d.player2Name+" ("+reaction+"ms)"
+});
 }
 });
 
 tapLock=false;
 });
 
-function reset(){
-if(unsubscribe) unsubscribe();
-roomId=null;
-bigText.innerText="";
-subText.innerText="";
-showLobby();
+/* CONFETTI */
+const canvas=document.getElementById("fx");
+const ctx=canvas.getContext("2d");
+canvas.width=innerWidth;
+canvas.height=innerHeight;
+
+function confettiEffect(){
+for(let i=0;i<120;i++){
+const x=Math.random()*canvas.width;
+const y=Math.random()*canvas.height;
+ctx.fillStyle="hsl("+Math.random()*360+",100%,50%)";
+ctx.fillRect(x,y,5,5);
+}
+setTimeout(()=>ctx.clearRect(0,0,canvas.width,canvas.height),800);
 }
 
 </script>
