@@ -85,7 +85,7 @@ import {
 getFirestore, doc, setDoc, updateDoc,
 deleteDoc, onSnapshot,
 collection, query, where, getDocs,
-serverTimestamp, runTransaction
+serverTimestamp, runTransaction, getDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {
 getAuth, onAuthStateChanged, signInAnonymously
@@ -95,9 +95,6 @@ const firebaseConfig={
 apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
 authDomain:"emirhan-site.firebaseapp.com",
 projectId:"emirhan-site",
-storageBucket:"emirhan-site.firebasestorage.app",
-messagingSenderId:"668871888390",
-appId:"1:668871888390:web:76568bda84cb1641f7bd87"
 };
 
 const app=initializeApp(firebaseConfig);
@@ -108,7 +105,6 @@ let uid=null;
 let username="Player";
 let roomId=null;
 let isHost=false;
-let roomUnsub=null;
 let tapLock=false;
 let audioCtx=null;
 let localPing=0;
@@ -121,7 +117,7 @@ const p1=document.getElementById("p1");
 const p2=document.getElementById("p2");
 const roundInfo=document.getElementById("roundInfo");
 
-/* AUDIO (TÜM CİHAZLAR) */
+/* AUDIO */
 function unlockAudio(){
 if(!audioCtx){
 audioCtx=new (window.AudioContext||window.webkitAudioContext)();
@@ -144,19 +140,28 @@ o.stop(audioCtx.currentTime+dur/1000);
 document.addEventListener("touchstart",unlockAudio,{once:true});
 document.addEventListener("mousedown",unlockAudio,{once:true});
 
-/* AUTH */
+/* AUTH + USERNAME */
 onAuthStateChanged(auth,async(user)=>{
 if(!user){ await signInAnonymously(auth); return; }
+
 uid=user.uid;
+
+const userRef=doc(db,"users",uid);
+const snap=await getDoc(userRef);
+
+if(snap.exists()){
+username=snap.data().username;
+}else{
+username="Player_"+uid.slice(0,4);
+await setDoc(userRef,{username});
+}
 });
 
-/* PING ÖLÇÜM */
+/* PING */
 async function measurePing(){
 const start=performance.now();
-const ref=doc(collection(db,"pingTest"));
-await setDoc(ref,{t:serverTimestamp()});
-await getDocs(query(collection(db,"pingTest")));
-localPing=Math.floor(performance.now()-start);
+await setDoc(doc(db,"pingTest",uid),{t:serverTimestamp()});
+localPing=Math.floor((performance.now()-start)/2);
 }
 
 /* MATCH */
@@ -167,67 +172,72 @@ status.innerText="Rakip aranıyor...";
 
 const q=query(collection(db,"rooms"),
 where("state","==","waiting"),
-where("player2","==",null));
+where("player2","==",null)
+);
 
 const snap=await getDocs(q);
 
+for(const docSnap of snap.docs){
+
+if(docSnap.data().player1!==uid){
+
 let joined=false;
 
-for(const docSnap of snap.docs){
-if(docSnap.data().player1!==uid){
-roomId=docSnap.id;
-isHost=false;
-
 await runTransaction(db,async(t)=>{
-const ref=doc(db,"rooms",roomId);
+const ref=doc(db,"rooms",docSnap.id);
 const s=await t.get(ref);
-if(!s.exists())return;
+if(!s.exists()) return;
 const d=s.data();
-if(d.player1!==uid && d.player2==null){
+
+if(d.player2==null && d.player1!==uid){
+
 t.update(ref,{
 player2:uid,
 player2Name:username,
 player2Ping:localPing,
 state:"countdown"
 });
+
+roomId=docSnap.id;
+isHost=false;
 joined=true;
 }
 });
-if(joined) break;
-}
-}
 
 if(joined){
 listenRoom();
-startGame();
 return;
 }
+}
+}
 
-/* Yeni oda */
+/* oda yoksa oluştur */
 const newRoom=doc(collection(db,"rooms"));
 roomId=newRoom.id;
 isHost=true;
 
 await setDoc(newRoom,{
 player1:uid,
-player2:null,
 player1Name:username,
-player2Name:null,
 player1Ping:localPing,
+player2:null,
+player2Name:null,
+player2Ping:null,
 round:1,
 score1:0,
 score2:0,
 state:"waiting",
 winner:null,
+startAt:null,
 createdAt:serverTimestamp()
 });
 
 listenRoom();
-startGame();
 };
 
+/* LISTEN */
 function listenRoom(){
-roomUnsub=onSnapshot(doc(db,"rooms",roomId),(snap)=>{
+onSnapshot(doc(db,"rooms",roomId),(snap)=>{
 if(!snap.exists()){ reset(); return; }
 
 const d=snap.data();
@@ -236,27 +246,25 @@ p1.innerText=d.player1Name+" ("+d.score1+")";
 p2.innerText=(d.player2Name||"...")+" ("+d.score2+")";
 roundInfo.innerText="Round "+d.round+" / 7";
 
-/* Disconnect auto win */
-if(d.player1 && !d.player2 && d.state!=="waiting"){
-if(uid===d.player1){
-updateDoc(doc(db,"rooms",roomId),{
-score1:d.score1+1,
-winner:d.player1,
-state:"result"
-});
-}
+/* eşleşme olduysa buton gizle */
+if(d.player2){
+findBtn.style.display="none";
+status.innerText="";
 }
 
-/* COUNTDOWN SENKRON */
+/* COUNTDOWN */
 if(d.state==="countdown"){
 
 if(isHost && !d.startAt && d.player2){
+
 const avgPing=((d.player1Ping||0)+(d.player2Ping||0))/2;
-const startAt=Date.now()+3500+avgPing;
+const startAt=Date.now()+3000+avgPing;
+
 updateDoc(doc(db,"rooms",roomId),{startAt});
 }
 
 if(d.startAt){
+
 const diff=d.startAt-Date.now();
 const sec=Math.ceil(diff/1000);
 
@@ -272,7 +280,7 @@ bigText.innerText=sec;
 beep(600);
 }else{
 bigText.innerText="GO!";
-beep(1300);
+beep(1200);
 }
 }
 
@@ -290,7 +298,7 @@ else if(d.state==="result"){
 bigText.innerText=d.winner===uid?"Kazandın":"Kaybettin";
 
 setTimeout(async()=>{
-if(d.score1===7||d.score2===7){
+if(d.score1>=7 || d.score2>=7){
 await deleteDoc(doc(db,"rooms",roomId));
 reset();
 }else{
@@ -309,15 +317,18 @@ state:"countdown"
 
 /* TAP */
 async function tap(){
-if(tapLock||!roomId)return;
+if(tapLock||!roomId) return;
 tapLock=true;
 
 await runTransaction(db,async(t)=>{
 const ref=doc(db,"rooms",roomId);
 const snap=await t.get(ref);
-if(!snap.exists())return;
+if(!snap.exists()) return;
 const d=snap.data();
-if(d.state!=="active"||d.winner)return;
+
+if(d.state!=="active") return;
+if(Date.now()<d.startAt) return;
+if(d.winner) return;
 
 if(uid===d.player1){
 t.update(ref,{score1:d.score1+1,winner:uid,state:"result"});
@@ -325,11 +336,8 @@ t.update(ref,{score1:d.score1+1,winner:uid,state:"result"});
 t.update(ref,{score2:d.score2+1,winner:uid,state:"result"});
 }
 });
-setTimeout(()=>tapLock=false,150);
-}
 
-function startGame(){
-findBtn.style.display="none";
+setTimeout(()=>tapLock=false,150);
 }
 
 function reset(){
