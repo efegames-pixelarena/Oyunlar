@@ -4,26 +4,31 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Reflex Duel Pro</title>
+
 <style>
 body{
 margin:0;
-background:#0f172a;
+background:linear-gradient(90deg,#7f1d1d 50%,#1e3a8a 50%);
 color:white;
 font-family:Arial;
 display:flex;
 flex-direction:column;
-align-items:center;
 height:100vh;
+overflow:hidden;
 }
 
 .topbar{
 width:100%;
-padding:10px;
-background:#1e293b;
+padding:12px;
+background:#0f172a;
 display:flex;
 justify-content:space-between;
 font-weight:bold;
+box-sizing:border-box;
 }
+
+#p1{color:#ff4d4d}
+#p2{color:#4da6ff}
 
 #game{
 flex:1;
@@ -39,9 +44,24 @@ border:none;
 border-radius:8px;
 font-weight:bold;
 cursor:pointer;
+font-size:16px;
 }
 
-#bigText{font-size:60px;margin-top:20px}
+#bigText{
+font-size:80px;
+margin-top:20px;
+transition:transform .3s ease, opacity .3s ease;
+}
+
+.countAnim{
+animation:pop .8s ease;
+}
+
+@keyframes pop{
+0%{transform:scale(.3);opacity:0}
+50%{transform:scale(1.2);opacity:1}
+100%{transform:scale(1);opacity:1}
+}
 </style>
 </head>
 <body>
@@ -68,7 +88,7 @@ collection, query, where, getDocs,
 serverTimestamp, runTransaction
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {
-getAuth, onAuthStateChanged
+getAuth, onAuthStateChanged, signInAnonymously
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const firebaseConfig={
@@ -85,11 +105,12 @@ const db=getFirestore(app);
 const auth=getAuth(app);
 
 let uid=null;
-let username=null;
+let username="Player";
 let roomId=null;
 let isHost=false;
 let roomUnsub=null;
 let tapLock=false;
+let audioCtx=null;
 
 const findBtn=document.getElementById("findBtn");
 const status=document.getElementById("status");
@@ -98,10 +119,27 @@ const p1=document.getElementById("p1");
 const p2=document.getElementById("p2");
 const roundInfo=document.getElementById("roundInfo");
 
+/* AUDIO (iOS SAFE) */
+function unlockAudio(){
+if(!audioCtx){
+audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+}
+}
+function beep(freq,dur=200){
+if(!audioCtx)return;
+const o=audioCtx.createOscillator();
+const g=audioCtx.createGain();
+o.connect(g); g.connect(audioCtx.destination);
+o.frequency.value=freq;
+o.start();
+g.gain.setValueAtTime(.4,audioCtx.currentTime);
+g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+dur/1000);
+o.stop(audioCtx.currentTime+dur/1000);
+}
+
 /* AUTH */
 onAuthStateChanged(auth,async(user)=>{
-if(!user)return;
-
+if(!user){ await signInAnonymously(auth); return; }
 uid=user.uid;
 
 const userDoc=await getDocs(query(collection(db,"users"),where("__name__","==",uid)));
@@ -112,10 +150,10 @@ username=userDoc.docs[0].data().username;
 
 /* MATCH */
 findBtn.onclick=async()=>{
-
+unlockAudio();
 status.innerText="Rakip aranıyor...";
 
-/* Açık oda var mı? */
+/* Açık oda var mı */
 const q=query(collection(db,"rooms"),
 where("state","==","waiting"),
 where("player2","==",null));
@@ -123,7 +161,7 @@ where("player2","==",null));
 const snap=await getDocs(q);
 
 if(!snap.empty){
-/* Katıl */
+
 const openRoom=snap.docs[0];
 roomId=openRoom.id;
 isHost=false;
@@ -131,14 +169,15 @@ isHost=false;
 await updateDoc(doc(db,"rooms",roomId),{
 player2:uid,
 player2Name:username,
-state:"countdown"
+state:"countdown",
+count:3
 });
 
 listenRoom();
 startGame();
 
 }else{
-/* Yeni oda */
+
 const newRoom=doc(collection(db,"rooms"));
 roomId=newRoom.id;
 isHost=true;
@@ -152,6 +191,7 @@ round:1,
 score1:0,
 score2:0,
 state:"waiting",
+count:3,
 winner:null,
 createdAt:serverTimestamp()
 });
@@ -163,10 +203,7 @@ startGame();
 
 function listenRoom(){
 roomUnsub=onSnapshot(doc(db,"rooms",roomId),(snap)=>{
-if(!snap.exists()){
-reset();
-return;
-}
+if(!snap.exists()){ reset(); return; }
 
 const d=snap.data();
 
@@ -175,10 +212,11 @@ p2.innerText=(d.player2Name||"...")+" ("+d.score2+")";
 roundInfo.innerText="Round "+d.round+" / 7";
 
 if(d.state==="countdown"){
-bigText.innerText="Hazır!";
-setTimeout(()=>{
-updateDoc(doc(db,"rooms",roomId),{state:"active"});
-},1000);
+renderCountdown(d.count);
+
+if(isHost){
+startCountdown();
+}
 }
 else if(d.state==="active"){
 bigText.innerText="TAP!";
@@ -194,7 +232,8 @@ reset();
 await updateDoc(doc(db,"rooms",roomId),{
 round:d.round+1,
 winner:null,
-state:"countdown"
+state:"countdown",
+count:3
 });
 }
 },2000);
@@ -202,6 +241,38 @@ state:"countdown"
 });
 }
 
+/* HOST COUNTDOWN (TEK TIMER) */
+function startCountdown(){
+let c=3;
+
+const interval=setInterval(async()=>{
+await updateDoc(doc(db,"rooms",roomId),{count:c});
+beep(600);
+c--;
+
+if(c<0){
+clearInterval(interval);
+await updateDoc(doc(db,"rooms",roomId),{state:"active"});
+beep(1200);
+}
+},1000);
+}
+
+/* RENDER COUNT */
+function renderCountdown(c){
+bigText.classList.remove("countAnim");
+void bigText.offsetWidth;
+bigText.classList.add("countAnim");
+
+if(c>0){
+bigText.innerText=c;
+}
+else{
+bigText.innerText="GO!";
+}
+}
+
+/* TAP */
 async function tap(){
 if(tapLock||!roomId)return;
 tapLock=true;
@@ -215,17 +286,9 @@ const d=snap.data();
 if(d.state!=="active"||d.winner)return;
 
 if(uid===d.player1){
-t.update(ref,{
-score1:d.score1+1,
-winner:uid,
-state:"result"
-});
+t.update(ref,{score1:d.score1+1,winner:uid,state:"result"});
 }else{
-t.update(ref,{
-score2:d.score2+1,
-winner:uid,
-state:"result"
-});
+t.update(ref,{score2:d.score2+1,winner:uid,state:"result"});
 }
 });
 
