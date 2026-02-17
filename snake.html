@@ -4,28 +4,50 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PixelArena Snake Ranked 1v1</title>
+
 <style>
-body{margin:0;background:#7c8f00;font-family:monospace;text-align:center}
-canvas{background:#9bbc0f;margin-top:20px}
+body{
+margin:0;
+background:#7c8f00;
+font-family:monospace;
+text-align:center;
+color:black;
+}
+canvas{
+background:#9bbc0f;
+margin-top:15px;
+}
 #info{margin-top:10px;font-weight:bold}
 #timer{margin-top:5px}
+button{
+padding:8px 15px;
+margin-top:10px;
+border:none;
+border-radius:6px;
+font-weight:bold;
+cursor:pointer;
+}
 </style>
 </head>
 <body>
 
 <h2>🐍 PixelArena Snake Ranked 1v1</h2>
-<div id="info">Rakip aranıyor...</div>
+<div id="info">Hazır</div>
+<button id="findBtn">Maç Bul</button>
 <div id="timer"></div>
 <canvas id="game" width="300" height="300"></canvas>
 
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc,
+collection, query, where, getDocs,
+onSnapshot, increment, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, getDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { getDatabase, ref, set, get, remove, onValue, onDisconnect } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const firebaseConfig = {
+const firebaseConfig={
 apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
 authDomain:"emirhan-site.firebaseapp.com",
 projectId:"emirhan-site",
@@ -34,18 +56,18 @@ messagingSenderId:"668871888390",
 appId:"1:668871888390:web:76568bda84cb1641f7bd87"
 };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const rtdb = getDatabase(app);
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+const auth=getAuth(app);
 
-let currentUser;
+let uid;
 let roomId=null;
+let unsubscribe=null;
 let opponentId=null;
-let gameStartTime=null;
+
+let gameStart=0;
 let gameDuration=60000;
 let isPlaying=false;
-let matched=false;
 
 const canvas=document.getElementById("game");
 const ctx=canvas.getContext("2d");
@@ -54,142 +76,95 @@ const size=300;
 
 let snake,dir,food,score;
 
+/* AUTH */
 onAuthStateChanged(auth,user=>{
-if(!user){ alert("Giriş gerekli"); return; }
-currentUser=user;
-joinQueue();
+if(!user){
+alert("Giriş gerekli");
+return;
+}
+uid=user.uid;
 });
 
-async function joinQueue(){
+/* MATCH FIND */
+document.getElementById("findBtn").onclick=async()=>{
+document.getElementById("info").innerText="Rakip aranıyor...";
+document.getElementById("findBtn").style.display="none";
 
-const snap = await getDoc(doc(db,"users",currentUser.uid));
-if(!snap.exists()){ alert("users dokümanı yok"); return; }
+const q=query(collection(db,"snakeRooms"),where("state","==","waiting"));
+const snap=await getDocs(q);
 
-const elo = snap.data().elo || 1000;
+let joined=false;
 
-await set(ref(rtdb,"rankedQueue/"+currentUser.uid),{
-elo:elo,
-joinedAt:Date.now()
+for(const r of snap.docs){
+const d=r.data();
+if(d.player1!==uid && !d.player2){
+roomId=r.id;
+await updateDoc(doc(db,"snakeRooms",roomId),{
+player2:uid,
+state:"matched"
 });
-
-listenQueue(elo);
-}
-
-function listenQueue(myElo){
-
-onValue(ref(rtdb,"rankedQueue"), async snap=>{
-if(!snap.exists() || matched) return;
-
-const queue = snap.val();
-
-for(let uid in queue){
-
-if(uid === currentUser.uid) continue;
-
-if(Math.abs(queue[uid].elo - myElo) <= 100){
-
-matched = true;
-
-if(currentUser.uid < uid){
-await createRoom(uid);
-}else{
-waitForRoom(uid);
-}
-
+joined=true;
 break;
 }
-
 }
 
+if(!joined){
+const newRoom=doc(collection(db,"snakeRooms"));
+roomId=newRoom.id;
+await setDoc(newRoom,{
+player1:uid,
+player2:null,
+score1:0,
+score2:0,
+state:"waiting",
+createdAt:serverTimestamp()
 });
 }
-
-async function createRoom(opponent){
-
-roomId="room_"+Date.now();
-opponentId=opponent;
-
-await set(ref(rtdb,"gameRooms/"+roomId),{
-startTime:Date.now(),
-players:{
-[currentUser.uid]:{score:0,connected:true},
-[opponent]:{score:0,connected:true}
-}
-});
-
-await remove(ref(rtdb,"rankedQueue/"+currentUser.uid));
-await remove(ref(rtdb,"rankedQueue/"+opponent]);
 
 listenRoom();
-startGame();
-}
+};
 
-function waitForRoom(opponent){
-
-onValue(ref(rtdb,"gameRooms"), snap=>{
-if(!snap.exists() || roomId) return;
-
-const rooms = snap.val();
-
-for(let id in rooms){
-
-if(rooms[id].players &&
-rooms[id].players[currentUser.uid] &&
-rooms[id].players[opponent]){
-
-roomId = id;
-opponentId = opponent;
-
-remove(ref(rtdb,"rankedQueue/"+currentUser.uid));
-
-listenRoom();
-startGame();
-break;
-}
-
-}
-
-});
-}
-
+/* ROOM LISTENER */
 function listenRoom(){
+if(unsubscribe)unsubscribe();
 
-const roomRef = ref(rtdb,"gameRooms/"+roomId);
+unsubscribe=onSnapshot(doc(db,"snakeRooms",roomId),async(snap)=>{
 
-onDisconnect(ref(rtdb,"gameRooms/"+roomId+"/players/"+currentUser.uid))
-.update({connected:false});
-
-onValue(roomRef,snap=>{
-if(!snap.exists()) return;
-
-const data = snap.val();
-gameStartTime = data.startTime;
-
-const players = data.players;
-
-for(let uid in players){
-if(uid !== currentUser.uid){
-opponentId = uid;
-
-if(players[uid].connected === false){
-finishMatch(true);
-}
-}
+if(!snap.exists()){
+location.reload();
+return;
 }
 
-if(Date.now() - data.startTime > gameDuration){
-finishMatch(null);
-}
+const d=snap.data();
+
+if(d.state==="matched"){
+await updateDoc(doc(db,"snakeRooms",roomId),{
+state:"playing",
+startTime:Date.now()
 });
 }
 
+if(d.state==="playing"){
+opponentId = (uid===d.player1)? d.player2 : d.player1;
+gameStart=d.startTime;
+startGame();
+}
+
+if(d.state==="finished"){
+finishLocal(d);
+}
+
+});
+}
+
+/* START GAME */
 function startGame(){
 snake=[{x:150,y:150}];
 dir="RIGHT";
 food=randomFood();
 score=0;
 isPlaying=true;
-document.getElementById("info").innerText="Maç başladı!";
+document.getElementById("info").innerText="Maç Başladı!";
 requestAnimationFrame(loop);
 }
 
@@ -206,12 +181,13 @@ if(!isPlaying) return;
 update();
 draw();
 
-if(roomId){
-set(ref(rtdb,"gameRooms/"+roomId+"/players/"+currentUser.uid+"/score"),score);
-}
+let timeLeft=Math.max(0,Math.floor((gameDuration-(Date.now()-gameStart))/1000));
+document.getElementById("timer").innerText="Süre: "+timeLeft;
 
-let left=Math.max(0,Math.floor((gameDuration-(Date.now()-gameStartTime))/1000));
-document.getElementById("timer").innerText="Süre: "+left;
+if(timeLeft<=0){
+endGame();
+return;
+}
 
 requestAnimationFrame(loop);
 }
@@ -220,13 +196,14 @@ function update(){
 let headX=snake[0].x;
 let headY=snake[0].y;
 
-if(dir==="UP") headY-=box;
-if(dir==="DOWN") headY+=box;
-if(dir==="LEFT") headX-=box;
-if(dir==="RIGHT") headX+=box;
+if(dir==="UP")headY-=box;
+if(dir==="DOWN")headY+=box;
+if(dir==="LEFT")headX-=box;
+if(dir==="RIGHT")headX+=box;
 
 if(headX<0||headY<0||headX>=size||headY>=size||collision(headX,headY)){
 isPlaying=false;
+endGame();
 return;
 }
 
@@ -249,7 +226,7 @@ ctx.fillStyle="#0f380f";
 ctx.fillRect(s.x,s.y,box,box);
 });
 
-ctx.fillText("🍎",food.x+7,food.y+7);
+ctx.fillText("🍎",food.x+5,food.y+12);
 }
 
 function collision(x,y){
@@ -257,56 +234,57 @@ return snake.some(s=>s.x===x&&s.y===y);
 }
 
 document.addEventListener("keydown",e=>{
-if(e.key==="ArrowUp"&&dir!=="DOWN") dir="UP";
-if(e.key==="ArrowDown"&&dir!=="UP") dir="DOWN";
-if(e.key==="ArrowLeft"&&dir!=="RIGHT") dir="LEFT";
-if(e.key==="ArrowRight"&&dir!=="LEFT") dir="RIGHT";
+if(e.key==="ArrowUp"&&dir!=="DOWN")dir="UP";
+if(e.key==="ArrowDown"&&dir!=="UP")dir="DOWN";
+if(e.key==="ArrowLeft"&&dir!=="RIGHT")dir="LEFT";
+if(e.key==="ArrowRight"&&dir!=="LEFT")dir="RIGHT";
 });
 
-async function finishMatch(forceWin){
-
+/* END GAME */
+async function endGame(){
 if(!roomId) return;
 
 isPlaying=false;
 
-const snap=await get(ref(rtdb,"gameRooms/"+roomId));
+const roomRef=doc(db,"snakeRooms",roomId);
+const snap=await getDoc(roomRef);
 if(!snap.exists()) return;
 
-const players=snap.val().players;
+const d=snap.data();
 
-let myScore=players[currentUser.uid].score;
-let oppScore=players[opponentId]?.score||0;
-
-let win=false;
-
-if(forceWin===true) win=true;
-else if(forceWin===null && myScore>oppScore) win=true;
-
-if(win){
-alert("Kazandın!");
-await updateElo(currentUser.uid,opponentId);
+if(uid===d.player1){
+await updateDoc(roomRef,{score1:score});
 }else{
-alert("Kaybettin!");
+await updateDoc(roomRef,{score2:score});
 }
 
-await remove(ref(rtdb,"gameRooms/"+roomId));
-roomId=null;
-matched=false;
+await updateDoc(roomRef,{state:"finished"});
 }
 
-async function updateElo(winner,loser){
+/* FINISH LOCAL */
+async function finishLocal(d){
 
-await updateDoc(doc(db,"users",winner),{
+let myScore = (uid===d.player1)? d.score1 : d.score2;
+let oppScore = (uid===d.player1)? d.score2 : d.score1;
+
+if(myScore>oppScore){
+alert("Kazandın!");
+await updateDoc(doc(db,"users",uid),{
 elo:increment(25),
 wins:increment(1),
 totalGames:increment(1)
 });
-
-await updateDoc(doc(db,"users",loser),{
+}else{
+alert("Kaybettin!");
+await updateDoc(doc(db,"users",uid),{
 elo:increment(-20),
 losses:increment(1),
 totalGames:increment(1)
 });
+}
+
+await deleteDoc(doc(db,"snakeRooms",roomId));
+location.reload();
 }
 
 </script>
