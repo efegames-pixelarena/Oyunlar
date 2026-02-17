@@ -3,261 +3,254 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>3310 Snake Multiplayer - Emirhan Efe</title>
-<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<title>PixelArena Snake 1v1</title>
 <style>
-html,body{margin:0;padding:0;height:100%;overflow:hidden;background:#7c8f00;font-family:'Press Start 2P', monospace;display:flex;justify-content:center;align-items:center;}
-.console{width:340px;height:480px;background:#8bac0f;border:14px solid #2f4f2f;box-shadow:0 0 40px black inset,0 0 30px black;padding:15px;display:flex;flex-direction:column;align-items:center;position:relative;}
-.score{font-size:12px;color:#0f380f;margin-bottom:10px;}
-.canvas-wrapper{position:relative;width:300px;height:300px;}
-canvas{background:#9bbc0f;image-rendering:pixelated;display:block;}
-.scanlines{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;background:repeating-linear-gradient(to bottom,rgba(0,0,0,0.05),rgba(0,0,0,0.05) 2px,transparent 2px,transparent 4px);}
-.gameover{position:absolute;top:0;left:0;width:300px;height:300px;background:rgba(139,172,15,0.95);display:flex;justify-content:center;align-items:center;flex-direction:column;font-size:12px;color:#0f380f;display:none;text-align:center;padding:20px;}
-.controls{display:flex;gap:10px;justify-content:center;margin-top:20px;}
-.btn{background:#2f4f2f;color:white;text-align:center;padding:15px;user-select:none;cursor:pointer;}
-.countdown{position:absolute;top:120px;width:100%;text-align:center;font-size:32px;color:#0f380f;font-weight:bold;display:none;}
+body{margin:0;background:#7c8f00;font-family:monospace;text-align:center}
+canvas{background:#9bbc0f;margin-top:20px}
+#info{margin-top:10px;font-weight:bold}
+#timer{margin-top:5px}
 </style>
 </head>
 <body>
-<div class="console">
-  <div class="score">
-    Skor: <span id="score">0</span>
-  </div>
 
-  <div class="canvas-wrapper">
-    <canvas id="game" width="300" height="300"></canvas>
-    <div class="scanlines"></div>
-    <div class="gameover" id="gameover">
-      <div id="gameoverText">GAME OVER</div>
-      <div id="retryBtn" class="btn">Yeniden Oyna</div>
-    </div>
-    <div class="countdown" id="countdown"></div>
-  </div>
-
-  <div class="controls" id="controls">
-    <div class="btn" id="matchBtn">Maç Bul</div>
-    <div class="btn" id="createBtn">Oda Kur</div>
-  </div>
-</div>
+<h2>🐍 PixelArena Snake Ranked 1v1</h2>
+<div id="info">Rakip aranıyor...</div>
+<div id="timer"></div>
+<canvas id="game" width="300" height="300"></canvas>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getDatabase, ref, set, onValue, onDisconnect } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-/* FIREBASE CONFIG */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, getDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getDatabase, ref, set, get, remove, onValue, onDisconnect } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
 const firebaseConfig = {
   apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
   authDomain:"emirhan-site.firebaseapp.com",
-  databaseURL:"https://emirhan-site-default-rtdb.firebaseio.com",
   projectId:"emirhan-site",
-  storageBucket:"emirhan-site.appspot.com",
+  storageBucket:"emirhan-site.firebasestorage.app",
   messagingSenderId:"668871888390",
   appId:"1:668871888390:web:76568bda84cb1641f7bd87"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const db = getFirestore(app);
 const rtdb = getDatabase(app);
 
-/* GLOBAL */
-let playerId=null;
+let currentUser;
 let roomId=null;
-let snake=[{x:150,y:150}];
-let otherSnake=[];
-let direction="RIGHT";
-let score=0;
-let food=null;
-let gameStarted=false;
-let countdownInterval=null;
+let opponentId=null;
+let gameStartTime=null;
+let gameDuration=60000;
+let isPlaying=false;
 
-const box=15, size=300;
 const canvas=document.getElementById("game");
 const ctx=canvas.getContext("2d");
-const matchBtn=document.getElementById("matchBtn");
-const createBtn=document.getElementById("createBtn");
-const controlsDiv=document.getElementById("controls");
-const countdownEl=document.getElementById("countdown");
-const gameoverDiv=document.getElementById("gameover");
-const retryBtn=document.getElementById("retryBtn");
-const gameoverText=document.getElementById("gameoverText");
-const scoreEl=document.getElementById("score");
+const box=15;
+const size=300;
 
-let lastMove=0;
-let speed=200;
+let snake,dir,food,score;
 
-/* AUTH */
-signInAnonymously(auth).catch(console.error);
 onAuthStateChanged(auth,user=>{
-  if(user) playerId=user.uid;
+if(!user){
+alert("Giriş gerekli");
+window.location.href="index.html";
+return;
+}
+currentUser=user;
+joinQueue();
 });
 
-/* BUTTONS */
-matchBtn.onclick=findMatch;
-createBtn.onclick=createRoom;
-retryBtn.onclick=()=>location.reload();
+async function joinQueue(){
+document.getElementById("info").innerText="Rakip aranıyor...";
+const userRef=doc(db,"users",currentUser.uid);
+const snap=await getDoc(userRef);
+const elo=snap.data().elo||1000;
 
-/* MATCHMAKING */
-function createRoom(){
-  roomId="room_"+Math.random().toString(36).substring(2,8);
-  set(ref(rtdb,'snakeRoom/rooms/'+roomId),{
-    players:{},
-    food:randomFood()
-  });
-  joinRoom(roomId);
+await set(ref(rtdb,"rankedQueue/"+currentUser.uid),{
+elo:elo,
+joinedAt:Date.now()
+});
+searchMatch(elo);
 }
 
-function findMatch(){
-  controlsDiv.innerHTML="Rakip Bekleniyor...";
-  onValue(ref(rtdb,'snakeRoom/rooms'),snap=>{
-    const rooms=snap.val()||{};
-    for(const id in rooms){
-      const players=rooms[id].players||{};
-      if(Object.keys(players).length===1 && !players[playerId]){
-        joinRoom(id);
-        return;
-      }
-    }
-    createRoom();
-  },{onlyOnce:true});
+async function searchMatch(myElo){
+const snap=await get(ref(rtdb,"rankedQueue"));
+if(!snap.exists()) return;
+
+const queue=snap.val();
+for(let uid in queue){
+if(uid===currentUser.uid) continue;
+if(Math.abs(queue[uid].elo-myElo)<=100){
+createRoom(uid);
+break;
+}
+}
 }
 
-function joinRoom(id){
-  roomId=id;
-  const playerRef=ref(rtdb,'snakeRoom/rooms/'+roomId+'/players/'+playerId);
+async function createRoom(opponent){
+roomId="room_"+Date.now();
+opponentId=opponent;
 
-  set(playerRef,{snake,dir:direction,score});
-  onDisconnect(playerRef).remove();
-  controlsDiv.style.display="none";
-
-  onValue(ref(rtdb,'snakeRoom/rooms/'+roomId+'/players'),snap=>{
-    const data=snap.val()||{};
-    const ids=Object.keys(data);
-    otherSnake=[];
-
-    ids.forEach(id=>{
-      if(id!==playerId) otherSnake=data[id].snake||[];
-    });
-
-    if(ids.length===2 && !gameStarted && !countdownInterval){
-      countdownStart(5);
-    }
-
-    if(ids.length<2 && !gameStarted){
-      countdownEl.style.display="block";
-      countdownEl.innerText="Rakip Bekleniyor...";
-    }
-  });
-
-  onValue(ref(rtdb,'snakeRoom/rooms/'+roomId+'/food'),snap=>{
-    if(snap.exists()) food=snap.val();
-  });
+await set(ref(rtdb,"gameRooms/"+roomId),{
+status:"playing",
+startTime:Date.now(),
+players:{
+[currentUser.uid]:{score:0,connected:true},
+[opponent]:{score:0,connected:true}
 }
-
-/* COUNTDOWN */
-function countdownStart(sec){
-  countdownEl.style.display="block";
-  let s=sec;
-  countdownEl.innerText=s;
-  countdownInterval=setInterval(()=>{
-    s--;
-    if(s>0) countdownEl.innerText=s;
-    if(s<=0){
-      clearInterval(countdownInterval);
-      countdownInterval=null;
-      countdownEl.style.display="none";
-      gameStarted=true;
-      requestAnimationFrame(gameLoop);
-    }
-  },1000);
-}
-
-/* CONTROLS */
-document.addEventListener("keydown",e=>{
-  if(!gameStarted) return;
-  if(e.key==="ArrowUp"&&direction!=="DOWN") direction="UP";
-  if(e.key==="ArrowDown"&&direction!=="UP") direction="DOWN";
-  if(e.key==="ArrowLeft"&&direction!=="RIGHT") direction="LEFT";
-  if(e.key==="ArrowRight"&&direction!=="LEFT") direction="RIGHT";
 });
 
-/* LOOP */
-function gameLoop(ts){
-  if(!gameStarted) return;
-  if(ts-lastMove>speed){
-    update();
-    lastMove=ts;
-  }
-  draw();
-  requestAnimationFrame(gameLoop);
+await remove(ref(rtdb,"rankedQueue/"+currentUser.uid));
+await remove(ref(rtdb,"rankedQueue/"+opponent]);
+
+listenRoom();
+startLocalGame();
+}
+
+function listenRoom(){
+const roomRef=ref(rtdb,"gameRooms/"+roomId);
+
+onDisconnect(ref(rtdb,"gameRooms/"+roomId+"/players/"+currentUser.uid))
+.update({connected:false});
+
+onValue(roomRef,snap=>{
+if(!snap.exists()) return;
+const data=snap.val();
+gameStartTime=data.startTime;
+
+const players=data.players;
+
+for(let uid in players){
+if(uid!==currentUser.uid){
+opponentId=uid;
+if(players[uid].connected===false){
+alert("Rakip bağlantıyı kaybetti. Kazandın!");
+updateElo(currentUser.uid,opponentId);
+remove(ref(rtdb,"gameRooms/"+roomId));
+}
+}
+}
+
+if(Date.now()-data.startTime>gameDuration){
+decideWinner(players);
+}
+});
+}
+
+function startLocalGame(){
+snake=[{x:150,y:150}];
+dir="RIGHT";
+food=randomFood();
+score=0;
+isPlaying=true;
+document.getElementById("info").innerText="Maç başladı!";
+requestAnimationFrame(loop);
+}
+
+function randomFood(){
+return{
+x:Math.floor(Math.random()*(size/box))*box,
+y:Math.floor(Math.random()*(size/box))*box
+};
+}
+
+function loop(){
+if(!isPlaying) return;
+
+update();
+draw();
+
+if(roomId){
+set(ref(rtdb,"gameRooms/"+roomId+"/players/"+currentUser.uid+"/score"),score);
+}
+
+let timeLeft=Math.max(0,Math.floor((gameDuration-(Date.now()-gameStartTime))/1000));
+document.getElementById("timer").innerText="Süre: "+timeLeft;
+
+requestAnimationFrame(loop);
 }
 
 function update(){
-  let x=snake[0].x;
-  let y=snake[0].y;
+let headX=snake[0].x;
+let headY=snake[0].y;
 
-  if(direction==="UP") y-=box;
-  if(direction==="DOWN") y+=box;
-  if(direction==="LEFT") x-=box;
-  if(direction==="RIGHT") x+=box;
+if(dir==="UP")headY-=box;
+if(dir==="DOWN")headY+=box;
+if(dir==="LEFT")headX-=box;
+if(dir==="RIGHT")headX+=box;
 
-  if(x<0||y<0||x>=size||y>=size||collision(x,y)||collisionOther(x,y)){
-    gameOver();
-    return;
-  }
-
-  if(food && x===food.x && y===food.y){
-    score++;
-    scoreEl.innerText=score;
-    set(ref(rtdb,'snakeRoom/rooms/'+roomId+'/food'),randomFood());
-  }else{
-    snake.pop();
-  }
-
-  snake.unshift({x,y});
-
-  set(ref(rtdb,'snakeRoom/rooms/'+roomId+'/players/'+playerId),
-      {snake,dir:direction,score});
+if(headX<0||headY<0||headX>=size||headY>=size||collision(headX,headY)){
+isPlaying=false;
+return;
 }
 
-function collision(x,y){return snake.some(s=>s.x===x&&s.y===y);}
-function collisionOther(x,y){return otherSnake.some(s=>s.x===x&&s.y===y);}
+if(headX===food.x&&headY===food.y){
+score++;
+food=randomFood();
+}else{
+snake.pop();
+}
 
-function randomFood(){
-  return {
-    x:Math.floor(Math.random()*20)*15,
-    y:Math.floor(Math.random()*20)*15
-  };
+snake.unshift({x:headX,y:headY});
 }
 
 function draw(){
-  ctx.fillStyle="#9bbc0f";
-  ctx.fillRect(0,0,size,size);
+ctx.fillStyle="#9bbc0f";
+ctx.fillRect(0,0,size,size);
 
-  snake.forEach(s=>{
-    ctx.fillStyle="#0f380f";
-    ctx.fillRect(s.x,s.y,box,box);
-  });
+snake.forEach(s=>{
+ctx.fillStyle="#0f380f";
+ctx.fillRect(s.x,s.y,box,box);
+});
 
-  otherSnake.forEach(s=>{
-    ctx.fillStyle="#003300";
-    ctx.fillRect(s.x,s.y,box,box);
-  });
-
-  if(food){
-    ctx.fillStyle="red";
-    ctx.fillRect(food.x,food.y,box,box);
-  }
+ctx.fillText("🍎",food.x+7,food.y+7);
 }
 
-function gameOver(){
-  gameStarted=false;
-  gameoverDiv.style.display="flex";
-  if(otherSnake.length>0)
-    gameoverText.innerText="Diğer Oyuncu Kazandı!";
-  else
-    gameoverText.innerText="Yandın!";
+function collision(x,y){
+return snake.some(s=>s.x===x&&s.y===y);
 }
+
+document.addEventListener("keydown",e=>{
+if(e.key==="ArrowUp"&&dir!=="DOWN")dir="UP";
+if(e.key==="ArrowDown"&&dir!=="UP")dir="DOWN";
+if(e.key==="ArrowLeft"&&dir!=="RIGHT")dir="LEFT";
+if(e.key==="ArrowRight"&&dir!=="LEFT")dir="RIGHT";
+});
+
+async function decideWinner(players){
+isPlaying=false;
+
+let myScore=players[currentUser.uid].score;
+let oppScore=players[opponentId].score;
+
+if(myScore>oppScore){
+alert("Kazandın!");
+await updateElo(currentUser.uid,opponentId);
+}else if(myScore<oppScore){
+alert("Kaybettin!");
+}else{
+alert("Berabere!");
+}
+
+remove(ref(rtdb,"gameRooms/"+roomId));
+}
+
+async function updateElo(winner,loser){
+await updateDoc(doc(db,"users",winner),{
+elo:increment(25),
+wins:increment(1),
+totalGames:increment(1)
+});
+await updateDoc(doc(db,"users",loser),{
+elo:increment(-20),
+losses:increment(1),
+totalGames:increment(1)
+});
+}
+
 </script>
 </body>
 </html>
