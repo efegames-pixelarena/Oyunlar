@@ -7,16 +7,21 @@
 <style>
 body { margin:0; overflow:hidden; background:#111; font-family:sans-serif; }
 #gameCanvas { display:block; margin:0 auto; background:#1a1a1a; touch-action:none; }
-#info { position:absolute; top:10px; left:10px; z-index:1000; color:white;}
+#scoreBoard {
+  position:absolute; top:10px; right:10px; z-index:1000; color:white;
+  background: rgba(0,0,0,0.5); padding:10px; border-radius:8px; max-height:90vh; overflow:auto;
+}
+#scoreBoard h3{margin:0 0 5px 0; font-size:14px;}
+#scoreBoard div{font-size:12px;}
 </style>
 </head>
 <body>
 <canvas id="gameCanvas" width="800" height="600"></canvas>
-<div id="info">Oyuncular: <span id="playerCount">0</span></div>
+<div id="scoreBoard"><h3>Skor Tablosu</h3></div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, doc, setDoc, onSnapshot, updateDoc, serverTimestamp, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, doc, setDoc, onSnapshot, updateDoc, serverTimestamp, collection } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 // Firebase config
@@ -49,6 +54,8 @@ let cameraX=0, cameraY=0;
 let direction = {x:1, y:0}; // Başlangıç yön
 let lastTouch = null;
 
+const scoreBoard = document.getElementById("scoreBoard");
+
 // Giriş anonim
 onAuthStateChanged(auth, async(user)=>{
     if(!user) {
@@ -66,6 +73,8 @@ async function joinGame(){
         snake: [{x: Math.random()*MAP_WIDTH, y: Math.random()*MAP_HEIGHT}],
         color: 'lime',
         score: 0,
+        username: 'Oyuncu_'+Math.floor(Math.random()*1000),
+        alive: true,
         lastUpdate: serverTimestamp()
     };
 
@@ -73,13 +82,15 @@ async function joinGame(){
     await setDoc(roomRef, playerData);
 
     // Mevcut yiyecekleri oluştur
-    for(let i=0;i<500;i++){
-        food.push({
-            id:'f'+i,
-            x: Math.random()*MAP_WIDTH,
-            y: Math.random()*MAP_HEIGHT,
-            type: Math.random()<0.1?'red':'green'
-        });
+    if(food.length===0){
+      for(let i=0;i<500;i++){
+          food.push({
+              id:'f'+i,
+              x: Math.random()*MAP_WIDTH,
+              y: Math.random()*MAP_HEIGHT,
+              type: Math.random()<0.1?'red':'green'
+          });
+      }
     }
 
     // Oyuncuları dinle
@@ -120,14 +131,14 @@ async function joinGame(){
 
 // Hareket
 function moveSnake(player, dir){
+    if(!player.alive) return;
     let head = {...player.snake[0]};
     head.x += dir.x*5;
     head.y += dir.y*5;
 
-    if(head.x<0) head.x=0;
-    if(head.y<0) head.y=0;
-    if(head.x>MAP_WIDTH) head.x=MAP_WIDTH;
-    if(head.y>MAP_HEIGHT) head.y=MAP_HEIGHT;
+    // Harita sınırları
+    head.x = Math.max(0, Math.min(MAP_WIDTH, head.x));
+    head.y = Math.max(0, Math.min(MAP_HEIGHT, head.y));
 
     player.snake.unshift(head);
     player.snake.pop();
@@ -147,24 +158,77 @@ function eatFood(player){
     }
 }
 
+// Çarpışma kontrolü
+function checkCollisions(){
+    const allPlayers = Object.values(players);
+    for(let pId in players){
+        let p = players[pId];
+        if(!p.alive) continue;
+        const head = p.snake[0];
+        // Kendine çarpma
+        for(let i=1;i<p.snake.length;i++){
+            if(distance(head, p.snake[i])<10){
+                p.alive=false;
+                break;
+            }
+        }
+        // Başkalarına çarpma
+        for(let other of allPlayers){
+            if(other===p || !other.alive) continue;
+            for(let s of other.snake){
+                if(distance(head, s)<10){
+                    p.alive=false;
+                    other.score += Math.floor(p.score/2); // otomatik skor
+                    break;
+                }
+            }
+        }
+    }
+}
+
+// Mesafe hesaplama
+function distance(a,b){
+    return Math.sqrt((a.x-b.x)**2 + (a.y-b.y)**2);
+}
+
+// Bot yılanlar
+function botMovement(){
+    for(let pId in players){
+        let p = players[pId];
+        if(!p.alive || !p.bot) continue;
+        let head = p.snake[0];
+        if(food.length===0) break;
+        let target = food[Math.floor(Math.random()*food.length)];
+        directionBot = {x: Math.sign(target.x-head.x), y: Math.sign(target.y-head.y)};
+        moveSnake(p, directionBot);
+        eatFood(p);
+    }
+}
+
 // Oyun döngüsü
 async function gameLoop(){
     // Kamera
     const player = players[uid];
-    if(!player) return requestAnimationFrame(gameLoop);
-    cameraX = player.snake[0].x - VIEW_WIDTH/2;
-    cameraY = player.snake[0].y - VIEW_HEIGHT/2;
+    if(player){
+        cameraX = player.snake[0].x - VIEW_WIDTH/2;
+        cameraY = player.snake[0].y - VIEW_HEIGHT/2;
+        moveSnake(player,direction);
+        eatFood(player);
+    }
 
-    // Kendi yılan hareketi
-    moveSnake(player, direction);
-    eatFood(player);
+    botMovement();
+    checkCollisions();
 
     // Firebase güncelle
-    await updateDoc(roomRef, {
-        snake: player.snake,
-        score: player.score,
-        lastUpdate: serverTimestamp()
-    });
+    for(let pId in players){
+        let p = players[pId];
+        await updateDoc(doc(db,"snakePlayers",pId), {
+            snake: p.snake,
+            score: p.score,
+            alive: p.alive,
+            lastUpdate: serverTimestamp()
+        });
+    }
 
     // Temizle
     ctx.clearRect(0,0,canvas.width,canvas.height);
@@ -178,15 +242,21 @@ async function gameLoop(){
     }
 
     // Yılanlar
-    for(let id in players){
-        let p = players[id];
-        ctx.fillStyle = p.color;
+    for(let pId in players){
+        let p = players[pId];
+        ctx.fillStyle = p.color || 'white';
         for(let s of p.snake){
             ctx.fillRect(s.x - cameraX, s.y - cameraY, 10, 10);
         }
     }
 
-    document.getElementById('playerCount').innerText = Object.keys(players).length;
+    // Skor tablosu
+    let scoreHtml = '<h3>Skor Tablosu</h3>';
+    const sorted = Object.values(players).sort((a,b)=>b.score - a.score);
+    for(let p of sorted.slice(0,10)){
+        scoreHtml += `<div>${p.username||'Bot'} : ${p.score}</div>`;
+    }
+    scoreBoard.innerHTML = scoreHtml;
 
     requestAnimationFrame(gameLoop);
 }
