@@ -64,12 +64,33 @@ background:#273c8f;
 .scoreboard{
 margin-top:55px;
 width:100%;
-background:rgba(0,0,0,0.75);
 display:none;
-justify-content:space-between;
-align-items:center;
-padding:8px 14px;
 font-weight:bold;
+}
+
+.score-wrap{
+display:flex;
+width:100%;
+}
+
+#p1{
+flex:1;
+padding:10px;
+background:linear-gradient(90deg,#0066ff,#003399);
+text-align:left;
+}
+
+#roundInfo{
+padding:10px 15px;
+background:#111;
+white-space:nowrap;
+}
+
+#p2{
+flex:1;
+padding:10px;
+background:linear-gradient(90deg,#990000,#ff0000);
+text-align:right;
 }
 
 /* GAME */
@@ -103,6 +124,17 @@ transition:0.2s;
 @keyframes winAnim{from{transform:scale(1);}to{transform:scale(1.15);}}
 .lobby{margin-top:15px;display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
 input{padding:8px;border-radius:8px;border:none;}
+
+.rematchPopup{
+position:fixed;
+bottom:20px;
+background:#000;
+padding:15px;
+border-radius:10px;
+text-align:center;
+box-shadow:0 0 20px rgba(0,0,0,0.5);
+z-index:2000;
+}
 </style>
 </head>
 <body>
@@ -116,9 +148,11 @@ input{padding:8px;border-radius:8px;border:none;}
 </div>
 
 <div class="scoreboard" id="scoreboard">
+<div class="score-wrap">
 <div id="p1"></div>
 <div id="roundInfo"></div>
 <div id="p2"></div>
+</div>
 </div>
 
 <div id="game">
@@ -162,44 +196,14 @@ const auth=getAuth(app);
 let uid,username,roomId,unsubscribe,tapLock=false;
 let localDrift=0;
 
-/* AUDIO (iOS SAFE) */
-let audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-let masterGain=audioCtx.createGain();
-masterGain.gain.value=0.6;
-masterGain.connect(audioCtx.destination);
-
-function unlockAudio(){
-if(audioCtx.state==="suspended")audioCtx.resume();
+/* ODA OTOMATİK KAPANMA */
+async function closeRoomIfExists(){
+if(roomId){
+try{ await deleteDoc(doc(db,"rooms",roomId)); }catch(e){}
 }
-document.addEventListener("pointerdown",unlockAudio,{once:true});
-
-function tone(freq,dur,type="sine"){
-let o=audioCtx.createOscillator();
-let g=audioCtx.createGain();
-o.type=type;
-o.frequency.value=freq;
-g.gain.value=0.4;
-o.connect(g);
-g.connect(masterGain);
-o.start();
-o.stop(audioCtx.currentTime+dur);
 }
 
-function sMatch(){tone(800,0.1);tone(1100,0.1);}
-function sCount(){tone(600,0.08);}
-function sGo(){tone(1400,0.2,"square");}
-function sWin(){tone(500,0.4,"sawtooth");}
-
-/* DOM */
-const scoreboard=document.getElementById("scoreboard");
-const bigText=document.getElementById("bigText");
-const subText=document.getElementById("subText");
-const p1=document.getElementById("p1");
-const p2=document.getElementById("p2");
-const roundInfo=document.getElementById("roundInfo");
-const findBtn=document.getElementById("findBtn");
-const lobbyBox=document.getElementById("lobbyBox");
-const afterMatch=document.getElementById("afterMatch");
+window.addEventListener("beforeunload",closeRoomIfExists);
 
 /* AUTH */
 onAuthStateChanged(auth,async(user)=>{
@@ -210,194 +214,83 @@ username=snap.data().username;
 document.getElementById("userBox").innerText=username;
 });
 
-document.getElementById("logoutBtn").onclick=async()=>{await signOut(auth);location.href="index.html";};
-
-/* ODA KUR */
-document.getElementById("createRoomBtn").onclick=async()=>{
-findBtn.style.display="none";
-lobbyBox.style.display="none";
-roomId=Math.random().toString(36).substring(2,7).toUpperCase();
-await setDoc(doc(db,"rooms",roomId),{
-player1:uid,
-player1Name:username,
-player2:null,
-player2Name:null,
-score1:0,
-score2:0,
-round:1,
-state:"waiting",
-createdAt:serverTimestamp()
-});
-bigText.innerText="Oda Kodu: "+roomId;
-subText.innerText="Rakip bekleniyor...";
-listenRoom();
+document.getElementById("logoutBtn").onclick=async()=>{
+await closeRoomIfExists();
+await signOut(auth);
+location.href="index.html";
 };
 
-/* KATIL */
-document.getElementById("joinCodeBtn").onclick=async()=>{
-const code=document.getElementById("roomCodeInput").value.trim().toUpperCase();
-if(!code)return;
-const ref=doc(db,"rooms",code);
-const snap=await getDoc(ref);
-if(!snap.exists())return;
-const d=snap.data();
-if(d.player1===uid)return; // %100 kendiyle eşleşme engel
-await updateDoc(ref,{
-player2:uid,
-player2Name:username,
-state:"matched",
-matchedAt:Date.now()
-});
-roomId=code;
-findBtn.style.display="none";
-lobbyBox.style.display="none";
-listenRoom();
-};
-
-/* MAÇ BUL */
-findBtn.onclick=async()=>{
-findBtn.style.display="none";
-lobbyBox.style.display="none";
-bigText.innerText="Rakip Aranıyor...";
-const q=query(collection(db,"rooms"),where("state","==","waiting"));
-const snap=await getDocs(q);
-let joined=false;
-for(const r of snap.docs){
-const d=r.data();
-if(d.player1!==uid && !d.player2){
-roomId=r.id;
-await updateDoc(doc(db,"rooms",roomId),{
-player2:uid,
-player2Name:username,
-state:"matched",
-matchedAt:Date.now()
-});
-joined=true;
-break;
-}
-}
-if(!joined){
-const newRoom=doc(collection(db,"rooms"));
-roomId=newRoom.id;
-await setDoc(newRoom,{
-player1:uid,
-player1Name:username,
-player2:null,
-player2Name:null,
-score1:0,
-score2:0,
-round:1,
-state:"waiting",
-createdAt:serverTimestamp()
-});
-}
-listenRoom();
-};
-
-/* ROOM */
-function listenRoom(){
-if(unsubscribe)unsubscribe();
-unsubscribe=onSnapshot(doc(db,"rooms",roomId),async(snap)=>{
-if(!snap.exists())return;
-const d=snap.data();
-
-if(d.state==="matched"){
-bigText.innerText="Eşleşme!";
-sMatch();
-setTimeout(()=>updateDoc(doc(db,"rooms",roomId),{
-state:"countdown",
-startAt:Date.now()+5000
-}),1000);
-}
-
-if(d.state==="countdown"){
-scoreboard.style.display="flex";
-let int=setInterval(()=>{
-let diff=d.startAt-Date.now();
-if(diff<=0){
-clearInterval(int);
-bigText.innerText="GO!";
-sGo();
-localDrift=Math.abs(Date.now()-d.startAt);
-updateDoc(doc(db,"rooms",roomId),{
-state:"active",
-roundStart:Date.now()
-});
-}else{
-bigText.innerText=Math.ceil(diff/1000);
-sCount();
-}
-},1000);
-}
-
-if(d.state==="active"){bigText.innerText="TAP!";}
-
-if(d.state==="result"){
-bigText.classList.add("winEffect");
-bigText.innerText=d.lastWinner+" Kazandı!";
-subText.innerText=d.reaction+" ms";
-sWin();
-
-if(d.score1===4||d.score2===4){
+/* REMATCH */
+function showAfterMatch(){
 afterMatch.innerHTML=`
 <button id="rematchBtn">⌛️ Rakiple Yeniden Oyna</button>
 <button id="newMatchBtn">⚽️ Yeni Maç Bul</button>
 `;
+
 document.getElementById("rematchBtn").onclick=async()=>{
 await updateDoc(doc(db,"rooms",roomId),{
-score1:0,score2:0,round:1,state:"countdown",startAt:Date.now()+5000
+rematchRequest:uid
 });
-afterMatch.innerHTML="";
 };
+
 document.getElementById("newMatchBtn").onclick=async()=>{
-await deleteDoc(doc(db,"rooms",roomId));
-location.reload();
+await closeRoomIfExists();
+findBtn.click();
 };
+}
+
+function listenRoom(){
+if(unsubscribe)unsubscribe();
+unsubscribe=onSnapshot(doc(db,"rooms",roomId),async(snap)=>{
+if(!snap.exists()){
+location.reload();
 return;
 }
-
-setTimeout(()=>{
-bigText.classList.remove("winEffect");
-updateDoc(doc(db,"rooms",roomId),{
-round:d.round+1,
-state:"countdown",
-startAt:Date.now()+5000
-});
-},3000);
-}
-
-p1.innerText=d.player1Name+" ("+d.score1+")";
-p2.innerText=(d.player2Name||"...")+" ("+d.score2+")";
-roundInfo.innerText="Round "+d.round+" / 7";
-});
-}
-
-/* ANTI CHEAT */
-document.addEventListener("pointerdown",async()=>{
-if(tapLock||!roomId)return;
-tapLock=true;
-
-await runTransaction(db,async(t)=>{
-const ref=doc(db,"rooms",roomId);
-const snap=await t.get(ref);
-if(!snap.exists())return;
 const d=snap.data();
-if(d.state!=="active")return;
 
-let reaction=Date.now()-d.roundStart;
+/* Rakip her zaman Player2 */
+const isPlayer1=d.player1===uid;
+const myScore=isPlayer1?d.score1:d.score2;
+const oppScore=isPlayer1?d.score2:d.score1;
+const oppName=isPlayer1?d.player2Name:d.player1Name;
 
-/* 80ms altı + drift 150ms üstü geçersiz */
-if(reaction<80 || localDrift>150)return;
+p1.innerText=username+" ("+myScore+")";
+p2.innerText=(oppName||"...")+" ("+oppScore+")";
+roundInfo.innerText="Round "+d.round+" / 7";
 
-if(uid===d.player1){
-t.update(ref,{score1:d.score1+1,state:"result",lastWinner:d.player1Name,reaction});
+/* Rematch isteği popup */
+if(d.rematchRequest && d.rematchRequest!==uid){
+let pop=document.createElement("div");
+pop.className="rematchPopup";
+pop.innerHTML=`
+Rakip senle tekrar oynamak istiyor<br><br>
+<button id="acceptRematch">Oyna</button>
+<button id="declineRematch">Yeni Maç Bul</button>
+`;
+document.body.appendChild(pop);
+
+document.getElementById("acceptRematch").onclick=async()=>{
+await updateDoc(doc(db,"rooms",roomId),{
+score1:0,score2:0,round:1,
+state:"countdown",
+startAt:Date.now()+5000,
+rematchRequest:null
+});
+pop.remove();
+};
+
+document.getElementById("declineRematch").onclick=async()=>{
+await closeRoomIfExists();
+findBtn.click();
+pop.remove();
+};
 }
-if(uid===d.player2){
-t.update(ref,{score2:d.score2+1,state:"result",lastWinner:d.player2Name,reaction});
+
+if(d.score1===4||d.score2===4){
+showAfterMatch();
 }
 });
-tapLock=false;
-});
+}
 
 </script>
 </body>
