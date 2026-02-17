@@ -32,7 +32,7 @@ canvas { display:block; }
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getDatabase, ref, onValue, set, update, onDisconnect } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { getDatabase, ref, onValue, set, update, onDisconnect, get, child } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 /* ---------------- FIREBASE ---------------- */
@@ -55,13 +55,14 @@ const ctx = canvas.getContext("2d");
 let W = window.innerWidth, H = window.innerHeight;
 canvas.width = W; canvas.height = H;
 
-const MAP_SIZE = 100000; // 100 bin x 100 bin
-const MAX_FOODS = 500; // Daha çok ve hızlı yem
+const MAP_SIZE = 100000; 
+const MAX_FOODS = 500; 
 let players = {}, foods = [];
 let inputDir = {x:0,y:0};
 const eatSound = document.getElementById("eatSound");
 const scoreboard = document.getElementById("scoreboard");
 const totalScoreEl = document.getElementById("totalScore");
+let roomId = null;
 
 /* ---------------- MY SNAKE ---------------- */
 let mySnake = { body:[], x:Math.random()*MAP_SIZE, y:Math.random()*MAP_SIZE, speed:6, maxSpeed:12, score:0, color:"#ffff00" };
@@ -78,18 +79,41 @@ function handleTouch(e){
   inputDir.x = dx/len; inputDir.y = dy/len;
 }
 
+/* ---------------- ODA YÖNETİMİ ---------------- */
+async function joinRoom(uid, username){
+  const roomsRef = ref(db, 'rooms');
+  const snapshot = await get(roomsRef);
+  let rooms = snapshot.val() || {};
+  let joined = false;
+  // 150 kişilik boş yer varsa katıl
+  for(let rid in rooms){
+    if(Object.keys(rooms[rid].players||{}).length < 150){
+      roomId = rid;
+      set(ref(db, `rooms/${rid}/players/${uid}`), { username, x:mySnake.x, y:mySnake.y, score:0, alive:true });
+      onDisconnect(ref(db, `rooms/${rid}/players/${uid}`)).remove();
+      joined = true;
+      break;
+    }
+  }
+  // Yoksa yeni oda oluştur
+  if(!joined){
+    roomId = 'room_' + Date.now();
+    set(ref(db, `rooms/${roomId}`), { players: {[uid]: {username, x:mySnake.x, y:mySnake.y, score:0, alive:true} }});
+    onDisconnect(ref(db, `rooms/${roomId}/players/${uid}`)).remove();
+  }
+}
+
 /* ---------------- START ---------------- */
-onAuthStateChanged(auth, user=>{
+onAuthStateChanged(auth, async user=>{
   if(!user) location.href="index.html";
   const uid = user.uid;
   const username = user.displayName || "Oyuncu";
 
   mySnake.body = [{x:mySnake.x, y:mySnake.y}];
-  const playerRef = ref(db, "players/" + uid);
-  set(playerRef, { username, x:mySnake.x, y:mySnake.y, score:0, alive:true });
-  onDisconnect(playerRef).remove();
 
-  const playersRef = ref(db, "players");
+  await joinRoom(uid, username);
+
+  const playersRef = ref(db, `rooms/${roomId}/players`);
   onValue(playersRef, snap=>{
     players = snap.val() || {};
     updateScoreboard();
@@ -120,15 +144,17 @@ function updateMySnake(){
     mySnake.body.unshift({x:mySnake.x,y:mySnake.y});
     if(mySnake.body.length>10+mySnake.score/5) mySnake.body.pop();
   }
-  update(ref(db, "players/"+auth.currentUser.uid), { x:mySnake.x, y:mySnake.y, score:mySnake.score });
+  update(ref(db, `rooms/${roomId}/players/${auth.currentUser.uid}`), { x:mySnake.x, y:mySnake.y, score:mySnake.score });
 }
 
 function checkCollisions(){
-  foods.forEach((f,i)=>{
+  foods.forEach((f)=>{
     if(distance(f, mySnake.body[0])<15){
       mySnake.score += (f.type==="red"?30:10);
-      foods[i]=randomFood();
       eatSound.currentTime=0; eatSound.play();
+      // 30 saniye sonra aynı yerde tekrar yem spawn
+      setTimeout(()=>{ foods.push(f); }, 30000);
+      foods = foods.filter(x=>x!==f);
     }
   });
 }
@@ -136,11 +162,9 @@ function checkCollisions(){
 function render(){
   ctx.clearRect(0,0,W,H);
 
-  // Sabit renkli arka plan
   ctx.fillStyle="#1e1e1e";
   ctx.fillRect(0,0,W,H);
 
-  // Grid
   ctx.strokeStyle="#2a2a2a"; ctx.lineWidth=1;
   for(let x=0;x<W;x+=40){ ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
   for(let y=0;y<H;y+=40){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
@@ -148,17 +172,14 @@ function render(){
   let camX = mySnake.x - W/2;
   let camY = mySnake.y - H/2;
 
-  // Map boundaries yanıp sönen
   let hue = (Date.now()/10)%360;
   ctx.strokeStyle=`hsl(${hue},80%,50%)`;
   ctx.lineWidth=16;
   ctx.strokeRect(-camX, -camY, MAP_SIZE, MAP_SIZE);
 
-  // Segment tabanlı görünür alan optimizasyonu
   const visibleFoods = foods.filter(f=>Math.abs(f.x-mySnake.x)<W && Math.abs(f.y-mySnake.y)<H);
   visibleFoods.forEach(f=>{ ctx.font="24px Arial"; ctx.fillText(f.type==="red"?"🍎":"🍏", f.x-camX, f.y-camY); });
 
-  // Diğer oyuncular sadece görünürdeyse render
   let onlineCount = 0;
   for(let id in players){
     const p = players[id];
@@ -168,15 +189,12 @@ function render(){
     if(players[id].alive) onlineCount++;
   }
 
-  // Ben
   drawSnake(mySnake, camX, camY, mySnake.color);
 
-  // Sol üstte skor + online oyuncu
   let scoreHue = (Date.now()/5)%360;
   totalScoreEl.style.color = `hsl(${scoreHue},100%,50%)`;
   totalScoreEl.innerText = `Score: ${Math.floor(mySnake.score)} | Online: ${onlineCount}`;
 
-  // Skor Tablosu Sağ Üst
   updateScoreboard();
 }
 
@@ -208,7 +226,8 @@ function distance(a,b){ return Math.hypot(a.x-b.x, a.y-b.y); }
 function updateScoreboard(){
   let arr=[];
   for(let id in players) arr.push({name:players[id].username, score:players[id].score});
-  arr.sort((a,b)=>b.score-a.score);
+  arr.sort((a,b)=>b.score-b.score);
+  arr = arr.slice(0,10); // en yüksek 10
   scoreboard.innerHTML = arr.map(p=>`${p.name}: ${Math.floor(p.score)}`).join("<br>");
 }
 
