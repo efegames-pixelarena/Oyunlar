@@ -7,6 +7,7 @@
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;}
+
 body{
 background:linear-gradient(-45deg,#ff0000,#001eff,#8b0000,#00008b,#ff1a1a,#0015ff);
 background-size:600% 600%;
@@ -39,7 +40,7 @@ animation:shine 3s linear infinite;
 }
 @keyframes shine{to{background-position:200% center;}}
 .right-menu{display:flex;gap:10px;align-items:center;}
-.nav-box{padding:6px 14px;border-radius:14px;font-weight:700;font-size:13px;min-width:95px;text-align:center;background:#273c8f;}
+.nav-box{padding:6px 14px;border-radius:14px;font-weight:700;font-size:13px;min-width:95px;text-align:center;background:#273c8f;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
 .btn{padding:6px 12px;border-radius:12px;border:none;cursor:pointer;font-weight:700;font-size:13px;}
 .logout-btn{background:#ff3b3b;color:white;}
 
@@ -55,20 +56,36 @@ font-weight:bold;
 .score-top{
 display:flex;
 justify-content:space-between;
-padding:8px 14px;
-background:rgba(0,0,0,0.75);
+align-items:center;
+padding:10px 10px;
+gap:6px;
+flex-wrap:nowrap;
 }
 
-.round-bar{
-display:flex;
-height:6px;
-width:100%;
+.player1Box,.player2Box,.roundBox{
+flex:1;
+min-width:0;
+text-align:center;
+font-size:14px;
+overflow:hidden;
+white-space:nowrap;
+text-overflow:ellipsis;
+padding:6px 6px;
+border-radius:8px;
 }
 
+.player1Box{background:#0d47a1;animation:blueAnim 1.2s infinite alternate;}
+.player2Box{background:#8b0000;animation:redAnim 1.2s infinite alternate;}
+.roundBox{background:#000;animation:blackAnim 1.2s infinite alternate;}
+
+@keyframes blueAnim{0%{box-shadow:0 0 5px #007bff;}100%{box-shadow:0 0 20px #00c3ff;}}
+@keyframes redAnim{0%{box-shadow:0 0 5px #ff0000;}100%{box-shadow:0 0 20px #ff4d4d;}}
+@keyframes blackAnim{0%{box-shadow:0 0 5px #000;}100%{box-shadow:0 0 20px #222;}}
+
+.round-bar{display:flex;height:6px;width:100%;}
 .round-blue{flex:1;background:#0066ff;}
 .round-red{flex:1;background:#ff0000;}
 
-/* GAME */
 #game{
 flex:1;
 display:flex;
@@ -86,8 +103,6 @@ margin-top:10px;
 }
 #bigText{font-size:clamp(32px,10vw,70px);min-height:90px;margin-top:20px;font-weight:800;}
 #subText{margin-top:10px;font-size:18px;}
-.winEffect{animation:winAnim 0.6s infinite alternate;}
-@keyframes winAnim{from{transform:scale(1);}to{transform:scale(1.15);}}
 .lobby{margin-top:15px;display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
 input{padding:8px;border-radius:8px;border:none;}
 </style>
@@ -104,9 +119,9 @@ input{padding:8px;border-radius:8px;border:none;}
 
 <div class="scoreboard" id="scoreboard">
 <div class="score-top">
-<div id="p1"></div>
-<div id="roundInfo"></div>
-<div id="p2"></div>
+<div id="p1" class="player1Box"></div>
+<div id="roundInfo" class="roundBox"></div>
+<div id="p2" class="player2Box"></div>
 </div>
 <div class="round-bar">
 <div class="round-blue"></div>
@@ -137,6 +152,7 @@ serverTimestamp, runTransaction, getDoc, setDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
+/* FIREBASE CONFIG */
 const firebaseConfig={
 apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
 authDomain:"emirhan-site.firebaseapp.com",
@@ -150,8 +166,30 @@ const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 const auth=getAuth(app);
 
+/* VARIABLES */
 let uid,username,roomId,unsubscribe,tapLock=false;
-let localDrift=0;
+let countdownInterval=null;
+let audioCtx=null;
+
+/* AUDIO (iOS Compatible) */
+function initAudio(){
+if(!audioCtx){
+audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+}
+}
+
+function beep(freq,duration){
+if(!audioCtx)return;
+const osc=audioCtx.createOscillator();
+const gain=audioCtx.createGain();
+osc.frequency.value=freq;
+osc.connect(gain);
+gain.connect(audioCtx.destination);
+osc.start();
+gain.gain.setValueAtTime(1,audioCtx.currentTime);
+gain.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+duration);
+osc.stop(audioCtx.currentTime+duration);
+}
 
 /* DOM */
 const scoreboard=document.getElementById("scoreboard");
@@ -173,19 +211,33 @@ username=snap.data().username;
 document.getElementById("userBox").innerText=username;
 });
 
+/* LOGOUT */
 document.getElementById("logoutBtn").onclick=async()=>{
 if(roomId) await deleteDoc(doc(db,"rooms",roomId));
 await signOut(auth);
 location.href="index.html";
 };
 
-/* AUTO ROOM CLOSE ON EXIT */
+/* DISCONNECT AUTO WIN */
 window.addEventListener("beforeunload",async()=>{
-if(roomId) await deleteDoc(doc(db,"rooms",roomId));
+if(roomId){
+const ref=doc(db,"rooms",roomId);
+const snap=await getDoc(ref);
+if(snap.exists()){
+const d=snap.data();
+if(d.state!=="finished"){
+await updateDoc(ref,{
+state:"finished",
+winner: uid===d.player1 ? d.player2Name : d.player1Name
+});
+}
+}
+}
 });
 
-/* MATCH FIND */
+/* FIND MATCH */
 findBtn.onclick=async()=>{
+initAudio();
 findBtn.style.display="none";
 lobbyBox.style.display="none";
 bigText.innerText="Rakip Aranıyor...";
@@ -201,8 +253,7 @@ roomId=r.id;
 await updateDoc(doc(db,"rooms",roomId),{
 player2:uid,
 player2Name:username,
-state:"matched",
-matchedAt:Date.now()
+state:"matched"
 });
 joined=true;
 break;
@@ -221,7 +272,6 @@ score1:0,
 score2:0,
 round:1,
 state:"waiting",
-rematchRequest:null,
 createdAt:serverTimestamp()
 });
 }
@@ -229,20 +279,21 @@ createdAt:serverTimestamp()
 listenRoom();
 };
 
-/* ROOM LISTENER */
+/* LISTEN ROOM */
 function listenRoom(){
 if(unsubscribe)unsubscribe();
 
 unsubscribe=onSnapshot(doc(db,"rooms",roomId),async(snap)=>{
-if(!snap.exists()){
-location.reload();
+if(!snap.exists()){location.reload();return;}
+const d=snap.data();
+
+scoreboard.style.display="flex";
+
+if(!d.player2 && d.state!=="waiting"){
+bigText.innerText="Rakip Ayrıldı - Kazandın!";
 return;
 }
 
-const d=snap.data();
-scoreboard.style.display="flex";
-
-/* Rakip her zaman Player2 */
 if(uid===d.player1){
 p1.innerText=d.player1Name+" ("+d.score1+")";
 p2.innerText=(d.player2Name||"...")+" ("+d.score2+")";
@@ -251,53 +302,41 @@ p1.innerText=d.player2Name+" ("+d.score2+")";
 p2.innerText=d.player1Name+" ("+d.score1+")";
 }
 
-roundInfo.innerText="Round "+d.round+" / 7";
+/* ROUND SYNC */
+let lead=Math.max(d.score1,d.score2)+1;
+roundInfo.innerText="Round "+lead+" / 7";
 
-/* REMATCH REQUEST */
-if(d.rematchRequest && d.rematchRequest!==uid){
-afterMatch.innerHTML=`
-<div>Rakip Senle Tekrar Oynamak İstiyor</div>
-<button id="acceptRematch">Oyna</button>
-<button id="declineRematch">Yeni Maç Bul</button>
-`;
-document.getElementById("acceptRematch").onclick=async()=>{
-await updateDoc(doc(db,"rooms",roomId),{
-score1:0,score2:0,round:1,state:"countdown",
-startAt:Date.now()+5000,
-rematchRequest:null
-});
-afterMatch.innerHTML="";
-};
-document.getElementById("declineRematch").onclick=async()=>{
-await deleteDoc(doc(db,"rooms",roomId));
-location.reload();
-};
-}
-
-/* GAME STATES */
+/* STATES */
 if(d.state==="matched"){
-setTimeout(()=>updateDoc(doc(db,"rooms",roomId),{
+await updateDoc(doc(db,"rooms",roomId),{
 state:"countdown",
-startAt:Date.now()+5000
-}),1000);
+startAt:Date.now()+4000
+});
 }
 
 if(d.state==="countdown"){
-let int=setInterval(()=>{
+if(countdownInterval) clearInterval(countdownInterval);
+countdownInterval=setInterval(async()=>{
 let diff=d.startAt-Date.now();
 if(diff<=0){
-clearInterval(int);
-updateDoc(doc(db,"rooms",roomId),{
+clearInterval(countdownInterval);
+beep(900,0.3); // GO sound
+await updateDoc(doc(db,"rooms",roomId),{
 state:"active",
 roundStart:Date.now()
 });
 }else{
-bigText.innerText=Math.ceil(diff/1000);
+let sec=Math.ceil(diff/1000);
+bigText.innerText=sec;
+beep(400,0.1); // countdown tick
 }
 },1000);
 }
 
-if(d.state==="active"){bigText.innerText="TAP!";}
+if(d.state==="active"){
+bigText.innerText="GO!";
+subText.innerText="";
+}
 
 if(d.state==="result"){
 bigText.innerText=d.lastWinner+" Kazandı!";
@@ -305,16 +344,8 @@ subText.innerText=d.reaction+" ms";
 
 if(d.score1===4||d.score2===4){
 afterMatch.innerHTML=`
-<button id="rematchBtn">⌛️ Rakiple Yeniden Oyna</button>
 <button id="newMatchBtn">⚽️ Yeni Maç Bul</button>
 `;
-
-document.getElementById("rematchBtn").onclick=async()=>{
-await updateDoc(doc(db,"rooms",roomId),{
-rematchRequest:uid
-});
-};
-
 document.getElementById("newMatchBtn").onclick=async()=>{
 await deleteDoc(doc(db,"rooms",roomId));
 location.reload();
@@ -322,13 +353,19 @@ location.reload();
 return;
 }
 
-setTimeout(()=>{
-updateDoc(doc(db,"rooms",roomId),{
-round:d.round+1,
+setTimeout(async()=>{
+await updateDoc(doc(db,"rooms",roomId),{
 state:"countdown",
-startAt:Date.now()+5000
+startAt:Date.now()+4000
 });
-},3000);
+},2500);
+}
+
+if(d.state==="finished"){
+bigText.innerText=d.winner+" Kazandı!";
+afterMatch.innerHTML=`
+<button onclick="location.reload()">⚽️ Yeni Maç Bul</button>
+`;
 }
 });
 }
