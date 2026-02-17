@@ -17,9 +17,13 @@ align-items:center;
 justify-content:center;
 height:100vh;
 overflow:hidden;
+transition:background .2s;
 }
 
-/* ===== TOP BAR (BLACKJACK STYLE) ===== */
+.flash{
+background:#ffffff !important;
+}
+
 .top-bar{
 position:fixed;
 top:0;
@@ -48,7 +52,6 @@ animation:shine 3s linear infinite;
 to{background-position:200% center;}
 }
 
-/* GAME WRAPPER */
 .game-wrapper{
 margin-top:55px;
 display:flex;
@@ -58,14 +61,8 @@ justify-content:center;
 height:calc(100vh - 55px);
 }
 
-/* INFO */
-#info{
-margin-bottom:20px;
-text-align:center;
-opacity:.8;
-}
+#info{margin-bottom:20px;text-align:center;opacity:.9;}
 
-/* GRID */
 #grid{
 display:grid;
 grid-template-columns:repeat(2,120px);
@@ -94,9 +91,19 @@ box-shadow:0 0 15px rgba(0,255,255,.2);
 .neon-right{color:#ffaa00;}
 
 .active{
-box-shadow:0 0 25px currentColor;
+box-shadow:0 0 30px currentColor;
 background:#111;
-transform:scale(1.08);
+transform:scale(1.1);
+}
+
+.perfect{
+animation:perfectGlow .6s ease;
+}
+
+@keyframes perfectGlow{
+0%{box-shadow:0 0 0px #fff;}
+50%{box-shadow:0 0 40px #fff;}
+100%{box-shadow:0 0 0px #fff;}
 }
 
 #status{
@@ -163,9 +170,32 @@ let level=1;
 let combo=0;
 let speed=800;
 let isShowing=false;
+let perfectStreak=true;
 
 let highScore=localStorage.getItem("patternHigh")||0;
 highscoreEl.innerText="High Score: "+highScore;
+
+/* ===== IOS SAFE AUDIO SYSTEM ===== */
+let audioCtx;
+
+function initAudio(){
+if(!audioCtx){
+audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+}
+}
+
+function playBeep(freq,duration=0.15){
+if(!audioCtx)return;
+const osc=audioCtx.createOscillator();
+const gain=audioCtx.createGain();
+osc.type="sine";
+osc.frequency.value=freq;
+osc.connect(gain);
+gain.connect(audioCtx.destination);
+gain.gain.setValueAtTime(0.2,audioCtx.currentTime);
+osc.start();
+osc.stop(audioCtx.currentTime+duration);
+}
 
 function randomDir(){
 const dirs=["up","down","left","right"];
@@ -183,17 +213,25 @@ isShowing=true;
 statusEl.innerText="İzle...";
 for(let i=0;i<pattern.length;i++){
 flashButton(pattern[i]);
+playBeep(300 + i*40);
 await new Promise(r=>setTimeout(r,speed));
 }
 isShowing=false;
 statusEl.innerText="Sıranı Yap!";
 }
 
+function screenFlash(){
+document.body.classList.add("flash");
+setTimeout(()=>document.body.classList.remove("flash"),150);
+}
+
 function startGame(){
+initAudio();
 pattern=[];
 level=1;
 combo=0;
 speed=800;
+perfectStreak=true;
 nextRound();
 }
 
@@ -205,8 +243,31 @@ comboEl.innerText=combo;
 showPattern();
 }
 
+function levelUp(){
+screenFlash();
+playBeep(800,.2);
+
+if(perfectStreak){
+combo+=10;
+statusEl.innerText="🔥 PERFECT!";
+document.querySelectorAll(".btn").forEach(b=>{
+b.classList.add("perfect");
+setTimeout(()=>b.classList.remove("perfect"),600);
+});
+}else{
+statusEl.innerText="Level Up!";
+}
+
+level++;
+speed=Math.max(300,speed-40);
+setTimeout(nextRound,700);
+}
+
 function gameOver(){
+playBeep(120,.5);
 statusEl.innerText="Yanlış! Oyun Bitti";
+perfectStreak=false;
+
 if(level-1>highScore){
 highScore=level-1;
 localStorage.setItem("patternHigh",highScore);
@@ -218,8 +279,10 @@ buttons.forEach(btn=>{
 btn.addEventListener("pointerdown",()=>{
 if(isShowing)return;
 
+initAudio();
 const dir=btn.dataset.dir;
 flashButton(dir);
+playBeep(500);
 
 if(dir===pattern[playerIndex]){
 playerIndex++;
@@ -227,15 +290,10 @@ combo++;
 comboEl.innerText=combo;
 
 if(playerIndex===pattern.length){
-level++;
-speed=Math.max(300,speed-40);
-setTimeout(()=>{
-combo+=5;
-comboEl.innerText=combo;
-nextRound();
-},600);
+levelUp();
 }
 }else{
+perfectStreak=false;
 gameOver();
 }
 });
