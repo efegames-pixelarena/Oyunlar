@@ -25,22 +25,31 @@ touch-action:manipulation;
 
 .top-bar{
 position:fixed;
-top:0;width:100%;height:55px;
-display:flex;align-items:center;justify-content:space-between;
+top:0;
+width:100%;
+height:55px;
+display:flex;
+align-items:center;
+justify-content:space-between;
 padding:0 16px;
 background:linear-gradient(135deg,#1a2a6c,#16245c);
 box-shadow:0 4px 15px rgba(0,0,0,0.45);
 z-index:1000;
 }
-.brand{font-weight:800;}
+.brand{font-size:clamp(14px,2vw,18px);font-weight:800;}
 .right-menu{display:flex;gap:10px;align-items:center;}
-.nav-box{padding:6px 14px;border-radius:14px;font-weight:700;background:#273c8f;}
-.logout-btn{background:#ff3b3b;color:white;border:none;padding:6px 12px;border-radius:12px;}
+.nav-box{
+padding:6px 14px;border-radius:14px;font-weight:700;
+font-size:clamp(11px,2vw,13px);
+background:#273c8f;min-width:70px;text-align:center;
+}
+.btn{padding:6px 12px;border-radius:12px;border:none;cursor:pointer;font-weight:700;}
+.logout-btn{background:#ff3b3b;color:white;}
 
 .scoreboard{
-display:none;
 margin-top:55px;width:100%;
-background:rgba(0,0,0,0.5);
+background:rgba(0,0,0,0.6);
+display:none;
 justify-content:space-between;
 align-items:center;padding:8px 14px;
 font-weight:bold;
@@ -60,15 +69,17 @@ margin-top:10px;
 }
 
 #bigText{
-font-size:60px;
+font-size:clamp(32px,10vw,70px);
 min-height:90px;margin-top:20px;
 font-weight:800;
+transition:0.3s;
 }
 
 .neon{
 color:#ff2b2b;
 text-shadow:0 0 10px red,0 0 20px red;
-font-size:22px;margin-top:10px;
+font-size:22px;
+margin-top:10px;
 }
 
 .winEffect{
@@ -79,12 +90,12 @@ animation:winAnim 0.8s ease-in-out infinite alternate;
 100%{transform:scale(1.2);}
 }
 
-/* Confetti */
 .confetti{
 position:fixed;
 width:10px;height:10px;
+background:yellow;
 top:-10px;
-animation:fall 3s linear forwards;
+animation:fall 2s linear forwards;
 }
 @keyframes fall{
 to{transform:translateY(100vh) rotate(720deg);}
@@ -100,7 +111,7 @@ input{padding:8px;border-radius:8px;border:none;}
 <div class="brand">PixelArena</div>
 <div class="right-menu">
 <div class="nav-box" id="userBox">...</div>
-<button class="logout-btn" id="logoutBtn">Çıkış</button>
+<button class="btn logout-btn" id="logoutBtn">Çıkış</button>
 </div>
 </div>
 
@@ -124,6 +135,7 @@ input{padding:8px;border-radius:8px;border:none;}
 </div>
 
 <script type="module">
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
 getFirestore, doc, updateDoc, deleteDoc,
@@ -148,44 +160,39 @@ const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 const auth=getAuth(app);
 
-let uid,username,roomId,unsubscribe;
-let tapLock=false;
+let uid,username,roomId,unsubscribe,tapLock=false;
 
 const scoreboard=document.getElementById("scoreboard");
 const bigText=document.getElementById("bigText");
 const subText=document.getElementById("subText");
+const p1=document.getElementById("p1");
+const p2=document.getElementById("p2");
+const roundInfo=document.getElementById("roundInfo");
 
-function showBoard(){scoreboard.style.display="flex";}
-function hideBoard(){scoreboard.style.display="none";}
-
-/* AUDIO (iOS compatible) */
+function playBeep(freq=440,duration=200){
 const ctx=new (window.AudioContext||window.webkitAudioContext)();
-function beep(freq,duration){
 const osc=ctx.createOscillator();
 const gain=ctx.createGain();
-osc.connect(gain);gain.connect(ctx.destination);
+osc.connect(gain);
+gain.connect(ctx.destination);
 osc.frequency.value=freq;
 osc.start();
-gain.gain.setValueAtTime(0.2,ctx.currentTime);
-osc.stop(ctx.currentTime+duration);
-}
-function applause(){beep(600,0.3);setTimeout(()=>beep(800,0.3),300);}
-function confettiSound(){beep(200,0.2);}
-
-/* CONFETTI */
-function launchConfetti(){
-for(let i=0;i<50;i++){
-let c=document.createElement("div");
-c.className="confetti";
-c.style.left=Math.random()*100+"vw";
-c.style.background=`hsl(${Math.random()*360},100%,50%)`;
-document.body.appendChild(c);
-setTimeout(()=>c.remove(),3000);
-}
-confettiSound();
+gain.gain.setValueAtTime(1,ctx.currentTime);
+gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+duration/1000);
+osc.stop(ctx.currentTime+duration/1000);
 }
 
-/* AUTH */
+function confettiBlast(){
+for(let i=0;i<40;i++){
+let div=document.createElement("div");
+div.className="confetti";
+div.style.left=Math.random()*100+"vw";
+div.style.background=`hsl(${Math.random()*360},100%,50%)`;
+document.body.appendChild(div);
+setTimeout(()=>div.remove(),2000);
+}
+}
+
 onAuthStateChanged(auth,async(user)=>{
 if(!user){location.href="index.html";return;}
 uid=user.uid;
@@ -194,12 +201,10 @@ username=snap.data().username;
 document.getElementById("userBox").innerText=username;
 });
 
-document.getElementById("logoutBtn").onclick=()=>signOut(auth);
+document.getElementById("logoutBtn").onclick=async()=>{await signOut(auth);location.href="index.html";};
 
-/* ROOM CREATE */
 document.getElementById("createRoomBtn").onclick=async()=>{
-const code=document.getElementById("roomCodeInput").value.trim();
-if(!code)return alert("Kod gir");
+const code=Math.random().toString(36).substring(2,8).toUpperCase();
 await setDoc(doc(db,"rooms",code),{
 player1:uid,
 player1Name:username,
@@ -212,18 +217,20 @@ state:"waiting"
 });
 roomId=code;
 listenRoom();
+alert("Oda Kodu: "+code);
 };
 
-/* JOIN */
 document.getElementById("joinCodeBtn").onclick=async()=>{
-const code=document.getElementById("roomCodeInput").value.trim();
+const code=document.getElementById("roomCodeInput").value.toUpperCase();
 const ref=doc(db,"rooms",code);
 const snap=await getDoc(ref);
-if(!snap.exists())return alert("Oda yok");
+if(!snap.exists()){alert("Oda yok");return;}
+const d=snap.data();
+if(d.players.includes(uid)){alert("Kendi odana katılamazsın");return;}
 await updateDoc(ref,{
 player2:uid,
 player2Name:username,
-players:[snap.data().player1,uid],
+players:[...d.players,uid],
 state:"countdown",
 startAt:Date.now()+5000
 });
@@ -237,23 +244,29 @@ unsubscribe=onSnapshot(doc(db,"rooms",roomId),async(snap)=>{
 if(!snap.exists())return;
 const d=snap.data();
 
-if(d.state==="waiting"){
-bigText.innerText="Rakip Bekleniyor...";
+if(d.player2){
+scoreboard.style.display="flex";
 }
 
+p1.innerText=d.player1Name+" ("+d.score1+")";
+p2.innerText=(d.player2Name||"...")+" ("+d.score2+")";
+roundInfo.innerText="Round "+d.round+" / 7";
+
 if(d.state==="countdown"){
-showBoard();
 let interval=setInterval(()=>{
 let diff=d.startAt-Date.now();
 if(diff<=0){
 clearInterval(interval);
-updateDoc(doc(db,"rooms",roomId),{
+bigText.innerText="HAZIR OL";
+setTimeout(async()=>{
+await updateDoc(doc(db,"rooms",roomId),{
 state:"active",
 roundStart:Date.now()
 });
+},3000);
 }else{
 bigText.innerText=Math.ceil(diff/1000);
-beep(400,0.1);
+playBeep(600,100);
 }
 },1000);
 }
@@ -268,33 +281,33 @@ bigText.classList.add("winEffect");
 bigText.innerText=d.lastWinner+" Kazandı!";
 subText.className="neon";
 subText.innerText=d.reaction+" ms";
-launchConfetti();
-applause();
+confettiBlast();
+playBeep(800,300);
+playBeep(1000,300);
 
 setTimeout(()=>{subText.innerText="";},3000);
 
+if(d.score1===4||d.score2===4){
+setTimeout(()=>{
+bigText.innerText="MAÇ BİTTİ!";
+},4000);
+return;
+}
+
 let count=5;
 let interval=setInterval(()=>{
-subText.innerText="Raund "+d.round+" - Sıradaki Raund'a "+count+" Saniye";
+subText.innerText="Round "+d.round+" Sıradaki Round'a "+count+" saniye";
 count--;
 if(count<0){
 clearInterval(interval);
-
-if(d.score1===4||d.score2===4){
-updateDoc(doc(db,"rooms",roomId),{state:"gameOver"});
-}else{
+bigText.classList.remove("winEffect");
 updateDoc(doc(db,"rooms",roomId),{
 round:d.round+1,
 state:"countdown",
 startAt:Date.now()+5000
 });
 }
-}
 },1000);
-}
-
-if(d.state==="gameOver"){
-bigText.innerText="MAÇ BİTTİ!";
 }
 });
 }
@@ -302,7 +315,6 @@ bigText.innerText="MAÇ BİTTİ!";
 document.addEventListener("pointerdown",async()=>{
 if(tapLock||!roomId)return;
 tapLock=true;
-
 await runTransaction(db,async(t)=>{
 const ref=doc(db,"rooms",roomId);
 const snap=await t.get(ref);
@@ -313,23 +325,15 @@ if(d.state!=="active")return;
 let reaction=Date.now()-d.roundStart;
 
 if(uid===d.player1){
-t.update(ref,{
-score1:d.score1+1,
-state:"result",
-lastWinner:d.player1Name,
-reaction:reaction
-});
-}else{
-t.update(ref,{
-score2:d.score2+1,
-state:"result",
-lastWinner:d.player2Name,
-reaction:reaction
-});
+t.update(ref,{score1:d.score1+1,state:"result",lastWinner:d.player1Name,reaction});
+}
+if(uid===d.player2){
+t.update(ref,{score2:d.score2+1,state:"result",lastWinner:d.player2Name,reaction});
 }
 });
 tapLock=false;
 });
+
 </script>
 </body>
 </html>
