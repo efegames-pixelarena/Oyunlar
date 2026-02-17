@@ -56,7 +56,7 @@ let W = window.innerWidth, H = window.innerHeight;
 canvas.width = W; canvas.height = H;
 
 const MAP_SIZE = 10000000; // 10 milyon x 10 milyon
-const MAX_FOODS = 1000; // Daha fazla ve hızlı yem
+const MAX_FOODS = 1000; // Daha hızlı ve çok yem
 let players = {}, foods = [];
 let inputDir = {x:0,y:0};
 const eatSound = document.getElementById("eatSound");
@@ -99,7 +99,7 @@ onAuthStateChanged(auth, user=>{
 
 /* ---------------- GAME LOOP ---------------- */
 function gameLoop(){
-  if(mySnake.speed < mySnake.maxSpeed) mySnake.speed += 0.002; // Snake.io tarzı hız artışı
+  if(mySnake.speed < mySnake.maxSpeed) mySnake.speed += 0.002;
 
   updateMySnake();
   checkCollisions();
@@ -156,13 +156,15 @@ function render(){
   ctx.lineWidth=16;
   ctx.strokeRect(-camX, -camY, MAP_SIZE, MAP_SIZE);
 
-  // Yemler
-  foods.forEach(f=>{ ctx.font="24px Arial"; ctx.fillText(f.type==="red"?"🍎":"🍏", f.x-camX, f.y-camY); });
+  // Segment tabanlı görünür alan optimizasyonu
+  const visibleFoods = foods.filter(f=>Math.abs(f.x-mySnake.x)<W && Math.abs(f.y-mySnake.y)<H);
+  visibleFoods.forEach(f=>{ ctx.font="24px Arial"; ctx.fillText(f.type==="red"?"🍎":"🍏", f.x-camX, f.y-camY); });
 
-  // Diğer oyuncular
+  // Diğer oyuncular sadece görünürdeyse render
   for(let id in players){
-    if(id!==auth.currentUser.uid){
-      drawSnake(players[id], camX, camY, "#00ffff");
+    const p = players[id];
+    if(Math.abs(p.x-mySnake.x)<W && Math.abs(p.y-mySnake.y)<H){
+      drawSnake(p, camX, camY, id===auth.currentUser.uid?mySnake.color:"#00ffff");
     }
   }
 
