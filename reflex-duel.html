@@ -2,55 +2,99 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Reflex Duel Pro</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>PixelArena - Reflex Duel</title>
 
 <style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;}
 body{
-margin:0;
-font-family:Arial;
+background:linear-gradient(180deg,#0b1023,#0d1333,#0a0f1f);
+color:white;
+overflow:hidden;
 display:flex;
 flex-direction:column;
 height:100vh;
-overflow:hidden;
-color:white;
-background:linear-gradient(-45deg,#ff0000,#001eff,#8b0000,#00008b);
-background-size:400% 400%;
-animation:bg 6s infinite alternate ease-in-out;
-touch-action:manipulation;
 }
-@keyframes bg{
-0%{background-position:0% 50%}
-100%{background-position:100% 50%}
-}
-.topbar{
+
+/* ===== TOP BAR (INDEX'TEN ENTEGRE) ===== */
+.top-bar{
+position:fixed;
+top:0;
 width:100%;
-padding:12px;
-background:#000000aa;
+height:55px;
 display:flex;
+align-items:center;
 justify-content:space-between;
-font-weight:bold;
-box-sizing:border-box;
+padding:0 16px;
+background:linear-gradient(135deg,#1a2a6c,#16245c);
+box-shadow:0 4px 15px rgba(0,0,0,0.45);
+z-index:1000;
 }
+.brand{
+font-size:18px;
+font-weight:800;
+background:linear-gradient(90deg,#4fd1ff,#fff,#4fd1ff);
+background-size:200% auto;
+-webkit-background-clip:text;
+-webkit-text-fill-color:transparent;
+animation:shine 3s linear infinite;
+}
+@keyframes shine{to{background-position:200% center;}}
+.right-menu{display:flex;gap:10px;align-items:center;}
+.nav-box{padding:6px 14px;border-radius:14px;font-weight:700;font-size:13px;background:#273c8f;}
+.btn{padding:6px 12px;border-radius:12px;border:none;cursor:pointer;font-weight:700;font-size:13px;}
+.logout-btn{background:#ff3b3b;color:white;}
+
+/* ===== GAME AREA ===== */
 #game{
 flex:1;
+margin-top:55px;
 display:flex;
 flex-direction:column;
 justify-content:center;
 align-items:center;
+text-align:center;
+padding:20px;
 }
+
 button{
-padding:15px 30px;
+padding:14px 28px;
 border:none;
-border-radius:8px;
+border-radius:10px;
 font-weight:bold;
 cursor:pointer;
-font-size:16px;
+font-size:15px;
+background:linear-gradient(90deg,#ffb300,#ff8c00);
 }
+
 #bigText{
-font-size:90px;
+font-size:70px;
 margin-top:20px;
+min-height:80px;
 }
+
+.scoreboard{
+display:flex;
+justify-content:space-between;
+width:100%;
+max-width:500px;
+margin-bottom:20px;
+font-weight:bold;
+}
+
+.lobby-box{
+margin-top:15px;
+display:flex;
+gap:10px;
+}
+
+input{
+padding:10px;
+border-radius:8px;
+border:none;
+outline:none;
+}
+
 canvas{
 position:fixed;
 pointer-events:none;
@@ -61,22 +105,39 @@ left:0;
 </head>
 <body>
 
+<!-- TOP BAR -->
+<div class="top-bar">
+<div class="brand">PixelArena</div>
+<div class="right-menu">
+<div class="nav-box" id="userBox">...</div>
+<button class="btn logout-btn" id="logoutBtn">Çıkış</button>
+</div>
+</div>
+
 <canvas id="confetti"></canvas>
 
-<div class="topbar">
+<div id="game">
+
+<div class="scoreboard">
 <div id="p1">...</div>
 <div id="roundInfo">Round 1 / 7</div>
 <div id="p2">...</div>
 </div>
 
-<div id="game">
 <button id="findBtn">Maç Bul</button>
-<div id="status"></div>
+
+<div class="lobby-box">
+<input id="roomCodeInput" placeholder="Oda Kodu">
+<button id="joinCodeBtn">Katıl</button>
+</div>
+
 <div id="bigText"></div>
+
 </div>
 
 <script type="module">
 
+/* FIREBASE IMPORT */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
 getFirestore, doc, setDoc, updateDoc,
@@ -85,10 +146,10 @@ collection, query, where, getDocs,
 serverTimestamp, runTransaction, getDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {
-getAuth, onAuthStateChanged, signInAnonymously
+getAuth, onAuthStateChanged, signOut
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-/* FIREBASE */
+/* CONFIG */
 const firebaseConfig={
 apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
 authDomain:"emirhan-site.firebaseapp.com",
@@ -102,235 +163,152 @@ const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 const auth=getAuth(app);
 
-/* AUDIO */
-let audioCtx=null;
-function unlockAudio(){
-if(!audioCtx){
-audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-}
-if(audioCtx.state==="suspended") audioCtx.resume();
-}
-function beep(f,d){
-unlockAudio();
-const o=audioCtx.createOscillator();
-const g=audioCtx.createGain();
-o.type="square";
-o.frequency.value=f;
-g.gain.value=0.2;
-o.connect(g);
-g.connect(audioCtx.destination);
-o.start();
-o.stop(audioCtx.currentTime+d);
-}
-const countdownSound=()=>beep(700,0.12);
-const goSound=()=>beep(1200,0.25);
-const winSound=()=>beep(200,0.4);
-
 /* GLOBALS */
 let uid=null;
-let username="Player";
+let username=null;
 let roomId=null;
 let isHost=false;
 let unsubscribe=null;
 let tapLock=false;
 let matchingLock=false;
-let countdownInterval=null;
 
 /* ELEMENTS */
 const findBtn=document.getElementById("findBtn");
+const joinCodeBtn=document.getElementById("joinCodeBtn");
+const roomCodeInput=document.getElementById("roomCodeInput");
 const bigText=document.getElementById("bigText");
 const p1=document.getElementById("p1");
 const p2=document.getElementById("p2");
 const roundInfo=document.getElementById("roundInfo");
+const logoutBtn=document.getElementById("logoutBtn");
+const userBox=document.getElementById("userBox");
 
 /* AUTH */
 onAuthStateChanged(auth,async(user)=>{
-if(!user){ await signInAnonymously(auth); return; }
+if(!user){ window.location.href="index.html"; return; }
 uid=user.uid;
-
-const ref=doc(db,"users",uid);
-const snap=await getDoc(ref);
-
-if(snap.exists()){
+const snap=await getDoc(doc(db,"users",uid));
 username=snap.data().username;
-}else{
-username="Player_"+uid.substring(0,4);
-await setDoc(ref,{username});
-}
+userBox.innerText=username;
 });
 
-/* CLEAN OLD ROOMS */
-async function cleanOldRooms(){
+/* LOGOUT */
+logoutBtn.onclick=async()=>{ await signOut(auth); location.href="index.html"; };
+
+/* OLD ROOM CLEAN */
+async function cleanOld(){
 const q=query(collection(db,"rooms"),where("players","array-contains",uid));
 const snap=await getDocs(q);
-for(const r of snap.docs){
-await deleteDoc(doc(db,"rooms",r.id));
-}
+for(const r of snap.docs){ await deleteDoc(doc(db,"rooms",r.id)); }
 }
 
-/* MATCHMAKING */
+/* ===== PRODUCTION QUEUE ===== */
 findBtn.onclick=async()=>{
 if(matchingLock) return;
 matchingLock=true;
+await cleanOld();
+bigText.innerText="Eşleşme aranıyor...";
 
-unlockAudio();
-findBtn.style.display="none";
+const queueRef=doc(collection(db,"queue"));
+await setDoc(queueRef,{
+uid,username,createdAt:serverTimestamp()
+});
 
-await cleanOldRooms();
+const q=query(collection(db,"queue"));
+const snap=await getDocs(q);
 
-const waitingQ=query(collection(db,"rooms"),where("state","==","waiting"));
-const snap=await getDocs(waitingQ);
+if(snap.size>=2){
+const players=snap.docs.slice(0,2);
+const roomRef=doc(collection(db,"rooms"));
+await setDoc(roomRef,{
+player1:players[0].data().uid,
+player1Name:players[0].data().username,
+player2:players[1].data().uid,
+player2Name:players[1].data().username,
+players:[players[0].data().uid,players[1].data().uid],
+score1:0,score2:0,round:1,state:"countdown"
+});
+await deleteDoc(players[0].ref);
+await deleteDoc(players[1].ref);
+roomId=roomRef.id;
+isHost=true;
+listenRoom();
+}
+matchingLock=false;
+};
 
-let joined=false;
+/* ===== ROOM CODE SYSTEM ===== */
+joinCodeBtn.onclick=async()=>{
+const code=roomCodeInput.value.trim();
+if(!code) return;
 
-for(const r of snap.docs){
-const d=r.data();
-if(d.player1===uid) continue;
-if(d.player2) continue;
+const ref=doc(db,"rooms",code);
+const snap=await getDoc(ref);
+if(!snap.exists()) return alert("Oda yok");
 
-roomId=r.id;
-isHost=false;
+const d=snap.data();
+if(d.player2) return alert("Oda dolu");
 
-await updateDoc(doc(db,"rooms",roomId),{
+await updateDoc(ref,{
 player2:uid,
 player2Name:username,
 players:[d.player1,uid],
 state:"countdown"
 });
-
-joined=true;
-break;
-}
-
-if(!joined){
-const newRoom=doc(collection(db,"rooms"));
-roomId=newRoom.id;
-isHost=true;
-
-await setDoc(newRoom,{
-player1:uid,
-player1Name:username,
-player2:null,
-player2Name:null,
-players:[uid],
-score1:0,
-score2:0,
-round:1,
-state:"waiting",
-createdAt:serverTimestamp()
-});
-}
-
+roomId=code;
 listenRoom();
-matchingLock=false;
 };
 
-/* ROOM LISTENER */
+/* ===== LISTENER ===== */
 function listenRoom(){
-
-if(!roomId) return;
-
-if(unsubscribe){
-unsubscribe();
-unsubscribe=null;
-}
+if(unsubscribe) unsubscribe();
 
 unsubscribe=onSnapshot(doc(db,"rooms",roomId),async(snap)=>{
-
-if(!snap.exists()){
-reset();
-return;
-}
-
+if(!snap.exists()) return reset();
 const d=snap.data();
 
-// Eğer oyuncu odada değilse reset
-if(!d.players || !d.players.includes(uid)){
-await deleteDoc(doc(db,"rooms",roomId));
-reset();
-return;
-}
+if(!d.players.includes(uid)) return reset();
 
 p1.innerText=d.player1Name+" ("+d.score1+")";
-p2.innerText=(d.player2Name||"...")+" ("+d.score2+")";
+p2.innerText=d.player2Name+" ("+d.score2+")";
 roundInfo.innerText="Round "+d.round+" / 7";
 
-if(d.state==="waiting"){
-bigText.innerText="Rakip Bekleniyor...";
-}
-
-else if(d.state==="countdown"){
-
-if(isHost && d.player2 && !d.startAt){
-await updateDoc(doc(db,"rooms",roomId),{
-startAt:Date.now()+3000
-});
-return;
-}
-
-if(d.startAt){
-clearInterval(countdownInterval);
-
-countdownInterval=setInterval(()=>{
-const diff=d.startAt-Date.now();
-const sec=Math.ceil(diff/1000);
-
-if(sec>0){
-bigText.innerText=sec;
-countdownSound();
-}else{
-bigText.innerText="GO!";
-goSound();
-}
-
-if(diff<=0){
-clearInterval(countdownInterval);
-if(isHost){
+if(d.state==="countdown"){
+bigText.innerText="3";
+setTimeout(()=>bigText.innerText="2",1000);
+setTimeout(()=>bigText.innerText="1",2000);
+setTimeout(()=>{
+bigText.innerText="TAP!";
 updateDoc(doc(db,"rooms",roomId),{state:"active"});
-}
-}
-},1000);
-}
+},3000);
 }
 
-else if(d.state==="active"){
+if(d.state==="active"){
 bigText.innerText="TAP!";
 }
 
-else if(d.state==="result"){
-
-if(d.score1===4 || d.score2===4){
-
-const winner=d.score1===4?d.player1Name:d.player2Name;
-bigText.innerText="Kazanan: "+winner;
-winSound();
-launchConfetti();
-
+if(d.state==="result"){
+bigText.innerText="Kazanan: "+d.lastWinner;
+if(d.score1===4||d.score2===4){
 setTimeout(async()=>{
 await deleteDoc(doc(db,"rooms",roomId));
 reset();
-},4000);
-
+},3000);
 }else{
-
 setTimeout(async()=>{
-if(isHost){
 await updateDoc(doc(db,"rooms",roomId),{
 round:d.round+1,
-state:"countdown",
-startAt:null
+state:"countdown"
 });
-}
-},1500);
+},1000);
 }
 }
 });
 }
 
-/* TAP */
-async function tap(e){
-e.preventDefault();
-if(tapLock || !roomId) return;
+/* ===== TAP ===== */
+document.addEventListener("pointerdown",async(e)=>{
+if(tapLock||!roomId) return;
 tapLock=true;
 
 await runTransaction(db,async(t)=>{
@@ -340,60 +318,32 @@ if(!snap.exists()) return;
 const d=snap.data();
 if(d.state!=="active") return;
 
+let winnerName=username;
+
 if(uid===d.player1){
-t.update(ref,{score1:d.score1+1,state:"result"});
-}else if(uid===d.player2){
-t.update(ref,{score2:d.score2+1,state:"result"});
+t.update(ref,{
+score1:d.score1+1,
+state:"result",
+lastWinner:winnerName
+});
+}else{
+t.update(ref,{
+score2:d.score2+1,
+state:"result",
+lastWinner:winnerName
+});
 }
 });
 
 tapLock=false;
-}
-
-document.addEventListener("pointerdown",tap,{passive:false});
-
-/* CONFETTI */
-const canvas=document.getElementById("confetti");
-const ctx=canvas.getContext("2d");
-canvas.width=window.innerWidth;
-canvas.height=window.innerHeight;
-let pieces=[];
-
-function launchConfetti(){
-for(let i=0;i<200;i++){
-pieces.push({
-x:Math.random()*canvas.width,
-y:-20,
-r:Math.random()*6+4,
-d:Math.random()*5+2
 });
-}
-animate();
-}
-
-function animate(){
-ctx.clearRect(0,0,canvas.width,canvas.height);
-pieces.forEach(p=>{
-p.y+=p.d;
-ctx.beginPath();
-ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
-ctx.fillStyle="hsl("+Math.random()*360+",100%,50%)";
-ctx.fill();
-});
-pieces=pieces.filter(p=>p.y<canvas.height);
-if(pieces.length>0)requestAnimationFrame(animate);
-}
 
 /* RESET */
 function reset(){
-if(unsubscribe){
-unsubscribe();
-unsubscribe=null;
-}
+if(unsubscribe) unsubscribe();
 roomId=null;
 bigText.innerText="";
 findBtn.style.display="block";
-clearInterval(countdownInterval);
 }
 
 </script>
