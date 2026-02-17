@@ -133,77 +133,65 @@ main{padding-top:20px;}
 </div>
 
 <div class="search-bar">
-<input type="text" id="searchInput" placeholder="🕹️ Oyun Ara">
+  <input type="text" id="searchInput" placeholder="🕹️ Oyun Ara">
 </div>
 
-<div class="section-title" style="padding-left:20px;margin-top:25px;font-size:22px;font-weight:bold;">
-MultiPlayer Oyunlar
-</div>
+<main>
+  <!-- MultiPlayer Oyunlar -->
+  <div class="section-title">MultiPlayer Oyunlar</div>
+  <div class="games-grid">
+    <div class="game-card" data-name="reflex duel" onclick="window.location.href='reflex-duel.html'">
+      <div class="game-icon">⌛️</div>
+      PixelArena Reflex-Duel
+      <div class="status">ONLINE OYUN</div>
+    </div>
+    <div class="game-card" data-name="yakında" onclick="window.location.href=''">
+      <div class="game-icon">⌛️</div>
+      Tasarım Aşamasında
+      <div class="status">YAKINDA !!!</div>
+    </div>
+  </div>
 
-<div class="games-grid">
-<div class="game-card" data-name="yılan" onclick="window.location.href='snake.html'">
-<div class="game-icon">🐍</div>
-PixelArena Yılan
-<div style="margin-top:8px;font-size:12px;color:#00eaff;font-weight:bold;">FREE PLAY</div>
-</div>
+  <!-- Güncel Oyunlar -->
+  <div class="section-title">Güncel Oyunlar</div>
+  <div class="games-grid">
+    <div class="game-card" data-name="blackjack" onclick="checkLogin('blackjack.html')">
+      <div class="game-icon">♠️</div>
+      PixelArena BJ
+    </div>
+    <div class="game-card" data-name="skycrash" onclick="checkLogin('crash.html')">
+      <div class="game-icon">✈️</div>
+      PixelArena Crash
+    </div>
+    <div class="game-card" data-name="mines" onclick="checkLogin('mines.html')">
+      <div class="game-icon">💣</div>
+      PixelArena Mines
+    </div>
+    <div class="game-card" data-name="pişti" onclick="checkLogin('pisti.html')">
+      <div class="game-icon">🃏</div>
+      PixelArena Pişti
+    </div>
+  </div>
 
-<div class="games-grid">
-<div class="game-card" data-name="yılan" onclick="window.location.href='snake.html'">
-<div class="game-icon">🐍</div>
-PixelArena Yılan
-<div style="margin-top:8px;font-size:12px;color:#00eaff;font-weight:bold;">FREE PLAY</div>
-</div>
-
-<div class="section-title" style="padding-left:20px;margin-top:25px;font-size:22px;font-weight:bold;">
-Güncel Oyunlar
-</div>
-
-<div class="games-grid">
-<div class="game-card" data-name="blackjack" onclick="checkLogin('blackjack.html')">
-<div class="game-icon">♠️</div>
-PixelArena BJ
-</div>
-
-<div class="game-card" data-name="skycrash" onclick="checkLogin('crash.html')">
-<div class="game-icon">✈️</div>
-PixelArena Crash
-</div>
-
-<div class="game-card" data-name="mines" onclick="checkLogin('mines.html')">
-<div class="game-icon">💣</div>
-PixelArena Mines
-</div>
-
-<div class="game-card" data-name="pişt" onclick="checkLogin('pisti.html')">
-<div class="game-icon">🃏</div>
-PixelArena Pişti
-</div>
-</div>
-
-<div class="section-title" style="padding-left:20px;margin-top:40px;font-size:22px;font-weight:bold;">
-Bakiyesiz Oyunlar
-</div>
-
-<div class="games-grid">
-<div class="game-card" data-name="yılan" onclick="window.location.href='snake.html'">
-<div class="game-icon">🐍</div>
-PixelArena Yılan
-<div style="margin-top:8px;font-size:12px;color:#00eaff;font-weight:bold;">FREE PLAY</div>
-</div>
-
-<div class="game-card" data-name="fruit ninja" onclick="window.location.href='reflex.html'">
-<div class="game-icon">🥕</div>
-PixelArena Reflex
-<div style="margin-top:8px;font-size:12px;color:#00eaff;font-weight:bold;">FREE PLAY</div>
-</div>
-
-<div class="game-card" data-name="roket" onclick="window.location.href='rocket.html'">
-<div class="game-icon">🚀</div>
-PixelArena Roket
-<div style="margin-top:8px;font-size:12px;color:#00eaff;font-weight:bold;">FREE PLAY</div>
-</div>
-</div>
-
+  <!-- Bakiyesiz Oyunlar -->
+  <div class="section-title">Bakiyesiz Oyunlar</div>
+  <div class="games-grid">
+    <div class="game-card" data-name="yılan" onclick="window.location.href='snake.html'">
+      <div class="game-icon">🐍</div>
+      PixelArena Yılan
+      <div class="status">FREE PLAY</div>
+    </div>
+    <div class="game-card" data-name="fruit ninja" onclick="window.location.href='reflex.html'">
+      <div class="game-icon">🥕</div>
+      PixelArena Reflex
+      <div class="status">FREE PLAY</div>
+    </div>
+    <div class="game-card" data-name="roket" onclick="window.location.href='rocket.html'">
+      <div class="game-icon">🚀</div>
+      PixelArena Roket
+      <div class="status">FREE PLAY</div>
+    </div>
+  </div>
 </main>
 
 <footer class="footer">
