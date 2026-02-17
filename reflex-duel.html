@@ -41,15 +41,16 @@ animation:shine 3s linear infinite;
 @keyframes shine{to{background-position:200% center;}}
 .right-menu{display:flex;gap:10px;align-items:center;}
 .nav-box{
-padding:6px 10px;
+padding:6px 14px;
 border-radius:14px;
 font-weight:700;
 font-size:13px;
-max-width:120px;
-overflow:hidden;
-white-space:nowrap;
-text-overflow:ellipsis;
+min-width:95px;
+text-align:center;
 background:#273c8f;
+overflow:hidden;
+text-overflow:ellipsis;
+white-space:nowrap;
 }
 .btn{padding:6px 12px;border-radius:12px;border:none;cursor:pointer;font-weight:700;font-size:13px;}
 .logout-btn{background:#ff3b3b;color:white;}
@@ -67,48 +68,47 @@ font-weight:bold;
 display:flex;
 justify-content:space-between;
 align-items:center;
-padding:10px;
+padding:10px 10px;
 gap:6px;
 }
 
-.playerBox{
+.player1Box,.player2Box,.roundBox{
 flex:1;
+min-width:0;
 text-align:center;
-padding:6px;
+padding:6px 8px;
 border-radius:8px;
-font-size:14px;
-white-space:nowrap;
 overflow:hidden;
 text-overflow:ellipsis;
+white-space:nowrap;
+font-size:14px;
 }
 
-.player1Box{
-background:#0d47a1;
-animation:blueAnim 1.2s infinite alternate;
-}
-.player2Box{
-background:#8b0000;
-animation:redAnim 1.2s infinite alternate;
-}
-.roundBox{
-background:#000;
-padding:6px 10px;
-border-radius:8px;
-font-size:13px;
-animation:blackAnim 1.2s infinite alternate;
-}
+.player1Box{background:#0d47a1;animation:blueAnim 1.2s infinite alternate;}
+.player2Box{background:#8b0000;animation:redAnim 1.2s infinite alternate;}
+.roundBox{background:#000;animation:blackAnim 1.2s infinite alternate;}
 
-@keyframes blueAnim{from{box-shadow:0 0 5px #007bff;}to{box-shadow:0 0 18px #00c3ff;}}
-@keyframes redAnim{from{box-shadow:0 0 5px #ff0000;}to{box-shadow:0 0 18px #ff4d4d;}}
-@keyframes blackAnim{from{box-shadow:0 0 5px #000;}to{box-shadow:0 0 15px #333;}}
+@keyframes blueAnim{0%{box-shadow:0 0 5px #007bff;}100%{box-shadow:0 0 20px #00c3ff;}}
+@keyframes redAnim{0%{box-shadow:0 0 5px #ff0000;}100%{box-shadow:0 0 20px #ff4d4d;}}
+@keyframes blackAnim{0%{box-shadow:0 0 5px #000;}100%{box-shadow:0 0 20px #222;}}
 
+/* ROUND BAR SYNC */
 .round-bar{
 display:flex;
 height:6px;
 width:100%;
+background:#111;
 }
-.round-blue{background:#0066ff;width:50%;transition:0.3s;}
-.round-red{background:#ff0000;width:50%;transition:0.3s;}
+.round-blue{
+width:50%;
+background:#0066ff;
+transition:width .3s ease;
+}
+.round-red{
+width:50%;
+background:#ff0000;
+transition:width .3s ease;
+}
 
 #game{
 flex:1;
@@ -119,12 +119,14 @@ align-items:center;
 text-align:center;
 padding:10px;
 }
+
 button{
 padding:12px 20px;border:none;border-radius:10px;
 font-weight:bold;cursor:pointer;
 background:linear-gradient(90deg,#ffb300,#ff5500);
 margin-top:10px;
 }
+
 #bigText{font-size:clamp(32px,10vw,70px);min-height:90px;margin-top:20px;font-weight:800;}
 #subText{margin-top:10px;font-size:18px;}
 .lobby{margin-top:15px;display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
@@ -143,9 +145,9 @@ input{padding:8px;border-radius:8px;border:none;}
 
 <div class="scoreboard" id="scoreboard">
 <div class="score-top">
-<div id="p1" class="playerBox player1Box"></div>
+<div id="p1" class="player1Box"></div>
 <div id="roundInfo" class="roundBox"></div>
-<div id="p2" class="playerBox player2Box"></div>
+<div id="p2" class="player2Box"></div>
 </div>
 <div class="round-bar">
 <div class="round-blue" id="roundBlue"></div>
@@ -155,6 +157,7 @@ input{padding:8px;border-radius:8px;border:none;}
 
 <div id="game">
 <button id="findBtn">Maç Bul</button>
+
 <div id="bigText"></div>
 <div id="subText"></div>
 <div id="afterMatch"></div>
@@ -182,7 +185,8 @@ const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 const auth=getAuth(app);
 
-let uid,username,roomId,unsubscribe,tapLock=false,countdownInterval=null;
+let uid,username,roomId,unsubscribe,tapLock=false;
+let countdownInterval=null;
 
 const scoreboard=document.getElementById("scoreboard");
 const bigText=document.getElementById("bigText");
@@ -195,7 +199,6 @@ const roundRed=document.getElementById("roundRed");
 const findBtn=document.getElementById("findBtn");
 const afterMatch=document.getElementById("afterMatch");
 
-/* AUTH */
 onAuthStateChanged(auth,async(user)=>{
 if(!user){location.href="index.html";return;}
 uid=user.uid;
@@ -204,7 +207,17 @@ username=snap.data().username;
 document.getElementById("userBox").innerText=username;
 });
 
-/* MATCH FIND (SELF MATCH %100 ENGEL) */
+document.getElementById("logoutBtn").onclick=async()=>{
+if(roomId) await deleteDoc(doc(db,"rooms",roomId));
+await signOut(auth);
+location.href="index.html";
+};
+
+window.addEventListener("beforeunload",async()=>{
+if(roomId) await deleteDoc(doc(db,"rooms",roomId));
+});
+
+/* MATCH FIND FIXED */
 findBtn.onclick=async()=>{
 findBtn.style.display="none";
 bigText.innerText="Rakip Aranıyor...";
@@ -217,15 +230,23 @@ let joined=false;
 for(const r of snap.docs){
 const d=r.data();
 if(d.player1!==uid && !d.player2){
-roomId=r.id;
-await updateDoc(doc(db,"rooms",roomId),{
+await runTransaction(db,async(t)=>{
+const ref=doc(db,"rooms",r.id);
+const roomSnap=await t.get(ref);
+if(!roomSnap.exists())return;
+const roomData=roomSnap.data();
+if(roomData.player1!==uid && !roomData.player2 && roomData.state==="waiting"){
+t.update(ref,{
 player2:uid,
 player2Name:username,
 state:"matched",
 matchedAt:Date.now()
 });
+roomId=r.id;
 joined=true;
-break;
+}
+});
+if(joined) break;
 }
 }
 
@@ -241,7 +262,6 @@ score1:0,
 score2:0,
 round:1,
 state:"waiting",
-rematchRequest:null,
 createdAt:serverTimestamp()
 });
 }
@@ -249,7 +269,6 @@ createdAt:serverTimestamp()
 listenRoom();
 };
 
-/* LISTENER */
 function listenRoom(){
 if(unsubscribe)unsubscribe();
 
@@ -258,47 +277,37 @@ if(!snap.exists()){location.reload();return;}
 const d=snap.data();
 scoreboard.style.display="flex";
 
-/* SCOREBOARD */
+/* SCORE UI FIX */
+let myScore,enemyScore;
 if(uid===d.player1){
+myScore=d.score1;
+enemyScore=d.score2;
 p1.innerText=d.player1Name+" ("+d.score1+")";
 p2.innerText=(d.player2Name||"...")+" ("+d.score2+")";
 }else{
+myScore=d.score2;
+enemyScore=d.score1;
 p1.innerText=d.player2Name+" ("+d.score2+")";
 p2.innerText=d.player1Name+" ("+d.score1+")";
 }
+
+/* ROUND SYNC BAR */
+let total=myScore+enemyScore;
+let blueWidth=50;
+if(total>0){
+let diff=myScore-enemyScore;
+blueWidth=50+(diff*12.5);
+if(blueWidth<5)blueWidth=5;
+if(blueWidth>95)blueWidth=95;
+}
+roundBlue.style.width=blueWidth+"%";
+roundRed.style.width=(100-blueWidth)+"%";
+
 roundInfo.innerText="Round "+d.round+" / 7";
 
-/* ROUND BAR SENKRON */
-let total=7;
-let bluePercent=(d.score1/4)*100;
-let redPercent=(d.score2/4)*100;
-roundBlue.style.width=bluePercent+"%";
-roundRed.style.width=redPercent+"%";
+/* STATES */
 
-/* REMATCH FIX */
-if(d.rematchRequest && d.rematchRequest!==uid){
-afterMatch.innerHTML=`
-<div>Rakip Tekrar Oynamak İstiyor</div>
-<button id="acceptRematch">Oyna</button>
-<button id="declineRematch">Yeni Maç Bul</button>
-`;
-document.getElementById("acceptRematch").onclick=async()=>{
-await updateDoc(doc(db,"rooms",roomId),{
-score1:0,score2:0,round:1,
-state:"countdown",
-startAt:Date.now()+5000,
-rematchRequest:null
-});
-afterMatch.innerHTML="";
-};
-document.getElementById("declineRematch").onclick=async()=>{
-await deleteDoc(doc(db,"rooms",roomId));
-location.reload();
-};
-}
-
-/* STATE FLOW */
-if(d.state==="matched" && uid===d.player1){
+if(d.state==="matched"){
 await updateDoc(doc(db,"rooms",roomId),{
 state:"countdown",
 startAt:Date.now()+5000
@@ -306,17 +315,15 @@ startAt:Date.now()+5000
 }
 
 if(d.state==="countdown"){
-if(countdownInterval)clearInterval(countdownInterval);
+if(countdownInterval) clearInterval(countdownInterval);
 countdownInterval=setInterval(async()=>{
 let diff=d.startAt-Date.now();
 if(diff<=0){
 clearInterval(countdownInterval);
-if(uid===d.player1){
 await updateDoc(doc(db,"rooms",roomId),{
 state:"active",
 roundStart:Date.now()
 });
-}
 }else{
 bigText.innerText=Math.ceil(diff/1000);
 }
@@ -335,13 +342,8 @@ subText.innerText=d.reaction+" ms";
 
 if(d.score1===4||d.score2===4){
 afterMatch.innerHTML=`
-<button id="rematchBtn">⌛️ Rakiple Yeniden Oyna</button>
 <button id="newMatchBtn">⚽️ Yeni Maç Bul</button>
 `;
-
-document.getElementById("rematchBtn").onclick=async()=>{
-await updateDoc(doc(db,"rooms",roomId),{rematchRequest:uid});
-};
 
 document.getElementById("newMatchBtn").onclick=async()=>{
 await deleteDoc(doc(db,"rooms",roomId));
@@ -351,19 +353,16 @@ return;
 }
 
 setTimeout(async()=>{
-if(uid===d.player1){
 await updateDoc(doc(db,"rooms",roomId),{
 round:d.round+1,
 state:"countdown",
 startAt:Date.now()+5000
 });
-}
 },3000);
 }
 });
 }
 
-/* TAP */
 document.addEventListener("pointerdown",async()=>{
 if(tapLock||!roomId)return;
 tapLock=true;
