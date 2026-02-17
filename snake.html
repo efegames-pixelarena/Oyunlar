@@ -42,14 +42,36 @@ animation:shine 3s linear infinite;
 .btn{padding:6px 12px;border-radius:12px;border:none;cursor:pointer;font-weight:700;font-size:13px;}
 .logout-btn{background:#ff3b3b;color:white;}
 
-/* GAME SCREEN */
-#game{
-flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:10px;
+/* SCOREBOARD */
+.scoreboard{
+margin-top:55px;
+width:100%;
+display:none;
+flex-direction:column;
+font-weight:bold;
 }
-#matchMessage{font-size:clamp(32px,10vw,60px);margin-top:20px;font-weight:800;}
-#scoreboard{margin-top:55px;width:100%;display:flex;justify-content:space-between;padding:6px 16px;font-weight:bold;font-size:16px;}
-canvas{background:#9bbc0f;image-rendering:pixelated;}
+.score-top{
+display:flex;
+justify-content:space-between;
+padding:8px 14px;
+background:rgba(0,0,0,0.75);
+}
+.round-bar{
+display:flex;
+height:6px;
+width:100%;
+}
+.round-blue{flex:1;background:#0066ff;}
+.round-red{flex:1;background:#ff0000;}
+
+/* GAME */
+#gameScreen{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:10px;}
 button{padding:12px 20px;border:none;border-radius:10px;font-weight:bold;cursor:pointer;background:linear-gradient(90deg,#ffb300,#ff5500);margin-top:10px;}
+#matchMessage{font-size:clamp(32px,10vw,60px);margin-top:20px;font-weight:800;min-height:60px;}
+#scoreContainer{display:flex;justify-content:space-around;width:100%;margin-top:10px;font-weight:bold;font-size:16px;}
+canvas{background:#9bbc0f;image-rendering:pixelated;}
+.lobby{margin-top:15px;display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
+input{padding:8px;border-radius:8px;border:none;}
 </style>
 </head>
 <body>
@@ -63,12 +85,7 @@ button{padding:12px 20px;border:none;border-radius:10px;font-weight:bold;cursor:
 </div>
 </div>
 
-<div id="scoreboard">
-<div>Sen: <span id="playerScore">0</span></div>
-<div>Rakip: <span id="opponentScore">0</span></div>
-</div>
-
-<div id="game">
+<div id="gameScreen">
 <div id="matchMessage">Maç Bul / Oda Kur</div>
 <button id="findBtn">Maç Bul</button>
 <div class="lobby" id="lobbyBox">
@@ -76,6 +93,12 @@ button{padding:12px 20px;border:none;border-radius:10px;font-weight:bold;cursor:
 <button id="createRoomBtn">Oda Kur</button>
 <button id="joinCodeBtn">Katıl</button>
 </div>
+
+<div id="scoreContainer">
+<div>Sen: <span id="playerScore">0</span></div>
+<div>Rakip: <span id="opponentScore">0</span></div>
+</div>
+
 <canvas id="gameCanvas" width="500" height="500"></canvas>
 </div>
 
@@ -97,13 +120,15 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-let uid, username, roomId, unsubscribe;
+let uid, username, opponent="", roomId, unsubscribe;
 let playerSnake=[], opponentSnake=[], direction="RIGHT", opponentDirection="LEFT";
 let playerScore=0, opponentScore=0;
 const box=20, canvas=document.getElementById("gameCanvas"), ctx=canvas.getContext("2d");
-const foodEmojis=["🍏","🍎"];
 let food={x:0,y:0,type:"🍏"};
+
 const matchMessage=document.getElementById("matchMessage");
+const playerScoreEl=document.getElementById("playerScore");
+const opponentScoreEl=document.getElementById("opponentScore");
 
 document.getElementById("logoutBtn").onclick=async()=>{
 if(roomId) await updateDoc(doc(db,"rooms",roomId),{state:"ended"});
@@ -114,8 +139,9 @@ location.href="index.html";
 onAuthStateChanged(auth, async(user)=>{
 if(!user) location.href="index.html";
 uid=user.uid;
-username="Oyuncu"+uid.substring(0,4);
-document.getElementById("playerName").innerText=username;
+const snap = await getDoc(doc(db,"users",uid));
+username = snap.data().username || "Oyuncu";
+document.getElementById("playerName").innerText = username;
 });
 
 async function findMatch(){
@@ -123,30 +149,38 @@ matchMessage.innerText="Rakip Aranıyor...";
 document.getElementById("findBtn").style.display="none";
 document.getElementById("lobbyBox").style.display="none";
 
-// Arama ve eşleşme
 const q = query(collection(db,"rooms"),where("state","==","waiting"));
 const snap = await getDocs(q);
 let joined=false;
+
 for(const r of snap.docs){
 const d=r.data();
 if(d.player1!==uid && !d.player2){
 roomId=r.id;
-await updateDoc(doc(db,"rooms",roomId),{player2:uid, player2Name:username, state:"countdown", startAt:Date.now()+5000});
-joined=true; break;
+await updateDoc(doc(db,"rooms",roomId),{
+player2:uid, player2Name:username, state:"countdown", startAt:Date.now()+5000
+});
+joined=true;
+break;
 }
 }
+
 if(!joined){
 const newRoom = doc(collection(db,"rooms"));
 roomId=newRoom.id;
 await setDoc(newRoom,{
-player1:uid, player1Name:username, player2:null, player2Name:null,
-player1Snake:[{x:100,y:100}], player2Snake:[{x:400,y:400}],
+player1:uid, player1Name:username,
+player2:null, player2Name:null,
+player1Snake:[{x:100,y:100}],
+player2Snake:[{x:400,y:400}],
 direction:"RIGHT", opponentDirection:"LEFT",
 food:randomFood(),
 player1Score:0, player2Score:0,
-state:"waiting", createdAt:serverTimestamp()
+state:"waiting",
+createdAt:serverTimestamp()
 });
 }
+
 listenRoom();
 }
 
@@ -158,29 +192,27 @@ unsubscribe = onSnapshot(doc(db,"rooms",roomId), snap=>{
 const d = snap.data();
 if(!d) return;
 
-// Eşleşme
 if(d.state==="waiting" && uid!==d.player1 && !d.player2){
 updateDoc(doc(db,"rooms",roomId),{player2:uid, player2Name:username, state:"countdown", startAt:Date.now()+5000});
 }
 
-// 5 saniye bekleme
 if(d.state==="countdown"){
 matchMessage.innerText="Başlıyor... 5";
 setTimeout(()=>updateDoc(doc(db,"rooms",roomId),{state:"active"}),5000);
 }
 
-// Oyun aktif
 if(d.state==="active"){
 matchMessage.style.display="none";
 playerSnake = uid===d.player1 ? d.player1Snake : d.player2Snake;
 opponentSnake = uid===d.player1 ? d.player2Snake : d.player1Snake;
-direction = d.direction;
-opponentDirection = d.opponentDirection;
+direction = uid===d.player1 ? d.direction : d.opponentDirection;
+opponentDirection = uid===d.player1 ? d.opponentDirection : d.direction;
 food=d.food;
 playerScore = uid===d.player1 ? d.player1Score : d.player2Score;
 opponentScore = uid===d.player1 ? d.player2Score : d.player1Score;
-document.getElementById("playerScore").innerText=playerScore;
-document.getElementById("opponentScore").innerText=opponentScore;
+document.getElementById("opponentName").innerText = uid===d.player1 ? d.player2Name||"Rakip" : d.player1Name||"Rakip";
+playerScoreEl.innerText = playerScore;
+opponentScoreEl.innerText = opponentScore;
 drawGame();
 }
 if(d.state==="ended"){matchMessage.innerText="Rakip Oyundan Çıktı / Oyun Bitti";}
@@ -188,7 +220,7 @@ if(d.state==="ended"){matchMessage.innerText="Rakip Oyundan Çıktı / Oyun Bitt
 }
 
 function randomFood(){
-let isRed = Math.random()<0.05;
+let isRed=Math.random()<0.05;
 return {x:Math.floor(Math.random()*(canvas.width/box))*box, y:Math.floor(Math.random()*(canvas.height/box))*box, type:isRed?"🍎":"🍏"};
 }
 
@@ -200,7 +232,7 @@ ctx.font="20px Arial"; ctx.textAlign="center"; ctx.textBaseline="middle";
 ctx.fillText(food.type, food.x+box/2, food.y+box/2);
 }
 
-// Yılan hareketi ve yemek
+// Yılan hareketi ve yem yeme
 document.addEventListener("keydown", async(e)=>{
 if(!roomId) return;
 if(e.key==="ArrowUp" && direction!=="DOWN") direction="UP";
@@ -209,8 +241,8 @@ if(e.key==="ArrowLeft" && direction!=="RIGHT") direction="LEFT";
 if(e.key==="ArrowRight" && direction!=="LEFT") direction="RIGHT";
 
 await runTransaction(db, async(t)=>{
-const ref=doc(db,"rooms",roomId);
-const snap=await t.get(ref);
+const ref = doc(db,"rooms",roomId);
+const snap = await t.get(ref);
 if(!snap.exists()) return;
 let d = snap.data();
 let snake = uid===d.player1 ? [...d.player1Snake] : [...d.player2Snake];
@@ -224,13 +256,13 @@ snake.unshift(head);
 let ate=false;
 if(head.x===d.food.x && head.y===d.food.y){
 ate=true;
-let scoreAdd = d.food.type==="🍎"?30:10;
-if(uid===d.player1) d.player1Score += scoreAdd; else d.player2Score += scoreAdd;
-d.food = randomFood();
+let scoreAdd=d.food.type==="🍎"?30:10;
+if(uid===d.player1) d.player1Score+=scoreAdd; else d.player2Score+=scoreAdd;
+d.food=randomFood();
 }else{snake.pop();}
 
 // Çarpışma veya sınır
-if(head.x<0||head.y<0||head.x>=canvas.width||head.y>=canvas.height||snake.slice(1).some(s=>s.x===head.x && s.y===head.y)){
+if(head.x<0||head.y<0||head.x>=canvas.width||head.y>=canvas.height||snake.slice(1).some(s=>s.x===head.x&&s.y===head.y)){
 d.state="ended";
 }
 
