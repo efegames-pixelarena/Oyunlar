@@ -12,12 +12,14 @@ canvas { display:block; }
   color:white; background:rgba(0,0,0,0.6);
   padding:10px; border-radius:8px;
   font-size:14px; max-height:90vh; overflow-y:auto;
+  transition: all 0.5s;
 }
 #totalScore {
   position:fixed; top:10px; left:10px;
   color:white; background:rgba(0,0,0,0.6);
   padding:10px; border-radius:8px;
   font-size:16px;
+  transition: all 0.5s;
 }
 </style>
 </head>
@@ -53,8 +55,8 @@ const ctx = canvas.getContext("2d");
 let W = window.innerWidth, H = window.innerHeight;
 canvas.width = W; canvas.height = H;
 
-const MAP_SIZE = 5000;
-const MAX_FOODS = 200;
+const MAP_SIZE = 10000; // Harita boyutu 10000x10000
+const MAX_FOODS = 600; // Yemler daha bol
 let players = {}, foods = [];
 let bots = [];
 let inputDir = {x:0,y:0};
@@ -63,7 +65,7 @@ const scoreboard = document.getElementById("scoreboard");
 const totalScoreEl = document.getElementById("totalScore");
 
 /* ---------------- MY SNAKE ---------------- */
-let mySnake = { body:[], x:Math.random()*MAP_SIZE, y:Math.random()*MAP_SIZE, speed:6, score:0, color:"#ffff00" };
+let mySnake = { body:[], x:Math.random()*MAP_SIZE, y:Math.random()*MAP_SIZE, speed:2, score:0, color:"#ffff00", maxSpeed:12 };
 
 /* ---------------- TOUCH ---------------- */
 canvas.addEventListener("touchstart", handleTouch);
@@ -92,13 +94,14 @@ onAuthStateChanged(auth, user=>{
   onValue(playersRef, snap=>{ players = snap.val() || {}; updateScoreboard(); });
 
   for(let i=0;i<MAX_FOODS;i++) foods.push(randomFood());
-  for(let i=0;i<5;i++) bots.push(randomBot());
-
   requestAnimationFrame(gameLoop);
 });
 
 /* ---------------- GAME LOOP ---------------- */
 function gameLoop(){
+  // Yılan yavaşça hızlanıyor
+  if(mySnake.speed < mySnake.maxSpeed) mySnake.speed += 0.002;
+
   updateMySnake();
   updateBots();
   checkCollisions();
@@ -114,7 +117,7 @@ function updateMySnake(){
     mySnake.x = Math.max(0, Math.min(MAP_SIZE, mySnake.x));
     mySnake.y = Math.max(0, Math.min(MAP_SIZE, mySnake.y));
     mySnake.body.unshift({x:mySnake.x,y:mySnake.y});
-    if(mySnake.body.length>10+mySnake.score/10) mySnake.body.pop();
+    if(mySnake.body.length>10+mySnake.score/5) mySnake.body.pop();
   }
   update(ref(db, "players/"+auth.currentUser.uid), { x:mySnake.x, y:mySnake.y, score:mySnake.score });
 }
@@ -128,7 +131,7 @@ function updateBots(){
     bot.x += dx/len*bot.speed;
     bot.y += dy/len*bot.speed;
     bot.body.unshift({x:bot.x, y:bot.y});
-    if(bot.body.length>10+bot.score/10) bot.body.pop();
+    if(bot.body.length>10+bot.score/5) bot.body.pop();
     foods.forEach((f,i)=>{
       if(distance(f, bot.body[0])<15){ bot.score += (f.type==="red"?30:10); foods[i]=randomFood(); }
     });
@@ -148,11 +151,17 @@ function checkCollisions(){
 function render(){
   ctx.clearRect(0,0,W,H);
 
-  // Snake.io tarzı grid
-  ctx.fillStyle="#1e1e1e";
+  // Renkli Snake.io tarzı arka plan
+  let gradient = ctx.createLinearGradient(0,0,W,H);
+  let hue1 = (Date.now()/50)%360;
+  let hue2 = (Date.now()/80)%360;
+  gradient.addColorStop(0, `hsl(${hue1},50%,10%)`);
+  gradient.addColorStop(1, `hsl(${hue2},50%,20%)`);
+  ctx.fillStyle = gradient;
   ctx.fillRect(0,0,W,H);
-  ctx.strokeStyle="#2a2a2a";
-  ctx.lineWidth=1;
+
+  // Grid
+  ctx.strokeStyle="#2a2a2a"; ctx.lineWidth=1;
   for(let x=0;x<W;x+=40){ ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
   for(let y=0;y<H;y+=40){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
 
@@ -162,14 +171,11 @@ function render(){
   // Map boundaries (yanıp sönen)
   let hue = (Date.now()/10)%360;
   ctx.strokeStyle=`hsl(${hue},80%,50%)`;
-  ctx.lineWidth=12;
+  ctx.lineWidth=16;
   ctx.strokeRect(-camX, -camY, MAP_SIZE, MAP_SIZE);
 
-  // Yemler
-  foods.forEach(f=>{ ctx.font="20px Arial"; ctx.fillText(f.type==="red"?"🍎":"🍏", f.x-camX, f.y-camY); });
-
-  // Botlar
-  bots.forEach(bot=> drawSnake(bot, camX, camY, "#ff6600") );
+  // Yemler hızlı spam
+  foods.forEach(f=>{ ctx.font="24px Arial"; ctx.fillText(f.type==="red"?"🍎":"🍏", f.x-camX, f.y-camY); });
 
   // Diğer oyuncular
   for(let id in players){ if(id!==auth.currentUser.uid) drawSnake(players[id], camX, camY, "#00ffff"); }
@@ -177,8 +183,13 @@ function render(){
   // Ben
   drawSnake(mySnake, camX, camY, mySnake.color);
 
-  // Skor
+  // Skor Sol Üst Renkli animasyon
+  let scoreHue = (Date.now()/5)%360;
+  totalScoreEl.style.color = `hsl(${scoreHue},100%,50%)`;
   totalScoreEl.innerText = `Score: ${Math.floor(mySnake.score)}`;
+
+  // Skor Tablosu Sağ Üst Canlı
+  updateScoreboard();
 }
 
 function drawSnake(snake, camX, camY, color){
@@ -203,13 +214,11 @@ function drawSnake(snake, camX, camY, color){
 }
 
 function randomFood(){ return { x:Math.random()*MAP_SIZE, y:Math.random()*MAP_SIZE, type:Math.random()<0.1?"red":"green" }; }
-function randomBot(){ return { body:[{x:Math.random()*MAP_SIZE,y:Math.random()*MAP_SIZE}], x:Math.random()*MAP_SIZE, y:Math.random()*MAP_SIZE, speed:3+Math.random()*3, score:0 }; }
 function distance(a,b){ return Math.hypot(a.x-b.x, a.y-b.y); }
 
 function updateScoreboard(){
   let arr=[];
   for(let id in players) arr.push({name:players[id].username, score:players[id].score});
-  bots.forEach((b,i)=> arr.push({name:"BOT"+(i+1), score:Math.floor(b.score)}));
   arr.sort((a,b)=>b.score-a.score);
   scoreboard.innerHTML = arr.map(p=>`${p.name}: ${Math.floor(p.score)}`).join("<br>");
 }
