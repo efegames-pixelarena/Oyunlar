@@ -434,16 +434,7 @@ logoutBtn.onclick = async ()=>{
   await signOut(auth);
   alert("Çıkış yapıldı.");
 };
-
-/* --- YENİ EKLENDİ: OYUN GİRİŞ KONTROLÜ --- */
-window.checkLogin = function(page){
-  const user = auth.currentUser;
-  if(!user){
-    // Kullanıcı giriş yapmamışsa direkt login sayfasına yönlendir
-    window.location.href = "login.html"; 
-    return;
-  }
-  // Giriş varsa oyuna yönlendir
-  window.location.href = page;
-};
 </script>
+
+</body>
+</html>
