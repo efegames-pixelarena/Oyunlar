@@ -17,7 +17,7 @@ flex-direction:column;
 height:100vh;
 touch-action:manipulation;
 }
-@keyframes bg{0%{background-position:0% 50%}100%{background-position:100% 50%}}
+@keyframes bg{0%{background-position:0% 50%}100%{background-position:100% 50%;}}
 
 /* TOP BAR */
 .top-bar{
@@ -42,36 +42,14 @@ animation:shine 3s linear infinite;
 .btn{padding:6px 12px;border-radius:12px;border:none;cursor:pointer;font-weight:700;font-size:13px;}
 .logout-btn{background:#ff3b3b;color:white;}
 
-/* SCOREBOARD */
-.scoreboard{
-margin-top:55px;
-width:100%;
-display:none;
-flex-direction:column;
-font-weight:bold;
-}
-.score-top{
-display:flex;
-justify-content:space-between;
-padding:8px 14px;
-background:rgba(0,0,0,0.75);
-}
-.round-bar{
-display:flex;
-height:6px;
-width:100%;
-}
-.round-blue{flex:1;background:#0066ff;}
-.round-red{flex:1;background:#ff0000;}
-
-/* GAME */
+/* GAME SCREEN */
 #gameScreen{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:10px;}
-button{padding:12px 20px;border:none;border-radius:10px;font-weight:bold;cursor:pointer;background:linear-gradient(90deg,#ffb300,#ff5500);margin-top:10px;}
 #matchMessage{font-size:clamp(32px,10vw,60px);margin-top:20px;font-weight:800;min-height:60px;}
-#scoreContainer{display:flex;justify-content:space-around;width:100%;margin-top:10px;font-weight:bold;font-size:16px;}
-canvas{background:#9bbc0f;image-rendering:pixelated;}
 .lobby{margin-top:15px;display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
 input{padding:8px;border-radius:8px;border:none;}
+button{padding:12px 20px;border:none;border-radius:10px;font-weight:bold;cursor:pointer;background:linear-gradient(90deg,#ffb300,#ff5500);margin-top:10px;}
+#scoreContainer{display:flex;justify-content:space-around;width:100%;margin-top:10px;font-weight:bold;font-size:16px;}
+canvas{display:none; background:#9bbc0f; image-rendering:pixelated; margin-top:10px;}
 </style>
 </head>
 <body>
@@ -121,7 +99,7 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 
 let uid, username, opponent="", roomId, unsubscribe;
-let playerSnake=[], opponentSnake=[], direction="RIGHT", opponentDirection="LEFT";
+let playerSnake=[], opponentSnake=[], direction="RIGHT";
 let playerScore=0, opponentScore=0;
 const box=20, canvas=document.getElementById("gameCanvas"), ctx=canvas.getContext("2d");
 let food={x:0,y:0,type:"🍏"};
@@ -173,8 +151,7 @@ player1:uid, player1Name:username,
 player2:null, player2Name:null,
 player1Snake:[{x:100,y:100}],
 player2Snake:[{x:400,y:400}],
-direction:"RIGHT", opponentDirection:"LEFT",
-food:randomFood(),
+direction:"RIGHT",
 player1Score:0, player2Score:0,
 state:"waiting",
 createdAt:serverTimestamp()
@@ -192,25 +169,21 @@ unsubscribe = onSnapshot(doc(db,"rooms",roomId), snap=>{
 const d = snap.data();
 if(!d) return;
 
-if(d.state==="waiting" && uid!==d.player1 && !d.player2){
-updateDoc(doc(db,"rooms",roomId),{player2:uid, player2Name:username, state:"countdown", startAt:Date.now()+5000});
-}
-
 if(d.state==="countdown"){
 matchMessage.innerText="Başlıyor... 5";
-setTimeout(()=>updateDoc(doc(db,"rooms",roomId),{state:"active"}),5000);
+setTimeout(()=>{
+matchMessage.style.display="none";
+canvas.style.display="block";
+updateDoc(doc(db,"rooms",roomId),{state:"active"});
+},5000);
 }
 
 if(d.state==="active"){
-matchMessage.style.display="none";
 playerSnake = uid===d.player1 ? d.player1Snake : d.player2Snake;
 opponentSnake = uid===d.player1 ? d.player2Snake : d.player1Snake;
-direction = uid===d.player1 ? d.direction : d.opponentDirection;
-opponentDirection = uid===d.player1 ? d.opponentDirection : d.direction;
 food=d.food;
 playerScore = uid===d.player1 ? d.player1Score : d.player2Score;
 opponentScore = uid===d.player1 ? d.player2Score : d.player1Score;
-document.getElementById("opponentName").innerText = uid===d.player1 ? d.player2Name||"Rakip" : d.player1Name||"Rakip";
 playerScoreEl.innerText = playerScore;
 opponentScoreEl.innerText = opponentScore;
 drawGame();
@@ -269,7 +242,7 @@ d.state="ended";
 if(uid===d.player1){
 t.update(ref,{player1Snake:snake,direction,food:d.food,player1Score:d.player1Score,state:d.state});
 }else{
-t.update(ref,{player2Snake:snake,direction:direction===d.direction?direction:"LEFT",food:d.food,player2Score:d.player2Score,state:d.state});
+t.update(ref,{player2Snake:snake,direction:direction==="RIGHT"?direction:"LEFT",food:d.food,player2Score:d.player2Score,state:d.state});
 }
 });
 });
