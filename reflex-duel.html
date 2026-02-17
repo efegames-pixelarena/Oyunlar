@@ -114,7 +114,7 @@ let roomId=null;
 let isHost=false;
 let tapTimes=[];
 let tapLock=false;
-let countdownStarted=false;
+let countdownInterval=null;
 
 /* ELEMENTS */
 const findBtn=document.getElementById("findBtn");
@@ -201,20 +201,35 @@ p2.innerText=(d.player2Name||"...")+" ("+d.score2+")";
 roundInfo.innerText="Round "+d.round+" / 7";
 
 if(d.state==="countdown"){
+
 if(isHost && d.player2 && !d.startAt){
 await updateDoc(doc(db,"rooms",roomId),{
 startAt:Date.now()+3000
 });
+return;
 }
 
 if(d.startAt){
+clearInterval(countdownInterval);
+
+countdownInterval=setInterval(async()=>{
 const diff=d.startAt-Date.now();
 const sec=Math.ceil(diff/1000);
+
 bigText.innerText=sec>0?sec:"GO!";
+
 if(diff<=0){
-await updateDoc(doc(db,"rooms",roomId),{state:"active"});
+clearInterval(countdownInterval);
+
+if(isHost){
+await updateDoc(doc(db,"rooms",roomId),{
+state:"active"
+});
 }
 }
+},100);
+}
+
 }
 
 else if(d.state==="active"){
@@ -234,32 +249,24 @@ reset();
 
 }else{
 setTimeout(async()=>{
+if(isHost){
 await updateDoc(doc(db,"rooms",roomId),{
 round:d.round+1,
 state:"countdown",
 startAt:null
 });
+}
 },2000);
 }
 }
 });
 }
 
-/* TAP + HİLE */
+/* TAP */
 async function tap(){
 
 if(tapLock||!roomId)return;
 tapLock=true;
-
-const now=Date.now();
-tapTimes.push(now);
-tapTimes=tapTimes.filter(t=>now-t<1000);
-
-if(tapTimes.length>12){
-alert("Hile tespit edildi!");
-reset();
-return;
-}
 
 await runTransaction(db,async(t)=>{
 const ref=doc(db,"rooms",roomId);
@@ -318,6 +325,7 @@ findBtn.style.display="block";
 bigText.innerText="";
 roomId=null;
 tapTimes=[];
+clearInterval(countdownInterval);
 }
 
 </script>
