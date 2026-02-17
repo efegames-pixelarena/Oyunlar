@@ -137,45 +137,39 @@ main{padding-top:20px;}
 </div>
 
 <main>
-  <!-- MultiPlayer Oyunlar -->
-  <div class="section-title" style="padding-left:20px;margin-top:25px;font-size:22px;font-weight:bold;">
-    MultiPlayer Oyunlar
+<!-- MultiPlayer Oyunlar -->
+<div class="games-grid">
+  <div class="game-card" data-name="reflex duel" onclick="goToPage('reflex-duel.html')">
+    <div class="game-icon">⚡️</div>
+    PixelArena Reflex-Duel
+    <div style="margin-top:8px;font-size:12px;color:#00eaff;font-weight:bold;">ONLİNE OYUN</div>
   </div>
-  <div class="games-grid">
-    <div class="game-card" data-name="reflex duel" onclick="window.location.href='reflex-duel.html'">
-      <div class="game-icon">⚡️</div>
-      PixelArena Reflex-Duel
-      <div style="margin-top:8px;font-size:12px;color:#00eaff;font-weight:bold;">ONLİNE OYUN</div>
-    </div>
-    <div class="game-card" data-name="yakında" onclick="window.location.href=''">
-      <div class="game-icon">⌛️</div>
-      Tasarım Aşamasında
-      <div style="margin-top:8px;font-size:12px;color:#00eaff;font-weight:bold;">YAKINDA !!!</div>
-    </div>
+  <div class="game-card" data-name="yakında" onclick="window.location.href=''">
+    <div class="game-icon">⌛️</div>
+    Tasarım Aşamasında
+    <div style="margin-top:8px;font-size:12px;color:#00eaff;font-weight:bold;">YAKINDA !!!</div>
   </div>
+</div>
 
-  <!-- Güncel Oyunlar -->
-  <div class="section-title" style="padding-left:20px;margin-top:25px;font-size:22px;font-weight:bold;">
-    Güncel Oyunlar
+<!-- Güncel Oyunlar -->
+<div class="games-grid">
+  <div class="game-card" data-name="blackjack" onclick="goToPage('blackjack.html')">
+    <div class="game-icon">♠️</div>
+    PixelArena BJ
   </div>
-  <div class="games-grid">
-    <div class="game-card" data-name="blackjack" onclick="checkLogin('blackjack.html')">
-      <div class="game-icon">♠️</div>
-      PixelArena BJ
-    </div>
-    <div class="game-card" data-name="skycrash" onclick="checkLogin('crash.html')">
-      <div class="game-icon">✈️</div>
-      PixelArena Crash
-    </div>
-    <div class="game-card" data-name="mines" onclick="checkLogin('mines.html')">
-      <div class="game-icon">💣</div>
-      PixelArena Mines
-    </div>
-    <div class="game-card" data-name="pişti" onclick="checkLogin('pisti.html')">
-      <div class="game-icon">🃏</div>
-      PixelArena Pişti
-    </div>
+  <div class="game-card" data-name="skycrash" onclick="goToPage('crash.html')">
+    <div class="game-icon">✈️</div>
+    PixelArena Crash
   </div>
+  <div class="game-card" data-name="mines" onclick="goToPage('mines.html')">
+    <div class="game-icon">💣</div>
+    PixelArena Mines
+  </div>
+  <div class="game-card" data-name="pişti" onclick="goToPage('pisti.html')">
+    <div class="game-icon">🃏</div>
+    PixelArena Pişti
+  </div>
+</div>
 
   <!-- Bakiyesiz Oyunlar -->
   <div class="section-title" style="padding-left:20px;margin-top:40px;font-size:22px;font-weight:bold;">
