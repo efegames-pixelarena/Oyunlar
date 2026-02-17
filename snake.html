@@ -2,11 +2,11 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>PixelArena Snake Ranked 1v1</title>
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box;user-select:none;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;}
 
 body{
 height:100vh;
@@ -21,23 +21,26 @@ flex-direction:column;
 
 /* TOP BAR */
 .top-bar{
-position:fixed;top:0;width:100%;height:55px;
+position:fixed;
+top:0;width:100%;height:55px;
 display:flex;align-items:center;justify-content:space-between;
 padding:0 16px;
 background:linear-gradient(135deg,#1a2a6c,#16245c);
 z-index:100;
 }
 
-.brand{font-weight:800}
-
 /* SCORE PANEL */
 .scoreboard{
 margin-top:55px;
 display:flex;
 justify-content:space-between;
-padding:10px 20px;
+padding:8px 30px;
 font-weight:bold;
 background:#111;
+}
+
+.scoreboard div{
+text-align:center;
 }
 
 .game-wrapper{
@@ -53,14 +56,12 @@ background:#9bbc0f;
 border-radius:8px;
 box-shadow:0 10px 30px rgba(0,0,0,0.6);
 }
-
-button{padding:10px 20px;margin-top:10px;border:none;border-radius:8px;font-weight:bold;cursor:pointer;}
 </style>
 </head>
 <body>
 
 <div class="top-bar">
-<div class="brand">PixelArena Snake</div>
+<div>PixelArena Snake</div>
 <div>Ranked 1v1</div>
 </div>
 
@@ -84,35 +85,54 @@ button{padding:10px 20px;margin-top:10px;border:none;border-radius:8px;font-weig
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc,
+import {
+getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc,
 collection, query, where, getDocs,
-onSnapshot, increment, serverTimestamp } 
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { getAuth, onAuthStateChanged } 
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+onSnapshot, increment, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-const firebaseConfig={ /* SENİN CONFIG AYNI */ };
+const firebaseConfig={
+apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
+authDomain:"emirhan-site.firebaseapp.com",
+projectId:"emirhan-site",
+storageBucket:"emirhan-site.firebasestorage.app",
+messagingSenderId:"668871888390",
+appId:"1:668871888390:web:76568bda84cb1641f7bd87"
+};
+
 const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 const auth=getAuth(app);
 
-let uid,roomId=null,unsubscribe=null;
-let opponentId=null;
+let uid,roomId=null,unsubscribe=null,opponentId=null;
+let gameStart=0,gameDuration=60000,isPlaying=false;
 
 const canvas=document.getElementById("game");
 const ctx=canvas.getContext("2d");
 
-let size=600;
+/* 40x150 GRID */
+const COLS=40;
+const ROWS=150;
+
+let box;
+let size;
+let snake=[],opponentSnake=[];
+let dir="RIGHT";
+let food,score=0,oppScore=0;
+let moveInterval=200;
+
+/* CANVAS */
+function resizeCanvas(){
+size=Math.min(window.innerWidth,window.innerHeight-180)*0.9;
 canvas.width=size;
 canvas.height=size;
+box=size/COLS;
+}
+window.addEventListener("resize",resizeCanvas);
+resizeCanvas();
 
-let box=size/30; // GENİŞ ALAN 30x30
-
-let snake=[],opponentSnake=[];
-let dir="RIGHT",oppDir="LEFT";
-let food,score=0,oppScore=0;
-let isPlaying=false;
-
+/* AUTH */
 onAuthStateChanged(auth,user=>{
 if(!user){alert("Giriş gerekli");return;}
 uid=user.uid;
@@ -141,6 +161,7 @@ roomId=newRoom.id;
 await setDoc(newRoom,{
 player1:uid,player2:null,
 score1:0,score2:0,
+snake1:[],snake2:[],
 state:"waiting",
 createdAt:serverTimestamp()
 });
@@ -151,13 +172,21 @@ listenRoom();
 function listenRoom(){
 unsubscribe=onSnapshot(doc(db,"snakeRooms",roomId),snap=>{
 const d=snap.data();
+if(!d) return;
+
 if(d.state==="matched"){
-updateDoc(doc(db,"snakeRooms",roomId),{state:"playing"});
+updateDoc(doc(db,"snakeRooms",roomId),{
+state:"playing",
+startTime:Date.now()
+});
 }
+
 if(d.state==="playing"){
 opponentId=(uid===d.player1)?d.player2:d.player1;
+gameStart=d.startTime;
 startGame();
 }
+
 if(d.snake1 && d.snake2){
 if(uid===d.player1){
 opponentSnake=d.snake2||[];
@@ -172,19 +201,17 @@ document.getElementById("p2score").innerText=oppScore;
 }
 
 function startGame(){
-snake=[{x:5*box,y:15*box}];
-opponentSnake=[{x:25*box,y:15*box}];
+snake=[{x:5*box,y:5*box}];
 food=randomFood();
 score=0;
-oppScore=0;
 isPlaying=true;
 loop();
 }
 
 function randomFood(){
 return{
-x:Math.floor(Math.random()*30)*box,
-y:Math.floor(Math.random()*30)*box
+x:Math.floor(Math.random()*COLS)*box,
+y:Math.floor(Math.random()*ROWS)*box
 };
 }
 
@@ -192,7 +219,7 @@ function loop(){
 if(!isPlaying)return;
 update();
 draw();
-setTimeout(loop,120);
+setTimeout(loop,moveInterval);
 }
 
 async function update(){
@@ -204,7 +231,7 @@ if(dir==="DOWN")headY+=box;
 if(dir==="LEFT")headX-=box;
 if(dir==="RIGHT")headX+=box;
 
-if(headX<0||headY<0||headX>=size||headY>=size){
+if(headX<0||headY<0||headX>=COLS*box||headY>=ROWS*box){
 explode(headX,headY);
 endGame();
 return;
@@ -222,12 +249,10 @@ snake.unshift({x:headX,y:headY});
 document.getElementById("p1score").innerText=score;
 
 if(uid){
-if(uid){
 await updateDoc(doc(db,"snakeRooms",roomId),
 uid===opponentId?
 {snake2:snake,score2:score}:
 {snake1:snake,score1:score});
-}
 }
 }
 
@@ -235,13 +260,13 @@ function draw(){
 ctx.fillStyle="#9bbc0f";
 ctx.fillRect(0,0,size,size);
 
-/* Player RED */
+/* PLAYER RED */
 snake.forEach(s=>{
 ctx.fillStyle="red";
 ctx.fillRect(s.x,s.y,box,box);
 });
 
-/* Opponent BLUE */
+/* OPPONENT BLUE */
 opponentSnake.forEach(s=>{
 ctx.fillStyle="blue";
 ctx.fillRect(s.x,s.y,box,box);
@@ -251,11 +276,11 @@ ctx.font=box+"px Arial";
 ctx.fillText("🍎",food.x,food.y+box);
 }
 
-/* PATLAMA */
+/* WALL EXPLOSION */
 function explode(x,y){
-for(let i=0;i<15;i++){
+for(let i=0;i<20;i++){
 ctx.fillStyle="orange";
-ctx.fillRect(x+Math.random()*20-10,y+Math.random()*20-10,5,5);
+ctx.fillRect(x+(Math.random()*30-15),y+(Math.random()*30-15),6,6);
 }
 }
 
@@ -270,7 +295,6 @@ async function endGame(){
 isPlaying=false;
 await updateDoc(doc(db,"snakeRooms",roomId),{state:"finished"});
 }
-
 </script>
 </body>
 </html>
