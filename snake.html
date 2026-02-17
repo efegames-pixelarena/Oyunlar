@@ -38,7 +38,6 @@ body{
 }
 @keyframes shine{to{background-position:200% center;}}
 .right-menu{display:flex;gap:10px;align-items:center;}
-.nav-box{padding:6px 14px;border-radius:14px;font-weight:700;font-size:13px;min-width:95px;text-align:center;background:#273c8f;}
 .btn{padding:6px 12px;border-radius:12px;border:none;cursor:pointer;font-weight:700;font-size:13px;}
 .logout-btn{background:#ff3b3b;color:white;}
 
@@ -79,8 +78,6 @@ canvas{
 <div class="top-bar">
   <div class="brand">Snake Duel</div>
   <div class="right-menu">
-    <div class="nav-box" id="playerName">...</div>
-    <div class="nav-box" id="opponentName">Rakip...</div>
     <button class="btn logout-btn" id="logoutBtn">Çıkış</button>
   </div>
 </div>
@@ -132,8 +129,6 @@ const lobbyBox=document.getElementById("lobbyBox");
 const scoreContainer=document.getElementById("scoreContainer");
 const playerScoreEl=document.getElementById("playerScore");
 const opponentScoreEl=document.getElementById("opponentScore");
-const playerNameEl=document.getElementById("playerName");
-const opponentNameEl=document.getElementById("opponentName");
 const canvas=document.getElementById("gameCanvas");
 const ctx=canvas.getContext("2d");
 
@@ -143,7 +138,6 @@ onAuthStateChanged(auth, async(user)=>{
   uid=user.uid;
   const snap = await getDoc(doc(db,"users",uid));
   username = snap.data()?.username || "Oyuncu";
-  playerNameEl.innerText = username;
 });
 
 /* LOGOUT */
@@ -160,14 +154,13 @@ findBtn.onclick = async()=>{
   lobbyBox.style.display="none";
   scoreContainer.style.display="none";
 
-  // Açık odaları kontrol et, kendi odasını atla
   const q = query(collection(db,"rooms"), where("state","==","waiting"));
   const snap = await getDocs(q);
   let joined = false;
 
   for(const r of snap.docs){
     const d = r.data();
-    if(d.player1 !== uid && !d.player2){
+    if(d.player1!==uid && !d.player2){
       roomId = r.id;
       await updateDoc(doc(db,"rooms",roomId),{
         player2: uid,
@@ -201,9 +194,6 @@ function listenRoom(){
   unsubscribe = onSnapshot(doc(db,"rooms",roomId), snap=>{
     const d = snap.data();
     if(!d) return;
-
-    if(d.player1Name) playerNameEl.innerText = d.player1Name;
-    if(d.player2Name && d.player2Name!==username) opponentNameEl.innerText = d.player2Name;
 
     if(d.state==="waiting"){
       scoreContainer.style.display="none";
@@ -240,7 +230,6 @@ let box = 15, size = 300;
 let gameInterval;
 
 function startSnakeGame(){
-  // Reset
   snake=[{x:150,y:150}];
   direction="RIGHT";
   score=0;
@@ -260,12 +249,8 @@ function startSnakeGame(){
 }
 
 function randomFood(){
-  let isRed = Math.random()<0.1; // kırmızı elma nadir
-  return {
-    x: Math.floor(Math.random()*(size/box))*box,
-    y: Math.floor(Math.random()*(size/box))*box,
-    type: isRed?"red":"green"
-  }
+  let isRed = Math.random()<0.1;
+  return { x: Math.floor(Math.random()*(size/box))*box, y: Math.floor(Math.random()*(size/box))*box, type: isRed?"red":"green" }
 }
 
 function gameLoop(){
@@ -277,24 +262,19 @@ function gameLoop(){
   if(direction==="LEFT") headX -= box;
   if(direction==="RIGHT") headX += box;
 
-  // Collision
   if(headX<0 || headY<0 || headX>=size || headY>=size || snake.some(s=>s.x===headX && s.y===headY)){
     clearInterval(gameInterval);
     alert("Oyun Bitti! Skor: "+score);
     return;
   }
 
-  // Eat food
   if(headX===food.x && headY===food.y){
     score += (food.type==="red"?30:10);
     playerScoreEl.innerText = score;
     food = randomFood();
-  } else {
-    snake.pop();
-  }
+  } else { snake.pop(); }
 
   snake.unshift({x:headX,y:headY});
-
   draw();
 }
 
