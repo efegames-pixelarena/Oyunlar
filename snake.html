@@ -21,7 +21,7 @@ canvas{background:#9bbc0f;image-rendering:pixelated;display:block;}
 <body>
 <div class="console">
   <div class="score">
-    Skor: <span id="score">0</span> | High: <span id="high">0</span>
+    Skor: <span id="score">0</span>
   </div>
 
   <div class="canvas-wrapper">
@@ -39,12 +39,13 @@ canvas{background:#9bbc0f;image-rendering:pixelated;display:block;}
     <div class="btn" id="createBtn">Oda Kur</div>
   </div>
 </div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getDatabase, ref, set, onValue, onDisconnect } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-/* ---------------- FIREBASE CONFIG ---------------- */
+/* FIREBASE CONFIG */
 const firebaseConfig = {
   apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
   authDomain:"emirhan-site.firebaseapp.com",
@@ -59,98 +60,86 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const rtdb = getDatabase(app);
 
-/* ---------------- GAME VARIABLES ---------------- */
-let playerId = null;
-let snake = [{x:150,y:150}], direction = "RIGHT", score = 0;
-let otherSnake = [], food, gameStarted = false;
-let roomId = null;
-let countdownInterval = null;
-const box = 15, size = 300;
+/* GLOBAL */
+let playerId=null;
+let roomId=null;
+let snake=[{x:150,y:150}];
+let otherSnake=[];
+let direction="RIGHT";
+let score=0;
+let food=null;
+let gameStarted=false;
+let countdownInterval=null;
 
-const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
-const controlsDiv = document.getElementById("controls");
-const matchBtn = document.getElementById("matchBtn");
-const createBtn = document.getElementById("createBtn");
-const countdownEl = document.getElementById("countdown");
-const gameoverDiv = document.getElementById("gameover");
-const retryBtn = document.getElementById("retryBtn");
-const gameoverText = document.getElementById("gameoverText");
+const box=15, size=300;
+const canvas=document.getElementById("game");
+const ctx=canvas.getContext("2d");
+const matchBtn=document.getElementById("matchBtn");
+const createBtn=document.getElementById("createBtn");
+const controlsDiv=document.getElementById("controls");
+const countdownEl=document.getElementById("countdown");
+const gameoverDiv=document.getElementById("gameover");
+const retryBtn=document.getElementById("retryBtn");
+const gameoverText=document.getElementById("gameoverText");
+const scoreEl=document.getElementById("score");
 
-let lastMoveTime = 0;
-let baseSpeed = 220, currentSpeed = 220, minSpeed = 80;
+let lastMove=0;
+let speed=200;
 
-/* ---------------- AUTH (FIX) ---------------- */
+/* AUTH */
 signInAnonymously(auth).catch(console.error);
-
-onAuthStateChanged(auth, user => {
-  if(user){
-    playerId = user.uid;
-    console.log("Player:", playerId);
-  }
+onAuthStateChanged(auth,user=>{
+  if(user) playerId=user.uid;
 });
 
-/* ---------------- BUTTON EVENTS ---------------- */
-matchBtn.onclick = findMatch;
-createBtn.onclick = createRoom;
-retryBtn.onclick = ()=>location.reload();
+/* BUTTONS */
+matchBtn.onclick=findMatch;
+createBtn.onclick=createRoom;
+retryBtn.onclick=()=>location.reload();
 
-/* ---------------- MULTIPLAYER ---------------- */
+/* MATCHMAKING */
 function createRoom(){
-  roomId = "room_" + Math.random().toString(36).substring(2,8);
-  const roomRef = ref(rtdb,'snakeRoom/rooms/'+roomId);
-
-  set(roomRef,{
+  roomId="room_"+Math.random().toString(36).substring(2,8);
+  set(ref(rtdb,'snakeRoom/rooms/'+roomId),{
     players:{},
     food:randomFood()
   });
-
-  joinRoom(roomId,true);
+  joinRoom(roomId);
 }
 
 function findMatch(){
-  controlsDiv.innerHTML = "Rakip Bekleniyor...";
-
-  onValue(ref(rtdb,'snakeRoom/rooms'), snap=>{
-    const rooms = snap.val() || {};
-
+  controlsDiv.innerHTML="Rakip Bekleniyor...";
+  onValue(ref(rtdb,'snakeRoom/rooms'),snap=>{
+    const rooms=snap.val()||{};
     for(const id in rooms){
-      const players = rooms[id].players || {};
-      if(Object.keys(players).length === 1 && !players[playerId]){
-        joinRoom(id,false);
+      const players=rooms[id].players||{};
+      if(Object.keys(players).length===1 && !players[playerId]){
+        joinRoom(id);
         return;
       }
     }
-
     createRoom();
-
-  }, {onlyOnce:true});
+  },{onlyOnce:true});
 }
 
-function joinRoom(rId,isCreator){
-  roomId = rId;
-
-  const playerRef = ref(rtdb,'snakeRoom/rooms/'+roomId+'/players/'+playerId);
+function joinRoom(id){
+  roomId=id;
+  const playerRef=ref(rtdb,'snakeRoom/rooms/'+roomId+'/players/'+playerId);
 
   set(playerRef,{snake,dir:direction,score});
   onDisconnect(playerRef).remove();
-
   controlsDiv.style.display="none";
 
-  // oyuncuları izle
-  onValue(ref(rtdb,'snakeRoom/rooms/'+roomId+'/players'), snap=>{
-    const data = snap.val() || {};
-    const ids = Object.keys(data);
-
-    otherSnake = [];
+  onValue(ref(rtdb,'snakeRoom/rooms/'+roomId+'/players'),snap=>{
+    const data=snap.val()||{};
+    const ids=Object.keys(data);
+    otherSnake=[];
 
     ids.forEach(id=>{
-      if(id!==playerId){
-        otherSnake = data[id].snake || [];
-      }
+      if(id!==playerId) otherSnake=data[id].snake||[];
     });
 
-    if(ids.length===2 && !gameStarted && countdownInterval===null){
+    if(ids.length===2 && !gameStarted && !countdownInterval){
       countdownStart(5);
     }
 
@@ -160,87 +149,84 @@ function joinRoom(rId,isCreator){
     }
   });
 
-  // food izle
-  onValue(ref(rtdb,'snakeRoom/rooms/'+roomId+'/food'), snap=>{
-    if(snap.exists()) food = snap.val();
+  onValue(ref(rtdb,'snakeRoom/rooms/'+roomId+'/food'),snap=>{
+    if(snap.exists()) food=snap.val();
   });
 }
 
-/* ---------------- COUNTDOWN ---------------- */
-function countdownStart(seconds){
-  countdownEl.style.display = "block";
-  let s = seconds;
-  countdownEl.innerText = s;
-
-  countdownInterval = setInterval(()=>{
+/* COUNTDOWN */
+function countdownStart(sec){
+  countdownEl.style.display="block";
+  let s=sec;
+  countdownEl.innerText=s;
+  countdownInterval=setInterval(()=>{
     s--;
-    if(s>0) countdownEl.innerText = s;
+    if(s>0) countdownEl.innerText=s;
     if(s<=0){
       clearInterval(countdownInterval);
-      countdownInterval = null;
-      countdownEl.style.display = "none";
-      gameStarted = true;
+      countdownInterval=null;
+      countdownEl.style.display="none";
+      gameStarted=true;
       requestAnimationFrame(gameLoop);
     }
   },1000);
 }
 
-/* ---------------- GAME LOOP ---------------- */
-document.addEventListener("keydown", e=>{
+/* CONTROLS */
+document.addEventListener("keydown",e=>{
   if(!gameStarted) return;
-  if(e.key==="ArrowUp" && direction!=="DOWN") direction="UP";
-  if(e.key==="ArrowDown" && direction!=="UP") direction="DOWN";
-  if(e.key==="ArrowLeft" && direction!=="RIGHT") direction="LEFT";
-  if(e.key==="ArrowRight" && direction!=="LEFT") direction="RIGHT";
+  if(e.key==="ArrowUp"&&direction!=="DOWN") direction="UP";
+  if(e.key==="ArrowDown"&&direction!=="UP") direction="DOWN";
+  if(e.key==="ArrowLeft"&&direction!=="RIGHT") direction="LEFT";
+  if(e.key==="ArrowRight"&&direction!=="LEFT") direction="RIGHT";
 });
 
+/* LOOP */
 function gameLoop(ts){
   if(!gameStarted) return;
-  if(ts - lastMoveTime > currentSpeed){
+  if(ts-lastMove>speed){
     update();
-    lastMoveTime=ts;
+    lastMove=ts;
   }
   draw();
   requestAnimationFrame(gameLoop);
 }
 
 function update(){
-  let headX=snake[0].x, headY=snake[0].y;
+  let x=snake[0].x;
+  let y=snake[0].y;
 
-  if(direction==="UP") headY-=box;
-  if(direction==="DOWN") headY+=box;
-  if(direction==="LEFT") headX-=box;
-  if(direction==="RIGHT") headX+=box;
+  if(direction==="UP") y-=box;
+  if(direction==="DOWN") y+=box;
+  if(direction==="LEFT") x-=box;
+  if(direction==="RIGHT") x+=box;
 
-  if(headX<0||headY<0||headX>=size||headY>=size||collision(headX,headY)||collisionOther(headX,headY)){
+  if(x<0||y<0||x>=size||y>=size||collision(x,y)||collisionOther(x,y)){
     gameOver();
     return;
   }
 
-  if(food && headX===food.x && headY===food.y){
+  if(food && x===food.x && y===food.y){
     score++;
-    set(ref(rtdb,'snakeRoom/rooms/'+roomId+'/food'), randomFood());
-    updateSpeed();
-  } else {
+    scoreEl.innerText=score;
+    set(ref(rtdb,'snakeRoom/rooms/'+roomId+'/food'),randomFood());
+  }else{
     snake.pop();
   }
 
-  snake.unshift({x:headX,y:headY});
+  snake.unshift({x,y});
 
   set(ref(rtdb,'snakeRoom/rooms/'+roomId+'/players/'+playerId),
       {snake,dir:direction,score});
 }
 
-function collision(x,y){ return snake.some(s=>s.x===x && s.y===y); }
-function collisionOther(x,y){ return otherSnake.some(s=>s.x===x && s.y===y); }
-function updateSpeed(){
-  currentSpeed = Math.max(minSpeed, baseSpeed - Math.floor(score/5)*15);
-}
+function collision(x,y){return snake.some(s=>s.x===x&&s.y===y);}
+function collisionOther(x,y){return otherSnake.some(s=>s.x===x&&s.y===y);}
+
 function randomFood(){
   return {
     x:Math.floor(Math.random()*20)*15,
-    y:Math.floor(Math.random()*20)*15,
-    type:Math.random()<0.15?"red":"green"
+    y:Math.floor(Math.random()*20)*15
   };
 }
 
@@ -259,10 +245,8 @@ function draw(){
   });
 
   if(food){
-    ctx.font="14px Arial";
-    ctx.textAlign="center";
-    ctx.textBaseline="middle";
-    ctx.fillText(food.type==="red"?"🍎":"🍏", food.x+box/2, food.y+box/2);
+    ctx.fillStyle="red";
+    ctx.fillRect(food.x,food.y,box,box);
   }
 }
 
@@ -275,3 +259,5 @@ function gameOver(){
     gameoverText.innerText="Yandın!";
 }
 </script>
+</body>
+</html>
