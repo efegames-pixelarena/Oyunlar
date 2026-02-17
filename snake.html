@@ -2,27 +2,21 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Snake Duel</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;}
 body{
+  display:flex;flex-direction:column;height:100vh;overflow:hidden;
   background:linear-gradient(-45deg,#ff0000,#001eff,#8b0000,#00008b,#ff1a1a,#0015ff);
-  background-size:600% 600%;
-  animation:bg 4s infinite alternate ease-in-out;
-  color:white;
-  overflow:hidden;
-  display:flex;
-  flex-direction:column;
-  height:100vh;
-  touch-action:manipulation;
+  background-size:600% 600%;animation:bg 10s ease infinite alternate;
+  color:white;touch-action:manipulation;
 }
-@keyframes bg{0%{background-position:0% 50%}100%{background-position:100% 50%;}}
+@keyframes bg{0%{background-position:0 0;}100%{background-position:100% 100%;}}
 
 /* TOP BAR */
 .top-bar{
-  position:fixed;
-  top:0;width:100%;height:55px;
+  position:fixed;top:0;width:100%;height:55px;
   display:flex;align-items:center;justify-content:space-between;
   padding:0 16px;
   background:linear-gradient(135deg,#1a2a6c,#16245c);
@@ -37,7 +31,7 @@ body{
   animation:shine 3s linear infinite;
 }
 @keyframes shine{to{background-position:200% center;}}
-.right-menu{display:flex;gap:10px;align-items:center;}
+.right-menu{display:flex;align-items:center;}
 .btn{padding:6px 12px;border-radius:12px;border:none;cursor:pointer;font-weight:700;font-size:13px;}
 .logout-btn{background:#ff3b3b;color:white;}
 
@@ -45,14 +39,8 @@ body{
 #gameScreen{
   flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:10px;
 }
-#matchMessage{
-  font-size:clamp(32px,10vw,60px);
-  margin-top:20px;font-weight:800;min-height:60px;
-}
-.lobby{
-  margin-top:15px;
-  display:flex;gap:10px;flex-wrap:wrap;justify-content:center;
-}
+#matchMessage{font-size:clamp(32px,10vw,60px);margin-top:20px;font-weight:800;min-height:60px;}
+.lobby{margin-top:15px;display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
 input{padding:8px;border-radius:8px;border:none;}
 button{
   padding:12px 20px;border:none;border-radius:10px;
@@ -61,16 +49,9 @@ button{
   margin-top:10px;
 }
 #scoreContainer{
-  display:flex;
-  justify-content:space-around;
-  width:100%;
-  margin-top:10px;
-  font-weight:bold;font-size:16px;
-  display:none;
+  display:flex;justify-content:space-around;width:100%;margin-top:10px;font-weight:bold;font-size:16px;display:none;
 }
-canvas{
-  display:none; background:#9bbc0f; image-rendering:pixelated; margin-top:10px;
-}
+canvas{display:none;background:#9bbc0f;image-rendering:pixelated;margin-top:10px;border-radius:10px;}
 </style>
 </head>
 <body>
@@ -84,21 +65,16 @@ canvas{
 
 <div id="gameScreen">
   <div id="matchMessage">Maç Bul / Oda Kur</div>
-
-  <!-- LOBBY -->
   <button id="findBtn">Maç Bul</button>
   <div class="lobby" id="lobbyBox">
     <input id="roomCodeInput" placeholder="Oda Kodu">
     <button id="createRoomBtn">Oda Kur</button>
     <button id="joinCodeBtn">Katıl</button>
   </div>
-
-  <!-- SCORE -->
   <div id="scoreContainer">
     <div>Sen: <span id="playerScore">0</span></div>
     <div>Rakip: <span id="opponentScore">0</span></div>
   </div>
-
   <canvas id="gameCanvas" width="300" height="300"></canvas>
 </div>
 
@@ -160,13 +136,14 @@ findBtn.onclick = async()=>{
 
   for(const r of snap.docs){
     const d = r.data();
+    // Kendi odasına katılma engeli
     if(d.player1!==uid && !d.player2){
       roomId = r.id;
       await updateDoc(doc(db,"rooms",roomId),{
         player2: uid,
         player2Name: username,
         state: "countdown",
-        startAt: Date.now()+5000
+        startAt: Date.now()+3000
       });
       joined = true;
       break;
@@ -220,22 +197,21 @@ function listenRoom(){
       matchMessage.innerText="Rakip Oyundan Çıktı / Oyun Bitti";
       scoreContainer.style.display="none";
       canvas.style.display="none";
+      if(gameInterval) clearInterval(gameInterval);
     }
   });
 }
 
-/* ---------------- SNAKE OYUNU ---------------- */
+/* ---------------- SNAKE GAME ---------------- */
 let snake, direction, food, score;
 let box = 15, size = 300;
 let gameInterval;
 
 function startSnakeGame(){
   snake=[{x:150,y:150}];
-  direction="RIGHT";
-  score=0;
+  direction="RIGHT"; score=0;
   food=randomFood();
-  playerScoreEl.innerText=0;
-  opponentScoreEl.innerText=0;
+  playerScoreEl.innerText=0; opponentScoreEl.innerText=0;
 
   document.addEventListener("keydown", e=>{
     if(e.key==="ArrowUp" && direction!=="DOWN") direction="UP";
@@ -249,18 +225,19 @@ function startSnakeGame(){
 }
 
 function randomFood(){
-  let isRed = Math.random()<0.1;
-  return { x: Math.floor(Math.random()*(size/box))*box, y: Math.floor(Math.random()*(size/box))*box, type: isRed?"red":"green" }
+  return {
+    x: Math.floor(Math.random()*(size/box))*box,
+    y: Math.floor(Math.random()*(size/box))*box,
+    type: Math.random()<0.1?"red":"green"
+  };
 }
 
 function gameLoop(){
-  let headX = snake[0].x;
-  let headY = snake[0].y;
-
-  if(direction==="UP") headY -= box;
-  if(direction==="DOWN") headY += box;
-  if(direction==="LEFT") headX -= box;
-  if(direction==="RIGHT") headX += box;
+  let headX = snake[0].x, headY = snake[0].y;
+  if(direction==="UP") headY-=box;
+  if(direction==="DOWN") headY+=box;
+  if(direction==="LEFT") headX-=box;
+  if(direction==="RIGHT") headX+=box;
 
   if(headX<0 || headY<0 || headX>=size || headY>=size || snake.some(s=>s.x===headX && s.y===headY)){
     clearInterval(gameInterval);
@@ -269,9 +246,9 @@ function gameLoop(){
   }
 
   if(headX===food.x && headY===food.y){
-    score += (food.type==="red"?30:10);
+    score += food.type==="red"?30:10;
     playerScoreEl.innerText = score;
-    food = randomFood();
+    food=randomFood();
   } else { snake.pop(); }
 
   snake.unshift({x:headX,y:headY});
@@ -279,15 +256,11 @@ function gameLoop(){
 }
 
 function draw(){
-  ctx.fillStyle="#9bbc0f";
-  ctx.fillRect(0,0,size,size);
+  ctx.fillStyle="#9bbc0f"; ctx.fillRect(0,0,size,size);
   snake.forEach(s=>{
-    ctx.fillStyle="#0f380f";
-    ctx.fillRect(s.x,s.y,box,box);
+    ctx.fillStyle="#0f380f"; ctx.fillRect(s.x,s.y,box,box);
   });
-  ctx.font="14px Arial";
-  ctx.textAlign="center";
-  ctx.textBaseline="middle";
+  ctx.font="14px Arial"; ctx.textAlign="center"; ctx.textBaseline="middle";
   ctx.fillText(food.type==="red"?"🍎":"🍏",food.x+box/2,food.y+box/2);
 }
 </script>
