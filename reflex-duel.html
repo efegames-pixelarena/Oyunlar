@@ -19,12 +19,10 @@ background-size:400% 400%;
 animation:bg 6s infinite alternate ease-in-out;
 touch-action:manipulation;
 }
-
 @keyframes bg{
 0%{background-position:0% 50%}
 100%{background-position:100% 50%}
 }
-
 .topbar{
 width:100%;
 padding:12px;
@@ -34,7 +32,6 @@ justify-content:space-between;
 font-weight:bold;
 box-sizing:border-box;
 }
-
 #game{
 flex:1;
 display:flex;
@@ -42,7 +39,6 @@ flex-direction:column;
 justify-content:center;
 align-items:center;
 }
-
 button{
 padding:15px 30px;
 border:none;
@@ -51,12 +47,10 @@ font-weight:bold;
 cursor:pointer;
 font-size:16px;
 }
-
 #bigText{
 font-size:90px;
 margin-top:20px;
 }
-
 canvas{
 position:fixed;
 pointer-events:none;
@@ -94,7 +88,7 @@ import {
 getAuth, onAuthStateChanged, signInAnonymously
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-/* FIREBASE CONFIG */
+/* FIREBASE */
 const firebaseConfig={
 apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
 authDomain:"emirhan-site.firebaseapp.com",
@@ -108,40 +102,39 @@ const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 const auth=getAuth(app);
 
-/* AUDIO SYSTEM */
+/* AUDIO */
 let audioCtx=null;
 function unlockAudio(){
 if(!audioCtx){
 audioCtx=new (window.AudioContext||window.webkitAudioContext)();
 }
-if(audioCtx.state==="suspended"){
-audioCtx.resume();
+if(audioCtx.state==="suspended") audioCtx.resume();
 }
-}
-function playBeep(freq,duration){
+function beep(f,d){
 unlockAudio();
-const osc=audioCtx.createOscillator();
-const gain=audioCtx.createGain();
-osc.type="square";
-osc.frequency.value=freq;
-gain.gain.value=0.2;
-osc.connect(gain);
-gain.connect(audioCtx.destination);
-osc.start();
-osc.stop(audioCtx.currentTime+duration);
+const o=audioCtx.createOscillator();
+const g=audioCtx.createGain();
+o.type="square";
+o.frequency.value=f;
+g.gain.value=0.2;
+o.connect(g);
+g.connect(audioCtx.destination);
+o.start();
+o.stop(audioCtx.currentTime+d);
 }
-function countdownSound(){ playBeep(700,0.12); }
-function goSound(){ playBeep(1200,0.25); }
-function winSound(){ playBeep(200,0.4); }
+const countdownSound=()=>beep(700,0.12);
+const goSound=()=>beep(1200,0.25);
+const winSound=()=>beep(200,0.4);
 
 /* GLOBALS */
 let uid=null;
 let username="Player";
 let roomId=null;
 let isHost=false;
-let tapLock=false;
-let countdownInterval=null;
 let unsubscribe=null;
+let tapLock=false;
+let matchingLock=false;
+let countdownInterval=null;
 
 /* ELEMENTS */
 const findBtn=document.getElementById("findBtn");
@@ -159,35 +152,54 @@ const ref=doc(db,"users",uid);
 const snap=await getDoc(ref);
 
 if(snap.exists()){
-username=snap.data().username||("Player_"+uid.substring(0,4));
+username=snap.data().username;
 }else{
-await setDoc(ref,{username:"Player_"+uid.substring(0,4)});
 username="Player_"+uid.substring(0,4);
+await setDoc(ref,{username});
 }
 });
 
-/* MATCH */
+/* CLEAN OLD ROOMS */
+async function cleanOldRooms(){
+const q=query(collection(db,"rooms"),where("players","array-contains",uid));
+const snap=await getDocs(q);
+for(const r of snap.docs){
+await deleteDoc(doc(db,"rooms",r.id));
+}
+}
+
+/* MATCHMAKING */
 findBtn.onclick=async()=>{
+if(matchingLock) return;
+matchingLock=true;
+
 unlockAudio();
 findBtn.style.display="none";
 
-const q=query(collection(db,"rooms"),where("state","==","waiting"));
-const snap=await getDocs(q);
+await cleanOldRooms();
+
+const waitingQ=query(collection(db,"rooms"),where("state","==","waiting"));
+const snap=await getDocs(waitingQ);
+
 let joined=false;
 
 for(const r of snap.docs){
 const d=r.data();
-if(d.player1!==uid && !d.player2){
+if(d.player1===uid) continue;
+if(d.player2) continue;
+
 roomId=r.id;
 isHost=false;
+
 await updateDoc(doc(db,"rooms",roomId),{
 player2:uid,
 player2Name:username,
+players:[d.player1,uid],
 state:"countdown"
 });
+
 joined=true;
 break;
-}
 }
 
 if(!joined){
@@ -200,32 +212,54 @@ player1:uid,
 player1Name:username,
 player2:null,
 player2Name:null,
+players:[uid],
 score1:0,
 score2:0,
 round:1,
 state:"waiting",
-winner:null,
 createdAt:serverTimestamp()
 });
 }
 
 listenRoom();
+matchingLock=false;
 };
 
-/* ROOM */
+/* ROOM LISTENER */
 function listenRoom(){
-if(unsubscribe) unsubscribe();
+
+if(!roomId) return;
+
+if(unsubscribe){
+unsubscribe();
+unsubscribe=null;
+}
 
 unsubscribe=onSnapshot(doc(db,"rooms",roomId),async(snap)=>{
-if(!snap.exists()) return reset();
+
+if(!snap.exists()){
+reset();
+return;
+}
 
 const d=snap.data();
+
+// Eğer oyuncu odada değilse reset
+if(!d.players || !d.players.includes(uid)){
+await deleteDoc(doc(db,"rooms",roomId));
+reset();
+return;
+}
 
 p1.innerText=d.player1Name+" ("+d.score1+")";
 p2.innerText=(d.player2Name||"...")+" ("+d.score2+")";
 roundInfo.innerText="Round "+d.round+" / 7";
 
-if(d.state==="countdown"){
+if(d.state==="waiting"){
+bigText.innerText="Rakip Bekleniyor...";
+}
+
+else if(d.state==="countdown"){
 
 if(isHost && d.player2 && !d.startAt){
 await updateDoc(doc(db,"rooms",roomId),{
@@ -257,7 +291,6 @@ updateDoc(doc(db,"rooms",roomId),{state:"active"});
 }
 },1000);
 }
-
 }
 
 else if(d.state==="active"){
@@ -267,10 +300,11 @@ bigText.innerText="TAP!";
 else if(d.state==="result"){
 
 if(d.score1===4 || d.score2===4){
-const winnerName=d.score1===4?d.player1Name:d.player2Name;
-bigText.innerText="Kazanan: "+winnerName;
-launchConfetti();
+
+const winner=d.score1===4?d.player1Name:d.player2Name;
+bigText.innerText="Kazanan: "+winner;
 winSound();
+launchConfetti();
 
 setTimeout(async()=>{
 await deleteDoc(doc(db,"rooms",roomId));
@@ -278,6 +312,7 @@ reset();
 },4000);
 
 }else{
+
 setTimeout(async()=>{
 if(isHost){
 await updateDoc(doc(db,"rooms",roomId),{
@@ -286,7 +321,7 @@ state:"countdown",
 startAt:null
 });
 }
-},2000);
+},1500);
 }
 }
 });
@@ -295,8 +330,7 @@ startAt:null
 /* TAP */
 async function tap(e){
 e.preventDefault();
-if(tapLock||!roomId)return;
-
+if(tapLock || !roomId) return;
 tapLock=true;
 
 await runTransaction(db,async(t)=>{
@@ -308,7 +342,7 @@ if(d.state!=="active") return;
 
 if(uid===d.player1){
 t.update(ref,{score1:d.score1+1,state:"result"});
-}else{
+}else if(uid===d.player2){
 t.update(ref,{score2:d.score2+1,state:"result"});
 }
 });
@@ -350,12 +384,16 @@ pieces=pieces.filter(p=>p.y<canvas.height);
 if(pieces.length>0)requestAnimationFrame(animate);
 }
 
+/* RESET */
 function reset(){
-findBtn.style.display="block";
-bigText.innerText="";
+if(unsubscribe){
+unsubscribe();
+unsubscribe=null;
+}
 roomId=null;
+bigText.innerText="";
+findBtn.style.display="block";
 clearInterval(countdownInterval);
-if(unsubscribe) unsubscribe();
 }
 
 </script>
