@@ -21,7 +21,7 @@ min-height:100vh;
 overflow-x:hidden;
 }
 
-/* ===== TOP BAR ===== */
+/* TOPBAR */
 .topbar{
 position:fixed;
 top:0;
@@ -29,47 +29,14 @@ width:100%;
 height:60px;
 display:flex;
 align-items:center;
-justify-content:space-between;
-padding:0 20px;
+justify-content:center;
 background:rgba(15,20,35,.95);
 backdrop-filter:blur(10px);
 z-index:1000;
+font-weight:700;
 }
 
-.menu-btn{
-font-size:22px;
-cursor:pointer;
-}
-
-.logo{
-font-weight:800;
-font-size:18px;
-}
-
-.auth{
-display:flex;
-gap:10px;
-}
-
-.btn{
-padding:8px 14px;
-border-radius:15px;
-font-weight:600;
-cursor:pointer;
-border:none;
-}
-
-.btn-login{
-background:#1e2742;
-color:white;
-}
-
-.btn-register{
-background:#ffb300;
-color:black;
-}
-
-/* ===== CONTENT ===== */
+/* CONTENT */
 .content{
 padding:80px 20px 30px;
 }
@@ -83,31 +50,6 @@ display:flex;
 justify-content:space-between;
 align-items:center;
 box-shadow:0 8px 25px rgba(0,0,0,.5);
-transition:.2s;
-}
-
-.card:hover{
-transform:translateY(-3px);
-}
-
-.card-left{
-display:flex;
-align-items:center;
-gap:15px;
-}
-
-.icon{
-font-size:38px;
-}
-
-.card h3{
-font-size:20px;
-margin-bottom:5px;
-}
-
-.card p{
-font-size:14px;
-opacity:.7;
 }
 
 .card button{
@@ -119,8 +61,8 @@ font-weight:600;
 cursor:pointer;
 }
 
-/* ===== MODAL ===== */
-.modal-overlay{
+/* MODAL */
+.modal{
 position:fixed;
 top:0;
 left:0;
@@ -137,178 +79,232 @@ transition:.3s;
 z-index:2000;
 }
 
-.modal-overlay.active{
+.modal.active{
 opacity:1;
 pointer-events:auto;
 }
 
 .modal-box{
 width:90%;
-max-width:400px;
+max-width:420px;
 background:linear-gradient(145deg,#1a2238,#222c48);
 padding:25px;
 border-radius:20px;
-box-shadow:0 20px 50px rgba(0,0,0,.6);
-animation:popUp .3s ease;
+text-align:center;
+position:relative;
 }
 
-@keyframes popUp{
-from{transform:scale(.8);opacity:0;}
-to{transform:scale(1);opacity:1;}
-}
-
-.modal-header{
-display:flex;
-justify-content:space-between;
-align-items:center;
-margin-bottom:20px;
-}
-
-.modal-box h2{
-font-size:22px;
-}
-
-.close-btn{
+.close{
+position:absolute;
+right:15px;
+top:15px;
 cursor:pointer;
 font-size:20px;
-opacity:.7;
 }
 
-.modal-box label{
-font-size:14px;
-opacity:.8;
-}
-
-.modal-box input{
+input{
 width:100%;
-margin:10px 0 20px;
 padding:12px;
+margin:15px 0;
 border-radius:12px;
 border:none;
 background:#2b3555;
 color:white;
-font-size:15px;
-outline:none;
-}
-
-.modal-box button{
-width:100%;
-padding:12px;
-border:none;
-border-radius:15px;
-background:#ffb300;
-font-weight:600;
-cursor:pointer;
 }
 
 .result{
-margin-top:15px;
-text-align:center;
+margin-top:10px;
 font-weight:600;
 }
 
 .success{color:#00ff99;}
 .error{color:#ff4d4d;}
+
+/* WHEEL */
+.wheel-container{
+position:relative;
+width:250px;
+height:250px;
+margin:20px auto;
+}
+
+#wheel{
+width:100%;
+height:100%;
+border-radius:50%;
+border:6px solid #ffb300;
+background:conic-gradient(
+#1e90ff 0deg 90deg,
+#555 90deg 180deg,
+#1e90ff 180deg 270deg,
+#777 270deg 360deg
+);
+transition:transform 4s cubic-bezier(.17,.67,.83,.67);
+}
+
+.pointer{
+position:absolute;
+top:-10px;
+left:50%;
+transform:translateX(-50%);
+width:0;
+height:0;
+border-left:12px solid transparent;
+border-right:12px solid transparent;
+border-bottom:20px solid white;
+}
+
+.spin-btn{
+margin-top:20px;
+background:#ffb300;
+padding:12px;
+border:none;
+border-radius:15px;
+font-weight:600;
+cursor:pointer;
+width:100%;
+}
 </style>
 </head>
 
 <body>
 
-<div class="topbar">
-<div class="logo">BonusStyle Panel</div>
-<div class="auth">
-<button class="btn btn-login">Giriş</button>
-<button class="btn btn-register">Kayıt</button>
-</div>
-</div>
+<div class="topbar">BonusStyle Panel</div>
 
 <div class="content">
 
 <div class="card">
-<div class="card-left">
-<div class="icon">🎁</div>
-<div>
-<h3>Kod Gir</h3>
-<p>Canlı yayında paylaşılan kodu gir</p>
-</div>
-</div>
-<button onclick="openModal()">Kodu Gir</button>
+<div>Kod Gir</div>
+<button onclick="openCode()">Aç</button>
 </div>
 
 <div class="card">
-<div class="card-left">
-<div class="icon">🎡</div>
-<div>
-<h3>Çark Çevir</h3>
-<p>Günlük çarkını çevir</p>
-</div>
-</div>
-<button>Çevir</button>
-</div>
-
-<div class="card">
-<div class="card-left">
-<div class="icon">🚀</div>
-<div>
-<h3>Günlük Puan</h3>
-<p>Günlük giriş puanı al</p>
-</div>
-</div>
-<button>Al</button>
+<div>Çark Çevir</div>
+<button onclick="openWheel()">Aç</button>
 </div>
 
 </div>
 
-<!-- ===== MODAL ===== -->
-<div class="modal-overlay" id="codeModal">
-  <div class="modal-box">
-    <div class="modal-header">
-      <h2>Kod Gir</h2>
-      <span class="close-btn" onclick="closeModal()">✕</span>
-    </div>
+<!-- KOD MODAL -->
+<div class="modal" id="codeModal">
+<div class="modal-box">
+<span class="close" onclick="closeCode()">✕</span>
+<h2>Kod Gir</h2>
+<input type="text" id="codeInput" placeholder="Kod Yazınız">
+<button onclick="submitCode()" class="spin-btn">Kodu Gönder</button>
+<div class="result" id="codeResult"></div>
+</div>
+</div>
 
-    <label>Kod</label>
-    <input type="text" id="codeInput" placeholder="Kod Yazınız">
+<!-- WHEEL MODAL -->
+<div class="modal" id="wheelModal">
+<div class="modal-box">
+<span class="close" onclick="closeWheel()">✕</span>
+<h2>Şans Çarkı</h2>
 
-    <button onclick="submitCode()">Kodu Gönder</button>
+<div class="wheel-container">
+<div class="pointer"></div>
+<div id="wheel"></div>
+</div>
 
-    <div class="result" id="resultText"></div>
-  </div>
+<button class="spin-btn" onclick="spinWheel()">Çevir</button>
+<div class="result" id="wheelResult"></div>
+
+</div>
 </div>
 
 <script>
 
-function openModal(){
+/* ===== KOD SİSTEMİ ===== */
+
+function openCode(){
 document.getElementById("codeModal").classList.add("active");
 }
 
-function closeModal(){
+function closeCode(){
 document.getElementById("codeModal").classList.remove("active");
-document.getElementById("resultText").innerText="";
-document.getElementById("codeInput").value="";
+document.getElementById("codeResult").innerText="";
 }
 
 function submitCode(){
 const input=document.getElementById("codeInput").value.trim();
-const result=document.getElementById("resultText");
+const result=document.getElementById("codeResult");
 
-/* ÖRNEK GEÇERLİ KODLAR */
-const validCodes=["SOFT100","BONUS50","VIP2025"];
+const valid=["SOFT100","BONUS50","VIP2025"];
 
-if(validCodes.includes(input.toUpperCase())){
-result.innerText="Kod Başarılı! 🎉";
+if(valid.includes(input.toUpperCase())){
+result.innerText="Kod Başarılı 🎉";
 result.className="result success";
 }else{
-result.innerText="Kod Hatalı!";
+result.innerText="Kod Hatalı";
 result.className="result error";
 }
 }
 
-/* Modal dışına tıklayınca kapanma */
-document.getElementById("codeModal").addEventListener("click",function(e){
-if(e.target===this){
-closeModal();
+/* ===== ÇARK SİSTEMİ ===== */
+
+let spinning=false;
+
+function openWheel(){
+document.getElementById("wheelModal").classList.add("active");
+checkCooldown();
 }
+
+function closeWheel(){
+document.getElementById("wheelModal").classList.remove("active");
+document.getElementById("wheelResult").innerText="";
+}
+
+function checkCooldown(){
+const lastSpin=localStorage.getItem("lastSpin");
+if(!lastSpin) return;
+
+const now=Date.now();
+const diff=now - parseInt(lastSpin);
+
+if(diff < 86400000){
+document.getElementById("wheelResult").innerText="24 saat dolmadan tekrar çeviremezsiniz.";
+}
+}
+
+function spinWheel(){
+
+if(spinning) return;
+
+const lastSpin=localStorage.getItem("lastSpin");
+const now=Date.now();
+
+if(lastSpin && now - parseInt(lastSpin) < 86400000){
+document.getElementById("wheelResult").innerText="24 saat dolmadan tekrar çeviremezsiniz.";
+return;
+}
+
+spinning=true;
+
+const wheel=document.getElementById("wheel");
+const resultEl=document.getElementById("wheelResult");
+
+const prizes=["50 Puan","100 Puan","1000 Puan","2000 Puan"];
+const index=Math.floor(Math.random()*4);
+
+const rotate=360*5 + (index*90) + 45;
+
+wheel.style.transform=`rotate(${rotate}deg)`;
+
+setTimeout(()=>{
+resultEl.innerText="Kazandınız: "+prizes[index]+" 🎉";
+localStorage.setItem("lastSpin",Date.now());
+spinning=false;
+},4000);
+}
+
+/* MODAL DIŞI TIKLAMA */
+document.querySelectorAll(".modal").forEach(mod=>{
+mod.addEventListener("click",function(e){
+if(e.target===this){
+this.classList.remove("active");
+}
+});
 });
 
 </script>
