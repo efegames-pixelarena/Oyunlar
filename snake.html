@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Multiplayer Snake - Emirhan Efe</title>
+<title>3310 Snake Multiplayer - Emirhan Efe</title>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
 html,body{margin:0;padding:0;height:100%;overflow:hidden;background:#7c8f00;font-family:'Press Start 2P', monospace;display:flex;justify-content:center;align-items:center;}
@@ -19,10 +19,12 @@ canvas{background:#9bbc0f;image-rendering:pixelated;display:block;}
 </style>
 </head>
 <body>
+
 <div class="console">
   <div class="score">
     Skor: <span id="score">0</span> | High: <span id="high">0</span>
   </div>
+
   <div class="canvas-wrapper">
     <canvas id="game" width="300" height="300"></canvas>
     <div class="scanlines"></div>
@@ -32,6 +34,7 @@ canvas{background:#9bbc0f;image-rendering:pixelated;display:block;}
     </div>
     <div class="countdown" id="countdown"></div>
   </div>
+
   <div class="controls" id="controls">
     <div class="btn" id="matchBtn">Maç Bul</div>
     <div class="btn" id="createBtn">Oda Kur</div>
@@ -43,7 +46,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getDatabase, ref, set, onValue, onDisconnect } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-/* ---------------- FIREBASE ---------------- */
+/* ---------------- FIREBASE CONFIG ---------------- */
 const firebaseConfig = {
   apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
   authDomain:"emirhan-site.firebaseapp.com",
@@ -58,7 +61,8 @@ const auth = getAuth(app);
 const rtdb = getDatabase(app);
 
 /* ---------------- GAME VARIABLES ---------------- */
-let playerId=null,snake=[{x:150,y:150}],direction="RIGHT",score=0,otherSnake=[],food,gameStarted=false,roomId=null;
+let playerId=null,snake=[{x:150,y:150}],direction="RIGHT",score=0;
+let otherSnake=[],food,gameStarted=false,roomId=null;
 const box=15,size=300;
 const canvas=document.getElementById("game"),ctx=canvas.getContext("2d");
 const controlsDiv=document.getElementById("controls");
@@ -71,12 +75,12 @@ let lastMoveTime=0,baseSpeed=220,currentSpeed=220,minSpeed=80;
 /* ---------------- AUTH ---------------- */
 onAuthStateChanged(auth,user=>{if(user) playerId=user.uid; else alert("Giriş yapınız!");});
 
-/* ---------------- BUTTONS ---------------- */
+/* ---------------- BUTTON EVENTS ---------------- */
 matchBtn.onclick=findMatch;
 createBtn.onclick=createRoom;
 retryBtn.onclick=()=>{location.reload();};
 
-/* ---------------- MULTIPLAYER ---------------- */
+/* ---------------- MULTIPLAYER FUNCTIONS ---------------- */
 function createRoom(){roomId="room_"+Math.random().toString(36).substring(2,8); joinRoom(roomId,true);}
 function findMatch(){controlsDiv.innerHTML="Rakip Bekleniyor..."; onValue(ref(rtdb,'snakeRoom/rooms'),snap=>{const rooms=snap.val()||{}; for(const id in rooms){if(Object.keys(rooms[id].players).length===1){joinRoom(id,false); return;}} createRoom();},{onlyOnce:true});}
 
@@ -88,14 +92,14 @@ function joinRoom(rId,isCreator){
   if(isCreator){set(roomRef,{players:{[playerId]:{snake,dir:direction,score}},food:randomFood()});}
   controlsDiv.style.display="none";
 
-  // oyuncuları dinle
+  // diğer oyuncuyu izle
   onValue(ref(rtdb,'snakeRoom/rooms/'+roomId+'/players'),snap=>{
     const data=snap.val()||{}; otherSnake=[]; 
     for(const id in data){if(id!==playerId) otherSnake=data[id].snake;}
     if(Object.keys(data).length===2 && !gameStarted) countdownStart(10);
   });
 
-  // yiyeceği dinle
+  // yiyeceği izle
   onValue(ref(rtdb,'snakeRoom/rooms/'+roomId+'/food'),snap=>{food=snap.exists()?snap.val():randomFood(); if(!snap.exists()) set(ref(rtdb,'snakeRoom/rooms/'+roomId+'/food'),food);});
 }
 
@@ -106,7 +110,13 @@ function countdownStart(seconds){
 }
 
 /* ---------------- GAME LOOP ---------------- */
-document.addEventListener("keydown",e=>{if(!gameStarted) return; if(e.key==="ArrowUp" && direction!=="DOWN") direction="UP"; if(e.key==="ArrowDown" && direction!=="UP") direction="DOWN"; if(e.key==="ArrowLeft" && direction!=="RIGHT") direction="LEFT"; if(e.key==="ArrowRight" && direction!=="LEFT") direction="RIGHT";});
+document.addEventListener("keydown",e=>{
+  if(!gameStarted) return;
+  if(e.key==="ArrowUp" && direction!=="DOWN") direction="UP";
+  if(e.key==="ArrowDown" && direction!=="UP") direction="DOWN";
+  if(e.key==="ArrowLeft" && direction!=="RIGHT") direction="LEFT";
+  if(e.key==="ArrowRight" && direction!=="LEFT") direction="RIGHT";
+});
 
 function gameLoop(ts){if(!gameStarted) return; if(ts-lastMoveTime>currentSpeed){update(); lastMoveTime=ts;} draw(); requestAnimationFrame(gameLoop);}
 
