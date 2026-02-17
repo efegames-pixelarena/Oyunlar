@@ -26,12 +26,12 @@ import { getFirestore, doc, getDoc, updateDoc, increment } from "https://www.gst
 import { getDatabase, ref, set, get, remove, onValue, onDisconnect } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 const firebaseConfig = {
-  apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
-  authDomain:"emirhan-site.firebaseapp.com",
-  projectId:"emirhan-site",
-  storageBucket:"emirhan-site.firebasestorage.app",
-  messagingSenderId:"668871888390",
-  appId:"1:668871888390:web:76568bda84cb1641f7bd87"
+apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
+authDomain:"emirhan-site.firebaseapp.com",
+projectId:"emirhan-site",
+storageBucket:"emirhan-site.firebasestorage.app",
+messagingSenderId:"668871888390",
+appId:"1:668871888390:web:76568bda84cb1641f7bd87"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -45,7 +45,7 @@ let opponentId=null;
 let gameStartTime=null;
 let gameDuration=60000;
 let isPlaying=false;
-let alreadyMatched=false;
+let matched=false;
 
 const canvas=document.getElementById("game");
 const ctx=canvas.getContext("2d");
@@ -55,40 +55,30 @@ const size=300;
 let snake,dir,food,score;
 
 onAuthStateChanged(auth,user=>{
-if(!user){
-alert("Giriş gerekli");
-return;
-}
+if(!user){ alert("Giriş gerekli"); return; }
 currentUser=user;
 joinQueue();
 });
 
 async function joinQueue(){
 
-const userRef=doc(db,"users",currentUser.uid);
-const snap=await getDoc(userRef);
+const snap = await getDoc(doc(db,"users",currentUser.uid));
+if(!snap.exists()){ alert("users dokümanı yok"); return; }
 
-if(!snap.exists()){
-alert("Firestore users dokümanı yok!");
-return;
-}
-
-const elo=snap.data().elo || 1000;
+const elo = snap.data().elo || 1000;
 
 await set(ref(rtdb,"rankedQueue/"+currentUser.uid),{
 elo:elo,
 joinedAt:Date.now()
 });
 
-listenForMatch(elo);
+listenQueue(elo);
 }
 
-function listenForMatch(myElo){
+function listenQueue(myElo){
 
-const queueRef = ref(rtdb,"rankedQueue");
-
-onValue(queueRef, snap=>{
-if(!snap.exists() || alreadyMatched) return;
+onValue(ref(rtdb,"rankedQueue"), async snap=>{
+if(!snap.exists() || matched) return;
 
 const queue = snap.val();
 
@@ -98,12 +88,14 @@ if(uid === currentUser.uid) continue;
 
 if(Math.abs(queue[uid].elo - myElo) <= 100){
 
-// küçük UID oda kurar (çakışma önleme)
+matched = true;
+
 if(currentUser.uid < uid){
-createRoom(uid);
+await createRoom(uid);
+}else{
+waitForRoom(uid);
 }
 
-alreadyMatched=true;
 break;
 }
 
@@ -114,13 +106,10 @@ break;
 
 async function createRoom(opponent){
 
-if(roomId) return;
-
 roomId="room_"+Date.now();
 opponentId=opponent;
 
 await set(ref(rtdb,"gameRooms/"+roomId),{
-status:"playing",
 startTime:Date.now(),
 players:{
 [currentUser.uid]:{score:0,connected:true},
@@ -132,12 +121,40 @@ await remove(ref(rtdb,"rankedQueue/"+currentUser.uid));
 await remove(ref(rtdb,"rankedQueue/"+opponent]);
 
 listenRoom();
-startLocalGame();
+startGame();
+}
+
+function waitForRoom(opponent){
+
+onValue(ref(rtdb,"gameRooms"), snap=>{
+if(!snap.exists() || roomId) return;
+
+const rooms = snap.val();
+
+for(let id in rooms){
+
+if(rooms[id].players &&
+rooms[id].players[currentUser.uid] &&
+rooms[id].players[opponent]){
+
+roomId = id;
+opponentId = opponent;
+
+remove(ref(rtdb,"rankedQueue/"+currentUser.uid));
+
+listenRoom();
+startGame();
+break;
+}
+
+}
+
+});
 }
 
 function listenRoom(){
 
-const roomRef=ref(rtdb,"gameRooms/"+roomId);
+const roomRef = ref(rtdb,"gameRooms/"+roomId);
 
 onDisconnect(ref(rtdb,"gameRooms/"+roomId+"/players/"+currentUser.uid))
 .update({connected:false});
@@ -145,28 +162,28 @@ onDisconnect(ref(rtdb,"gameRooms/"+roomId+"/players/"+currentUser.uid))
 onValue(roomRef,snap=>{
 if(!snap.exists()) return;
 
-const data=snap.val();
-gameStartTime=data.startTime;
-const players=data.players;
+const data = snap.val();
+gameStartTime = data.startTime;
+
+const players = data.players;
 
 for(let uid in players){
-if(uid!==currentUser.uid){
-opponentId=uid;
+if(uid !== currentUser.uid){
+opponentId = uid;
 
-if(players[uid].connected===false){
-alert("Rakip bağlantıyı kaybetti. Kazandın!");
+if(players[uid].connected === false){
 finishMatch(true);
 }
 }
 }
 
-if(Date.now()-data.startTime>gameDuration){
+if(Date.now() - data.startTime > gameDuration){
 finishMatch(null);
 }
 });
 }
 
-function startLocalGame(){
+function startGame(){
 snake=[{x:150,y:150}];
 dir="RIGHT";
 food=randomFood();
@@ -193,8 +210,8 @@ if(roomId){
 set(ref(rtdb,"gameRooms/"+roomId+"/players/"+currentUser.uid+"/score"),score);
 }
 
-let timeLeft=Math.max(0,Math.floor((gameDuration-(Date.now()-gameStartTime))/1000));
-document.getElementById("timer").innerText="Süre: "+timeLeft;
+let left=Math.max(0,Math.floor((gameDuration-(Date.now()-gameStartTime))/1000));
+document.getElementById("timer").innerText="Süre: "+left;
 
 requestAnimationFrame(loop);
 }
@@ -203,10 +220,10 @@ function update(){
 let headX=snake[0].x;
 let headY=snake[0].y;
 
-if(dir==="UP")headY-=box;
-if(dir==="DOWN")headY+=box;
-if(dir==="LEFT")headX-=box;
-if(dir==="RIGHT")headX+=box;
+if(dir==="UP") headY-=box;
+if(dir==="DOWN") headY+=box;
+if(dir==="LEFT") headX-=box;
+if(dir==="RIGHT") headX+=box;
 
 if(headX<0||headY<0||headX>=size||headY>=size||collision(headX,headY)){
 isPlaying=false;
@@ -240,10 +257,10 @@ return snake.some(s=>s.x===x&&s.y===y);
 }
 
 document.addEventListener("keydown",e=>{
-if(e.key==="ArrowUp"&&dir!=="DOWN")dir="UP";
-if(e.key==="ArrowDown"&&dir!=="UP")dir="DOWN";
-if(e.key==="ArrowLeft"&&dir!=="RIGHT")dir="LEFT";
-if(e.key==="ArrowRight"&&dir!=="LEFT")dir="RIGHT";
+if(e.key==="ArrowUp"&&dir!=="DOWN") dir="UP";
+if(e.key==="ArrowDown"&&dir!=="UP") dir="DOWN";
+if(e.key==="ArrowLeft"&&dir!=="RIGHT") dir="LEFT";
+if(e.key==="ArrowRight"&&dir!=="LEFT") dir="RIGHT";
 });
 
 async function finishMatch(forceWin){
@@ -258,15 +275,12 @@ if(!snap.exists()) return;
 const players=snap.val().players;
 
 let myScore=players[currentUser.uid].score;
-let oppScore=players[opponentId]?.score || 0;
+let oppScore=players[opponentId]?.score||0;
 
 let win=false;
 
-if(forceWin===true){
-win=true;
-}else if(forceWin===null){
-if(myScore>oppScore) win=true;
-}
+if(forceWin===true) win=true;
+else if(forceWin===null && myScore>oppScore) win=true;
 
 if(win){
 alert("Kazandın!");
@@ -277,6 +291,7 @@ alert("Kaybettin!");
 
 await remove(ref(rtdb,"gameRooms/"+roomId));
 roomId=null;
+matched=false;
 }
 
 async function updateElo(winner,loser){
