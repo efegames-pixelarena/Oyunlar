@@ -14,12 +14,12 @@ flex-direction:column;
 height:100vh;
 overflow:hidden;
 color:white;
-animation:bgMove 6s infinite alternate;
-background:linear-gradient(-45deg,#7f1d1d,#1e3a8a,#111827,#4c1d95);
+background:linear-gradient(-45deg,#ff0000,#001eff,#8b0000,#00008b);
 background-size:400% 400%;
+animation:bg 6s infinite alternate ease-in-out;
 }
 
-@keyframes bgMove{
+@keyframes bg{
 0%{background-position:0% 50%}
 100%{background-position:100% 50%}
 }
@@ -27,7 +27,7 @@ background-size:400% 400%;
 .topbar{
 width:100%;
 padding:12px;
-background:#0f172acc;
+background:#000000aa;
 display:flex;
 justify-content:space-between;
 font-weight:bold;
@@ -54,7 +54,6 @@ font-size:16px;
 #bigText{
 font-size:90px;
 margin-top:20px;
-transition:.2s;
 }
 
 canvas{
@@ -115,50 +114,54 @@ let roomId=null;
 let isHost=false;
 let tapTimes=[];
 let tapLock=false;
-let lastSecond=null;
+let countdownStarted=false;
 
 /* ELEMENTS */
 const findBtn=document.getElementById("findBtn");
-const status=document.getElementById("status");
 const bigText=document.getElementById("bigText");
 const p1=document.getElementById("p1");
 const p2=document.getElementById("p2");
 const roundInfo=document.getElementById("roundInfo");
 
-/* AUTH + USERNAME ÇEKME */
+/* AUTH */
 onAuthStateChanged(auth,async(user)=>{
 if(!user){ await signInAnonymously(auth); return; }
 uid=user.uid;
 
-const userRef=doc(db,"users",uid);
-const snap=await getDoc(userRef);
+const ref=doc(db,"users",uid);
+const snap=await getDoc(ref);
+
 if(snap.exists()){
-username=snap.data().username||"Player";
+username=snap.data().username||("Player_"+uid.substring(0,4));
 }else{
-await setDoc(userRef,{username:"Player"});
+await setDoc(ref,{username:"Player_"+uid.substring(0,4)});
+username="Player_"+uid.substring(0,4);
 }
 });
 
-/* MATCHMAKING */
+/* MATCH BUL */
 findBtn.onclick=async()=>{
-status.innerText="Rakip aranıyor...";
+findBtn.style.display="none";
 
 const q=query(collection(db,"rooms"),
 where("state","==","waiting"));
 
 const snap=await getDocs(q);
-
 let joined=false;
 
 for(const r of snap.docs){
-if(r.data().player1!==uid && !r.data().player2){
+const d=r.data();
+
+if(d.player1!==uid && !d.player2){
 roomId=r.id;
 isHost=false;
+
 await updateDoc(doc(db,"rooms",roomId),{
 player2:uid,
 player2Name:username,
 state:"countdown"
 });
+
 joined=true;
 break;
 }
@@ -184,13 +187,13 @@ createdAt:serverTimestamp()
 }
 
 listenRoom();
-findBtn.style.display="none";
 };
 
-/* ROOM LISTENER */
+/* ROOM */
 function listenRoom(){
 onSnapshot(doc(db,"rooms",roomId),async(snap)=>{
 if(!snap.exists())return reset();
+
 const d=snap.data();
 
 p1.innerText=d.player1Name+" ("+d.score1+")";
@@ -198,7 +201,7 @@ p2.innerText=(d.player2Name||"...")+" ("+d.score2+")";
 roundInfo.innerText="Round "+d.round+" / 7";
 
 if(d.state==="countdown"){
-if(isHost && !d.startAt && d.player2){
+if(isHost && d.player2 && !d.startAt){
 await updateDoc(doc(db,"rooms",roomId),{
 startAt:Date.now()+3000
 });
@@ -207,12 +210,7 @@ startAt:Date.now()+3000
 if(d.startAt){
 const diff=d.startAt-Date.now();
 const sec=Math.ceil(diff/1000);
-
-if(sec!==lastSecond){
-lastSecond=sec;
 bigText.innerText=sec>0?sec:"GO!";
-}
-
 if(diff<=0){
 await updateDoc(doc(db,"rooms",roomId),{state:"active"});
 }
@@ -225,20 +223,21 @@ bigText.innerText="TAP!";
 
 else if(d.state==="result"){
 if(d.score1===4 || d.score2===4){
-bigText.innerText="Kazanan: "+(d.score1===4?d.player1Name:d.player2Name);
+const winnerName=d.score1===4?d.player1Name:d.player2Name;
+bigText.innerText="Kazanan: "+winnerName;
 launchConfetti();
+
 setTimeout(async()=>{
 await deleteDoc(doc(db,"rooms",roomId));
 reset();
 },4000);
+
 }else{
 setTimeout(async()=>{
-lastSecond=null;
 await updateDoc(doc(db,"rooms",roomId),{
 round:d.round+1,
-winner:null,
-startAt:null,
-state:"countdown"
+state:"countdown",
+startAt:null
 });
 },2000);
 }
@@ -246,7 +245,7 @@ state:"countdown"
 });
 }
 
-/* TAP + HİLE KORUMA */
+/* TAP + HİLE */
 async function tap(){
 
 if(tapLock||!roomId)return;
@@ -256,7 +255,7 @@ const now=Date.now();
 tapTimes.push(now);
 tapTimes=tapTimes.filter(t=>now-t<1000);
 
-if(tapTimes.length>15){
+if(tapTimes.length>12){
 alert("Hile tespit edildi!");
 reset();
 return;
@@ -268,13 +267,7 @@ const snap=await t.get(ref);
 if(!snap.exists())return;
 const d=snap.data();
 
-if(d.state!=="active"){
-if(uid===d.player1)
-t.update(ref,{score2:d.score2+1,state:"result"});
-else
-t.update(ref,{score1:d.score1+1,state:"result"});
-return;
-}
+if(d.state!=="active")return;
 
 if(uid===d.player1)
 t.update(ref,{score1:d.score1+1,state:"result"});
@@ -296,7 +289,7 @@ canvas.height=window.innerHeight;
 let pieces=[];
 
 function launchConfetti(){
-for(let i=0;i<150;i++){
+for(let i=0;i<200;i++){
 pieces.push({
 x:Math.random()*canvas.width,
 y:-20,
@@ -304,10 +297,10 @@ r:Math.random()*6+4,
 d:Math.random()*5+2
 });
 }
-animateConfetti();
+animate();
 }
 
-function animateConfetti(){
+function animate(){
 ctx.clearRect(0,0,canvas.width,canvas.height);
 pieces.forEach(p=>{
 p.y+=p.d;
@@ -317,7 +310,7 @@ ctx.fillStyle="hsl("+Math.random()*360+",100%,50%)";
 ctx.fill();
 });
 pieces=pieces.filter(p=>p.y<canvas.height);
-if(pieces.length>0)requestAnimationFrame(animateConfetti);
+if(pieces.length>0)requestAnimationFrame(animate);
 }
 
 function reset(){
@@ -325,7 +318,6 @@ findBtn.style.display="block";
 bigText.innerText="";
 roomId=null;
 tapTimes=[];
-lastSecond=null;
 }
 
 </script>
