@@ -316,12 +316,14 @@ const firebaseConfig = {
   /* OYUN GİRİŞ KONTROLÜ */
 window.checkLogin = function(page){
   const user = auth.currentUser;
-
   if(!user){
     alert("Lütfen giriş yapın.");
-    openLogin(); // giriş modalını aç
+    document.getElementById("authOverlay").style.display = "flex"; // Giriş modalını aç
     return;
   }
+  window.location.href = page;
+};
+</script>
 
   window.location.href = page;
 };
