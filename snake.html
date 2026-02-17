@@ -12,14 +12,14 @@ canvas { display:block; }
   color:white; background:rgba(0,0,0,0.6);
   padding:10px; border-radius:8px;
   font-size:14px; max-height:90vh; overflow-y:auto;
-  transition: all 0.5s;
+  transition: all 0.3s;
 }
 #totalScore {
   position:fixed; top:10px; left:10px;
   color:white; background:rgba(0,0,0,0.6);
   padding:10px; border-radius:8px;
   font-size:16px;
-  transition: all 0.5s;
+  transition: all 0.3s;
 }
 </style>
 </head>
@@ -56,7 +56,7 @@ let W = window.innerWidth, H = window.innerHeight;
 canvas.width = W; canvas.height = H;
 
 const MAP_SIZE = 10000; // Harita boyutu 10000x10000
-const MAX_FOODS = 600; // Yemler daha bol
+const MAX_FOODS = 600; // Daha fazla yem
 let players = {}, foods = [];
 let bots = [];
 let inputDir = {x:0,y:0};
@@ -65,7 +65,7 @@ const scoreboard = document.getElementById("scoreboard");
 const totalScoreEl = document.getElementById("totalScore");
 
 /* ---------------- MY SNAKE ---------------- */
-let mySnake = { body:[], x:Math.random()*MAP_SIZE, y:Math.random()*MAP_SIZE, speed:2, score:0, color:"#ffff00", maxSpeed:12 };
+let mySnake = { body:[], x:Math.random()*MAP_SIZE, y:Math.random()*MAP_SIZE, speed:4, maxSpeed:10, score:0, color:"#ffff00" };
 
 /* ---------------- TOUCH ---------------- */
 canvas.addEventListener("touchstart", handleTouch);
@@ -99,7 +99,7 @@ onAuthStateChanged(auth, user=>{
 
 /* ---------------- GAME LOOP ---------------- */
 function gameLoop(){
-  // Yılan yavaşça hızlanıyor
+  // Snake.io tarzı başlangıç hızı
   if(mySnake.speed < mySnake.maxSpeed) mySnake.speed += 0.002;
 
   updateMySnake();
@@ -151,7 +151,7 @@ function checkCollisions(){
 function render(){
   ctx.clearRect(0,0,W,H);
 
-  // Renkli Snake.io tarzı arka plan
+  // Snake.io tarzı renkli arka plan
   let gradient = ctx.createLinearGradient(0,0,W,H);
   let hue1 = (Date.now()/50)%360;
   let hue2 = (Date.now()/80)%360;
@@ -174,7 +174,7 @@ function render(){
   ctx.lineWidth=16;
   ctx.strokeRect(-camX, -camY, MAP_SIZE, MAP_SIZE);
 
-  // Yemler hızlı spam
+  // Yemler
   foods.forEach(f=>{ ctx.font="24px Arial"; ctx.fillText(f.type==="red"?"🍎":"🍏", f.x-camX, f.y-camY); });
 
   // Diğer oyuncular
@@ -183,7 +183,7 @@ function render(){
   // Ben
   drawSnake(mySnake, camX, camY, mySnake.color);
 
-  // Skor Sol Üst Renkli animasyon
+  // Skor Sol Üst Renkli
   let scoreHue = (Date.now()/5)%360;
   totalScoreEl.style.color = `hsl(${scoreHue},100%,50%)`;
   totalScoreEl.innerText = `Score: ${Math.floor(mySnake.score)}`;
