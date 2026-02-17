@@ -6,146 +6,46 @@
 <title>Bonus Soft</title>
 
 <style>
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:Arial, Helvetica, sans-serif;
-}
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial;}
+body{background:linear-gradient(180deg,#0f172a,#111827);color:white;}
 
-body{
-background:linear-gradient(180deg,#0f172a,#111827);
-color:white;
-}
+.header{display:flex;justify-content:space-between;align-items:center;padding:15px;background:#0b1220;}
+.logo{font-size:22px;font-weight:bold;background:linear-gradient(45deg,#00c6ff,#ff8c00);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.balance{font-weight:bold}
 
-/* ===== ÜST BAR ===== */
-.header{
-display:flex;
-justify-content:space-between;
-align-items:center;
-padding:15px;
-background:#0b1220;
-}
+.banner{width:100%;height:150px;background:url('https://picsum.photos/800/300') center/cover;border-radius:10px;margin:15px auto;}
 
-.logo{
-font-size:22px;
-font-weight:bold;
-background:linear-gradient(45deg,#00c6ff,#ff8c00);
--webkit-background-clip:text;
--webkit-text-fill-color:transparent;
-}
+.card{background:#1f2937;margin:15px;padding:20px;border-radius:15px;box-shadow:0 5px 15px rgba(0,0,0,0.4);}
+.card h2{margin-bottom:10px;}
+.card p{color:#9ca3af;margin-bottom:15px;}
 
-.header-buttons button{
-margin-left:10px;
-padding:8px 15px;
-border:none;
-border-radius:8px;
-font-weight:bold;
-cursor:pointer;
-}
+.btn{background:#f59e0b;color:black;padding:10px 15px;border:none;border-radius:8px;cursor:pointer;font-weight:bold;width:100%;}
+input{padding:10px;border-radius:8px;border:none;width:100%;margin-bottom:10px;}
 
-.login{
-background:#1f2937;
-color:white;
-}
-
-.register{
-background:#f59e0b;
-color:black;
-}
-
-/* ===== BANNER ===== */
-.banner{
-width:100%;
-height:150px;
-background:url('https://picsum.photos/800/300') center/cover;
-border-radius:10px;
-margin:15px auto;
-}
-
-/* ===== CARD ===== */
-.card{
-background:#1f2937;
-margin:15px;
-padding:20px;
-border-radius:15px;
-box-shadow:0 5px 15px rgba(0,0,0,0.4);
-}
-
-.card h2{
-margin-bottom:10px;
-}
-
-.card p{
-color:#9ca3af;
-margin-bottom:15px;
-}
-
-.btn{
-background:#f59e0b;
-color:black;
-padding:10px 15px;
-border:none;
-border-radius:8px;
-cursor:pointer;
-font-weight:bold;
-}
-
-/* ===== ÇARK ===== */
-.wheel-container{
-position:relative;
-width:250px;
-height:250px;
-margin:20px auto;
-}
-
-#wheel{
-width:100%;
-height:100%;
-border-radius:50%;
-border:8px solid #f59e0b;
-transition:transform 4s ease-out;
-}
-
-.pointer{
-position:absolute;
-top:-10px;
-left:50%;
-transform:translateX(-50%);
-width:0;
-height:0;
-border-left:10px solid transparent;
-border-right:10px solid transparent;
-border-bottom:20px solid white;
-}
+.wheel-container{position:relative;width:250px;height:250px;margin:20px auto;}
+#wheel{width:100%;height:100%;border-radius:50%;border:8px solid #f59e0b;transition:transform 4s ease-out;}
+.pointer{position:absolute;top:-10px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:10px solid transparent;border-right:10px solid transparent;border-bottom:20px solid white;}
 </style>
 </head>
 <body>
 
-<!-- ===== ÜST BAR ===== -->
 <div class="header">
 <div class="logo">BonusSoft</div>
-<div class="header-buttons">
-<button class="login">Giriş</button>
-<button class="register">Kayıt</button>
-</div>
+<div class="balance">Bakiye: <span id="balance">0</span> ₺</div>
 </div>
 
-<!-- ===== BANNER ===== -->
 <div class="banner"></div>
 
-<!-- ===== KOD GİR ALANI ===== -->
 <div class="card">
 <h2>Kod Gir</h2>
-<p>Canlı yayında paylaşılan kodu gir</p>
-<input type="text" placeholder="Kodu buraya yaz" style="padding:10px;border-radius:8px;border:none;width:100%;margin-bottom:10px;">
-<button class="btn">Kodu Gir</button>
+<p>Aktif bonus kodunu gir</p>
+<input type="text" id="codeInput" placeholder="Kodu yaz">
+<button class="btn" onclick="useCode()">Kodu Kullan</button>
 </div>
 
-<!-- ===== ÇARK ÇEVİR ALANI ===== -->
 <div class="card">
 <h2>Çarkı Çevir</h2>
-<p>Günlük çarkını çevir.</p>
+<p>Günlük ödül kazan</p>
 
 <div class="wheel-container">
 <div class="pointer"></div>
@@ -155,52 +55,112 @@ border-bottom:20px solid white;
 <button class="btn" onclick="spinWheel()">Çarkı Çevir</button>
 </div>
 
-<script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { 
+  getFirestore, doc, getDoc, updateDoc, increment, setDoc 
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
+  authDomain:"emirhan-site.firebaseapp.com",
+  projectId:"emirhan-site",
+  storageBucket:"emirhan-site.firebasestorage.app",
+  messagingSenderId:"668871888390",
+  appId:"1:668871888390:web:76568bda84cb1641f7bd87"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+let currentUser = null;
+
+onAuthStateChanged(auth, async(user)=>{
+if(!user){
+alert("Giriş yapmanız gerekiyor.");
+window.location.href="index.html";
+}else{
+currentUser = user;
+const snap = await getDoc(doc(db,"users",user.uid));
+document.getElementById("balance").innerText = snap.data().balance;
+}
+});
+
+/* ==================== ÇARK ==================== */
+
 const canvas = document.getElementById("wheel");
 const ctx = canvas.getContext("2d");
 
-const segments = [
-{color:"#3b82f6", text:"50"},
-{color:"#6b7280", text:"100"},
-{color:"#2563eb", text:"1000"},
-{color:"#9ca3af", text:"2000"}
-];
+const rewards = [50,100,1000,2000];
+const angle = 2*Math.PI/rewards.length;
 
-const angle = 2 * Math.PI / segments.length;
-
-function drawWheel(){
-for(let i=0;i<segments.length;i++){
+for(let i=0;i<rewards.length;i++){
 ctx.beginPath();
 ctx.moveTo(125,125);
 ctx.arc(125,125,125,i*angle,(i+1)*angle);
-ctx.fillStyle = segments[i].color;
+ctx.fillStyle = i%2==0 ? "#3b82f6" : "#6b7280";
 ctx.fill();
 ctx.save();
 ctx.translate(125,125);
-ctx.rotate(i*angle + angle/2);
+ctx.rotate(i*angle+angle/2);
 ctx.fillStyle="white";
 ctx.font="bold 16px Arial";
-ctx.fillText(segments[i].text+" PUAN",60,5);
+ctx.fillText(rewards[i]+"₺",60,5);
 ctx.restore();
 }
-}
-
-drawWheel();
 
 let rotation = 0;
 
-function spinWheel(){
-const random = Math.floor(Math.random()*segments.length);
-const extraSpins = 5;
-const totalRotation = (360*extraSpins) + (360/segments.length)*random;
+window.spinWheel = async function(){
+const index = Math.floor(Math.random()*rewards.length);
+const prize = rewards[index];
 
-rotation += totalRotation;
-
+rotation += 360*5 + (360/rewards.length)*index;
 canvas.style.transform = `rotate(${rotation}deg)`;
 
-setTimeout(()=>{
-alert("Kazandınız: " + segments[random].text + " PUAN");
+setTimeout(async()=>{
+await updateDoc(doc(db,"users",currentUser.uid),{
+balance: increment(prize)
+});
+alert(prize+"₺ bakiyene eklendi!");
 },4000);
+}
+
+/* ==================== KOD SİSTEMİ ==================== */
+
+window.useCode = async function(){
+const code = document.getElementById("codeInput").value.trim().toUpperCase();
+if(!code) return alert("Kod gir.");
+
+const codeRef = doc(db,"codes",code);
+const codeSnap = await getDoc(codeRef);
+
+if(!codeSnap.exists()) return alert("Kod geçersiz.");
+
+const data = codeSnap.data();
+
+if(!data.active) return alert("Kod pasif.");
+if(data.limit <= 0) return alert("Kod kullanım hakkı dolmuş.");
+
+/* Kullanıcı daha önce kullanmış mı */
+if(data.usedBy && data.usedBy.includes(currentUser.uid)){
+return alert("Bu kodu zaten kullandın.");
+}
+
+/* Bakiyeye ekle */
+await updateDoc(doc(db,"users",currentUser.uid),{
+balance: increment(data.reward)
+});
+
+/* Kod limit azalt */
+await updateDoc(codeRef,{
+limit: increment(-1),
+usedBy: [...(data.usedBy || []), currentUser.uid]
+});
+
+alert(data.reward+"₺ bakiyene eklendi!");
 }
 </script>
 
