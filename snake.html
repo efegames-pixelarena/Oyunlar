@@ -27,7 +27,7 @@ canvas { display:block; }
 
 <canvas id="gameCanvas"></canvas>
 <div id="scoreboard"></div>
-<div id="totalScore">Score: 0</div>
+<div id="totalScore">Score: 0 | Online: 0</div>
 <audio id="eatSound" src="https://freesound.org/data/previews/342/342756_3248244-lq.mp3"></audio>
 
 <script type="module">
@@ -55,8 +55,8 @@ const ctx = canvas.getContext("2d");
 let W = window.innerWidth, H = window.innerHeight;
 canvas.width = W; canvas.height = H;
 
-const MAP_SIZE = 10000000; // 10 milyon x 10 milyon
-const MAX_FOODS = 1000; // Daha hızlı ve çok yem
+const MAP_SIZE = 100000; // 100 bin x 100 bin
+const MAX_FOODS = 500; // Daha çok ve hızlı yem
 let players = {}, foods = [];
 let inputDir = {x:0,y:0};
 const eatSound = document.getElementById("eatSound");
@@ -90,7 +90,10 @@ onAuthStateChanged(auth, user=>{
   onDisconnect(playerRef).remove();
 
   const playersRef = ref(db, "players");
-  onValue(playersRef, snap=>{ players = snap.val() || {}; updateScoreboard(); });
+  onValue(playersRef, snap=>{
+    players = snap.val() || {};
+    updateScoreboard();
+  });
 
   for(let i=0;i<MAX_FOODS;i++) foods.push(randomFood());
 
@@ -133,13 +136,8 @@ function checkCollisions(){
 function render(){
   ctx.clearRect(0,0,W,H);
 
-  // Snake.io tarzı gradient arka plan
-  let gradient = ctx.createLinearGradient(0,0,W,H);
-  let hue1 = (Date.now()/50)%360;
-  let hue2 = (Date.now()/80)%360;
-  gradient.addColorStop(0, `hsl(${hue1},50%,10%)`);
-  gradient.addColorStop(1, `hsl(${hue2},50%,20%)`);
-  ctx.fillStyle = gradient;
+  // Sabit renkli arka plan
+  ctx.fillStyle="#1e1e1e";
   ctx.fillRect(0,0,W,H);
 
   // Grid
@@ -161,20 +159,22 @@ function render(){
   visibleFoods.forEach(f=>{ ctx.font="24px Arial"; ctx.fillText(f.type==="red"?"🍎":"🍏", f.x-camX, f.y-camY); });
 
   // Diğer oyuncular sadece görünürdeyse render
+  let onlineCount = 0;
   for(let id in players){
     const p = players[id];
     if(Math.abs(p.x-mySnake.x)<W && Math.abs(p.y-mySnake.y)<H){
       drawSnake(p, camX, camY, id===auth.currentUser.uid?mySnake.color:"#00ffff");
     }
+    if(players[id].alive) onlineCount++;
   }
 
   // Ben
   drawSnake(mySnake, camX, camY, mySnake.color);
 
-  // Skor Sol Üst
+  // Sol üstte skor + online oyuncu
   let scoreHue = (Date.now()/5)%360;
   totalScoreEl.style.color = `hsl(${scoreHue},100%,50%)`;
-  totalScoreEl.innerText = `Score: ${Math.floor(mySnake.score)}`;
+  totalScoreEl.innerText = `Score: ${Math.floor(mySnake.score)} | Online: ${onlineCount}`;
 
   // Skor Tablosu Sağ Üst
   updateScoreboard();
