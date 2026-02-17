@@ -50,17 +50,7 @@ font-size:16px;
 #bigText{
 font-size:90px;
 margin-top:20px;
-transition:transform .3s ease, opacity .3s ease;
-}
-
-.countAnim{
-animation:pop .7s ease;
-}
-
-@keyframes pop{
-0%{transform:scale(.3);opacity:0}
-50%{transform:scale(1.2);opacity:1}
-100%{transform:scale(1);opacity:1}
+transition:transform .2s ease;
 }
 </style>
 </head>
@@ -85,16 +75,19 @@ import {
 getFirestore, doc, setDoc, updateDoc,
 deleteDoc, onSnapshot,
 collection, query, where, getDocs,
-serverTimestamp, runTransaction, getDoc
+serverTimestamp, runTransaction
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {
 getAuth, onAuthStateChanged, signInAnonymously
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const firebaseConfig={
-apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
-authDomain:"emirhan-site.firebaseapp.com",
-projectId:"emirhan-site",
+apiKey:"XXX",
+authDomain:"XXX",
+projectId:"XXX",
+storageBucket:"XXX",
+messagingSenderId:"XXX",
+appId:"XXX"
 };
 
 const app=initializeApp(firebaseConfig);
@@ -102,13 +95,11 @@ const db=getFirestore(app);
 const auth=getAuth(app);
 
 let uid=null;
-let username="Player";
 let roomId=null;
 let isHost=false;
+let roomUnsub=null;
+let countdownInterval=null;
 let tapLock=false;
-let audioCtx=null;
-let localPing=0;
-let lastSecondShown=null;
 
 const findBtn=document.getElementById("findBtn");
 const status=document.getElementById("status");
@@ -117,196 +108,87 @@ const p1=document.getElementById("p1");
 const p2=document.getElementById("p2");
 const roundInfo=document.getElementById("roundInfo");
 
-/* AUDIO */
-function unlockAudio(){
-if(!audioCtx){
-audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-}
-if(audioCtx.state==="suspended"){
-audioCtx.resume();
-}
-}
-function beep(freq,dur=180){
-unlockAudio();
-const o=audioCtx.createOscillator();
-const g=audioCtx.createGain();
-o.connect(g); g.connect(audioCtx.destination);
-o.frequency.value=freq;
-o.start();
-g.gain.setValueAtTime(.4,audioCtx.currentTime);
-g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+dur/1000);
-o.stop(audioCtx.currentTime+dur/1000);
-}
-document.addEventListener("touchstart",unlockAudio,{once:true});
-document.addEventListener("mousedown",unlockAudio,{once:true});
-
-/* AUTH + USERNAME */
 onAuthStateChanged(auth,async(user)=>{
 if(!user){ await signInAnonymously(auth); return; }
-
 uid=user.uid;
-
-const userRef=doc(db,"users",uid);
-const snap=await getDoc(userRef);
-
-if(snap.exists()){
-username=snap.data().username;
-}else{
-username="Player_"+uid.slice(0,4);
-await setDoc(userRef,{username});
-}
 });
-
-/* PING */
-async function measurePing(){
-const start=performance.now();
-await setDoc(doc(db,"pingTest",uid),{t:serverTimestamp()});
-localPing=Math.floor((performance.now()-start)/2);
-}
 
 /* MATCH */
 findBtn.onclick=async()=>{
-unlockAudio();
-await measurePing();
 status.innerText="Rakip aranıyor...";
 
 const q=query(collection(db,"rooms"),
 where("state","==","waiting"),
-where("player2","==",null)
-);
+where("player2","==",null));
 
 const snap=await getDocs(q);
 
-for(const docSnap of snap.docs){
-
-if(docSnap.data().player1!==uid){
-
 let joined=false;
 
-await runTransaction(db,async(t)=>{
-const ref=doc(db,"rooms",docSnap.id);
-const s=await t.get(ref);
-if(!s.exists()) return;
-const d=s.data();
-
-if(d.player2==null && d.player1!==uid){
-
-t.update(ref,{
+for(const r of snap.docs){
+if(r.data().player1!==uid){
+roomId=r.id;
+isHost=false;
+await updateDoc(doc(db,"rooms",roomId),{
 player2:uid,
-player2Name:username,
-player2Ping:localPing,
 state:"countdown"
 });
-
-roomId=docSnap.id;
-isHost=false;
 joined=true;
-}
-});
-
-if(joined){
-listenRoom();
-return;
-}
+break;
 }
 }
 
-/* oda yoksa oluştur */
+if(!joined){
 const newRoom=doc(collection(db,"rooms"));
 roomId=newRoom.id;
 isHost=true;
-
 await setDoc(newRoom,{
 player1:uid,
-player1Name:username,
-player1Ping:localPing,
 player2:null,
-player2Name:null,
-player2Ping:null,
-round:1,
 score1:0,
 score2:0,
+round:1,
 state:"waiting",
 winner:null,
-startAt:null,
 createdAt:serverTimestamp()
 });
+}
 
 listenRoom();
+findBtn.style.display="none";
 };
 
-/* LISTEN */
 function listenRoom(){
-onSnapshot(doc(db,"rooms",roomId),(snap)=>{
+if(roomUnsub) roomUnsub();
+
+roomUnsub=onSnapshot(doc(db,"rooms",roomId),(snap)=>{
 if(!snap.exists()){ reset(); return; }
 
 const d=snap.data();
 
-p1.innerText=d.player1Name+" ("+d.score1+")";
-p2.innerText=(d.player2Name||"...")+" ("+d.score2+")";
+p1.innerText="P1 ("+d.score1+")";
+p2.innerText="P2 ("+d.score2+")";
 roundInfo.innerText="Round "+d.round+" / 7";
 
-/* eşleşme olduysa buton gizle */
-if(d.player2){
-findBtn.style.display="none";
-status.innerText="";
-}
-
-/* COUNTDOWN */
 if(d.state==="countdown"){
-
-if(isHost && !d.startAt && d.player2){
-
-const avgPing=((d.player1Ping||0)+(d.player2Ping||0))/2;
-const startAt=Date.now()+3000+avgPing;
-
-updateDoc(doc(db,"rooms",roomId),{startAt});
+startCountdown(d);
 }
 
-if(d.startAt){
-
-const diff=d.startAt-Date.now();
-const sec=Math.ceil(diff/1000);
-
-if(sec!==lastSecondShown){
-lastSecondShown=sec;
-
-bigText.classList.remove("countAnim");
-void bigText.offsetWidth;
-bigText.classList.add("countAnim");
-
-if(sec>0){
-bigText.innerText=sec;
-beep(600);
-}else{
-bigText.innerText="GO!";
-beep(1200);
-}
-}
-
-if(diff<=0 && d.state==="countdown"){
-updateDoc(doc(db,"rooms",roomId),{state:"active"});
-}
-}
-}
-
-else if(d.state==="active"){
+if(d.state==="active"){
 bigText.innerText="TAP!";
 }
 
-else if(d.state==="result"){
+if(d.state==="result"){
 bigText.innerText=d.winner===uid?"Kazandın":"Kaybettin";
 
 setTimeout(async()=>{
-if(d.score1>=7 || d.score2>=7){
+if(d.score1===7||d.score2===7){
 await deleteDoc(doc(db,"rooms",roomId));
 reset();
 }else{
-lastSecondShown=null;
 await updateDoc(doc(db,"rooms",roomId),{
 round:d.round+1,
 winner:null,
-startAt:null,
 state:"countdown"
 });
 }
@@ -315,20 +197,47 @@ state:"countdown"
 });
 }
 
-/* TAP */
+/* ===== GERİ SAYIM DÜZELTİLDİ ===== */
+function startCountdown(d){
+
+if(countdownInterval) clearInterval(countdownInterval);
+
+if(isHost){
+updateDoc(doc(db,"rooms",roomId),{
+startAt: Date.now()+3000
+});
+}
+
+let localStart = d.startAt || Date.now()+3000;
+
+countdownInterval=setInterval(()=>{
+let diff = localStart - Date.now();
+let sec = Math.ceil(diff/1000);
+
+if(sec>0){
+bigText.innerText=sec;
+}else{
+bigText.innerText="GO!";
+clearInterval(countdownInterval);
+updateDoc(doc(db,"rooms",roomId),{state:"active"});
+}
+},100);
+}
+
+/* ===== TAP DÜZELTİLDİ ===== */
 async function tap(){
-if(tapLock||!roomId) return;
-tapLock=true;
+if(tapLock || !roomId) return;
+
+const ref=doc(db,"rooms",roomId);
 
 await runTransaction(db,async(t)=>{
-const ref=doc(db,"rooms",roomId);
 const snap=await t.get(ref);
 if(!snap.exists()) return;
 const d=snap.data();
 
-if(d.state!=="active") return;
-if(Date.now()<d.startAt) return;
-if(d.winner) return;
+if(d.state!=="active" || d.winner) return;
+
+tapLock=true;
 
 if(uid===d.player1){
 t.update(ref,{score1:d.score1+1,winner:uid,state:"result"});
@@ -337,14 +246,14 @@ t.update(ref,{score2:d.score2+1,winner:uid,state:"result"});
 }
 });
 
-setTimeout(()=>tapLock=false,150);
+setTimeout(()=>tapLock=false,200);
 }
 
 function reset(){
+if(countdownInterval) clearInterval(countdownInterval);
 findBtn.style.display="block";
 bigText.innerText="";
 roomId=null;
-lastSecondShown=null;
 }
 
 document.addEventListener("mousedown",tap);
