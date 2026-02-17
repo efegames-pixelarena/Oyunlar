@@ -102,13 +102,13 @@ canvas{
     <div>Rakip: <span id="opponentScore">0</span></div>
   </div>
 
-  <canvas id="gameCanvas" width="500" height="500"></canvas>
+  <canvas id="gameCanvas" width="300" height="300"></canvas>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, doc, setDoc, onSnapshot, updateDoc, serverTimestamp, query, where, getDocs, collection } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getAuth, onAuthStateChanged, signOut, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const firebaseConfig={
   apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
@@ -153,7 +153,7 @@ document.getElementById("logoutBtn").onclick=async()=>{
   location.href="index.html";
 };
 
-/* FIND MATCH */
+/* MATCH FIND */
 findBtn.onclick = async()=>{
   matchMessage.innerText = "Rakip Aranıyor...";
   findBtn.style.display="none";
@@ -180,14 +180,13 @@ findBtn.onclick = async()=>{
     }
   }
 
-  // Eğer uygun oda yoksa yeni oda aç
   if(!joined){
     const newRoom = doc(collection(db,"rooms"));
     roomId = newRoom.id;
     await setDoc(newRoom,{
       player1: uid, player1Name: username,
       player2: null, player2Name: null,
-      player1Score: 0, player2Score: 0,
+      playerScore: 0, opponentScore: 0,
       state: "waiting",
       createdAt: serverTimestamp()
     });
@@ -203,18 +202,15 @@ function listenRoom(){
     const d = snap.data();
     if(!d) return;
 
-    // Kullanıcı adları
     if(d.player1Name) playerNameEl.innerText = d.player1Name;
     if(d.player2Name && d.player2Name!==username) opponentNameEl.innerText = d.player2Name;
 
-    // Rakip aranıyor
     if(d.state==="waiting"){
       scoreContainer.style.display="none";
       matchMessage.innerText="Rakip Aranıyor...";
       canvas.style.display="none";
     }
 
-    // Countdown
     if(d.state==="countdown"){
       scoreContainer.style.display="none";
       let diff = Math.ceil((d.startAt - Date.now())/1000);
@@ -223,7 +219,6 @@ function listenRoom(){
       canvas.style.display="none";
     }
 
-    // Oyun başlıyor
     if(d.state==="active"){
       scoreContainer.style.display="flex";
       canvas.style.display="block";
@@ -239,14 +234,81 @@ function listenRoom(){
   });
 }
 
-/* Oyun - Basit başlangıç */
+/* ---------------- SNAKE OYUNU ---------------- */
+let snake, direction, food, score;
+let box = 15, size = 300;
+let gameInterval;
+
 function startSnakeGame(){
+  // Reset
+  snake=[{x:150,y:150}];
+  direction="RIGHT";
+  score=0;
+  food=randomFood();
+  playerScoreEl.innerText=0;
+  opponentScoreEl.innerText=0;
+
+  document.addEventListener("keydown", e=>{
+    if(e.key==="ArrowUp" && direction!=="DOWN") direction="UP";
+    if(e.key==="ArrowDown" && direction!=="UP") direction="DOWN";
+    if(e.key==="ArrowLeft" && direction!=="RIGHT") direction="LEFT";
+    if(e.key==="ArrowRight" && direction!=="LEFT") direction="RIGHT";
+  });
+
+  if(gameInterval) clearInterval(gameInterval);
+  gameInterval = setInterval(gameLoop,150);
+}
+
+function randomFood(){
+  let isRed = Math.random()<0.1; // kırmızı elma nadir
+  return {
+    x: Math.floor(Math.random()*(size/box))*box,
+    y: Math.floor(Math.random()*(size/box))*box,
+    type: isRed?"red":"green"
+  }
+}
+
+function gameLoop(){
+  let headX = snake[0].x;
+  let headY = snake[0].y;
+
+  if(direction==="UP") headY -= box;
+  if(direction==="DOWN") headY += box;
+  if(direction==="LEFT") headX -= box;
+  if(direction==="RIGHT") headX += box;
+
+  // Collision
+  if(headX<0 || headY<0 || headX>=size || headY>=size || snake.some(s=>s.x===headX && s.y===headY)){
+    clearInterval(gameInterval);
+    alert("Oyun Bitti! Skor: "+score);
+    return;
+  }
+
+  // Eat food
+  if(headX===food.x && headY===food.y){
+    score += (food.type==="red"?30:10);
+    playerScoreEl.innerText = score;
+    food = randomFood();
+  } else {
+    snake.pop();
+  }
+
+  snake.unshift({x:headX,y:headY});
+
+  draw();
+}
+
+function draw(){
   ctx.fillStyle="#9bbc0f";
-  ctx.fillRect(0,0,canvas.width,canvas.height);
-  ctx.fillStyle="#0f380f";
-  ctx.font="20px Arial";
+  ctx.fillRect(0,0,size,size);
+  snake.forEach(s=>{
+    ctx.fillStyle="#0f380f";
+    ctx.fillRect(s.x,s.y,box,box);
+  });
+  ctx.font="14px Arial";
   ctx.textAlign="center";
-  ctx.fillText("Oyun Başladı!", canvas.width/2, canvas.height/2);
+  ctx.textBaseline="middle";
+  ctx.fillText(food.type==="red"?"🍎":"🍏",food.x+box/2,food.y+box/2);
 }
 </script>
 </body>
