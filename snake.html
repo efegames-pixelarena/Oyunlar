@@ -65,6 +65,7 @@ let playerId = null;
 let snake = [{x:150,y:150}], direction = "RIGHT", score = 0;
 let otherSnake = [], food, gameStarted = false;
 let roomId = null;
+let countdownInterval = null;
 const box = 15, size = 300;
 
 const canvas = document.getElementById("game");
@@ -107,7 +108,6 @@ function findMatch(){
         return;
       }
     }
-    // yoksa kendi oda
     createRoom();
   }, {onlyOnce:true});
 }
@@ -123,7 +123,7 @@ function joinRoom(rId,isCreator){
     set(roomRef,{players:{[playerId]:{snake,dir:direction,score}},food:randomFood()});
   }
 
-  // diğer oyuncuyu izle
+  // diğer oyuncuyu izle ve geri sayımı başlat
   onValue(ref(rtdb,'snakeRoom/rooms/'+roomId+'/players'), snap=>{
     const data = snap.val() || {};
     otherSnake = [];
@@ -133,8 +133,14 @@ function joinRoom(rId,isCreator){
       }
     }
     const playerCount = Object.keys(data).length;
-    if(playerCount===2 && !gameStarted){
+
+    if(playerCount===2 && !gameStarted && countdownInterval===null){
       countdownStart(10);
+    } else if(playerCount<2 && !gameStarted){
+      countdownEl.style.display = "block";
+      countdownEl.innerText = "Rakip Bekleniyor...";
+      if(countdownInterval) clearInterval(countdownInterval);
+      countdownInterval = null;
     }
   });
 
@@ -147,7 +153,7 @@ function joinRoom(rId,isCreator){
     }
   });
 
-  controlsDiv.style.display = "none"; // butonları gizle
+  controlsDiv.style.display = "none"; // match/oda tuşlarını gizle
 }
 
 /* ---------------- COUNTDOWN ---------------- */
@@ -155,12 +161,13 @@ function countdownStart(seconds){
   countdownEl.style.display = "block";
   let s = seconds;
   countdownEl.innerText = s;
-  const interval = setInterval(()=>{
+  countdownInterval = setInterval(()=>{
     s--;
-    countdownEl.innerText = s;
+    if(s>0) countdownEl.innerText = s;
     if(s<=0){
-      clearInterval(interval);
-      countdownEl.style.display="none";
+      clearInterval(countdownInterval);
+      countdownInterval = null;
+      countdownEl.style.display = "none";
       gameStarted = true;
       requestAnimationFrame(gameLoop);
     }
