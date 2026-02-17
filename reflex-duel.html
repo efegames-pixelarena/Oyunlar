@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Reflex Duel V3</title>
+<title>Reflex Duel Pro</title>
 <style>
 body{
 margin:0;
@@ -11,30 +11,52 @@ background:#0f172a;
 color:white;
 font-family:Arial;
 display:flex;
-justify-content:center;
+flex-direction:column;
 align-items:center;
 height:100vh;
-flex-direction:column;
 }
+
+.topbar{
+width:100%;
+padding:10px;
+background:#1e293b;
+display:flex;
+justify-content:space-between;
+font-weight:bold;
+}
+
+#game{
+flex:1;
+display:flex;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+}
+
 button{
 padding:15px 30px;
-margin:10px;
 border:none;
 border-radius:8px;
-font-size:16px;
 font-weight:bold;
 cursor:pointer;
 }
-#status{margin-top:15px;font-weight:bold}
-#bigText{font-size:60px;margin-top:40px}
-.hidden{display:none}
+
+#bigText{font-size:60px;margin-top:20px}
 </style>
 </head>
 <body>
 
+<div class="topbar">
+<div id="p1">...</div>
+<div id="roundInfo">Round 1 / 7</div>
+<div id="p2">...</div>
+</div>
+
+<div id="game">
 <button id="findBtn">Maç Bul</button>
 <div id="status"></div>
-<div id="bigText" class="hidden"></div>
+<div id="bigText"></div>
+</div>
 
 <script type="module">
 
@@ -42,13 +64,13 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import {
 getFirestore, doc, setDoc, updateDoc,
 deleteDoc, onSnapshot,
+collection, query, where, getDocs,
 serverTimestamp, runTransaction
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {
-getAuth, signInAnonymously, onAuthStateChanged
+getAuth, onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-/* CONFIG */
 const firebaseConfig={
 apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
 authDomain:"emirhan-site.firebaseapp.com",
@@ -62,125 +84,124 @@ const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 const auth=getAuth(app);
 
-const findBtn=document.getElementById("findBtn");
-const status=document.getElementById("status");
-const bigText=document.getElementById("bigText");
-
 let uid=null;
+let username=null;
 let roomId=null;
 let isHost=false;
 let roomUnsub=null;
-let audioCtx=null;
 let tapLock=false;
+
+const findBtn=document.getElementById("findBtn");
+const status=document.getElementById("status");
+const bigText=document.getElementById("bigText");
+const p1=document.getElementById("p1");
+const p2=document.getElementById("p2");
+const roundInfo=document.getElementById("roundInfo");
 
 /* AUTH */
 onAuthStateChanged(auth,async(user)=>{
-if(!user){await signInAnonymously(auth);return;}
+if(!user)return;
+
 uid=user.uid;
+
+const userDoc=await getDocs(query(collection(db,"users"),where("__name__","==",uid)));
+if(!userDoc.empty){
+username=userDoc.docs[0].data().username;
+}
 });
 
-/* AUDIO */
-function unlockAudio(){
-if(!audioCtx){
-audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-}
-}
-function beep(freq){
-if(!audioCtx)return;
-const o=audioCtx.createOscillator();
-const g=audioCtx.createGain();
-o.connect(g); g.connect(audioCtx.destination);
-o.frequency.value=freq;
-o.start();
-g.gain.setValueAtTime(.3,audioCtx.currentTime);
-g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.2);
-o.stop(audioCtx.currentTime+.2);
-}
-
-/* MATCHMAKING (GLOBAL LOCK) */
+/* MATCH */
 findBtn.onclick=async()=>{
-if(!uid)return;
-unlockAudio();
+
 status.innerText="Rakip aranıyor...";
-findBtn.disabled=true;
 
-await runTransaction(db,async(t)=>{
-const queueRef=doc(db,"system","matchmaking");
-const queueSnap=await t.get(queueRef);
+/* Açık oda var mı? */
+const q=query(collection(db,"rooms"),
+where("state","==","waiting"),
+where("player2","==",null));
 
-if(!queueSnap.exists()){
-t.set(queueRef,{waiting:uid});
-return;
-}
+const snap=await getDocs(q);
 
-const data=queueSnap.data();
+if(!snap.empty){
+/* Katıl */
+const openRoom=snap.docs[0];
+roomId=openRoom.id;
+isHost=false;
 
-if(!data.waiting){
-t.update(queueRef,{waiting:uid});
-}
-else if(data.waiting!==uid){
+await updateDoc(doc(db,"rooms",roomId),{
+player2:uid,
+player2Name:username,
+state:"countdown"
+});
 
-roomId=crypto.randomUUID();
+listenRoom();
+startGame();
+
+}else{
+/* Yeni oda */
+const newRoom=doc(collection(db,"rooms"));
+roomId=newRoom.id;
 isHost=true;
 
-t.set(doc(db,"rooms",roomId),{
-player1:data.waiting,
-player2:uid,
-state:"countdown",
-count:3,
+await setDoc(newRoom,{
+player1:uid,
+player2:null,
+player1Name:username,
+player2Name:null,
+round:1,
+score1:0,
+score2:0,
+state:"waiting",
 winner:null,
 createdAt:serverTimestamp()
 });
 
-t.update(queueRef,{waiting:null});
+listenRoom();
+startGame();
 }
-});
-
-listenForRoom();
 };
 
-/* ROOM LISTENER */
-function listenForRoom(){
-roomUnsub=onSnapshot(doc(db,"system","matchmaking"),async(snap)=>{
-if(!snap.exists())return;
-
-const roomsSnap=await onSnapshotRoomSearch();
-});
-
-}
-
-async function onSnapshotRoomSearch(){
-const roomRef=doc(db,"rooms",roomId);
-if(!roomId)return;
-
-roomUnsub=onSnapshot(roomRef,(snap)=>{
+function listenRoom(){
+roomUnsub=onSnapshot(doc(db,"rooms",roomId),(snap)=>{
 if(!snap.exists()){
 reset();
 return;
 }
-updateUI(snap.data());
+
+const d=snap.data();
+
+p1.innerText=d.player1Name+" ("+d.score1+")";
+p2.innerText=(d.player2Name||"...")+" ("+d.score2+")";
+roundInfo.innerText="Round "+d.round+" / 7";
+
+if(d.state==="countdown"){
+bigText.innerText="Hazır!";
+setTimeout(()=>{
+updateDoc(doc(db,"rooms",roomId),{state:"active"});
+},1000);
+}
+else if(d.state==="active"){
+bigText.innerText="TAP!";
+}
+else if(d.state==="result"){
+bigText.innerText=d.winner===uid?"Kazandın":"Kaybettin";
+
+setTimeout(async()=>{
+if(d.score1===7||d.score2===7){
+await deleteDoc(doc(db,"rooms",roomId));
+reset();
+}else{
+await updateDoc(doc(db,"rooms",roomId),{
+round:d.round+1,
+winner:null,
+state:"countdown"
+});
+}
+},2000);
+}
 });
 }
 
-/* COUNTDOWN */
-async function startCountdown(){
-if(!isHost)return;
-let c=3;
-
-const int=setInterval(async()=>{
-await updateDoc(doc(db,"rooms",roomId),{count:c});
-beep(600);
-c--;
-
-if(c<0){
-clearInterval(int);
-await updateDoc(doc(db,"rooms",roomId),{state:"active"});
-beep(1200);
-}
-},1000);
-}
-
-/* TAP */
 async function tap(){
 if(tapLock||!roomId)return;
 tapLock=true;
@@ -193,40 +214,36 @@ if(!snap.exists())return;
 const d=snap.data();
 if(d.state!=="active"||d.winner)return;
 
-t.update(ref,{winner:uid,state:"result"});
+if(uid===d.player1){
+t.update(ref,{
+score1:d.score1+1,
+winner:uid,
+state:"result"
+});
+}else{
+t.update(ref,{
+score2:d.score2+1,
+winner:uid,
+state:"result"
+});
+}
 });
 
 setTimeout(()=>tapLock=false,200);
 }
 
-/* UI */
-function updateUI(d){
-bigText.classList.remove("hidden");
-
-if(d.state==="countdown"){
-if(isHost)startCountdown();
-bigText.innerText=d.count>0?d.count:"GO!";
-}
-else if(d.state==="active"){
-bigText.innerText="TAP!";
-}
-else if(d.state==="result"){
-bigText.innerText=d.winner===uid?"Kazandın":"Kaybettin";
-}
+function startGame(){
+findBtn.style.display="none";
 }
 
 function reset(){
-findBtn.disabled=false;
-findBtn.classList.remove("hidden");
-bigText.classList.add("hidden");
+findBtn.style.display="block";
 bigText.innerText="";
 roomId=null;
 }
 
-/* EVENTS */
-document.addEventListener("touchstart",tap);
 document.addEventListener("mousedown",tap);
-document.addEventListener("keydown",e=>{if(e.code==="Space")tap();});
+document.addEventListener("touchstart",tap);
 
 </script>
 </body>
