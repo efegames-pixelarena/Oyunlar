@@ -313,20 +313,6 @@ const firebaseConfig = {
   appId:"1:668871888390:web:76568bda84cb1641f7bd87"
 };
 
-  /* OYUN GİRİŞ KONTROLÜ */
-window.checkLogin = function(page){
-  const user = auth.currentUser;
-  if(!user){
-    alert("Lütfen giriş yapın.");
-    document.getElementById("authOverlay").style.display = "flex"; // Giriş modalını aç
-    return;
-  }
-  window.location.href = page;
-};
-
-  window.location.href = page;
-};
-
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -377,7 +363,7 @@ function openRegister(){
 loginBtn.onclick = openLogin;
 registerBtn.onclick = openRegister;
 
-/* SWITCH DÜZELTİLDİ */
+/* SWITCH */
 switchMode.onclick = () => {
   if(isLogin){
     openRegister();
@@ -386,20 +372,29 @@ switchMode.onclick = () => {
   }
 };
 
+/* OYUN GİRİŞ KONTROLÜ */
+window.checkLogin = function(page){
+  const user = auth.currentUser;
+  if(!user){
+    window.location.href = "login.html"; // Giriş sayfasına yönlendir
+    return;
+  }
+  window.location.href = page;
+};
+
 /* SUBMIT */
 authSubmit.onclick = async () => {
   const email = authEmail.value;
   const password = authPassword.value;
   const username = authUsername.value;
 
-  if(!email || !password) return alert("Tüm alanları doldur.");
+  if(!email || !password) return;
 
   try{
     if(isLogin){
       await signInWithEmailAndPassword(auth,email,password);
-      alert("Giriş başarılı.");
     }else{
-      if(!username) return alert("Kullanıcı adı gir.");
+      if(!username) return;
       const userCredential = await createUserWithEmailAndPassword(auth,email,password);
       await setDoc(doc(db,"users",userCredential.user.uid),{
         balance:10000,
@@ -407,7 +402,6 @@ authSubmit.onclick = async () => {
         email:email,
         createdAt:new Date()
       });
-      alert("Kayıt başarılı. 10.000₺ yüklendi.");
     }
 
     overlay.style.display="none";
@@ -415,7 +409,7 @@ authSubmit.onclick = async () => {
     authPassword.value="";
     authUsername.value="";
   }catch(e){
-    alert(e.message);
+    console.error(e.message);
   }
 };
 
@@ -433,7 +427,6 @@ onAuthStateChanged(auth,(user)=>{
         balanceText.innerText="💵 "+snap.data().balance+"₺";
       }
     });
-
   }else{
     loginBtn.style.display="inline-block";
     registerBtn.style.display="inline-block";
@@ -446,9 +439,6 @@ onAuthStateChanged(auth,(user)=>{
 /* ÇIKIŞ */
 logoutBtn.onclick = async ()=>{
   await signOut(auth);
-  alert("Çıkış yapıldı.");
+  window.location.href = "login.html"; // çıkış sonrası giriş sayfasına yönlendir
 };
 </script>
-
-</body>
-</html>
