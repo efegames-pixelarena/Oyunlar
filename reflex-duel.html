@@ -111,7 +111,8 @@ let isHost=false;
 let roomUnsub=null;
 let tapLock=false;
 let audioCtx=null;
-let countdownRunning=false;
+let localPing=0;
+let lastSecondShown=null;
 
 const findBtn=document.getElementById("findBtn");
 const status=document.getElementById("status");
@@ -120,7 +121,7 @@ const p1=document.getElementById("p1");
 const p2=document.getElementById("p2");
 const roundInfo=document.getElementById("roundInfo");
 
-/* AUDIO (iOS SAFE) */
+/* AUDIO (TÜM CİHAZLAR) */
 function unlockAudio(){
 if(!audioCtx){
 audioCtx=new (window.AudioContext||window.webkitAudioContext)();
@@ -130,7 +131,7 @@ audioCtx.resume();
 }
 }
 function beep(freq,dur=180){
-if(!audioCtx)return;
+unlockAudio();
 const o=audioCtx.createOscillator();
 const g=audioCtx.createGain();
 o.connect(g); g.connect(audioCtx.destination);
@@ -140,24 +141,30 @@ g.gain.setValueAtTime(.4,audioCtx.currentTime);
 g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+dur/1000);
 o.stop(audioCtx.currentTime+dur/1000);
 }
+document.addEventListener("touchstart",unlockAudio,{once:true});
+document.addEventListener("mousedown",unlockAudio,{once:true});
 
 /* AUTH */
 onAuthStateChanged(auth,async(user)=>{
 if(!user){ await signInAnonymously(auth); return; }
 uid=user.uid;
-
-const userDoc=await getDocs(query(collection(db,"users"),where("__name__","==",uid)));
-if(!userDoc.empty){
-username=userDoc.docs[0].data().username;
-}
 });
+
+/* PING ÖLÇÜM */
+async function measurePing(){
+const start=performance.now();
+const ref=doc(collection(db,"pingTest"));
+await setDoc(ref,{t:serverTimestamp()});
+await getDocs(query(collection(db,"pingTest")));
+localPing=Math.floor(performance.now()-start);
+}
 
 /* MATCH */
 findBtn.onclick=async()=>{
 unlockAudio();
+await measurePing();
 status.innerText="Rakip aranıyor...";
 
-/* Açık oda var mı (kendi odası hariç) */
 const q=query(collection(db,"rooms"),
 where("state","==","waiting"),
 where("player2","==",null));
@@ -167,7 +174,7 @@ const snap=await getDocs(q);
 let joined=false;
 
 for(const docSnap of snap.docs){
-if(docSnap.data().player1 !== uid){
+if(docSnap.data().player1!==uid){
 roomId=docSnap.id;
 isHost=false;
 
@@ -176,12 +183,12 @@ const ref=doc(db,"rooms",roomId);
 const s=await t.get(ref);
 if(!s.exists())return;
 const d=s.data();
-if(d.player2==null && d.player1!==uid){
+if(d.player1!==uid && d.player2==null){
 t.update(ref,{
 player2:uid,
 player2Name:username,
-state:"countdown",
-count:3
+player2Ping:localPing,
+state:"countdown"
 });
 joined=true;
 }
@@ -196,7 +203,7 @@ startGame();
 return;
 }
 
-/* Yeni oda oluştur */
+/* Yeni oda */
 const newRoom=doc(collection(db,"rooms"));
 roomId=newRoom.id;
 isHost=true;
@@ -206,11 +213,11 @@ player1:uid,
 player2:null,
 player1Name:username,
 player2Name:null,
+player1Ping:localPing,
 round:1,
 score1:0,
 score2:0,
 state:"waiting",
-count:3,
 winner:null,
 createdAt:serverTimestamp()
 });
@@ -229,16 +236,56 @@ p1.innerText=d.player1Name+" ("+d.score1+")";
 p2.innerText=(d.player2Name||"...")+" ("+d.score2+")";
 roundInfo.innerText="Round "+d.round+" / 7";
 
+/* Disconnect auto win */
+if(d.player1 && !d.player2 && d.state!=="waiting"){
+if(uid===d.player1){
+updateDoc(doc(db,"rooms",roomId),{
+score1:d.score1+1,
+winner:d.player1,
+state:"result"
+});
+}
+}
+
+/* COUNTDOWN SENKRON */
 if(d.state==="countdown"){
-renderCountdown(d.count);
-if(isHost && !countdownRunning){
-countdownRunning=true;
-startCountdown();
+
+if(isHost && !d.startAt && d.player2){
+const avgPing=((d.player1Ping||0)+(d.player2Ping||0))/2;
+const startAt=Date.now()+3500+avgPing;
+updateDoc(doc(db,"rooms",roomId),{startAt});
+}
+
+if(d.startAt){
+const diff=d.startAt-Date.now();
+const sec=Math.ceil(diff/1000);
+
+if(sec!==lastSecondShown){
+lastSecondShown=sec;
+
+bigText.classList.remove("countAnim");
+void bigText.offsetWidth;
+bigText.classList.add("countAnim");
+
+if(sec>0){
+bigText.innerText=sec;
+beep(600);
+}else{
+bigText.innerText="GO!";
+beep(1300);
 }
 }
+
+if(diff<=0 && d.state==="countdown"){
+updateDoc(doc(db,"rooms",roomId),{state:"active"});
+}
+}
+}
+
 else if(d.state==="active"){
 bigText.innerText="TAP!";
 }
+
 else if(d.state==="result"){
 bigText.innerText=d.winner===uid?"Kazandın":"Kaybettin";
 
@@ -247,48 +294,17 @@ if(d.score1===7||d.score2===7){
 await deleteDoc(doc(db,"rooms",roomId));
 reset();
 }else{
-countdownRunning=false;
+lastSecondShown=null;
 await updateDoc(doc(db,"rooms",roomId),{
 round:d.round+1,
 winner:null,
-state:"countdown",
-count:3
+startAt:null,
+state:"countdown"
 });
 }
 },2000);
 }
 });
-}
-
-/* HOST COUNTDOWN */
-function startCountdown(){
-let c=3;
-
-const interval=setInterval(async()=>{
-await updateDoc(doc(db,"rooms",roomId),{count:c});
-
-if(c>0){
-beep(600);
-}else{
-beep(1300);
-}
-
-c--;
-
-if(c<0){
-clearInterval(interval);
-await updateDoc(doc(db,"rooms",roomId),{state:"active"});
-}
-},1000);
-}
-
-/* RENDER */
-function renderCountdown(c){
-bigText.classList.remove("countAnim");
-void bigText.offsetWidth;
-bigText.classList.add("countAnim");
-
-bigText.innerText = c>0 ? c : "GO!";
 }
 
 /* TAP */
@@ -300,7 +316,6 @@ await runTransaction(db,async(t)=>{
 const ref=doc(db,"rooms",roomId);
 const snap=await t.get(ref);
 if(!snap.exists())return;
-
 const d=snap.data();
 if(d.state!=="active"||d.winner)return;
 
@@ -310,7 +325,6 @@ t.update(ref,{score1:d.score1+1,winner:uid,state:"result"});
 t.update(ref,{score2:d.score2+1,winner:uid,state:"result"});
 }
 });
-
 setTimeout(()=>tapLock=false,150);
 }
 
@@ -322,7 +336,7 @@ function reset(){
 findBtn.style.display="block";
 bigText.innerText="";
 roomId=null;
-countdownRunning=false;
+lastSecondShown=null;
 }
 
 document.addEventListener("mousedown",tap);
