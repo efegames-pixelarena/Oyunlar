@@ -7,7 +7,6 @@
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;}
-
 body{
 background:linear-gradient(-45deg,#ff0000,#001eff,#8b0000,#00008b,#ff1a1a,#0015ff);
 background-size:600% 600%;
@@ -40,18 +39,7 @@ animation:shine 3s linear infinite;
 }
 @keyframes shine{to{background-position:200% center;}}
 .right-menu{display:flex;gap:10px;align-items:center;}
-.nav-box{
-padding:6px 14px;
-border-radius:14px;
-font-weight:700;
-font-size:13px;
-min-width:95px;
-text-align:center;
-background:#273c8f;
-overflow:hidden;
-text-overflow:ellipsis;
-white-space:nowrap;
-}
+.nav-box{padding:6px 14px;border-radius:14px;font-weight:700;font-size:13px;min-width:95px;text-align:center;background:#273c8f;}
 .btn{padding:6px 12px;border-radius:12px;border:none;cursor:pointer;font-weight:700;font-size:13px;}
 .logout-btn{background:#ff3b3b;color:white;}
 
@@ -67,49 +55,20 @@ font-weight:bold;
 .score-top{
 display:flex;
 justify-content:space-between;
-align-items:center;
-padding:10px 10px;
-gap:6px;
+padding:8px 14px;
+background:rgba(0,0,0,0.75);
 }
 
-.player1Box,.player2Box,.roundBox{
-flex:1;
-min-width:0;
-text-align:center;
-padding:6px 8px;
-border-radius:8px;
-overflow:hidden;
-text-overflow:ellipsis;
-white-space:nowrap;
-font-size:14px;
-}
-
-.player1Box{background:#0d47a1;animation:blueAnim 1.2s infinite alternate;}
-.player2Box{background:#8b0000;animation:redAnim 1.2s infinite alternate;}
-.roundBox{background:#000;animation:blackAnim 1.2s infinite alternate;}
-
-@keyframes blueAnim{0%{box-shadow:0 0 5px #007bff;}100%{box-shadow:0 0 20px #00c3ff;}}
-@keyframes redAnim{0%{box-shadow:0 0 5px #ff0000;}100%{box-shadow:0 0 20px #ff4d4d;}}
-@keyframes blackAnim{0%{box-shadow:0 0 5px #000;}100%{box-shadow:0 0 20px #222;}}
-
-/* ROUND BAR SYNC */
 .round-bar{
 display:flex;
 height:6px;
 width:100%;
-background:#111;
-}
-.round-blue{
-width:50%;
-background:#0066ff;
-transition:width .3s ease;
-}
-.round-red{
-width:50%;
-background:#ff0000;
-transition:width .3s ease;
 }
 
+.round-blue{flex:1;background:#0066ff;}
+.round-red{flex:1;background:#ff0000;}
+
+/* GAME */
 #game{
 flex:1;
 display:flex;
@@ -119,16 +78,16 @@ align-items:center;
 text-align:center;
 padding:10px;
 }
-
 button{
 padding:12px 20px;border:none;border-radius:10px;
 font-weight:bold;cursor:pointer;
 background:linear-gradient(90deg,#ffb300,#ff5500);
 margin-top:10px;
 }
-
 #bigText{font-size:clamp(32px,10vw,70px);min-height:90px;margin-top:20px;font-weight:800;}
 #subText{margin-top:10px;font-size:18px;}
+.winEffect{animation:winAnim 0.6s infinite alternate;}
+@keyframes winAnim{from{transform:scale(1);}to{transform:scale(1.15);}}
 .lobby{margin-top:15px;display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
 input{padding:8px;border-radius:8px;border:none;}
 </style>
@@ -145,18 +104,24 @@ input{padding:8px;border-radius:8px;border:none;}
 
 <div class="scoreboard" id="scoreboard">
 <div class="score-top">
-<div id="p1" class="player1Box"></div>
-<div id="roundInfo" class="roundBox"></div>
-<div id="p2" class="player2Box"></div>
+<div id="p1"></div>
+<div id="roundInfo"></div>
+<div id="p2"></div>
 </div>
 <div class="round-bar">
-<div class="round-blue" id="roundBlue"></div>
-<div class="round-red" id="roundRed"></div>
+<div class="round-blue"></div>
+<div class="round-red"></div>
 </div>
 </div>
 
 <div id="game">
 <button id="findBtn">Maç Bul</button>
+
+<div class="lobby" id="lobbyBox">
+<input id="roomCodeInput" placeholder="Oda Kodu">
+<button id="createRoomBtn">Oda Kur</button>
+<button id="joinCodeBtn">Katıl</button>
+</div>
 
 <div id="bigText"></div>
 <div id="subText"></div>
@@ -186,19 +151,20 @@ const db=getFirestore(app);
 const auth=getAuth(app);
 
 let uid,username,roomId,unsubscribe,tapLock=false;
-let countdownInterval=null;
+let localDrift=0;
 
+/* DOM */
 const scoreboard=document.getElementById("scoreboard");
 const bigText=document.getElementById("bigText");
 const subText=document.getElementById("subText");
 const p1=document.getElementById("p1");
 const p2=document.getElementById("p2");
 const roundInfo=document.getElementById("roundInfo");
-const roundBlue=document.getElementById("roundBlue");
-const roundRed=document.getElementById("roundRed");
 const findBtn=document.getElementById("findBtn");
+const lobbyBox=document.getElementById("lobbyBox");
 const afterMatch=document.getElementById("afterMatch");
 
+/* AUTH */
 onAuthStateChanged(auth,async(user)=>{
 if(!user){location.href="index.html";return;}
 uid=user.uid;
@@ -213,40 +179,33 @@ await signOut(auth);
 location.href="index.html";
 };
 
+/* AUTO ROOM CLOSE ON EXIT */
 window.addEventListener("beforeunload",async()=>{
 if(roomId) await deleteDoc(doc(db,"rooms",roomId));
 });
 
-/* MATCH FIND FIXED */
+/* MATCH FIND */
 findBtn.onclick=async()=>{
 findBtn.style.display="none";
+lobbyBox.style.display="none";
 bigText.innerText="Rakip Aranıyor...";
 
 const q=query(collection(db,"rooms"),where("state","==","waiting"));
 const snap=await getDocs(q);
-
 let joined=false;
 
 for(const r of snap.docs){
 const d=r.data();
 if(d.player1!==uid && !d.player2){
-await runTransaction(db,async(t)=>{
-const ref=doc(db,"rooms",r.id);
-const roomSnap=await t.get(ref);
-if(!roomSnap.exists())return;
-const roomData=roomSnap.data();
-if(roomData.player1!==uid && !roomData.player2 && roomData.state==="waiting"){
-t.update(ref,{
+roomId=r.id;
+await updateDoc(doc(db,"rooms",roomId),{
 player2:uid,
 player2Name:username,
 state:"matched",
 matchedAt:Date.now()
 });
-roomId=r.id;
 joined=true;
-}
-});
-if(joined) break;
+break;
 }
 }
 
@@ -262,6 +221,7 @@ score1:0,
 score2:0,
 round:1,
 state:"waiting",
+rematchRequest:null,
 createdAt:serverTimestamp()
 });
 }
@@ -269,72 +229,75 @@ createdAt:serverTimestamp()
 listenRoom();
 };
 
+/* ROOM LISTENER */
 function listenRoom(){
 if(unsubscribe)unsubscribe();
 
 unsubscribe=onSnapshot(doc(db,"rooms",roomId),async(snap)=>{
-if(!snap.exists()){location.reload();return;}
+if(!snap.exists()){
+location.reload();
+return;
+}
+
 const d=snap.data();
 scoreboard.style.display="flex";
 
-/* SCORE UI FIX */
-let myScore,enemyScore;
+/* Rakip her zaman Player2 */
 if(uid===d.player1){
-myScore=d.score1;
-enemyScore=d.score2;
 p1.innerText=d.player1Name+" ("+d.score1+")";
 p2.innerText=(d.player2Name||"...")+" ("+d.score2+")";
 }else{
-myScore=d.score2;
-enemyScore=d.score1;
 p1.innerText=d.player2Name+" ("+d.score2+")";
 p2.innerText=d.player1Name+" ("+d.score1+")";
 }
 
-/* ROUND SYNC BAR */
-let total=myScore+enemyScore;
-let blueWidth=50;
-if(total>0){
-let diff=myScore-enemyScore;
-blueWidth=50+(diff*12.5);
-if(blueWidth<5)blueWidth=5;
-if(blueWidth>95)blueWidth=95;
-}
-roundBlue.style.width=blueWidth+"%";
-roundRed.style.width=(100-blueWidth)+"%";
-
 roundInfo.innerText="Round "+d.round+" / 7";
 
-/* STATES */
-
-if(d.state==="matched"){
+/* REMATCH REQUEST */
+if(d.rematchRequest && d.rematchRequest!==uid){
+afterMatch.innerHTML=`
+<div>Rakip Senle Tekrar Oynamak İstiyor</div>
+<button id="acceptRematch">Oyna</button>
+<button id="declineRematch">Yeni Maç Bul</button>
+`;
+document.getElementById("acceptRematch").onclick=async()=>{
 await updateDoc(doc(db,"rooms",roomId),{
+score1:0,score2:0,round:1,state:"countdown",
+startAt:Date.now()+5000,
+rematchRequest:null
+});
+afterMatch.innerHTML="";
+};
+document.getElementById("declineRematch").onclick=async()=>{
+await deleteDoc(doc(db,"rooms",roomId));
+location.reload();
+};
+}
+
+/* GAME STATES */
+if(d.state==="matched"){
+setTimeout(()=>updateDoc(doc(db,"rooms",roomId),{
 state:"countdown",
 startAt:Date.now()+5000
-});
+}),1000);
 }
 
 if(d.state==="countdown"){
-if(countdownInterval) clearInterval(countdownInterval);
-countdownInterval=setInterval(async()=>{
+let int=setInterval(()=>{
 let diff=d.startAt-Date.now();
 if(diff<=0){
-clearInterval(countdownInterval);
-await updateDoc(doc(db,"rooms",roomId),{
+clearInterval(int);
+updateDoc(doc(db,"rooms",roomId),{
 state:"active",
 roundStart:Date.now()
 });
 }else{
 bigText.innerText=Math.ceil(diff/1000);
 }
-},250);
+},1000);
 }
 
-if(d.state==="active"){
-bigText.innerText="TAP!";
-subText.innerText="";
-afterMatch.innerHTML="";
-}
+if(d.state==="active"){bigText.innerText="TAP!";}
 
 if(d.state==="result"){
 bigText.innerText=d.lastWinner+" Kazandı!";
@@ -342,8 +305,15 @@ subText.innerText=d.reaction+" ms";
 
 if(d.score1===4||d.score2===4){
 afterMatch.innerHTML=`
+<button id="rematchBtn">⌛️ Rakiple Yeniden Oyna</button>
 <button id="newMatchBtn">⚽️ Yeni Maç Bul</button>
 `;
+
+document.getElementById("rematchBtn").onclick=async()=>{
+await updateDoc(doc(db,"rooms",roomId),{
+rematchRequest:uid
+});
+};
 
 document.getElementById("newMatchBtn").onclick=async()=>{
 await deleteDoc(doc(db,"rooms",roomId));
@@ -352,8 +322,8 @@ location.reload();
 return;
 }
 
-setTimeout(async()=>{
-await updateDoc(doc(db,"rooms",roomId),{
+setTimeout(()=>{
+updateDoc(doc(db,"rooms",roomId),{
 round:d.round+1,
 state:"countdown",
 startAt:Date.now()+5000
@@ -363,6 +333,7 @@ startAt:Date.now()+5000
 });
 }
 
+/* TAP */
 document.addEventListener("pointerdown",async()=>{
 if(tapLock||!roomId)return;
 tapLock=true;
