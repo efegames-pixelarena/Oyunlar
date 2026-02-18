@@ -9,19 +9,14 @@
     *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;}
     
     body {
-        height:100vh;
-        width: 100vw;
-        overflow:hidden;
+        height:100vh; width: 100vw; overflow:hidden;
         font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
         background: radial-gradient(circle at 50% 50%, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.5) 100%),
                     linear-gradient(135deg, #073d1c 0%, #0a5d2a 50%, #063d1c 100%);
-        color:white;
-        touch-action:manipulation;
-        display: flex;
-        flex-direction: column;
+        color:white; touch-action:manipulation; display: flex; flex-direction: column;
     }
 
-    /* 1- ÜST BAR STİLİ (ESKİ KODUNUZDAKİ GİBİ) */
+    /* ÜST BAR STİLİ */
     .top-bar {
         position: fixed; top: 0; width: 100%; height: 55px; display: flex; align-items: center; justify-content: space-between;
         padding: 0 16px; background: linear-gradient(135deg, #1a2a6c, #16245c);
@@ -40,23 +35,18 @@
 
     .game-container {
         flex: 1; display: flex; flex-direction: column; justify-content: space-between;
-        padding: 70px 0 20px 0; position: relative;
+        padding: 75px 0 20px 0; position: relative;
     }
 
     .area { width: 100%; text-align: center; }
 
-    /* 8- NEON ANIMASYONLU KURUPİER YAZISI */
+    /* NEON KURUPİER */
     .dealer-title {
-        font-size: 20px; letter-spacing: 5px; font-weight: 800;
-        color: #fff; text-transform: uppercase;
-        text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 20px #ffd700, 0 0 30px #ffd700;
-        animation: neon 1.5s ease-in-out infinite alternate;
-        margin-bottom: 10px;
+        font-size: 20px; letter-spacing: 5px; font-weight: 800; color: #fff; text-transform: uppercase;
+        text-shadow: 0 0 5px #fff, 0 0 10px #ffd700, 0 0 20px #ffd700;
+        animation: neon 1.5s ease-in-out infinite alternate; margin-bottom: 8px;
     }
-    @keyframes neon {
-        from { opacity: 1; text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 20px #ffd700; }
-        to { opacity: 0.7; text-shadow: 0 0 2px #fff, 0 0 5px #fff, 0 0 10px #ffd700; }
-    }
+    @keyframes neon { from { opacity: 1; } to { opacity: 0.6; } }
 
     .score-badge {
         background: rgba(0,0,0,0.6); color: #ffd700; padding: 4px 15px;
@@ -78,14 +68,13 @@
     #hit { background: #2ecc71; box-shadow: 0 4px #27ae60; }
     #stand { background: #e74c3c; box-shadow: 0 4px #c0392b; }
 
-    /* 5- ÇİPLER BİRAZ DAHA YUKARI TAŞINDI */
-    .chips-area { display: flex; justify-content: center; gap: 12px; padding-bottom: 40px; }
+    /* ÇİPLER (YUKARI TAŞINDI) */
+    .chips-area { display: flex; justify-content: center; gap: 12px; padding-bottom: 45px; }
     .chip {
-        width: 65px; height: 65px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        width: 62px; height: 62px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
         font-weight: 900; font-size: 16px; border: 4px dashed rgba(255,255,255,0.4);
         box-shadow: 0 5px 15px rgba(0,0,0,0.4); cursor: pointer; transition: transform 0.2s;
     }
-    .chip:active { transform: scale(0.9); }
     .c250 { background: #fff; color: #000; }
     .c500 { background: #27ae60; color: #fff; }
     .c1k { background: #e74c3c; color: #fff; }
@@ -104,7 +93,7 @@
 </div>
 
 <div class="game-container">
-    <div id="dealerArea" class="area">
+    <div class="area">
         <div class="dealer-title">KURUPİER</div>
         <div class="score-badge">SAYI: <span id="dealerScore">0</span></div>
         <div id="dealerCards" class="cards-wrapper"></div>
@@ -118,7 +107,7 @@
         </div>
     </div>
 
-    <div id="playerArea" class="area">
+    <div class="area">
         <div id="playerCards" class="cards-wrapper"></div>
         <div class="score-badge">SAYI: <span id="playerScore">0</span></div>
     </div>
@@ -159,7 +148,6 @@ const messageEl = document.getElementById("message");
 const controlsEl = document.getElementById("controls");
 const chipsAreaEl = document.getElementById("chipsArea");
 
-// 6- BUST VE DİĞER SESLER GÜNCELLENDİ
 function playSound(type) {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     if (audioCtx.state === "suspended") audioCtx.resume();
@@ -168,12 +156,11 @@ function playSound(type) {
     const g = audioCtx.createGain();
     osc.connect(g); g.connect(audioCtx.destination);
 
-    if(type==='chip') { osc.frequency.setValueAtTime(1000, now); g.gain.setValueAtTime(0.1, now); g.gain.exponentialRampToValueAtTime(0.01, now+0.05); osc.start(); osc.stop(now+0.05); }
+    if(type==='chip') { osc.frequency.setValueAtTime(1000, now); g.gain.setValueAtTime(0.1, now); osc.start(); osc.stop(now+0.05); }
     if(type==='card') { osc.type='triangle'; osc.frequency.setValueAtTime(400, now); g.gain.setValueAtTime(0.05, now); osc.start(); osc.stop(now+0.1); }
-    if(type==='count') { osc.frequency.setValueAtTime(800, now); g.gain.setValueAtTime(0.05, now); osc.start(); osc.stop(now+0.05); }
-    if(type==='win') { osc.frequency.setValueAtTime(523, now); osc.frequency.setValueAtTime(659, now+0.1); osc.frequency.setValueAtTime(783, now+0.2); g.gain.setValueAtTime(0.1, now); osc.start(); osc.stop(now+0.4); }
-    if(type==='bust') { osc.type='sawtooth'; osc.frequency.setValueAtTime(120, now); osc.frequency.linearRampToValueAtTime(40, now+0.5); g.gain.setValueAtTime(0.2, now); g.gain.linearRampToValueAtTime(0.01, now+0.5); osc.start(); osc.stop(now+0.5); }
-    if(type==='lose') { osc.type='square'; osc.frequency.setValueAtTime(100, now); g.gain.setValueAtTime(0.1, now); osc.start(); osc.stop(now+0.3); }
+    if(type==='count') { osc.frequency.setValueAtTime(800, now); g.gain.setValueAtTime(0.04, now); osc.start(); osc.stop(now+0.05); }
+    if(type==='win') { osc.frequency.setValueAtTime(523, now); osc.frequency.setValueAtTime(659, now+0.1); g.gain.setValueAtTime(0.1, now); osc.start(); osc.stop(now+0.4); }
+    if(type==='bust') { osc.type='sawtooth'; osc.frequency.setValueAtTime(100, now); osc.frequency.linearRampToValueAtTime(30, now+0.5); g.gain.setValueAtTime(0.2, now); osc.start(); osc.stop(now+0.5); }
 }
 
 onAuthStateChanged(auth, user => {
@@ -192,7 +179,6 @@ window.addBet = (amount) => {
     playSound('chip');
     bet += amount; balance -= amount;
     balanceEl.innerText = balance; betEl.innerText = bet;
-    // 7- BAŞLANGIÇ GERİ SAYIMI TETİKLENİYOR
     if(!betCountdown) startBetCountdown();
 };
 
@@ -215,25 +201,24 @@ async function startGame(){
     createDeck();
     await updateDoc(userRef, { balance: balance });
 
+    // 2 saniye aralıklarla dağıtım
     await draw(player, "playerCards"); await delay(2000);
     await draw(dealer, "dealerCards"); await delay(2000);
     await draw(player, "playerCards"); await delay(2000);
     await draw(dealer, "dealerCards", true);
 
-    // 3- BLACKJACK KONTROLÜ (A+10)
-    let pT = total(player), dT = dealerFirstCardScore();
-    if(pT === 21) { messageEl.innerText = "BLACKJACK!"; await delay(1000); dealerTurn(); }
-    else { controlsEl.style.display = "flex"; startActionTimer(); }
-}
-
-function dealerFirstCardScore() {
-    let c = dealer[0];
-    if(c.v==='A') return 11;
-    if(['J','Q','K','0'].includes(c.v)) return 10;
-    return parseInt(c.v);
+    if(total(player) === 21) { 
+        messageEl.innerText = "BLACKJACK!"; 
+        await delay(1000); 
+        dealerTurn(); 
+    } else { 
+        controlsEl.style.display = "flex"; 
+        startActionTimer(); 
+    }
 }
 
 async function draw(hand, divId, hidden=false){
+    if(deck.length === 0) createDeck();
     playSound('card');
     let card = deck.pop();
     hand.push(card);
@@ -251,20 +236,27 @@ function createDeck(){
     deck.sort(() => Math.random() - 0.5);
 }
 
+function cardValue(c){
+    if(!c) return 0;
+    if(c.v === 'A') return 11;
+    if(['J','Q','K','0'].includes(c.v)) return 10;
+    return parseInt(c.v);
+}
+
 function total(h){
     let t=0, a=0;
-    h.forEach(c => {
-        if(c.v==='A') a++;
-        else if(['J','Q','K','0'].includes(c.v)) t+=10;
-        else t+=parseInt(c.v);
-    });
-    for(let i=0; i<a; i++) t += (t+11 > 21) ? 1 : 11;
+    h.forEach(c => { t += cardValue(c); if(c.v==='A') a++; });
+    while(t > 21 && a > 0){ t -= 10; a--; }
     return t;
 }
 
 function updateScores(){
     document.getElementById("playerScore").innerText = total(player);
-    document.getElementById("dealerScore").innerText = dealerHidden ? dealerFirstCardScore() : total(dealer);
+    if(dealer.length === 0) {
+        document.getElementById("dealerScore").innerText = "0";
+    } else {
+        document.getElementById("dealerScore").innerText = dealerHidden ? cardValue(dealer[0]) : total(dealer);
+    }
 }
 
 function startActionTimer(){
@@ -273,12 +265,7 @@ function startActionTimer(){
     actionTimer = setInterval(() => {
         s--;
         if(s>0) { messageEl.innerText = "KARAR (" + s + ")"; playSound('count'); }
-        else { 
-            // 4- SÜRE BİTİNCE OTOMATİK KALIR
-            clearInterval(actionTimer); 
-            messageEl.innerText = "SÜRE DOLDU!";
-            stand(); 
-        }
+        else { clearInterval(actionTimer); stand(); }
     }, 1000);
 }
 
@@ -287,20 +274,15 @@ document.getElementById("hit").onclick = async () => {
     controlsEl.style.display = "none";
     await draw(player, "playerCards");
     let pT = total(player);
-    // 2- 21'DE OTOMATİK KALMA VEYA BUST
     if(pT >= 21) { 
         if(pT === 21) messageEl.innerText = "21!";
-        await delay(1000);
-        dealerTurn(); 
+        await delay(1000); dealerTurn(); 
+    } else { 
+        await delay(2000); controlsEl.style.display = "flex"; startActionTimer(); 
     }
-    else { await delay(2000); controlsEl.style.display = "flex"; startActionTimer(); }
 };
 
-const stand = () => { 
-    clearInterval(actionTimer); 
-    controlsEl.style.display="none"; 
-    dealerTurn(); 
-};
+const stand = () => { clearInterval(actionTimer); controlsEl.style.display="none"; dealerTurn(); };
 document.getElementById("stand").onclick = stand;
 
 async function dealerTurn(){
@@ -309,8 +291,6 @@ async function dealerTurn(){
     if(dc[1]) dc[1].src = `https://deckofcardsapi.com/static/img/${dealer[1].v}${dealer[1].s}.png`;
     updateScores();
     await delay(2000);
-    
-    // 2- KURUPİER 21'DE VEYA ÜSTÜNDE OTOMATİK DURUR
     if(total(player) <= 21){
         while(total(dealer) < 17){ await draw(dealer, "dealerCards"); await delay(2000); }
     }
@@ -320,9 +300,9 @@ async function dealerTurn(){
 async function endGame(){
     let p=total(player), d=total(dealer), m=0, txt="";
     if(p>21) { txt="BUST! KAYBETTİN"; playSound('bust'); }
-    else if(d>21) { txt="KURUPİER BUST! KAZANDIN"; m=2; playSound('win'); }
+    else if(d>21) { txt="KURUPİER BUST!"; m=2; playSound('win'); }
     else if(p>d) { txt="KAZANDIN!"; m=2; playSound('win'); }
-    else if(d>p) { txt="KAYBETTİN"; playSound('lose'); }
+    else if(d>p) { txt="KAYBETTİN"; }
     else { txt="BERABERE"; m=1; }
     
     if(m>0) await updateDoc(userRef, { balance: increment(bet*m) });
