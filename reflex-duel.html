@@ -29,48 +29,44 @@ z-index:1000;
 .logout-btn{background:#ff3b3b;color:white;border:none;padding:6px 12px;border-radius:12px;}
 
 /* PREMIUM SCOREBOARD */
-
-.scoreboard{
-margin-top:55px;
-display:none;
-flex-direction:column;
-font-weight:bold;
-}
-
-.score-top{
-display:flex;
-justify-content:space-between;
-padding:10px 14px;
-}
-
-.p1Box{
+#p1{
 background:linear-gradient(90deg,#001eff,#00c3ff);
 padding:8px 14px;
 border-radius:12px;
-box-shadow:0 0 20px #001eff;
+box-shadow:0 0 15px #001eff;
 animation:bluePulse 2s infinite alternate;
 }
 
-.p2Box{
+#p2{
 background:linear-gradient(90deg,#ff0000,#ff4d4d);
 padding:8px 14px;
 border-radius:12px;
-box-shadow:0 0 20px #ff0000;
+box-shadow:0 0 15px #ff0000;
 animation:redPulse 2s infinite alternate;
 }
 
-.roundBox{
+#roundInfo{
 background:#000;
 padding:8px 14px;
 border-radius:12px;
-box-shadow:0 0 20px #000;
+box-shadow:0 0 10px #000;
 animation:darkPulse 1.5s infinite alternate;
 }
 
-@keyframes bluePulse{from{box-shadow:0 0 10px #001eff}to{box-shadow:0 0 30px #00c3ff}}
-@keyframes redPulse{from{box-shadow:0 0 10px #ff0000}to{box-shadow:0 0 30px #ff4d4d}}
-@keyframes darkPulse{from{box-shadow:0 0 5px #222}to{box-shadow:0 0 25px #000}}
+@keyframes bluePulse{
+from{box-shadow:0 0 10px #001eff}
+to{box-shadow:0 0 25px #00c3ff}
+}
 
+@keyframes redPulse{
+from{box-shadow:0 0 10px #ff0000}
+to{box-shadow:0 0 25px #ff4d4d}
+}
+
+@keyframes darkPulse{
+from{box-shadow:0 0 5px #222}
+to{box-shadow:0 0 20px #000}
+}
 #game{
 flex:1;display:flex;flex-direction:column;
 justify-content:center;align-items:center;text-align:center;padding:10px;
