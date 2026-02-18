@@ -7,7 +7,6 @@
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;}
-
 body{
 background:linear-gradient(-45deg,#ff0000,#001eff,#8b0000,#00008b,#ff1a1a,#0015ff);
 background-size:600% 600%;
@@ -22,66 +21,32 @@ display:flex;align-items:center;justify-content:space-between;
 padding:0 16px;background:linear-gradient(135deg,#1a2a6c,#16245c);
 z-index:1000;
 }
-
 .brand{font-weight:800;font-size:18px;}
 .right-menu{display:flex;gap:10px;align-items:center;}
 .nav-box{padding:6px 14px;border-radius:14px;font-weight:700;font-size:13px;background:#273c8f;}
 .logout-btn{background:#ff3b3b;color:white;border:none;padding:6px 12px;border-radius:12px;}
 
-/* PREMIUM SCOREBOARD */
-#p1{
-background:linear-gradient(90deg,#001eff,#00c3ff);
-padding:8px 14px;
-border-radius:12px;
-box-shadow:0 0 15px #001eff;
-animation:bluePulse 2s infinite alternate;
+.scoreboard{
+margin-top:55px;width:100%;display:none;
+flex-direction:column;font-weight:bold;
+}
+.score-top{
+display:flex;justify-content:space-between;
+padding:8px 14px;background:rgba(0,0,0,0.75);
 }
 
-#p2{
-background:linear-gradient(90deg,#ff0000,#ff4d4d);
-padding:8px 14px;
-border-radius:12px;
-box-shadow:0 0 15px #ff0000;
-animation:redPulse 2s infinite alternate;
-}
-
-#roundInfo{
-background:#000;
-padding:8px 14px;
-border-radius:12px;
-box-shadow:0 0 10px #000;
-animation:darkPulse 1.5s infinite alternate;
-}
-
-@keyframes bluePulse{
-from{box-shadow:0 0 10px #001eff}
-to{box-shadow:0 0 25px #00c3ff}
-}
-
-@keyframes redPulse{
-from{box-shadow:0 0 10px #ff0000}
-to{box-shadow:0 0 25px #ff4d4d}
-}
-
-@keyframes darkPulse{
-from{box-shadow:0 0 5px #222}
-to{box-shadow:0 0 20px #000}
-}
 #game{
 flex:1;display:flex;flex-direction:column;
 justify-content:center;align-items:center;text-align:center;padding:10px;
 }
-
 button{
 padding:12px 20px;border:none;border-radius:10px;
 font-weight:bold;cursor:pointer;
 background:linear-gradient(90deg,#ffb300,#ff5500);
 margin-top:10px;
 }
-
 #bigText{font-size:clamp(32px,10vw,70px);min-height:90px;margin-top:20px;font-weight:800;}
 #subText{margin-top:10px;font-size:18px;}
-
 </style>
 </head>
 <body>
@@ -96,9 +61,9 @@ margin-top:10px;
 
 <div class="scoreboard" id="scoreboard">
 <div class="score-top">
-<div id="p1" class="p1Box"></div>
-<div id="roundInfo" class="roundBox"></div>
-<div id="p2" class="p2Box"></div>
+<div id="p1"></div>
+<div id="roundInfo"></div>
+<div id="p2"></div>
 </div>
 </div>
 
@@ -108,17 +73,16 @@ margin-top:10px;
 <div id="subText"></div>
 <div id="afterMatch"></div>
 </div>
-
+  
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
 getFirestore, doc, updateDoc, deleteDoc,
-onSnapshot, serverTimestamp,
-runTransaction, getDoc, setDoc
+onSnapshot, collection, query, where, getDocs,
+serverTimestamp, runTransaction, getDoc, setDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-/* FIREBASE */
 const firebaseConfig={
 apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
 authDomain:"emirhan-site.firebaseapp.com",
@@ -132,11 +96,9 @@ const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 const auth=getAuth(app);
 
-let uid,username,elo=1000,premium=false;
-let roomId=null;
-let ping=0;
+let uid,username,roomId=null,unsubscribe=null;
+let countdownInterval=null;
 let tapLock=false;
-let unsubscribe=null;
 
 /* DOM */
 const scoreboard=document.getElementById("scoreboard");
@@ -146,142 +108,188 @@ const p1=document.getElementById("p1");
 const p2=document.getElementById("p2");
 const roundInfo=document.getElementById("roundInfo");
 const findBtn=document.getElementById("findBtn");
+const afterMatch=document.getElementById("afterMatch");
 
 /* AUTH */
 onAuthStateChanged(auth,async(user)=>{
 if(!user){location.href="index.html";return;}
 uid=user.uid;
 
-const ref=doc(db,"users",uid);
-const snap=await getDoc(ref);
-
+const snap=await getDoc(doc(db,"users",uid));
 if(!snap.exists()){
-await setDoc(ref,{username:"Player",elo:1000,premium:false});
+await setDoc(doc(db,"users",uid),{username:"Player"});
 username="Player";
 }else{
-const d=snap.data();
-username=d.username||"Player";
-elo=d.elo||1000;
-premium=d.premium||false;
+username=snap.data().username || "Player";
 }
-
-document.getElementById("userBox").innerText=username+" ("+elo+")";
+document.getElementById("userBox").innerText=username;
 });
 
-/* PING */
-async function measurePing(){
-const start=performance.now();
-await getDoc(doc(db,"meta","ping"));
-ping=performance.now()-start;
+/* LOGOUT */
+document.getElementById("logoutBtn").onclick=async()=>{
+if(roomId){
+await updateDoc(doc(db,"rooms",roomId),{
+state:"abandoned",
+abandonedBy:uid
+});
 }
-setInterval(measurePing,4000);
+await signOut(auth);
+location.href="index.html";
+};
 
-/* GLOBAL QUEUE */
+/* MATCHMAKING FIXED */
 findBtn.onclick=async()=>{
-findBtn.disabled=true;
+findBtn.style.display="none";
 bigText.innerText="Rakip Aranıyor...";
 
-await runTransaction(db,async(t)=>{
-const queueRef=doc(db,"queue","global");
-const snap=await t.get(queueRef);
+const roomsRef=collection(db,"rooms");
+const q=query(roomsRef,where("state","==","waiting"));
+const snap=await getDocs(q);
 
-if(!snap.exists()){
-t.set(queueRef,{uid,elo,premium,created:Date.now()});
-return;
-}
+let roomFound=null;
+snap.forEach(d=>{
+if(!roomFound) roomFound=d;
+});
 
-const q=snap.data();
+if(roomFound){
+await runTransaction(db, async (transaction)=>{
+const roomDoc=await transaction.get(roomFound.ref);
+if(!roomDoc.exists()) return;
 
-if(q.uid && q.uid!==uid){
-roomId=crypto.randomUUID();
+const data=roomDoc.data();
+if(data.state!=="waiting") return;
 
-t.set(doc(db,"rooms",roomId),{
-player1:q.uid,
+transaction.update(roomFound.ref,{
 player2:uid,
-elo1:q.elo,
-elo2:elo,
+player2Name:username,
+state:"matched"
+});
+roomId=roomFound.id;
+});
+}else{
+const newRoom=doc(roomsRef);
+roomId=newRoom.id;
+
+await setDoc(newRoom,{
+player1:uid,
+player1Name:username,
+player2:null,
+player2Name:null,
 score1:0,
 score2:0,
 round:1,
-state:"countdown",
-host:q.uid,
-startAt:Date.now()+3000,
-lastActive:Date.now()
+state:"waiting",
+host:uid,
+createdAt:serverTimestamp()
 });
-
-t.delete(queueRef);
-}else{
-t.set(queueRef,{uid,elo,premium,created:Date.now()});
 }
-});
 
-waitForRoom();
+listenRoom();
 };
 
-/* WAIT FOR ROOM */
-function waitForRoom(){
-const roomsRef=doc(db,"rooms",roomId);
-unsubscribe=onSnapshot(roomsRef,async(snap)=>{
-if(!snap.exists()) return;
+/* ROOM LISTENER */
+function listenRoom(){
+if(unsubscribe) unsubscribe();
+
+unsubscribe=onSnapshot(doc(db,"rooms",roomId),async(snap)=>{
+if(!snap.exists()){location.reload();return;}
+
 const d=snap.data();
 scoreboard.style.display="flex";
 
-p1.innerText="P1 ("+d.score1+")";
-p2.innerText="P2 ("+d.score2+")";
-roundInfo.innerText="Round "+d.round;
+if(uid===d.player1){
+p1.innerText=d.player1Name+" ("+d.score1+")";
+p2.innerText=(d.player2Name||"...")+" ("+d.score2+")";
+}else{
+p1.innerText=d.player2Name+" ("+d.score2+")";
+p2.innerText=d.player1Name+" ("+d.score1+")";
+}
 
-/* DISCONNECT PROTECTION */
-if(Date.now()-d.lastActive>10000){
-await updateDoc(roomsRef,{
-state:"finished",
-winner: uid===d.player1?d.player1:d.player2
+roundInfo.innerText="Round "+d.round+" / 7";
+
+/* DISCONNECT */
+if(d.state==="abandoned"){
+bigText.innerText="Rakip Ayrıldı!";
+subText.innerText="Maçı kazandın.";
+return;
+}
+
+/* HOST START */
+if(d.state==="matched" && uid===d.host){
+await updateDoc(doc(db,"rooms",roomId),{
+state:"countdown",
+startAt:Date.now()+4000
 });
 }
 
 /* COUNTDOWN */
 if(d.state==="countdown"){
-const diff=d.startAt-Date.now();
-if(diff<=0 && uid===d.host){
-await updateDoc(roomsRef,{
+if(countdownInterval) return;
+
+countdownInterval=setInterval(async()=>{
+const fresh=await getDoc(doc(db,"rooms",roomId));
+if(!fresh.exists()) return;
+
+const data=fresh.data();
+const diff=data.startAt-Date.now();
+
+if(diff<=0){
+clearInterval(countdownInterval);
+countdownInterval=null;
+
+if(uid===data.host){
+await updateDoc(doc(db,"rooms",roomId),{
 state:"active",
 roundStart:serverTimestamp()
 });
+}
 }else{
 bigText.innerText=Math.ceil(diff/1000);
 }
+},200);
 }
 
 /* ACTIVE */
 if(d.state==="active"){
 bigText.innerText="TAP!";
+subText.innerText="";
 }
 
 /* RESULT */
 if(d.state==="result"){
 bigText.innerText=d.lastWinner+" Kazandı!";
-subText.innerText=d.reaction;
+subText.innerText=d.reaction+"";
 
 setTimeout(async()=>{
 if(uid===d.host){
 if(d.score1===4||d.score2===4){
-await handleElo(d);
-await updateDoc(roomsRef,{state:"finished"});
+await updateDoc(doc(db,"rooms",roomId),{state:"finished"});
 }else{
-await updateDoc(roomsRef,{
+await updateDoc(doc(db,"rooms",roomId),{
 round:d.round+1,
 state:"countdown",
-startAt:Date.now()+3000
+startAt:Date.now()+4000
 });
 }
 }
-},2000);
+},2500);
 }
+
+/* FINISHED */
+if(d.state==="finished"){
+afterMatch.innerHTML=`<button id="newMatchBtn">Yeni Maç</button>`;
+document.getElementById("newMatchBtn").onclick=async()=>{
+await deleteDoc(doc(db,"rooms",roomId));
+location.reload();
+};
+}
+
 });
 }
 
 /* TAP SYSTEM */
 document.addEventListener("pointerdown",async()=>{
-if(!roomId||tapLock) return;
+if(tapLock||!roomId)return;
 tapLock=true;
 
 await runTransaction(db,async(t)=>{
@@ -292,53 +300,51 @@ if(!snap.exists()) return;
 const d=snap.data();
 if(d.state!=="active") return;
 
-const reaction=(Date.now()-d.roundStart.toMillis())-(ping/2);
+if(!d.roundStart) return;
 
-/* 50ms AUTO LOSE */
+const now=Date.now();
+const reaction=now - d.roundStart.toMillis();
+
+/* 50ms false start */
 if(reaction<50){
-const loseField=uid===d.player1?"score2":"score1";
+if(uid===d.player1){
 t.update(ref,{
-[loseField]:d[loseField]+1,
+score2:d.score2+1,
 state:"result",
-lastWinner:"Rakip",
+lastWinner:d.player2Name,
 reaction:"False Start"
 });
+}else{
+t.update(ref,{
+score1:d.score1+1,
+state:"result",
+lastWinner:d.player1Name,
+reaction:"False Start"
+});
+}
 return;
 }
 
-const winField=uid===d.player1?"score1":"score2";
-
+/* normal tap */
+if(uid===d.player1){
 t.update(ref,{
-[winField]:d[winField]+1,
+score1:d.score1+1,
 state:"result",
-lastWinner:username,
-reaction:Math.max(1,Math.floor(reaction))+" ms"
+lastWinner:d.player1Name,
+reaction:reaction+" ms"
 });
+}else{
+t.update(ref,{
+score2:d.score2+1,
+state:"result",
+lastWinner:d.player2Name,
+reaction:reaction+" ms"
+});
+}
 });
 
 tapLock=false;
 });
-
-/* ELO */
-async function handleElo(d){
-const K=32;
-const expected1=1/(1+Math.pow(10,(d.elo2-d.elo1)/400));
-const expected2=1/(1+Math.pow(10,(d.elo1-d.elo2)/400));
-
-let newElo1=d.elo1;
-let newElo2=d.elo2;
-
-if(d.score1>d.score2){
-newElo1=d.elo1+K*(1-expected1);
-newElo2=d.elo2+K*(0-expected2);
-}else{
-newElo1=d.elo1+K*(0-expected1);
-newElo2=d.elo2+K*(1-expected2);
-}
-
-await updateDoc(doc(db,"users",d.player1),{elo:Math.round(newElo1)});
-await updateDoc(doc(db,"users",d.player2),{elo:Math.round(newElo2)});
-}
 </script>
 </body>
 </html>
