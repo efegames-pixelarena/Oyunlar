@@ -16,7 +16,7 @@
         color:white; touch-action:manipulation; display: flex; flex-direction: column;
     }
 
-    /* --- ÜST BAR DÜZENLEME (SABİT DÜZEN) --- */
+    /* --- YENİ ENTEGRE EDİLEN ÜST BAR (SkyCrash Stil) --- */
     .top-bar {
         position:fixed; top:0; width:100%; height:60px;
         display:flex; align-items:center; justify-content:space-between;
@@ -25,36 +25,16 @@
     }
 
     .brand {
-        flex: 1; /* Sol tarafı kaplar, menüyü sağa iter */
         font-size:16px; font-weight:900; background:linear-gradient(90deg,#4fd1ff,#fff);
         -webkit-background-clip:text; -webkit-text-fill-color:transparent;
         letter-spacing: 1px;
     }
 
-    .right-menu { 
-        display:flex; 
-        gap:6px; 
-        align-items: center; 
-        justify-content: flex-end; 
-    }
-
+    .right-menu { display:flex; gap:6px; align-items: center; }
     .nav-box { 
-        height: 34px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0 8px;
-        border-radius:10px; 
-        font-weight:700; 
-        font-size:11px; 
-        min-width:100px; /* Sabit genişlik: Kaymayı önler */
-        max-width: 120px;
-        text-align:center; 
-        white-space: nowrap;
-        overflow: hidden; /* Taşmayı önler */
-        text-overflow: ellipsis; /* Rakam çok uzunsa üç nokta koyar */
+        padding:6px 10px; border-radius:10px; font-weight:700; font-size:11px; 
+        min-width:85px; text-align:center; white-space: nowrap;
     }
-
     .balance-box { background:#1a2248; border: 1px solid #4fd1ff44; color: #4fd1ff; }
     .bet-box { background:linear-gradient(90deg,#ff8a00,#ff5f00); color:#000; }
 
@@ -163,6 +143,7 @@ const messageEl = document.getElementById("message");
 const controlsEl = document.getElementById("controls");
 const chipsAreaEl = document.getElementById("chipsArea");
 
+// --- iOS UYUMLU PROFESYONEL SES MOTORU ---
 function playSound(type) {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     if (audioCtx.state === "suspended") audioCtx.resume();
@@ -209,13 +190,14 @@ onAuthStateChanged(auth, user => {
 
 window.addBet = (amount) => {
     if(gameState !== "betting" || balance < amount) return;
-    if(bet + amount > 2000000) return; // Maks limit güncellendi
+    if(bet + amount > 20000) return;
     
     playSound('chip');
     bet += amount; balance -= amount;
     balanceEl.innerText = balance.toLocaleString('tr-TR');
     betEl.innerText = bet.toLocaleString('tr-TR');
     
+    if(bet >= 20000) document.querySelectorAll('.chip').forEach(c => c.classList.add("disabled"));
     if(!betCountdown && bet >= 250) startBetCountdown();
 };
 
@@ -228,6 +210,7 @@ window.cancelBet = () => {
     betEl.innerText = 0;
     if(betCountdown) { clearInterval(betCountdown); betCountdown = null; }
     messageEl.innerText = "BAHİS YAPIN";
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove("disabled"));
 };
 
 function startBetCountdown(){
