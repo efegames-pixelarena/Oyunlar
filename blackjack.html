@@ -16,30 +16,28 @@
         color:white; touch-action:manipulation; display: flex; flex-direction: column;
     }
 
-    /* ÜST BAR STİLİ - KAYMA VE DÜZEN BOZUKLUĞU GİDERİLDİ */
+    /* ÜST BAR STİLİ - DÜZEN BOZUKLUĞU GİDERİLDİ */
     .top-bar {
         position: fixed; top: 0; width: 100%; height: 60px; display: flex; align-items: center; justify-content: space-between;
         padding: 0 10px; background: linear-gradient(135deg, #1a2a6c, #16245c);
         box-shadow: 0 4px 15px rgba(0,0,0,0.45); z-index: 100;
     }
     .brand {
-        flex-shrink: 0; /* Logo alanının küçülmesini engeller */
+        flex-shrink: 0; /* İsmin küçülmesini engeller */
         font-size: 16px; font-weight: 900; background: linear-gradient(90deg, #4fd1ff, #fff, #4fd1ff);
         background-size: 200% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        animation: shine 3s linear infinite; line-height: 1.1; margin-right: 10px;
+        animation: shine 3s linear infinite; line-height: 1.1; margin-right: 5px;
     }
     @keyframes shine { to { background-position: 200% center; } }
 
-    .right-menu { 
-        display: flex; gap: 8px; flex-grow: 1; justify-content: flex-end; max-width: 70%;
-    }
+    /* Sağ menü esnek hale getirildi */
+    .right-menu { display: flex; gap: 8px; flex-shrink: 1; justify-content: flex-end; }
     .nav-box { 
         padding: 5px 10px; border-radius: 10px; font-weight: 700; font-size: 11px; 
-        min-width: 90px; flex: 1; /* Kutuların eşit büyümesini sağlar */
-        text-align: center; display: flex; flex-direction: column; justify-content: center;
-        white-space: nowrap; overflow: hidden;
+        min-width: 85px; text-align: center; display: flex; flex-direction: column; justify-content: center;
+        white-space: nowrap; /* Metnin aşağı kaymasını engeller */
     }
-    .nav-box span { font-size: 12px; display: block; overflow: hidden; text-overflow: ellipsis; }
+    .nav-box span { font-size: 12px; }
     .balance-box { background: #273c8f; border: 1px solid #4fd1ff; }
     .bet-box { background: linear-gradient(90deg, #ff8a00, #ff5f00); color: #000; }
 
@@ -347,10 +345,10 @@ async function endGame(){
     if(m>0) await updateDoc(userRef, { balance: increment(bet*m) });
     messageEl.innerText = txt;
 
-    // MAÇ SONU KARTLARIN 3 SANİYE DURUP TEMİZLENMESİ
+    // MAÇ SONU: 3 Saniye Bekle ve Temizle
     await delay(3000);
     
-    // Temizlik İşlemi
+    // UI Temizliği
     document.getElementById("dealerCards").innerHTML = "";
     document.getElementById("playerCards").innerHTML = "";
     document.getElementById("dealerScore").innerText = "0";
