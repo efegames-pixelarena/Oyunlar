@@ -6,93 +6,133 @@
 <title>PixelArena | Bonus Hub</title>
 
 <style>
-:root { --neon-blue: #00f5ff; --neon-purple: #9333ea; --gold: #ffb300; }
-*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Roboto,sans-serif;}
-
-body {
-    background: radial-gradient(circle at center, #1a2a6c, #0a0f1f);
-    color: white; min-height: 100vh; overflow-x: hidden;
+/* --- ANA SAYFA İLE AYNI TASARIM DEĞİŞKENLERİ --- */
+:root {
+    --primary: #4fd1ff;
+    --accent: #ff8a00;
+    --bg-dark: #03050a;
+    --glass: rgba(10, 15, 30, 0.9);
+    --border: #1e2642;
+    --card-gradient: linear-gradient(145deg, #0f172a, #020617);
+    --neon-purple: #9333ea;
 }
 
-/* KAR EFEKTİ */
-.snowflake { position: fixed; top: -10px; color: white; pointer-events: none; z-index: 999; }
-@keyframes fall { to { transform: translateY(110vh) rotate(360deg); } }
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;}
+body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.5;}
 
-/* TOP BAR */
+#snow { position:fixed; top:0; left:0; width:100%; height:100%; z-index:1; pointer-events:none; opacity: 0.4; }
+
+/* --- TOP BAR (ANA SAYFAYLA AYNI) --- */
 .top-bar {
-    position: fixed; top: 0; width: 100%; height: 65px;
+    position: fixed; top: 0; width: 100%; height: 60px;
     display: flex; align-items: center; justify-content: space-between;
-    padding: 0 20px; background: rgba(13, 19, 51, 0.9);
-    backdrop-filter: blur(10px); border-bottom: 1px solid rgba(0,245,255,0.2); z-index: 1000;
+    padding: 0 15px; background: var(--glass);
+    backdrop-filter: blur(15px); border-bottom: 1px solid var(--border); z-index: 2000;
 }
-.brand { font-size: 20px; font-weight: 900; color: #fff; text-shadow: 0 0 10px var(--neon-blue); }
-.balance-box {
-    background: rgba(0, 245, 255, 0.1); border: 1px solid var(--neon-blue);
-    padding: 8px 15px; border-radius: 12px; font-weight: bold; color: var(--neon-blue);
-    box-shadow: 0 0 10px rgba(0,245,255,0.2);
+.brand {
+    font-size: 18px; font-weight: 900; letter-spacing: 1px;
+    background: linear-gradient(90deg, var(--primary), #fff);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.balance-box { 
+    background: #1a2248; border: 1px solid rgba(79, 209, 255, 0.2); 
+    color: var(--primary); padding: 7px 12px; border-radius: 12px; 
+    font-weight: 800; font-size: 13px;
 }
 
-/* PANEL */
-.panel-container { margin-top: 100px; padding: 20px; max-width: 500px; margin-left: auto; margin-right: auto; }
+/* --- CONTENT --- */
+.panel-container { margin-top: 100px; padding: 20px; max-width: 500px; margin-left: auto; margin-right: auto; position: relative; z-index: 10; }
 
+/* ANA SAYFADAKİ GAME CARD STİLİNDE BUTONLAR */
 .animated-btn {
-    position: relative; padding: 25px; text-align: center; border-radius: 20px;
-    cursor: pointer; font-size: 16px; font-weight: bold; margin-bottom: 20px;
-    background: #111936; overflow: hidden; transition: 0.3s; border: 1px solid rgba(255,255,255,0.1);
+    background: var(--card-gradient); border-radius: 24px; padding: 25px;
+    text-align: center; border: 1px solid var(--border); position: relative;
+    transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); overflow: hidden;
+    cursor: pointer; margin-bottom: 20px; font-weight: 800;
 }
-.animated-btn:active { transform: scale(0.95); }
-.animated-btn::before {
+.animated-btn:hover { transform: translateY(-5px); border-color: var(--primary); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+
+/* ÖZEL ANİMASYONLU KENARLIK (GÜNLÜK ÇARK İÇİN) */
+.premium-btn::before {
     content: ""; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-    background: conic-gradient(transparent, var(--neon-blue), transparent, var(--neon-purple), transparent);
+    background: conic-gradient(transparent, var(--primary), transparent, var(--neon-purple), transparent);
     animation: rotate 4s linear infinite; z-index: -1;
 }
-.animated-btn::after { content: ""; position: absolute; inset: 3px; background: #0d1333; border-radius: 17px; z-index: -1; }
+.premium-btn::after { content: ""; position: absolute; inset: 2px; background: #0d1333; border-radius: 22px; z-index: -1; }
 @keyframes rotate { 100% { transform: rotate(360deg); } }
 
-/* MODAL */
+/* --- MODAL (ANA SAYFA AUTH MODAL STİLİ) --- */
 .modal {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.9);
+    position: fixed; inset: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(15px);
     display: none; justify-content: center; align-items: center; z-index: 5000;
 }
 .modal-content {
-    background: #12183c; padding: 30px; border-radius: 25px; width: 90%; max-width: 400px;
-    text-align: center; border: 1px solid var(--neon-blue); position: relative;
+    background: #0f172a; padding: 35px; border-radius: 25px; width: 90%; max-width: 400px;
+    text-align: center; border: 1px solid var(--border); position: relative;
 }
-.close { position: absolute; right: 20px; top: 15px; font-size: 20px; cursor: pointer; color: #666; }
+.close { position: absolute; right: 20px; top: 20px; cursor: pointer; opacity: 0.5; font-size: 20px; }
 
-input { width: 100%; padding: 15px; margin: 15px 0; border-radius: 12px; border: none; background: #1f285c; color: white; text-align: center; font-weight: bold; }
-.action-btn { width: 100%; padding: 15px; border: none; border-radius: 12px; background: linear-gradient(90deg, var(--gold), #ff8c00); font-weight: 900; cursor: pointer; color: #000; }
+input { 
+    width: 100%; padding: 15px; margin: 15px 0; border-radius: 12px; 
+    background: #050811; border: 1px solid var(--border); color: white; 
+    text-align: center; font-weight: bold; outline: none;
+}
+input:focus { border-color: var(--primary); }
 
-/* WHEEL UI */
-.wheel-wrapper { position: relative; width: 300px; height: 300px; margin: 20px auto; }
+.action-btn { 
+    width: 100%; padding: 16px; border-radius: 12px; border: none; 
+    background: linear-gradient(90deg, var(--accent), #ff5f00); 
+    font-weight: 900; cursor: pointer; color: #000; 
+}
+
+/* --- ÇARK TASARIMI --- */
+.wheel-wrapper { position: relative; width: 280px; height: 280px; margin: 25px auto; }
 #wheel { 
-    width: 100%; height: 100%; border-radius: 50%; border: 8px solid #333;
-    box-shadow: 0 0 30px rgba(0,245,255,0.3); transition: transform 4s cubic-bezier(0.15, 0, 0.15, 1);
+    width: 100%; height: 100%; border-radius: 50%; border: 6px solid #1e2642;
+    box-shadow: 0 0 30px rgba(79, 209, 255, 0.2); transition: transform 4s cubic-bezier(0.15, 0, 0.15, 1);
 }
 .pointer {
-    position: absolute; top: -15px; left: 50%; transform: translateX(-50%);
+    position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
     width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent;
-    border-top: 30px solid var(--gold); z-index: 10; filter: drop-shadow(0 0 5px black);
+    border-top: 25px solid var(--accent); z-index: 10;
 }
+
+.footer { margin-top: 50px; text-align: center; color: #444; font-size: 12px; padding-bottom: 30px; }
 </style>
 </head>
 <body>
 
+<canvas id="snow"></canvas>
+
 <div class="top-bar">
-    <div class="brand">PixelArena</div>
-    <div class="balance-box" id="balanceBox">BAKİYE: <span id="balance">...</span></div>
+    <div class="brand">PixelArena Bonus</div>
+    <div class="balance-box">₺<span id="userBalance">0</span></div>
 </div>
 
 <div class="panel-container">
-    <div class="animated-btn" onclick="openModal('codeModal')">🎁 BONUS KOD GİR</div>
-    <div class="animated-btn" onclick="openModal('wheelModal')">🎡 GÜNLÜK ÇARK</div>
-    <div class="animated-btn" onclick="location.href='index.html'">🏠 ANA SAYFA</div>
+    <div class="animated-btn" onclick="openModal('codeModal')">
+        <div style="font-size: 30px; margin-bottom: 10px;">🎁</div>
+        <span>BONUS KOD GİR</span>
+    </div>
+
+    <div class="animated-btn premium-btn" onclick="openModal('wheelModal')">
+        <div style="font-size: 30px; margin-bottom: 10px;">🎡</div>
+        <span>GÜNLÜK ÇARK</span>
+    </div>
+
+    <div class="animated-btn" onclick="location.href='index.html'">
+        <div style="font-size: 30px; margin-bottom: 10px;">🏠</div>
+        <span>ANA SAYFAYA DÖN</span>
+    </div>
+
+    <div class="footer">© 2026 PixelArena Global. All Rights Reserved.</div>
 </div>
 
 <div class="modal" id="codeModal">
     <div class="modal-content">
-        <span class="close" onclick="closeModal('codeModal')">✖</span>
-        <h3>PROMOSYON KODU</h3>
+        <span class="close" onclick="closeModal('codeModal')">✕</span>
+        <h2 style="margin-bottom: 10px;">Promosyon</h2>
+        <p style="font-size: 13px; opacity: 0.6;">Size özel kodu buraya girin.</p>
         <input id="codeInput" placeholder="KODU BURAYA YAZ">
         <button class="action-btn" onclick="useCode()">ONAYLA</button>
     </div>
@@ -100,8 +140,9 @@ input { width: 100%; padding: 15px; margin: 15px 0; border-radius: 12px; border:
 
 <div class="modal" id="wheelModal">
     <div class="modal-content">
-        <span class="close" onclick="closeModal('wheelModal')">✖</span>
-        <h3 style="margin-bottom:10px">GÜNLÜK ŞANS</h3>
+        <span class="close" onclick="closeModal('wheelModal')">✕</span>
+        <h2 style="margin-bottom: 5px;">Şans Çarkı</h2>
+        <p style="font-size: 12px; color: var(--primary);">Her 24 saatte bir ücretsiz çevir!</p>
         <div class="wheel-wrapper">
             <div class="pointer"></div>
             <canvas id="wheel" width="300" height="300"></canvas>
@@ -115,7 +156,7 @@ input { width: 100%; padding: 15px; margin: 15px 0; border-radius: 12px; border:
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, getDoc, updateDoc, increment, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, doc, getDoc, updateDoc, increment, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
@@ -133,129 +174,98 @@ const db = getFirestore(app);
 let currentUser = null;
 const spinSound = document.getElementById("spinSound");
 
+// --- SNOW (ANA SAYFAYLA AYNI) ---
+const canvasSnow = document.getElementById("snow");
+const ctxSnow = canvasSnow.getContext("2d");
+let particles = [];
+function resize() { canvasSnow.width = window.innerWidth; canvasSnow.height = window.innerHeight; }
+window.onresize = resize; resize();
+for(let i=0; i<80; i++) particles.push({x:Math.random()*canvasSnow.width, y:Math.random()*canvasSnow.height, r:Math.random()*2+1, d:Math.random()*0.5+0.2});
+function drawSnow() {
+    ctxSnow.clearRect(0,0,canvasSnow.width, canvasSnow.height);
+    ctxSnow.fillStyle = "rgba(255,255,255,0.3)";
+    ctxSnow.beginPath();
+    particles.forEach(p => {
+        ctxSnow.moveTo(p.x, p.y); ctxSnow.arc(p.x, p.y, p.r, 0, Math.PI*2);
+        p.y += p.d; if(p.y > canvasSnow.height) p.y = -5;
+    });
+    ctxSnow.fill(); requestAnimationFrame(drawSnow);
+}
+drawSnow();
+
+// --- AUTH & SYNC ---
 onAuthStateChanged(auth, async (user) => {
     if(!user) { location.href="index.html"; return; }
     currentUser = user;
-    await syncUser();
+    onSnapshot(doc(db, "users", user.uid), s => {
+        if(s.exists()) document.getElementById("userBalance").innerText = s.data().balance.toLocaleString();
+    });
 });
 
-async function syncUser() {
-    const ref = doc(db, "users", currentUser.uid);
-    const snap = await getDoc(ref);
-    if(!snap.exists()) {
-        await setDoc(ref, { balance: 0, lastSpin: 0 });
-        document.getElementById("balance").innerText = "0₺";
-    } else {
-        document.getElementById("balance").innerText = snap.data().balance + "₺";
-    }
-}
-
-// Çark Çizimi (Ok yukarıda olduğu için 90 derece ofsetle çiziyoruz)
-const canvas = document.getElementById("wheel");
-const ctx = canvas.getContext("2d");
-const rewards = [50, 100, 500, 1000, 250, 750]; // Daha fazla dilim
-const colors = ["#00f5ff", "#9333ea", "#00f5ff", "#9333ea", "#00f5ff", "#9333ea"];
+// --- WHEEL LOGIC ---
+const wheelCanvas = document.getElementById("wheel");
+const wctx = wheelCanvas.getContext("2d");
+const rewards = [100, 500, 1000, 200, 2500, 50]; 
+const colors = ["#0f172a", "#4fd1ff", "#0f172a", "#9333ea", "#0f172a", "#ff8a00"];
 
 function drawWheel() {
     const angle = (2 * Math.PI) / rewards.length;
     for(let i=0; i<rewards.length; i++) {
-        ctx.beginPath();
-        ctx.moveTo(150, 150);
-        ctx.arc(150, 150, 150, i * angle, (i + 1) * angle);
-        ctx.fillStyle = colors[i];
-        ctx.fill();
-        ctx.save();
-        ctx.translate(150, 150);
-        ctx.rotate(i * angle + angle / 2);
-        ctx.fillStyle = "white";
-        ctx.font = "bold 18px Arial";
-        ctx.textAlign = "right";
-        ctx.fillText(rewards[i] + "₺", 130, 10);
-        ctx.restore();
+        wctx.beginPath(); wctx.moveTo(150, 150);
+        wctx.arc(150, 150, 150, i * angle, (i + 1) * angle);
+        wctx.fillStyle = colors[i]; wctx.fill();
+        wctx.save(); wctx.translate(150, 150); wctx.rotate(i * angle + angle / 2);
+        wctx.fillStyle = "white"; wctx.font = "bold 16px Arial"; wctx.textAlign = "right";
+        wctx.fillText(rewards[i] + "₺", 130, 8); wctx.restore();
     }
 }
 drawWheel();
 
 let currentRotation = 0;
-
 window.spinWheel = async () => {
     const btn = document.getElementById("spinBtn");
     const userRef = doc(db, "users", currentUser.uid);
     const snap = await getDoc(userRef);
     
-    // Zaman kontrolü
     const lastSpin = snap.data().lastSpin || 0;
-    const waitTime = 24 * 60 * 60 * 1000;
-    if(Date.now() - lastSpin < waitTime) {
-        const remaining = Math.ceil((waitTime - (Date.now() - lastSpin)) / (1000 * 60 * 60));
-        alert(`Günde 1 kez çevirebilirsin! Kalan: ${remaining} saat`);
+    if(Date.now() - lastSpin < 24 * 60 * 60 * 1000) {
+        alert("Bugün zaten çevirdiniz! Yarın tekrar gelin.");
         return;
     }
 
     btn.disabled = true;
-    spinSound.currentTime = 0;
-    spinSound.play().catch(() => {});
+    spinSound.play().catch(()=>{});
 
     const segmentAngle = 360 / rewards.length;
     const randomIndex = Math.floor(Math.random() * rewards.length);
-    
-    // Ok yukarıda (270 derece) olduğu için düzgün duruş hesabı
     const stopAt = (randomIndex * segmentAngle);
     currentRotation += (360 * 5) + (360 - stopAt) - (segmentAngle/2); 
     
-    canvas.style.transform = `rotate(${currentRotation}deg)`;
+    wheelCanvas.style.transform = `rotate(${currentRotation}deg)`;
 
     setTimeout(async () => {
         const prize = rewards[randomIndex];
-        await updateDoc(userRef, {
-            balance: increment(prize),
-            lastSpin: Date.now()
-        });
-        alert(`Tebrikler! ${prize}₺ hesabına eklendi.`);
-        await syncUser();
+        await updateDoc(userRef, { balance: increment(prize), lastSpin: Date.now() });
+        alert(`Tebrikler! ${prize}₺ kazandınız.`);
         btn.disabled = false;
         closeModal('wheelModal');
     }, 4100);
 };
 
 window.useCode = async () => {
-    const input = document.getElementById("codeInput");
-    const code = input.value.trim().toUpperCase();
+    const code = document.getElementById("codeInput").value.trim().toUpperCase();
     if(!code) return;
-    
     const codeRef = doc(db, "codes", code);
-    const codeSnap = await getDoc(codeRef);
-    
-    if(!codeSnap.exists()) {
-        alert("Geçersiz veya kullanılmış kod!");
-        return;
-    }
+    const cSnap = await getDoc(codeRef);
+    if(!cSnap.exists()) { alert("Geçersiz kod!"); return; }
 
-    const reward = codeSnap.data().reward;
-    await updateDoc(doc(db, "users", currentUser.uid), { balance: increment(reward) });
-    // Kodu silmek veya işaretlemek istersen buraya deleteDoc ekleyebilirsin
-    alert(`${reward}₺ bakiye eklendi!`);
-    input.value = "";
-    await syncUser();
+    await updateDoc(doc(db, "users", currentUser.uid), { balance: increment(cSnap.data().reward) });
+    alert("Kod başarıyla kullanıldı!");
     closeModal('codeModal');
 };
 
 window.openModal = id => document.getElementById(id).style.display = "flex";
 window.closeModal = id => document.getElementById(id).style.display = "none";
-
-// Optimize Kar Efekti
-setInterval(() => {
-    if(document.visibilityState !== 'visible') return;
-    const snow = document.createElement("div");
-    snow.className = "snowflake";
-    snow.innerHTML = "❄";
-    snow.style.left = Math.random() * 100 + "vw";
-    snow.style.fontSize = Math.random() * 15 + 10 + "px";
-    snow.style.animation = `fall ${Math.random() * 4 + 4}s linear forwards`;
-    document.body.appendChild(snow);
-    setTimeout(() => snow.remove(), 7000);
-}, 400);
-
 </script>
 </body>
 </html>
