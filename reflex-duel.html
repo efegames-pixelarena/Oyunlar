@@ -165,7 +165,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const auth = getAuth(app); // EXTREME ÖNEMLİ: Auth burada başlatıldı
+const auth = getAuth(app);
 
 let uid, username, currentRoomId = null, unsubRoom = null, tapLock = false;
 let countdownInterval = null, lastTapTime = 0;
@@ -199,19 +199,14 @@ window.openModal = () => { audioCtx.resume(); document.getElementById("createMod
 window.closeModal = () => document.getElementById("createModal").style.display = "none";
 
 onAuthStateChanged(auth, async (user) => {
-    if (!user) {
-        console.warn("Oturum açılmamış!");
-        return;
-    }
+    if (!user) return;
     uid = user.uid;
     try {
         const snap = await getDoc(doc(db, "users", uid));
         username = snap.exists() ? snap.data().username : "Warrior";
         document.getElementById("userBox").innerText = username.toUpperCase();
         listenLobby();
-    } catch (e) {
-        console.error("Firestore Hatası:", e);
-    }
+    } catch (e) { console.error(e); }
 });
 
 function listenLobby() {
@@ -244,7 +239,7 @@ document.getElementById("confirmCreateBtn").onclick = async () => {
     await setDoc(newRoomRef, {
         player1: uid, player1Name: username, player2: null, player2Name: null,
         score1: 0, score2: 0, round: 1, state: "waiting", host: uid, 
-        password: pass, createdAt: serverTimestamp(), spammer: null
+        password: pass, createdAt: serverTimestamp(), penalty: false
     });
     closeModal();
     enterRoom();
@@ -284,6 +279,8 @@ function enterRoom() {
 
         if (d.state === "countdown") {
             if (countdownInterval) clearInterval(countdownInterval);
+            document.getElementById("arena").classList.remove("flash");
+            document.getElementById("subText").classList.remove("penalty");
             let lastSec = -1;
             countdownInterval = setInterval(() => {
                 const diff = Math.ceil((d.startTime - Date.now()) / 1000);
@@ -293,7 +290,7 @@ function enterRoom() {
                     document.getElementById("subText").innerText = "HAZIRLAN";
                 } else {
                     clearInterval(countdownInterval);
-                    if (uid === d.host) updateDoc(doc(db, "rooms", currentRoomId), { state: "active", roundStart: serverTimestamp(), spammer: null });
+                    if (uid === d.host) updateDoc(doc(db, "rooms", currentRoomId), { state: "active", roundStart: Date.now() });
                 }
             }, 100);
         }
@@ -304,29 +301,30 @@ function enterRoom() {
             document.getElementById("arena").classList.add("flash");
             document.getElementById("bigText").innerText = "GO!";
             document.getElementById("subText").innerText = "ŞİMDİ VUR!";
-            if (d.spammer === uid) {
-                document.getElementById("subText").innerText = "ERKEN BASTIN!";
-                document.getElementById("subText").classList.add("penalty");
-            } else {
-                document.getElementById("subText").classList.remove("penalty");
-            }
-        } else {
-            document.getElementById("arena").classList.remove("flash");
         }
 
         if (d.state === "result") {
+            document.getElementById("arena").classList.remove("flash");
             document.getElementById("bigText").innerText = d.reaction || "WIN";
-            document.getElementById("subText").innerText = d.lastWinner.toUpperCase() + " KAZANDI";
+            
+            if (d.penalty) {
+                document.getElementById("subText").classList.add("penalty");
+                document.getElementById("subText").innerText = d.penaltyUser === uid ? "ERKEN BASTIN!" : "RAKİP ERKEN BASTI!";
+            } else {
+                document.getElementById("subText").classList.remove("penalty");
+                document.getElementById("subText").innerText = d.lastWinner.toUpperCase() + " KAZANDI";
+            }
+
             if (uid === d.host) {
                 setTimeout(() => {
-                    if (d.score1 >= 5 || d.score2 >= 5) updateDoc(doc(db, "rooms", currentRoomId), { state: "finished" });
-                    else updateDoc(doc(db, "rooms", currentRoomId), { state: "countdown", startTime: Date.now() + 2500, round: d.round + 1, spammer: null });
+                    if (d.score1 >= 11 || d.score2 >= 11) updateDoc(doc(db, "rooms", currentRoomId), { state: "finished" });
+                    else updateDoc(doc(db, "rooms", currentRoomId), { state: "countdown", startTime: Date.now() + 2500, round: d.round + 1, penalty: false });
                 }, 2000);
             }
         }
 
         if (d.state === "finished") {
-            const winner = d.score1 >= 5 ? d.player1Name : d.player2Name;
+            const winner = d.score1 >= 11 ? d.player1Name : d.player2Name;
             document.getElementById("championName").innerText = winner.toUpperCase();
             document.getElementById("winnerScreen").style.display = "flex";
             sounds.win();
@@ -347,11 +345,26 @@ document.getElementById("arena").addEventListener('pointerdown', async (e) => {
     if(!snap.exists()) return;
     const d = snap.data();
 
-    if (d.state === "countdown") { await updateDoc(roomRef, { spammer: uid }); return; }
-    if (d.state !== "active" || d.spammer === uid) return;
+    // 1 & 2: Erken dokunma ve raundu kaybetme mantığı
+    if (d.state === "countdown") { 
+        tapLock = true;
+        const isP1 = uid === d.player1;
+        await updateDoc(roomRef, { 
+            state: "result",
+            penalty: true,
+            penaltyUser: uid,
+            [isP1 ? "score2" : "score1"]: (isP1 ? d.score2 : d.score1) + 1,
+            lastWinner: isP1 ? d.player2Name : d.player1Name,
+            reaction: "HATA!"
+        });
+        setTimeout(() => { tapLock = false; }, 2000);
+        return; 
+    }
+
+    if (d.state !== "active") return;
 
     tapLock = true;
-    const reaction = now - d.roundStart.toMillis();
+    const reaction = now - d.roundStart;
 
     try {
         await runTransaction(db, async (transaction) => {
@@ -363,11 +376,12 @@ document.getElementById("arena").addEventListener('pointerdown', async (e) => {
                 state: "result",
                 [isP1 ? "score1" : "score2"]: (isP1 ? fData.score1 : fData.score2) + 1,
                 lastWinner: username,
-                reaction: reaction + "ms"
+                reaction: reaction + "ms",
+                penalty: false
             });
         });
     } catch (e) {}
-    setTimeout(() => { tapLock = false; }, 1000);
+    setTimeout(() => { tapLock = false; }, 2000);
 });
 
 async function quitGame() {
