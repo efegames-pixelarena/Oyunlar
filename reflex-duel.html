@@ -19,7 +19,6 @@
     user-select: none; 
 }
 
-/* 6- SAVAŞÇI ARKA PLAN */
 body { 
     background: var(--bg); color: white; height: 100vh; overflow: hidden; 
     display: flex; flex-direction: column; position: fixed; width: 100%;
@@ -35,7 +34,6 @@ body::before {
     z-index: -1;
 }
 
-/* NAVBAR */
 .top-bar { 
     height: 70px; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); 
     border-bottom: 2px solid var(--p); display: flex; align-items: center; 
@@ -46,7 +44,6 @@ body::before {
     background: linear-gradient(to bottom, #fff, var(--p)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
 }
 
-/* 3- PROFESYONEL LOBBY */
 #lobby { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
 .lobby-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
 .create-btn { 
@@ -61,7 +58,6 @@ body::before {
 }
 @keyframes slideIn { from { transform: translateX(-20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
-/* 5- PROFESYONEL MODAL */
 .modal { position: fixed; inset:0; background:rgba(0,0,0,0.9); display:none; justify-content:center; align-items:center; z-index:2000; padding: 20px; }
 .modal-content { 
     background: var(--b); padding: 30px; border-radius: 20px; border: 1px solid var(--p);
@@ -73,7 +69,6 @@ body::before {
     color: var(--p); border-radius: 10px; margin-bottom: 20px; text-align: center; font-size: 1.1rem;
 }
 
-/* 4- PROFESYONEL ARENA */
 #game-view { display: none; flex: 1; flex-direction: column; }
 .scoreboard { 
     padding: 20px; display: grid; grid-template-columns: 1fr auto 1fr; 
@@ -90,14 +85,12 @@ body::before {
 .flash { background: #fff !important; }
 .flash #bigText, .flash #subText { color: #000 !important; }
 
-/* 7- MAÇ SONU TASARIM */
 .winner-screen {
     position: fixed; inset: 0; background: #000; z-index: 5000;
     display: none; flex-direction: column; justify-content: center; align-items: center;
     text-align: center;
 }
 .winner-screen h1 { font-family: 'Orbitron'; font-size: 3rem; color: var(--gold); text-shadow: 0 0 20px var(--gold); margin-bottom: 10px; }
-.winner-screen p { font-size: 1.5rem; letter-spacing: 3px; }
 
 .penalty { color: var(--a) !important; animation: shake 0.3s infinite; }
 @keyframes shake { 0%,100%{transform: scale(1);} 50%{transform: scale(1.1);} }
@@ -116,7 +109,7 @@ body::before {
 <div id="createModal" class="modal">
     <div class="modal-content">
         <h2>ODA KUR</h2>
-        <input type="text" id="roomPassInput" placeholder="ŞİFRE (BOŞ BIRAKABİLİRSİN)" maxlength="10">
+        <input type="text" id="roomPassInput" placeholder="ŞİFRE (OPSİYONEL)" maxlength="10">
         <div style="display:flex; gap:10px;">
             <button onclick="closeModal()" style="flex:1; padding:15px; border-radius:10px; background:#222; border:none; color:white;">İPTAL</button>
             <button id="confirmCreateBtn" style="flex:1; padding:15px; border-radius:10px; background:var(--p); border:none; color:black; font-weight:900;">BAŞLAT</button>
@@ -172,14 +165,14 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const auth = getAuth(app);
+const auth = getAuth(app); // EXTREME ÖNEMLİ: Auth burada başlatıldı
 
 let uid, username, currentRoomId = null, unsubRoom = null, tapLock = false;
 let countdownInterval = null, lastTapTime = 0;
 
-// 1 & 2 & 7 - SES MOTORU (GECİKMESİZ)
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 function playBeep(freq, type, duration) {
+    if(audioCtx.state === 'suspended') audioCtx.resume();
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
     osc.type = type;
@@ -206,12 +199,19 @@ window.openModal = () => { audioCtx.resume(); document.getElementById("createMod
 window.closeModal = () => document.getElementById("createModal").style.display = "none";
 
 onAuthStateChanged(auth, async (user) => {
-    if (!user) return;
+    if (!user) {
+        console.warn("Oturum açılmamış!");
+        return;
+    }
     uid = user.uid;
-    const snap = await getDoc(doc(db, "users", uid));
-    username = snap.exists() ? snap.data().username : "Warrior";
-    document.getElementById("userBox").innerText = username.toUpperCase();
-    listenLobby();
+    try {
+        const snap = await getDoc(doc(db, "users", uid));
+        username = snap.exists() ? snap.data().username : "Warrior";
+        document.getElementById("userBox").innerText = username.toUpperCase();
+        listenLobby();
+    } catch (e) {
+        console.error("Firestore Hatası:", e);
+    }
 });
 
 function listenLobby() {
@@ -344,6 +344,7 @@ document.getElementById("arena").addEventListener('pointerdown', async (e) => {
 
     const roomRef = doc(db, "rooms", currentRoomId);
     const snap = await getDoc(roomRef);
+    if(!snap.exists()) return;
     const d = snap.data();
 
     if (d.state === "countdown") { await updateDoc(roomRef, { spammer: uid }); return; }
