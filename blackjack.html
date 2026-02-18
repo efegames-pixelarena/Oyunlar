@@ -42,7 +42,7 @@
     }
     .card.show{transform:translateY(0) rotateY(0deg);opacity:1;}
 
-    #message{position:absolute;bottom:170px;width:100%;text-align:center;font-size:22px;font-weight:800;text-shadow: 0 2px 4px rgba(0,0,0,0.5);}
+    #message{position:absolute;bottom:170px;width:100%;text-align:center;font-size:22px;font-weight:800;text-shadow: 0 2px 4px rgba(0,0,0,0.5); min-height: 30px;}
     .controls{position:absolute;bottom:110px;width:100%;text-align:center;display:none;z-index:10;}
 
     button{padding:14px 28px;margin:8px;border:none;border-radius:12px;font-weight:700;font-size:15px;cursor:pointer;}
@@ -115,13 +115,25 @@ let audioCtx = null, balance = 0, bet = 0, userRef = null;
 let gameState = "loading", betCountdown = null, actionTimer = null;
 let deck = [], player = [], dealer = [], dealerHidden = true;
 
-// --- GERÇEKÇİ SES SİSTEMİ (Web Audio API) ---
-function initAudio(){ 
-    if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if(audioCtx.state === "suspended") audioCtx.resume();
+const balanceEl = document.getElementById("balance");
+const betEl = document.getElementById("bet");
+const message = document.getElementById("message");
+const dealerDiv = document.getElementById("dealerCards");
+const playerDiv = document.getElementById("playerCards");
+const controls = document.getElementById("controls");
+const chipsArea = document.getElementById("chipsArea");
+
+// --- GELİŞMİŞ SES SİSTEMİ (iOS UYUMLU) ---
+function initAudio() {
+    if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioCtx.state === "suspended") {
+        audioCtx.resume();
+    }
 }
 
-function playAdvancedSound(type) {
+function playSound(type) {
     initAudio();
     const now = audioCtx.currentTime;
     const osc = audioCtx.createOscillator();
@@ -130,69 +142,67 @@ function playAdvancedSound(type) {
     gain.connect(audioCtx.destination);
 
     switch(type) {
-        case 'chip': // Gerçekçi çip sesi (Yüksek frekanslı tık)
+        case 'chip': // Çip Sesi
             osc.type = 'sine';
-            osc.frequency.setValueAtTime(800, now);
-            osc.frequency.exponentialRampToValueAtTime(1200, now + 0.05);
-            gain.gain.setValueAtTime(0.3, now);
-            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-            osc.start(now); osc.stop(now + 0.1);
+            osc.frequency.setValueAtTime(900, now);
+            osc.frequency.exponentialRampToValueAtTime(1200, now + 0.04);
+            gain.gain.setValueAtTime(0.2, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+            osc.start(now); osc.stop(now + 0.08);
             break;
-        case 'card': // Kart çekme sesi (Sürtünme efekti)
-            osc.type = 'square';
+        case 'card': // Kart Çekme Sesi
+            osc.type = 'triangle';
             osc.frequency.setValueAtTime(150, now);
-            osc.frequency.linearRampToValueAtTime(250, now + 0.15);
-            gain.gain.setValueAtTime(0.05, now);
+            osc.frequency.linearRampToValueAtTime(300, now + 0.1);
+            gain.gain.setValueAtTime(0.1, now);
             gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
             osc.start(now); osc.stop(now + 0.15);
             break;
-        case 'win': // Kazanma (Melodik)
-            osc.type = 'triangle';
-            osc.frequency.setValueAtTime(523.25, now); // C5
-            osc.frequency.setValueAtTime(659.25, now + 0.1); // E5
-            osc.frequency.setValueAtTime(783.99, now + 0.2); // G5
+        case 'count': // Geri Sayım Sesi
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(800, now);
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+            osc.start(now); osc.stop(now + 0.05);
+            break;
+        case 'win': // Kazanma Sesi
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(523, now); // C5
+            osc.frequency.setValueAtTime(659, now + 0.1); // E5
+            osc.frequency.setValueAtTime(783, now + 0.2); // G5
             gain.gain.setValueAtTime(0.2, now);
             gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
             osc.start(now); osc.stop(now + 0.5);
             break;
-        case 'lose': // Kaybetme (Kalın/Düşen ton)
+        case 'lose': // Kaybetme Sesi
             osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(150, now);
-            osc.frequency.linearRampToValueAtTime(70, now + 0.4);
+            osc.frequency.setValueAtTime(120, now);
+            osc.frequency.linearRampToValueAtTime(60, now + 0.4);
             gain.gain.setValueAtTime(0.2, now);
             gain.gain.linearRampToValueAtTime(0.01, now + 0.4);
             osc.start(now); osc.stop(now + 0.4);
             break;
-        case 'bust': // Patlama (Gürültülü kalın ton)
+        case 'bust': // Bust Sesi
             osc.type = 'square';
-            osc.frequency.setValueAtTime(100, now);
-            osc.frequency.linearRampToValueAtTime(40, now + 0.5);
+            osc.frequency.setValueAtTime(80, now);
+            osc.frequency.linearRampToValueAtTime(30, now + 0.5);
             gain.gain.setValueAtTime(0.2, now);
-            gain.gain.linearRampToValueAtTime(0.01, now + 0.5);
-            osc.start(now); osc.stop(now + 0.5);
-            break;
-        case 'count': // Geri sayım (Kısa bip)
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(1000, now);
-            gain.gain.setValueAtTime(0.1, now);
-            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
-            osc.start(now); osc.stop(now + 0.05);
+            gain.gain.linearRampToValueAtTime(0.01, now + 0.6);
+            osc.start(now); osc.stop(now + 0.6);
             break;
     }
 }
 
 const sounds = {
-    chip: () => playAdvancedSound('chip'),
-    card: () => playAdvancedSound('card'),
-    win: () => playAdvancedSound('win'),
-    lose: () => playAdvancedSound('lose'),
-    bust: () => playAdvancedSound('bust'),
-    count: () => playAdvancedSound('count')
+    chip: () => playSound('chip'),
+    card: () => playSound('card'),
+    win: () => playSound('win'),
+    lose: () => playSound('lose'),
+    bust: () => playSound('bust'),
+    count: () => playSound('count')
 };
 
-document.body.addEventListener("click", initAudio, {once:true});
-
-// --- AUTH ---
+// --- AUTH & DATA ---
 onAuthStateChanged(auth, user => {
     if(!user){ message.innerText="Giriş yapmalısın"; return; }
     userRef = doc(db, "users", user.uid);
@@ -207,7 +217,7 @@ onAuthStateChanged(auth, user => {
     });
 });
 
-// --- OYUN ---
+// --- OYUN MANTIĞI ---
 function createDeck(){
     const suits = ["H", "D", "C", "S"];
     deck = [];
@@ -234,7 +244,7 @@ async function addCardToUI(container, card, hidden=false){
     img.src = hidden ? "https://deckofcardsapi.com/static/img/back.png" : cardURL(card);
     img.className = "card";
     container.appendChild(img);
-    await new Promise(r => setTimeout(r, 50));
+    await new Promise(r => setTimeout(r, 80));
     img.classList.add("show");
 }
 
@@ -248,16 +258,15 @@ function updateScores(){
 }
 
 function addBet(amount){
-    initAudio();
+    initAudio(); 
     if(gameState !== "betting" || balance < amount) return;
-    if(bet + amount > 20000) { message.innerText = "Maks Limit 20K₺!"; return; }
-
+    if(bet + amount > 20000) { message.innerText = "Maksimum 20.000₺"; return; }
+    
     sounds.chip();
     bet += amount;
     balance -= amount;
     balanceEl.innerText = balance;
     betEl.innerText = bet;
-    
     if(!betCountdown) startBetCountdown();
 }
 window.addBet = addBet;
@@ -273,16 +282,15 @@ function startBetCountdown(){
         } else {
             clearInterval(betCountdown);
             betCountdown = null;
-            // Süre bitince yazıyı gizle (kısa süre sonra oyun başlar)
-            message.innerText = ""; 
+            message.innerText = ""; // Süre bitince yazıyı gizle
+            
             if(bet < 250) {
-                // Min bahis kontrolü
                 balance += bet;
                 bet = 0;
                 balanceEl.innerText = balance;
                 betEl.innerText = 0;
-                message.innerText = "Min Bahis 250₺!";
-                setTimeout(() => { if(gameState==="betting") message.innerText="Bahis Yapın"; }, 2000);
+                message.innerText = "Minimum Bahis 250₺!";
+                setTimeout(() => { if(gameState === "betting") message.innerText = "Bahis Yapın"; }, 2000);
             } else {
                 startGame();
             }
@@ -299,12 +307,9 @@ async function startGame(){
 
     await updateDoc(userRef, { balance: balance });
 
-    await giveCard(player, playerDiv);
-    await delay(500);
-    await giveCard(dealer, dealerDiv);
-    await delay(500);
-    await giveCard(player, playerDiv);
-    await delay(500);
+    await giveCard(player, playerDiv); await delay(400);
+    await giveCard(dealer, dealerDiv); await delay(400);
+    await giveCard(player, playerDiv); await delay(400);
     await giveCard(dealer, dealerDiv, true);
 
     if(total(player) === 21) {
@@ -332,7 +337,7 @@ function startActionTimer(){
         if(time > 0) message.innerText = "Karar (" + time + ")";
         else {
             clearInterval(actionTimer);
-            message.innerText = ""; // Süre bitince yazıyı sil
+            message.innerText = ""; // Süre bitti, yazıyı gizle
             stand();
         }
     }, 1000);
@@ -340,7 +345,7 @@ function startActionTimer(){
 
 function hit(){
     clearInterval(actionTimer);
-    message.innerText = "";
+    message.innerText = ""; // Hamle yapıldı, yazıyı gizle
     controls.style.display = "none";
     giveCard(player, playerDiv).then(() => {
         if(total(player) >= 21) dealerTurn();
@@ -350,7 +355,7 @@ function hit(){
 
 function stand(){
     clearInterval(actionTimer);
-    message.innerText = "";
+    message.innerText = ""; // Hamle yapıldı, yazıyı gizle
     controls.style.display = "none";
     dealerTurn();
 }
@@ -373,28 +378,10 @@ async function dealerTurn(){
 async function determineWinner(){
     let p = total(player), d = total(dealer), res = "", mult = 0;
 
-    if(p > 21) { 
-        res = "BUST! KAYBETTİN"; 
-        sounds.bust(); 
-    }
-    else if(d > 21) { 
-        res = "DEALER BUST! KAZANDIN"; 
-        mult = 2; 
-        sounds.win(); 
-    }
-    else if(p > d) { 
-        res = "KAZANDIN!"; 
-        mult = 2; 
-        sounds.win(); 
-    }
-    else if(d > p) { 
-        res = "DEALER KAZANDI"; 
-        sounds.lose(); 
-    }
-    else { 
-        res = "BERABERE"; 
-        mult = 1; 
-    }
+    if(p > 21) { res = "BUST! KAYBETTİN"; sounds.bust(); }
+    else if(d > 21 || p > d) { res = "KAZANDIN!"; mult = 2; sounds.win(); }
+    else if(d > p) { res = "DEALER KAZANDI"; sounds.lose(); }
+    else { res = "BERABERE"; mult = 1; }
 
     if(mult > 0) await updateDoc(userRef, { balance: increment(bet * mult) });
     
