@@ -200,7 +200,7 @@ Bakiye: <span id="balance">0₺</span>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, getDoc, updateDoc, increment } 
+import { getFirestore, doc, getDoc, updateDoc, increment, setDoc } 
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig={
@@ -218,33 +218,35 @@ const db=getFirestore(app);
 
 let currentUser=null;
 
-onAuthStateChanged(auth,async(user)=>{
+onAuthStateChanged(auth,(user)=>{
 if(!user){window.location="index.html";return;}
 currentUser=user;
 });
 
-/* iOS SES UNLOCK */
+/* =========================
+   iOS %100 SES ÇÖZÜMÜ
+========================= */
 const spinSound=document.getElementById("spinSound");
-document.body.addEventListener("click",()=>{
-spinSound.play().then(()=>spinSound.pause()).catch(()=>{});
-},{once:true});
 
-/* MODAL */
+function unlockIOSAudio(){
+spinSound.play().then(()=>{
+spinSound.pause();
+spinSound.currentTime=0;
+}).catch(()=>{});
+}
+
+document.addEventListener("touchstart",unlockIOSAudio,{once:true});
+document.addEventListener("click",unlockIOSAudio,{once:true});
+
+/* =========================
+   MODAL
+========================= */
 window.openModal=id=>document.getElementById(id).style.display="flex";
 window.closeModal=id=>document.getElementById(id).style.display="none";
 
-/* KAR */
-setInterval(()=>{
-const snow=document.createElement("div");
-snow.classList.add("snowflake");
-snow.innerText="❄";
-snow.style.left=Math.random()*100+"vw";
-snow.style.animationDuration=(3+Math.random()*5)+"s";
-document.body.appendChild(snow);
-setTimeout(()=>snow.remove(),8000);
-},300);
-
-/* PREMIUM WHEEL */
+/* =========================
+   ÇARK ÇİZİMİ
+========================= */
 const canvas=document.getElementById("wheel");
 const ctx=canvas.getContext("2d");
 
@@ -272,38 +274,64 @@ ctx.restore();
 }
 
 let rotation=0;
-window.spinWheel=async()=>{
-spinSound.currentTime=0;
-spinSound.play().catch(()=>{});
 
+/* =========================
+   GÜNLÜK 1 ÇARK HAKKI
+========================= */
+window.spinWheel=async()=>{
+
+const userRef=doc(db,"users",currentUser.uid);
+const snap=await getDoc(userRef);
+
+const today=new Date();
+const todayKey=today.getFullYear()+"-"+(today.getMonth()+1)+"-"+today.getDate();
+
+if(snap.exists() && snap.data().lastSpinDate===todayKey){
+alert("Bugün çark hakkını kullandın!");
+return;
+}
+
+/* Ses başlat */
+spinSound.currentTime=0;
+await spinSound.play().catch(()=>{});
+
+/* Rastgele ödül */
 const index=Math.floor(Math.random()*rewards.length);
 const prize=rewards[index];
 
 rotation+=360*6+(360/rewards.length)*index;
 canvas.style.transform=`rotate(${rotation}deg)`;
 
+/* Ödül verme */
 setTimeout(async()=>{
-await updateDoc(doc(db,"users",currentUser.uid),{
-balance:increment(prize)
-});
+await setDoc(userRef,{
+balance: increment(prize),
+lastSpinDate: todayKey
+},{merge:true});
+
 alert(prize+"₺ kazandın!");
 closeModal("wheelModal");
 },4500);
+
 };
 
+/* =========================
+   KOD SİSTEMİ (DEĞİŞMEDİ)
+========================= */
 window.useCode=async()=>{
 const code=document.getElementById("codeInput").value.trim().toUpperCase();
 if(!code) return alert("Kod gir.");
+
 const ref=doc(db,"codes",code);
 const snap=await getDoc(ref);
+
 if(!snap.exists()) return alert("Kod yok.");
+
 await updateDoc(doc(db,"users",currentUser.uid),{
 balance:increment(snap.data().reward)
 });
+
 alert(snap.data().reward+"₺ kazandın!");
 closeModal("codeModal");
 };
 </script>
-
-</body>
-</html>
