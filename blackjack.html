@@ -142,70 +142,57 @@ const messageEl = document.getElementById("message");
 const controlsEl = document.getElementById("controls");
 const chipsAreaEl = document.getElementById("chipsArea");
 
-// --- iOS UYUMLU PROFESYONEL SES MOTORU ---
+// --- iOS UYUMLU PROFESYONEL SES MOTORU (UPGRADED) ---
 function playSound(type) {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     if (audioCtx.state === "suspended") audioCtx.resume();
     
     const now = audioCtx.currentTime;
-    const osc = audioCtx.createOscillator();
-    const g = audioCtx.createGain();
-    osc.connect(g); g.connect(audioCtx.destination);
+    
+    const playOsc = (freq, type, gainVal, startTime, stopTime, ramp=false) => {
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = type;
+        o.frequency.setValueAtTime(freq, startTime);
+        if(ramp) o.frequency.exponentialRampToValueAtTime(ramp, stopTime);
+        g.gain.setValueAtTime(gainVal, startTime);
+        g.gain.linearRampToValueAtTime(0, stopTime);
+        o.connect(g); g.connect(audioCtx.destination);
+        o.start(startTime); o.stop(stopTime);
+    };
 
-    if(type==='chip') { // Gerçek Çip Koyma (Tok Ses)
-        osc.frequency.setValueAtTime(150, now);
-        osc.frequency.exponentialRampToValueAtTime(40, now + 0.1);
-        g.gain.setValueAtTime(0.3, now);
-        g.gain.linearRampToValueAtTime(0, now + 0.1);
-        osc.start(); osc.stop(now + 0.1);
+    if(type==='chip') {
+        playOsc(150, 'sine', 0.3, now, now + 0.1, 40);
     }
-    if(type==='card') { // Gerçek Kart Çekme (Sürtünme)
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(800, now);
-        osc.frequency.linearRampToValueAtTime(1200, now + 0.05);
-        g.gain.setValueAtTime(0.05, now);
-        g.gain.linearRampToValueAtTime(0, now + 0.1);
-        osc.start(); osc.stop(now + 0.1);
+    
+    if(type==='card') { 
+        // PROFESYONEL KART SESİ: 2 Katmanlı (Sürtünme + Masaya Konma)
+        // Katman 1: Desteden kayma sesi (Yüksek frekanslı hışırtı)
+        playOsc(1000, 'triangle', 0.03, now, now + 0.05, 1500);
+        // Katman 2: Masaya vuruş sesi (Düşük frekanslı tok ses)
+        playOsc(200, 'sine', 0.05, now + 0.03, now + 0.1);
     }
-    if(type==='clear') { // Bahis Silme
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(400, now);
-        osc.frequency.linearRampToValueAtTime(200, now + 0.2);
-        g.gain.setValueAtTime(0.1, now);
-        g.gain.linearRampToValueAtTime(0, now + 0.2);
-        osc.start(); osc.stop(now + 0.2);
+
+    if(type==='clear') {
+        playOsc(400, 'sine', 0.1, now, now + 0.2, 200);
     }
-    if(type==='count') { // Geri Sayım / Karar (Tık)
-        osc.frequency.setValueAtTime(880, now);
-        g.gain.setValueAtTime(0.1, now);
-        g.gain.linearRampToValueAtTime(0, now + 0.05);
-        osc.start(); osc.stop(now + 0.05);
+
+    if(type==='count') {
+        playOsc(880, 'sine', 0.08, now, now + 0.05);
     }
-    if(type==='win') { // Kazanma (Melodik)
-        [523, 659, 783].forEach((f, i) => {
-            const o = audioCtx.createOscillator();
-            const gn = audioCtx.createGain();
-            o.connect(gn); gn.connect(audioCtx.destination);
-            o.frequency.setValueAtTime(f, now + i*0.1);
-            gn.gain.setValueAtTime(0.1, now + i*0.1);
-            gn.gain.linearRampToValueAtTime(0, now + i*0.1 + 0.3);
-            o.start(now + i*0.1); o.stop(now + i*0.1 + 0.3);
+
+    if(type==='win') {
+        [523.25, 659.25, 783.99].forEach((f, i) => {
+            playOsc(f, 'sine', 0.1, now + i*0.1, now + i*0.1 + 0.4);
         });
     }
-    if(type==='lose') { // Kaybetme (Kalın Bas)
-        osc.type = 'square';
-        osc.frequency.setValueAtTime(110, now);
-        osc.frequency.linearRampToValueAtTime(55, now + 0.4);
-        g.gain.setValueAtTime(0.1, now);
-        g.gain.linearRampToValueAtTime(0, now + 0.4);
-        osc.start(); osc.stop(now + 0.4);
+
+    if(type==='lose') {
+        playOsc(110, 'square', 0.1, now, now + 0.4, 55);
     }
-    if(type==='bust') { // Bust (Gürültülü)
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(60, now);
-        g.gain.setValueAtTime(0.2, now);
-        g.gain.linearRampToValueAtTime(0, now + 0.5);
-        osc.start(); osc.stop(now + 0.5);
+
+    if(type==='bust') {
+        playOsc(60, 'sawtooth', 0.2, now, now + 0.5);
     }
 }
 
@@ -227,7 +214,6 @@ window.addBet = (amount) => {
     bet += amount; balance -= amount;
     balanceEl.innerText = balance; betEl.innerText = bet;
     
-    // Max Bahis Limiti Kontrolü
     if(bet >= 20000) {
         document.querySelectorAll('.chip').forEach(c => c.classList.add("disabled"));
     }
@@ -267,9 +253,9 @@ async function startGame(){
     createDeck();
     await updateDoc(userRef, { balance: balance });
 
-    await draw(player, "playerCards"); await delay(700);
-    await draw(dealer, "dealerCards"); await delay(700);
-    await draw(player, "playerCards"); await delay(700);
+    await draw(player, "playerCards"); await delay(600);
+    await draw(dealer, "dealerCards"); await delay(600);
+    await draw(player, "playerCards"); await delay(600);
     await draw(dealer, "dealerCards", true);
 
     if(total(player) === 21) { messageEl.innerText = "BLACKJACK!"; dealerTurn(); }
@@ -350,7 +336,6 @@ async function endGame(){
     messageEl.innerText = txt;
     await delay(3000);
     
-    // Tabloyu Temizle
     document.getElementById("dealerCards").innerHTML = "";
     document.getElementById("playerCards").innerHTML = "";
     document.getElementById("dealerScore").innerText = "0";
