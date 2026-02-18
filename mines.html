@@ -21,7 +21,7 @@
         .mines-header { display:flex; justify-content:space-between; align-items:center; background:#151b26; padding:12px 15px; border-radius:14px; margin-bottom:15px; }
         
         #grid { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; flex:1; max-height:400px; }
-        .tile { background:#1b2232; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:24px; cursor:pointer; transition:0.2s; box-shadow:inset 0 0 10px rgba(0,0,0,0.5); border:1px solid #2a3447; }
+        .tile { background:#1b2232; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:24px; cursor:pointer; transition:0.2s; box-shadow:inset 0 0 10px rgba(0,0,0,0.5); border:1px solid #2a3447; position: relative; }
         .tile.open { background:linear-gradient(135deg, #16c784, #0b8a5b); border:none; box-shadow:0 0 15px rgba(22,199,132,0.4); }
         .tile.mine { background:linear-gradient(135deg, #ff4d4f, #cf1322); border:none; box-shadow:0 0 15px rgba(255,77,79,0.4); animation: shake 0.3s; }
 
@@ -41,7 +41,7 @@
 <div class="top-bar">
     <div class="brand">PIXELARENA</div>
     <div class="right-menu">
-        <div class="nav-box balance-box">₺ <span id="userBalance">0</span></div>
+        <div class="nav-box balance-box">₺ <span id="userBalance">---</span></div>
         <div class="nav-box bet-box">Bet: <span id="currentBet">0</span></div>
     </div>
 </div>
@@ -57,7 +57,7 @@
     <div class="bet-panel">
         <input type="number" id="betInput" placeholder="Bahis Tutarı (250 - 3000)" value="250">
         <select id="mineCountSelect"></select>
-        <button id="mainBtn" class="start-btn">OYUNU BAŞLAT</button>
+        <button id="mainBtn" class="start-btn">YÜKLENİYOR...</button>
     </div>
 </div>
 
@@ -79,7 +79,6 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Değişkenler
 let mines = [], openedCount = 0, betAmount = 0, mineTotal = 1, multiplier = 1, gameActive = false;
 let tileElements = [];
 
@@ -91,7 +90,7 @@ const mineSelect = document.getElementById("mineCountSelect");
 const betInput = document.getElementById("betInput");
 const mineDisplay = document.getElementById("mineDisplay");
 
-// Mayın Seçeneklerini Doldur (1-24)
+// Mayın Seçenekleri (1-24)
 for(let i=1; i<=24; i++) {
     let opt = document.createElement("option");
     opt.value = i; opt.text = i + " Mayın";
@@ -99,7 +98,6 @@ for(let i=1; i<=24; i++) {
 }
 mineSelect.addEventListener("change", () => mineDisplay.innerText = mineSelect.value);
 
-// Grid Oluşturucu
 function initGrid() {
     gridEl.innerHTML = "";
     tileElements = [];
@@ -112,7 +110,6 @@ function initGrid() {
     }
 }
 
-// Çarpan Hesaplama (Matematiksel Olasılık - %4 Kasa Payı)
 function getMultiplier(nMines, nOpened) {
     let prob = 1;
     for (let i = 0; i < nOpened; i++) {
@@ -121,13 +118,11 @@ function getMultiplier(nMines, nOpened) {
     return (1 / prob) * 0.96; 
 }
 
-// Ana Buton İşlemi (Bet / Cashout)
 mainBtn.addEventListener("click", async () => {
-    if (!auth.currentUser) return;
+    if (!auth.currentUser || mainBtn.innerText === "YÜKLENİYOR...") return;
     const userRef = doc(db, "users", auth.currentUser.uid);
 
     if (gameActive) {
-        // --- PARA ÇEKME (CASHOUT) ---
         if (openedCount === 0) return;
         gameActive = false;
         const winAmount = Math.floor(betAmount * multiplier);
@@ -137,13 +132,11 @@ mainBtn.addEventListener("click", async () => {
                 const snap = await transaction.get(userRef);
                 transaction.update(userRef, { balance: (snap.data().balance || 0) + winAmount });
             });
-            alert(`Tebrikler! ₺${winAmount} kazandınız.`);
         } catch (e) { console.error(e); }
         resetGame();
         return;
     }
 
-    // --- OYUN BAŞLATMA (BET) ---
     betAmount = parseInt(betInput.value);
     mineTotal = parseInt(mineSelect.value);
 
@@ -161,7 +154,6 @@ mainBtn.addEventListener("click", async () => {
         });
     } catch (e) { alert(e); return; }
 
-    // Mayınları Yerleştir
     mines = [];
     while(mines.length < mineTotal) {
         let r = Math.floor(Math.random() * 25);
@@ -180,12 +172,10 @@ mainBtn.addEventListener("click", async () => {
     mainBtn.style.background = "#555";
 });
 
-// Kareye Tıklama
 function handleTileClick(index, tile) {
     if (!gameActive || tile.classList.contains("open") || tile.classList.contains("mine")) return;
 
     if (mines.includes(index)) {
-        // PATLADI (KAYIP)
         gameActive = false;
         mines.forEach(mIdx => {
             tileElements[mIdx].classList.add("mine");
@@ -195,12 +185,10 @@ function handleTileClick(index, tile) {
         mainBtn.style.background = "#ff4d4f";
         setTimeout(resetGame, 2500);
     } else {
-        // BAŞARILI (ELMAS)
         openedCount++;
         tile.classList.add("open");
         tile.innerHTML = "💎";
         multiplier = getMultiplier(mineTotal, openedCount);
-        
         mainBtn.style.background = "#00c853";
         mainBtn.innerText = `ÇEK (₺${Math.floor(betAmount * multiplier)})`;
     }
@@ -216,16 +204,29 @@ function resetGame() {
     initGrid();
 }
 
-// Giriş ve Bakiye Takibi
+// GÜVENLİ BAKİYE VE GİRİŞ SİSTEMİ
 signInAnonymously(auth).catch(e => console.error("Giriş Hatası"));
+
 onAuthStateChanged(auth, async (user) => {
     if (!user) return;
     const userRef = doc(db, "users", user.uid);
-    const snap = await getDoc(userRef);
-    if (!snap.exists()) await setDoc(userRef, { balance: 10000 }); // Yeni üyeye 10k bakiye
+    
+    // Kullanıcıyı bir kez kontrol et
+    try {
+        const snap = await getDoc(userRef);
+        if (!snap.exists()) {
+            // Sadece hesap ilk kez oluştuğunda 10.000₺ tanımla
+            await setDoc(userRef, { balance: 10000 });
+        }
+    } catch (e) { console.error("Veritabanı erişim hatası:", e); }
 
-    onSnapshot(userRef, s => {
-        if (s.exists()) balanceEl.innerText = Math.floor(s.data().balance).toLocaleString();
+    // Bakiyeyi dinle
+    onSnapshot(userRef, (s) => {
+        if (s.exists()) {
+            const data = s.data();
+            balanceEl.innerText = Math.floor(data.balance || 0).toLocaleString('tr-TR');
+            if(mainBtn.innerText === "YÜKLENİYOR...") mainBtn.innerText = "OYUNU BAŞLAT";
+        }
     });
 });
 
