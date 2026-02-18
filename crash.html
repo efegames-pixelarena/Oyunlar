@@ -1,46 +1,120 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-    <title>SkyCrash Fix</title>
-    <style>
-        *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-        body{height:100%;overflow:hidden;font-family:sans-serif;background:#03050a;color:white;}
-        .top-bar{position:fixed;top:0;width:100%;height:60px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;background:rgba(10,15,30,0.9);z-index:100;}
-        .nav-box{padding:6px 10px;border-radius:10px;background:#1a2248;color:#4fd1ff;}
-        .main{position:absolute;top:60px;bottom:180px;width:100%;display:flex;justify-content:center;align-items:center;}
-        canvas{position:absolute;width:100%;height:100%;}
-        .multiplier{font-size:75px;font-weight:900;z-index:10;text-align:center;}
-        .multiplier.small{font-size:24px;color:#4fd1ff;}
-        .multiplier.crashed{color:#ff2a4d;}
-        .bottom{position:absolute;bottom:0;width:100%;height:180px;background:#0a0f1e;display:flex;justify-content:center;align-items:center;gap:10px;padding:15px;border-top:1px solid #1e2642;}
-        .betBox{background:#161d36;padding:12px;border-radius:15px;flex:1;display:flex;flex-direction:column;gap:8px;}
-        .betBox button{padding:14px;border:none;border-radius:10px;font-weight:bold;background:#5743d6;color:white;}
-        .betBox button:disabled{opacity:0.3;}
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>SkyCrash: Space Pro</title>
+
+<style>
+    /* GENEL STİL */
+    *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
+    html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;background:#03050a;color:white;}
+
+    /* ÜST PANEL */
+    .top-bar{
+        position:fixed;top:0;width:100%;height:60px;
+        display:flex;align-items:center;justify-content:space-between;
+        padding:0 12px; background: rgba(10, 15, 30, 0.9);
+        backdrop-filter: blur(10px); border-bottom: 1px solid #1e2642; z-index:100;
+    }
+    .brand{
+        font-size:16px;font-weight:900; background:linear-gradient(90deg,#4fd1ff,#fff);
+        -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    }
+    .right-menu{display:flex;gap:6px;}
+    .nav-box{padding:6px 10px; border-radius:10px; font-weight:700; font-size:11px; min-width:85px; text-align:center;}
+    .balance-box{background:#1a2248; border: 1px solid #4fd1ff44; color: #4fd1ff;}
+    .bet-box{background:linear-gradient(90deg,#ff8a00,#ff5f00); color:#000;}
+
+    /* GEÇMİŞ (HISTORY) */
+    .history{
+        position:absolute;top:60px;width:100%;height:38px;
+        display:flex;align-items:center;gap:6px;
+        padding:0 10px;overflow-x:auto;background:rgba(13, 19, 38, 0.8);
+        scrollbar-width: none; z-index: 50;
+    }
+    .history::-webkit-scrollbar { display: none; }
+    .history span{padding:3px 8px; border-radius:6px; font-size:10px; font-weight:800; white-space:nowrap; color: white;}
+
+    /* OYUN ALANI */
+    .main{position:absolute;top:0;bottom:180px;width:100%;overflow:hidden;}
+    canvas{width:100%; height:100%; display: block;}
+
+    /* ÇARPAN EKRANI */
+    .multiplier-overlay{
+        position:absolute; top:45%; left:50%; transform:translate(-50%,-50%);
+        pointer-events:none; text-align:center; z-index:10;
+    }
+    .multiplier{font-weight:900; line-height: 1; font-variant-numeric: tabular-nums;}
+    .multiplier.big{font-size:65px; color:#fff; text-shadow: 0 0 30px rgba(79,209,255,0.8);}
+    .multiplier.small{font-size:22px; color:#4fd1ff;}
+    .multiplier.crashed{color:#ff2a4d !important; animation: shake 0.3s infinite;}
+
+    @keyframes shake {
+        0% { transform: translate(1px, 1px); }
+        50% { transform: translate(-2px, -1px); }
+        100% { transform: translate(1px, 1px); }
+    }
+
+    /* ALT PANEL (BAHİS) */
+    .bottom{
+        position:absolute;bottom:0;width:100%;height:180px;
+        background:#0a0f1e; display:flex; justify-content:center; align-items:center; gap:10px; padding:0 15px;
+        border-top: 1px solid #1e2642; z-index: 100;
+    }
+    .betBox{
+        background:#161d36; padding:12px; border-radius:15px;
+        flex:1; max-width:190px; display:flex; flex-direction:column; gap:8px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    }
+    .betBox input{
+        padding:12px; border:1px solid #273c8f; border-radius:10px;
+        text-align:center; font-weight:bold; font-size:16px; background:#050811; color:white; outline:none;
+    }
+    .betBox button{
+        padding:14px; border:none; border-radius:10px; font-weight:800;
+        font-size:14px; cursor:pointer; background:#5743d6; color:white; transition: 0.2s;
+    }
+    .betBox button:active{transform: scale(0.95);}
+    .betBox button:disabled{opacity:0.4; pointer-events:none;}
+    .cancel{background:#d63031 !important;}
+    .cashout{background:#00b894 !important;}
+</style>
 </head>
 <body>
 
 <div class="top-bar">
-    <div style="font-weight:900;">SKYCRASH PRO</div>
-    <div class="nav-box">₺<span id="balance">0</span></div>
+    <div class="brand">SKYCRASH PRO</div>
+    <div class="right-menu">
+        <div class="nav-box balance-box">₺<span id="balance">0</span></div>
+        <div class="nav-box bet-box">B: ₺<span id="bet">0</span></div>
+    </div>
 </div>
+
+<div class="history" id="history"></div>
 
 <div class="main">
     <canvas id="graph"></canvas>
-    <div class="multiplier" id="multiplier">BAĞLANIYOR...</div>
+    <div class="multiplier-overlay">
+        <div class="multiplier small" id="multiplier">SENKRONİZE EDİLİYOR...</div>
+    </div>
 </div>
 
 <div class="bottom">
-    <div class="betBox"><input type="number" id="betInput1" value="100" style="width:100%;padding:10px;border-radius:5px;"><button id="btn1">BAHİS YAP</button></div>
-    <div class="betBox"><input type="number" id="betInput2" value="200" style="width:100%;padding:10px;border-radius:5px;"><button id="btn2">BAHİS YAP</button></div>
+    <div class="betBox">
+        <input type="number" id="betInput1" value="100">
+        <button id="btn1">BAHİS YAP</button>
+    </div>
+    <div class="betBox">
+        <input type="number" id="betInput2" value="200">
+        <button id="btn2">BAHİS YAP</button>
+    </div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, onSnapshot, updateDoc, increment, runTransaction, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, doc, onSnapshot, updateDoc, increment, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
@@ -55,132 +129,166 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-let userRef = null, balance = 0;
+// --- SES MOTORU ---
+let audioCtx = null;
+const initAudio = () => { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); };
+function playSfx(type) {
+    if(!audioCtx) return;
+    const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    osc.connect(g); g.connect(audioCtx.destination);
+    if(type==='bet'){ osc.frequency.setValueAtTime(400, now); g.gain.setValueAtTime(0.1, now); osc.start(); osc.stop(now+0.05); }
+    if(type==='cash'){ osc.frequency.setValueAtTime(800, now); osc.frequency.exponentialRampToValueAtTime(1200, now+0.1); g.gain.setValueAtTime(0.1, now); osc.start(); osc.stop(now+0.2); }
+    if(type==='crash'){ osc.type='sawtooth'; osc.frequency.setValueAtTime(80, now); g.gain.setValueAtTime(0.2, now); g.gain.linearRampToValueAtTime(0, now+0.4); osc.start(); osc.stop(now+0.4); }
+}
+
+// --- GLOBAL DEĞİŞKENLER ---
+let userRef = null, balance = 0, activeBet1 = 0, activeBet2 = 0;
 let gameData = { phase: "waiting", multiplier: 1, countdown: 0, crashPoint: 0 };
 let loopLock = false;
 
-// --- GİRİŞ VE VERİ TAKİBİ ---
-signInAnonymously(auth).then(() => {
-    onAuthStateChanged(auth, async (user) => {
-        if (!user) return;
-        userRef = doc(db, "users", user.uid);
+const canvas = document.getElementById("graph"), ctx = canvas.getContext("2d");
+const multEl = document.getElementById("multiplier");
+const balEl = document.getElementById("balance");
+const betTotalEl = document.getElementById("bet");
+
+// --- CANVAS ANİMASYON ---
+function resize() { canvas.width = window.innerWidth; canvas.height = canvas.offsetHeight; }
+window.addEventListener("resize", resize); resize();
+
+let stars = Array.from({length: 80}, () => ({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, s: Math.random()*2 }));
+
+function render() {
+    ctx.fillStyle = "#03050a"; ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = "white";
+    let speed = gameData.phase === "flying" ? (gameData.multiplier * 1.5) : 0.4;
+    stars.forEach(s => {
+        ctx.beginPath(); ctx.arc(s.x, s.y, s.s, 0, 7); ctx.fill();
+        s.x -= speed; if(s.x < 0) s.x = canvas.width;
+    });
+    
+    if(gameData.phase === "flying") {
+        const progress = Math.min(1, (gameData.multiplier - 1) / 20);
+        const px = 60 + (canvas.width - 120) * progress;
+        const py = (canvas.height - 60) - (canvas.height - 200) * Math.pow(progress, 0.6);
+        ctx.shadowBlur = 15; ctx.shadowColor = "#4fd1ff"; ctx.fillStyle = "#fff";
+        ctx.beginPath(); ctx.arc(px, py, 6, 0, 7); ctx.fill(); ctx.shadowBlur = 0;
+    }
+    requestAnimationFrame(render);
+}
+render();
+
+// --- OYUN DÖNGÜSÜ ---
+async function startCycle() {
+    if(loopLock) return;
+    loopLock = true;
+    const gRef = doc(db, "games", "current");
+    
+    setTimeout(async () => {
+        // Bahis Süreci
+        await updateDoc(gRef, { phase: "betting", countdown: 5, multiplier: 1 });
+        for(let i=5; i>=0; i--) {
+            await updateDoc(gRef, { countdown: i });
+            await new Promise(r => setTimeout(r, 1000));
+        }
         
-        // Kullanıcı yoksa oluştur
+        // Uçuş Süreci
+        const cp = (1.01 + (Math.random() * (Math.random() < 0.1 ? 15 : 4))).toFixed(2);
+        const startTime = Date.now();
+        await updateDoc(gRef, { phase: "flying", crashPoint: parseFloat(cp), startTime: startTime });
+        
+        const flyInt = setInterval(async () => {
+            const elapsed = (Date.now() - startTime) / 1000;
+            const currentM = Math.pow(1.08, elapsed);
+            if(currentM >= cp) {
+                clearInterval(flyInt);
+                await updateDoc(gRef, { phase: "crashed", multiplier: parseFloat(cp) });
+                playSfx('crash');
+                setTimeout(() => { loopLock = false; }, 3000);
+            } else {
+                await updateDoc(gRef, { multiplier: currentM });
+            }
+        }, 150);
+    }, 2000);
+}
+
+// --- VERİ SENKRONİZASYONU ---
+signInAnonymously(auth).then(() => {
+    onAuthStateChanged(auth, async user => {
+        if(!user) return;
+        userRef = doc(db, "users", user.uid);
         const uSnap = await getDoc(userRef);
-        if(!uSnap.exists()) await setDoc(userRef, { balance: 10000 });
+        if(!uSnap.exists()) await setDoc(userRef, { balance: 5000 });
 
         onSnapshot(userRef, s => {
-            if(s.exists()){ 
-                balance = s.data().balance;
-                document.getElementById("balance").innerText = balance.toLocaleString();
-            }
+            balance = s.data().balance;
+            balEl.innerText = balance.toLocaleString('tr-TR');
         });
 
-        // Oyun Durumu Takibi
         onSnapshot(doc(db, "games", "current"), s => {
             if(!s.exists()) return;
-            const d = s.data();
-            gameData = d;
+            gameData = s.data();
             updateUI();
-            
-            // Eğer oyun crashed ise ve döngü kilitli değilse yeni turu başlat
-            if(d.phase === "crashed" && !loopLock) autoRestart();
+            if(gameData.phase === "crashed" && !loopLock) startCycle();
         });
     });
 });
 
 function updateUI() {
-    const multEl = document.getElementById("multiplier");
     if(gameData.phase === "betting") {
         multEl.className = "multiplier small";
-        multEl.innerText = "BAHİSLER ALINIYOR\n" + gameData.countdown + "s";
+        multEl.innerText = "UÇUŞA " + gameData.countdown + "s";
     } else if(gameData.phase === "flying") {
-        multEl.className = "multiplier";
+        multEl.className = "multiplier big";
         multEl.innerText = gameData.multiplier.toFixed(2) + "x";
     } else if(gameData.phase === "crashed") {
-        multEl.className = "multiplier crashed";
-        multEl.innerText = gameData.crashPoint.toFixed(2) + "x\nPATLADI!";
+        multEl.className = "multiplier big crashed";
+        multEl.innerText = gameData.multiplier.toFixed(2) + "x\nPATLADI!";
+        if(activeBet1 > 0 || activeBet2 > 0) { activeBet1 = 0; activeBet2 = 0; betTotalEl.innerText = "0"; }
     }
+    updateButtons();
 }
 
-// --- OTOMATİK DÖNGÜ (HATAYI ÇÖZEN KISIM) ---
-async function autoRestart() {
-    loopLock = true;
-    setTimeout(async () => {
-        const gRef = doc(db, "games", "current");
-        try {
-            await runTransaction(db, async (transaction) => {
-                const sfDoc = await transaction.get(gRef);
-                if (sfDoc.data().phase !== "crashed") return;
+async function handleAction(box) {
+    initAudio();
+    let amt = Math.floor(document.getElementById("betInput"+box).value);
+    let cur = box === 1 ? activeBet1 : activeBet2;
 
-                // Yeni X hesapla
-                const r = Math.random();
-                let nextX = r < 0.05 ? 1.00 : (1 / (1 - Math.random())).toFixed(2);
-                if(nextX > 1000000) nextX = 1000000;
-
-                transaction.update(gRef, { 
-                    phase: "betting", 
-                    countdown: 5, 
-                    multiplier: 1.00,
-                    crashPoint: parseFloat(nextX)
-                });
-            });
-            
-            // Geri sayımı başlat
-            let c = 5;
-            const cd = setInterval(async () => {
-                c--;
-                if(c <= 0) {
-                    clearInterval(cd);
-                    await updateDoc(gRef, { phase: "flying", startTime: Date.now() });
-                    startFlying();
-                } else {
-                    await updateDoc(gRef, { countdown: c });
-                }
-            }, 1000);
-
-        } catch (e) { console.error(e); }
-        loopLock = false;
-    }, 3000);
+    if(gameData.phase === "betting" && cur === 0 && balance >= amt) {
+        await updateDoc(userRef, { balance: increment(-amt) });
+        if(box === 1) activeBet1 = amt; else activeBet2 = amt;
+        playSfx('bet');
+    } else if(gameData.phase === "betting" && cur > 0) {
+        await updateDoc(userRef, { balance: increment(cur) });
+        if(box === 1) activeBet1 = 0; else activeBet2 = 0;
+    } else if(gameData.phase === "flying" && cur > 0) {
+        let win = Math.floor(cur * gameData.multiplier);
+        await updateDoc(userRef, { balance: increment(win) });
+        if(box === 1) activeBet1 = 0; else activeBet2 = 0;
+        playSfx('cash');
+    }
+    betTotalEl.innerText = (activeBet1 + activeBet2).toString();
 }
 
-// --- UÇUŞ SİMÜLASYONU ---
-function startFlying() {
-    const gRef = doc(db, "games", "current");
-    const interval = setInterval(async () => {
-        const snap = await getDoc(gRef);
-        const data = snap.data();
-        
-        if(data.phase !== "flying") {
-            clearInterval(interval);
-            return;
-        }
-
-        const elapsed = (Date.now() - data.startTime) / 1000;
-        const newMult = Math.pow(1.08, elapsed);
-
-        if(newMult >= data.crashPoint) {
-            clearInterval(interval);
-            await updateDoc(gRef, { phase: "crashed", multiplier: data.crashPoint });
+function updateButtons() {
+    const btnSet = (id, act) => {
+        const b = document.getElementById(id);
+        if(gameData.phase === "betting") {
+            b.disabled = false; b.innerText = act > 0 ? "İPTAL" : "BAHİS YAP";
+            b.className = act > 0 ? "cancel" : "";
+        } else if(gameData.phase === "flying" && act > 0) {
+            b.disabled = false; b.innerText = "ÇEK ₺" + Math.floor(act * gameData.multiplier);
+            b.className = "cashout";
         } else {
-            await updateDoc(gRef, { multiplier: newMult });
+            b.disabled = true; b.innerText = "BEKLENİYOR"; b.className = "";
         }
-    }, 100);
+    };
+    btnSet("btn1", activeBet1); btnSet("btn2", activeBet2);
 }
 
-// Canvas ve Yıldızlar (Görsel)
-const stars = Array.from({length: 50}, () => ({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, s: Math.random()*2 }));
-function animate() {
-    ctx.fillStyle = "#03050a"; ctx.fillRect(0,0,canvas.width,canvas.height);
-    ctx.fillStyle = "white";
-    stars.forEach(s => {
-        ctx.beginPath(); ctx.arc(s.x, s.y, s.s, 0, Math.PI*2); ctx.fill();
-        s.x -= (gameData.phase === "flying" ? gameData.multiplier * 0.5 : 0.2);
-        if(s.x < 0) s.x = canvas.width;
-    });
-    requestAnimationFrame(animate);
-}
-animate();
+document.getElementById("btn1").onclick = () => handleAction(1);
+document.getElementById("btn2").onclick = () => handleAction(2);
 </script>
 </body>
 </html>
