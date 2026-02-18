@@ -2,163 +2,168 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PixelArena 3310 Snake</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>PixelArena | Snake 3310 Edition</title>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 
 <style>
-html,body{
-margin:0;
-padding:0;
-height:100%;
-overflow:hidden;
-background:#7c8f00;
-font-family:'Press Start 2P', monospace;
-display:flex;
-justify-content:center;
-align-items:center;
+:root {
+    --nokia-dark: #0f380f;
+    --nokia-med: #2f4f2f;
+    --nokia-light: #8bac0f;
+    --nokia-screen: #9bbc0f;
 }
 
-.startup{
-position:absolute;
-width:100%;
-height:100%;
-background:#8bac0f;
-display:flex;
-justify-content:center;
-align-items:center;
-flex-direction:column;
-color:#0f380f;
-z-index:50;
-transition:1s;
-}
-.hidden{opacity:0;visibility:hidden;}
+* { margin:0; padding:0; box-sizing:border-box; touch-action:none; }
 
-.producer{
-position:absolute;
-top:40px;
-font-size:14px;
-color:#0f380f;
-letter-spacing:2px;
-animation: blink 1s infinite;
-}
-@keyframes blink{50%{opacity:0;}}
-
-.console{
-width:340px;
-height:480px;
-background:#8bac0f;
-border:14px solid #2f4f2f;
-box-shadow:0 0 40px black inset, 0 0 30px black;
-padding:15px;
-display:flex;
-flex-direction:column;
-align-items:center;
-position:relative;
+body {
+    background: #5d6d00;
+    height: 100vh;
+    overflow: hidden;
+    font-family: 'Press Start 2P', monospace;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
-.score{
-font-size:12px;
-color:#0f380f;
-margin-bottom:10px;
+.producer {
+    position: absolute;
+    top: 20px;
+    font-size: 10px;
+    color: var(--nokia-dark);
+    letter-spacing: 1px;
+    animation: blink 1.5s infinite;
 }
 
-.canvas-wrapper{
-position:relative;
-width:300px;
-height:300px;
+@keyframes blink { 50% { opacity: 0.3; } }
+
+.startup {
+    position: fixed;
+    inset: 0;
+    background: var(--nokia-light);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    color: var(--nokia-dark);
+    z-index: 100;
+    cursor: pointer;
 }
 
-canvas{
-background:#9bbc0f;
-image-rendering: pixelated;
-display:block;
+.hidden { opacity: 0; visibility: hidden; transition: opacity 0.5s; }
+
+.console {
+    width: 350px;
+    background: var(--nokia-light);
+    border: 12px solid var(--nokia-med);
+    border-radius: 20px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
-.scanlines{
-position:absolute;
-top:0;
-left:0;
-width:100%;
-height:100%;
-pointer-events:none;
-background: repeating-linear-gradient(
-to bottom,
-rgba(0,0,0,0.05),
-rgba(0,0,0,0.05) 2px,
-transparent 2px,
-transparent 4px
-);
+.score-panel {
+    width: 100%;
+    font-size: 9px;
+    color: var(--nokia-dark);
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
 }
 
-.gameover{
-position:absolute;
-top:0;
-left:0;
-width:300px;
-height:300px;
-background:rgba(139,172,15,0.95);
-display:flex;
-justify-content:center;
-align-items:center;
-flex-direction:column;
-font-size:12px;
-color:#0f380f;
-display:none;
-text-align:center;
-padding:20px;
+.screen-container {
+    position: relative;
+    border: 6px solid var(--nokia-dark);
+    background: var(--nokia-screen);
 }
 
-.controls{
-display:grid;
-grid-template-columns:60px 60px 60px;
-grid-gap:5px;
-justify-content:center;
-margin-top:20px;
+canvas {
+    display: block;
+    image-rendering: pixelated;
 }
 
-.btn{
-background:#2f4f2f;
-color:white;
-text-align:center;
-padding:15px;
-user-select:none;
+.scanlines {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(to bottom, rgba(0,0,0,0.03) 0px, rgba(0,0,0,0.03) 1px, transparent 2px);
 }
+
+.gameover-layer {
+    position: absolute;
+    inset: 0;
+    background: rgba(155, 188, 15, 0.9);
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    color: var(--nokia-dark);
+    font-size: 12px;
+    padding: 10px;
+}
+
+.controls {
+    display: grid;
+    grid-template-columns: repeat(3, 70px);
+    grid-gap: 10px;
+    margin-top: 25px;
+}
+
+.btn {
+    background: var(--nokia-med);
+    color: white;
+    height: 60px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 10px;
+    font-size: 20px;
+    box-shadow: 0 4px 0 var(--nokia-dark);
+    cursor: pointer;
+    transition: transform 0.05s;
+}
+
+.btn:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--nokia-dark); }
+.empty { visibility: hidden; }
+
 </style>
 </head>
 <body>
 
-<div class="startup" id="startup">
-<h1>NOKIA</h1>
-<div>Connecting People</div>
-</div>
-
 <div class="producer">YAPIMCI: PixelArena</div>
 
+<div class="startup" id="startup">
+    <h1 style="font-size: 30px; margin-bottom: 10px;">NOKIA</h1>
+    <p style="font-size: 10px;">Connecting People</p>
+    <p style="margin-top: 40px; font-size: 8px; animation: blink 1s infinite;">BAŞLAMAK İÇİN DOKUNUN</p>
+</div>
+
 <div class="console">
+    <div class="score-panel">
+        <div>SKOR: <span id="score">0</span></div>
+        <div>EN YÜKSEK: <span id="high">0</span></div>
+    </div>
 
-<div class="score">
-Skor: <span id="score">0</span> | High: <span id="high">0</span>
-</div>
+    <div class="screen-container">
+        <canvas id="game" width="300" height="300"></canvas>
+        <div class="scanlines"></div>
+        <div class="gameover-layer" id="gameover">
+            <p>GAME OVER</p>
+            <p style="font-size: 8px; margin-top: 20px;">TEKRAR OYNAMAK İÇİN DOKUNUN</p>
+        </div>
+    </div>
 
-<div class="canvas-wrapper">
-<canvas id="game" width="300" height="300"></canvas>
-<div class="scanlines"></div>
-<div class="gameover" id="gameover">
-GAME OVER<br><br>
-Dokunarak Yeniden Başla
-</div>
-</div>
-
-<div class="controls">
-<div></div>
-<div class="btn" onclick="setDir('UP')">↑</div>
-<div></div>
-<div class="btn" onclick="setDir('LEFT')">←</div>
-<div class="btn" onclick="setDir('DOWN')">↓</div>
-<div class="btn" onclick="setDir('RIGHT')">→</div>
-</div>
-
+    <div class="controls">
+        <div class="empty"></div>
+        <div class="btn" id="btn-UP">↑</div>
+        <div class="empty"></div>
+        <div class="btn" id="btn-LEFT">←</div>
+        <div class="btn" id="btn-DOWN">↓</div>
+        <div class="btn" id="btn-RIGHT">→</div>
+    </div>
 </div>
 
 <script>
@@ -167,178 +172,175 @@ const ctx = canvas.getContext("2d");
 const box = 15;
 const size = 300;
 
-let snake, direction, food, score;
-let started = false;
-
-let baseSpeed = 220;
-let currentSpeed = baseSpeed;
-let minSpeed = 80;
-
-let lastMoveTime = 0;
-
-let highScore = localStorage.getItem("snakeHigh") || 0;
-document.getElementById("high").innerText = highScore;
-
-/* AUDIO */
+let snake, direction, food, score, started = false;
+let currentSpeed, lastMoveTime, nextDirection;
 let audioCtx;
-function initAudio(){
-if(!audioCtx){
-audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-}
-}
-function beep(freq,duration){
-if(!audioCtx) return;
-const osc = audioCtx.createOscillator();
-const gain = audioCtx.createGain();
-osc.type="square";
-osc.frequency.value=freq;
-gain.gain.setValueAtTime(0.15,audioCtx.currentTime);
-gain.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+duration/1000);
-osc.connect(gain);
-gain.connect(audioCtx.destination);
-osc.start();
-osc.stop(audioCtx.currentTime+duration/1000);
+
+const highScore = () => localStorage.getItem("snakeHighPro") || 0;
+document.getElementById("high").innerText = highScore();
+
+function initAudio() {
+    if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
 }
 
-/* BOOT */
-if(!sessionStorage.getItem("booted")){
-document.body.addEventListener("click", boot,{once:true});
-document.body.addEventListener("touchstart", boot,{once:true});
-}else{
-document.getElementById("startup").style.display="none";
-initAudio();
-startGame();
+function beep(freq, dur) {
+    if (!audioCtx) return;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = "square";
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur/1000);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + dur/1000);
 }
 
-function boot(){
-initAudio();
-beep(700,250);
-setTimeout(()=>{
-document.getElementById("startup").classList.add("hidden");
-sessionStorage.setItem("booted","true");
-setTimeout(()=>{startGame();},2000);
-},1000);
+document.getElementById("startup").addEventListener("click", function() {
+    initAudio();
+    beep(600, 100);
+    this.classList.add("hidden");
+    setTimeout(() => {
+        this.style.display = "none";
+        startGame();
+    }, 500);
+}, { once: true });
+
+function startGame() {
+    snake = [{ x: 10 * box, y: 10 * box }, { x: 9 * box, y: 10 * box }];
+    direction = "RIGHT";
+    nextDirection = "RIGHT";
+    food = randomFood();
+    score = 0;
+    currentSpeed = 200;
+    lastMoveTime = 0;
+    started = true;
+    document.getElementById("score").innerText = "0";
+    document.getElementById("gameover").style.display = "none";
+    requestAnimationFrame(gameLoop);
 }
 
-function startGame(){
-snake=[{x:150,y:150}];
-direction="RIGHT";
-food=randomFood();
-score=0;
-currentSpeed = baseSpeed;
-lastMoveTime=0;
-document.getElementById("score").innerText=0;
-document.getElementById("gameover").style.display="none";
-started=true;
-requestAnimationFrame(gameLoop);
+function randomFood() {
+    let newFood;
+    while(true) {
+        newFood = {
+            x: Math.floor(Math.random() * (size / box)) * box,
+            y: Math.floor(Math.random() * (size / box)) * box,
+            special: Math.random() < 0.1
+        };
+        // Yılanın üstünde doğmasın
+        let onSnake = snake.some(s => s.x === newFood.x && s.y === newFood.y);
+        if (!onSnake) break;
+    }
+    return newFood;
 }
 
-function updateSpeed(){
-let newSpeed = baseSpeed - Math.floor(score/5)*15;
-if(newSpeed < minSpeed) newSpeed = minSpeed;
-currentSpeed = newSpeed;
+function handleInput(dir) {
+    if (!started) return;
+    // Input Buffer: Ters yöne ani dönüşü engeller
+    if (dir === "UP" && direction !== "DOWN") nextDirection = "UP";
+    if (dir === "DOWN" && direction !== "UP") nextDirection = "DOWN";
+    if (dir === "LEFT" && direction !== "RIGHT") nextDirection = "LEFT";
+    if (dir === "RIGHT" && direction !== "LEFT") nextDirection = "RIGHT";
 }
 
-function randomFood(){
-let isRed = Math.random() < 0.15;
-return{
-x:Math.floor(Math.random()*(size/box))*box,
-y:Math.floor(Math.random()*(size/box))*box,
-type:isRed?"red":"green"
-}
-}
-
-function setDir(dir){
-if(!started)return;
-if(dir==="UP"&&direction!=="DOWN")direction="UP";
-if(dir==="DOWN"&&direction!=="UP")direction="DOWN";
-if(dir==="LEFT"&&direction!=="RIGHT")direction="LEFT";
-if(dir==="RIGHT"&&direction!=="LEFT")direction="RIGHT";
-}
-
-document.addEventListener("keydown",(e)=>{
-if(e.key==="ArrowUp")setDir("UP");
-if(e.key==="ArrowDown")setDir("DOWN");
-if(e.key==="ArrowLeft")setDir("LEFT");
-if(e.key==="ArrowRight")setDir("RIGHT");
+// Kontroller
+document.addEventListener("keydown", e => {
+    if (e.key === "ArrowUp") handleInput("UP");
+    if (e.key === "ArrowDown") handleInput("DOWN");
+    if (e.key === "ArrowLeft") handleInput("LEFT");
+    if (e.key === "ArrowRight") handleInput("RIGHT");
 });
 
-function gameLoop(timestamp){
-if(!started) return;
-
-if(timestamp - lastMoveTime > currentSpeed){
-update();
-lastMoveTime = timestamp;
-}
-draw();
-requestAnimationFrame(gameLoop);
-}
-
-function update(){
-let headX=snake[0].x;
-let headY=snake[0].y;
-
-if(direction==="UP")headY-=box;
-if(direction==="DOWN")headY+=box;
-if(direction==="LEFT")headX-=box;
-if(direction==="RIGHT")headX+=box;
-
-if(headX<0||headY<0||headX>=size||headY>=size||collision(headX,headY)){
-gameOver();
-return;
-}
-
-if(headX===food.x&&headY===food.y){
-if(food.type==="red"){
-score+=3;
-beep(900,120);
-}else{
-score+=1;
-beep(600,100);
-}
-food=randomFood();
-updateSpeed();
-}else{
-snake.pop();
-}
-
-snake.unshift({x:headX,y:headY});
-document.getElementById("score").innerText=score;
-}
-
-function draw(){
-ctx.fillStyle="#9bbc0f";
-ctx.fillRect(0,0,size,size);
-
-snake.forEach(s=>{
-ctx.fillStyle="#0f380f";
-ctx.fillRect(s.x,s.y,box,box);
+["UP", "DOWN", "LEFT", "RIGHT"].forEach(d => {
+    document.getElementById("btn-" + d).addEventListener("pointerdown", (e) => {
+        e.preventDefault();
+        handleInput(d);
+    });
 });
 
-ctx.font="14px Arial";
-ctx.textAlign="center";
-ctx.textBaseline="middle";
-ctx.fillText(food.type==="red"?"🍎":"🍏",food.x+box/2,food.y+box/2);
+function gameLoop(time) {
+    if (!started) return;
+
+    if (time - lastMoveTime > currentSpeed) {
+        update();
+        lastMoveTime = time;
+    }
+    draw();
+    requestAnimationFrame(gameLoop);
 }
 
-function collision(x,y){
-return snake.some(s=>s.x===x&&s.y===y);
+function update() {
+    direction = nextDirection;
+    let head = { x: snake[0].x, y: snake[0].y };
+
+    if (direction === "UP") head.y -= box;
+    if (direction === "DOWN") head.y += box;
+    if (direction === "LEFT") head.x -= box;
+    if (direction === "RIGHT") head.x += box;
+
+    // Duvar veya Gövde Çarpışması
+    if (head.x < 0 || head.y < 0 || head.x >= size || head.y >= size || 
+        snake.some(s => s.x === head.x && s.y === head.y)) {
+        gameOver();
+        return;
+    }
+
+    if (head.x === food.x && head.y === food.y) {
+        score += food.special ? 5 : 1;
+        beep(food.special ? 800 : 400, 80);
+        food = randomFood();
+        currentSpeed = Math.max(60, 200 - Math.floor(score / 3) * 5);
+    } else {
+        snake.pop();
+    }
+
+    snake.unshift(head);
+    document.getElementById("score").innerText = score;
 }
 
-function gameOver(){
-started=false;
+function draw() {
+    // Ekranı Temizle
+    ctx.fillStyle = "#9bbc0f";
+    ctx.fillRect(0, 0, size, size);
 
-if(score>highScore){
-localStorage.setItem("snakeHigh",score);
-document.getElementById("high").innerText=score;
+    // Yılanı Çiz (Borderlı pixel etkisi)
+    snake.forEach((s, index) => {
+        ctx.fillStyle = "#0f380f";
+        ctx.fillRect(s.x + 1, s.y + 1, box - 2, box - 2);
+        // Gözler
+        if(index === 0) {
+            ctx.fillStyle = "#9bbc0f";
+            ctx.fillRect(s.x + 3, s.y + 3, 3, 3);
+            ctx.fillRect(s.x + 9, s.y + 3, 3, 3);
+        }
+    });
+
+    // Yemek
+    ctx.fillStyle = "#0f380f";
+    if (food.special) {
+        // Özel yemek için yanıp sönen kare
+        if (Math.floor(Date.now() / 100) % 2) ctx.fillRect(food.x, food.y, box, box);
+    } else {
+        ctx.fillRect(food.x + 4, food.y + 4, box - 8, box - 8);
+    }
 }
 
-document.getElementById("gameover").style.display="flex";
+function gameOver() {
+    started = false;
+    beep(150, 500);
+    if (score > highScore()) {
+        localStorage.setItem("snakeHighPro", score);
+        document.getElementById("high").innerText = score;
+    }
+    document.getElementById("gameover").style.display = "flex";
 }
 
-document.getElementById("gameover").addEventListener("click",startGame);
-document.getElementById("gameover").addEventListener("touchstart",startGame);
+document.getElementById("gameover").addEventListener("click", startGame);
+
 </script>
-
 </body>
 </html>
