@@ -6,12 +6,12 @@
 <title>Pişti Casino PRO</title>
 
 <style>
-    /* ZOOM VE ÇİFT TIK ENGELLEME */
+    /* 1. ÇİFT TIK ZOOM ENGELLEME (TÜM ETKİLEŞİMLİ ÖĞELER) */
     * { 
         margin:0; padding:0; box-sizing:border-box; 
         -webkit-tap-highlight-color:transparent; 
         user-select:none; 
-        touch-action: manipulation; 
+        touch-action: manipulation; /* Çift tık zoomu tamamen kapatır */
     }
     
     body {
@@ -45,21 +45,22 @@
     .table-cards { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:75px; height:105px; }
     .stack-card { width:75px; position:absolute; left:0; top:0; border-radius: 6px; box-shadow: 0 4px 8px rgba(0,0,0,0.4); background: white; }
 
-    .hand, .computer { position:absolute; left:50%; transform:translateX(-50%); display:flex; gap:6px; width: max-content; padding: 10px; min-height: 110px; }
+    .hand, .computer { position:absolute; left:50%; transform:translateX(-50%); display:flex; gap:6px; width: max-content; padding: 10px; min-height: 100px;}
     .hand { bottom:-55px; }
     .computer { top:-55px; }
 
-    .card { width:65px; border-radius: 6px; cursor:pointer; transition: transform 0.2s; box-shadow: 0 5px 15px rgba(0,0,0,0.3); background: white; }
+    .card { width:65px; border-radius: 6px; cursor:pointer; transition: transform 0.2s; box-shadow: 0 5px 15px rgba(0,0,0,0.3); background: white;}
     .hand .card:hover { transform: translateY(-15px); }
 
-    /* ANİMASYON KARTI */
-    .animated-card {
-        position: fixed; width: 65px; height: 91px; border-radius: 6px; z-index: 5000;
-        background-size: cover; pointer-events: none; transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
-        box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+    /* DAĞITMA VE ATMA ANİMASYONU ÖĞELERİ */
+    .card-anim { 
+        position:fixed; width:65px; z-index:5000; 
+        transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1); 
+        border-radius: 6px; pointer-events: none;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.4);
     }
 
-    .card-throw { position:absolute; width:65px; z-index:2000; transition:all 0.4s cubic-bezier(.25,.8,.25,1); border-radius: 6px; }
+    .card-throw { position:absolute; width:65px; z-index:2000; transition:all 0.45s cubic-bezier(.25,.8,.25,1); border-radius: 6px; }
 
     .chips { position:fixed; bottom:95px; display:flex; gap:10px; background: rgba(0,0,0,0.2); padding: 10px 15px; border-radius: 40px; backdrop-filter: blur(5px); }
     .chip { 
@@ -98,9 +99,9 @@
     }
     .modal-content {
         background: linear-gradient(135deg, #1a2a6c, #0b1023); color: white; padding: 30px; border-radius: 25px; width: 85%; max-width: 320px;
-        text-align: center; border: 2px solid #4fd1ff; box-shadow: 0 0 30px rgba(79, 209, 255, 0.3); animation: modalIn 0.4s;
+        text-align: center; border: 2px solid #4fd1ff; box-shadow: 0 0 30px rgba(79, 209, 255, 0.3); animation: modalIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
-    .modal-msg { font-size: 20px; font-weight: 800; margin-bottom: 20px; color: #ffcc00; white-space: pre-line; }
+    .modal-msg { font-size: 20px; font-weight: 800; margin-bottom: 20px; color: #ffcc00; white-space: pre-line;}
     .modal-btn { background: #4fd1ff; color: #0b1023; border: none; font-size: 16px; font-weight: 800; cursor: pointer; padding: 12px 30px; border-radius: 15px; width: 100%; }
 </style>
 </head>
@@ -140,7 +141,7 @@
     <div class="chip c10000" id="chip10000" onclick="addBet(10000)">10K</div>
 </div>
 
-<button class="start-btn" id="startBtn" onclick="initAudioAndStart()">MASAYA OTUR</button>
+<button class="start-btn" id="startBtn" onclick="unlockAudioAndStart()">MASAYA OTUR</button>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -160,7 +161,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// SES DOSYALARI
+// 2. SES MOTORU (iOS ÖZEL ÇÖZÜM)
 const sfx = {
     chip: new Audio("https://www.soundjay.com/buttons/sounds/button-20.mp3"),
     cardThrow: new Audio("https://assets.mixkit.co/active_storage/sfx/261/261-preview.mp3"),
@@ -170,22 +171,21 @@ const sfx = {
     pisti: new Audio("https://assets.mixkit.co/active_storage/sfx/2017/2017-preview.mp3")
 };
 
-// iOS Ses Kilidini Açma
-function initAudioAndStart() {
-    Object.keys(sfx).forEach(key => {
-        sfx[key].play().then(() => {
-            sfx[key].pause();
-            sfx[key].currentTime = 0;
+// Tüm sesleri aynı anda yükleyip hazır eden fonksiyon
+function unlockAudioAndStart() {
+    Object.values(sfx).forEach(sound => {
+        sound.play().then(() => {
+            sound.pause();
+            sound.currentTime = 0;
         }).catch(() => {});
     });
     startGame();
 }
 
 function playSfx(name) {
-    const sound = sfx[name];
-    if (sound) {
-        sound.currentTime = 0;
-        sound.play().catch(() => {});
+    if(sfx[name]) {
+        sfx[name].currentTime = 0;
+        sfx[name].play().catch(() => {});
     }
 }
 
@@ -249,42 +249,43 @@ function createDeck() {
     deck.sort(() => Math.random() - 0.5);
 }
 
-// PROFESYONEL DAĞITIM ANİMASYONU
-async function animateDistribution(targetId, count, isTable = false) {
+// 3. PROFESYONEL DAĞITIM ANİMASYONU
+async function animateDeal(targetId, count, isBack = true) {
     dealing = true;
     const targetEl = document.getElementById(targetId);
     
     for (let i = 0; i < count; i++) {
-        const tempCard = document.createElement("div");
-        tempCard.className = "animated-card";
-        tempCard.style.backgroundImage = "url('https://deckofcardsapi.com/static/img/back.png')";
+        const animCard = document.createElement("div");
+        animCard.className = "card-anim";
+        animCard.style.backgroundImage = "url('https://deckofcardsapi.com/static/img/back.png')";
+        animCard.style.backgroundSize = "cover";
         
-        // Sağ dışarıdan başla
-        tempCard.style.left = "110%";
-        tempCard.style.top = "50%";
-        document.body.appendChild(tempCard);
+        // Ekranın sağ dışından başla
+        animCard.style.left = "110%";
+        animCard.style.top = "50%";
+        document.body.appendChild(animCard);
         
         playSfx("cardThrow");
 
         await new Promise(resolve => {
             setTimeout(() => {
-                const rect = targetEl.getBoundingClientRect();
-                tempCard.style.left = (rect.left + (i * 15)) + "px";
-                tempCard.style.top = rect.top + "px";
-                tempCard.style.transform = "rotate(360deg)";
+                const targetRect = targetEl.getBoundingClientRect();
+                animCard.style.left = (targetRect.left + (i * 12)) + "px";
+                animCard.style.top = targetRect.top + "px";
+                animCard.style.transform = "rotate(360deg)";
                 
                 setTimeout(() => {
-                    tempCard.remove();
+                    animCard.remove();
                     resolve();
                 }, 400);
-            }, 100);
+            }, 80);
         });
     }
     dealing = false;
 }
 
 async function dealInitial() {
-    await animateDistribution("tableCards", 4, true);
+    await animateDeal("tableCards", 4);
     table = ["BACK", "BACK", "BACK", deck.shift()];
     render();
     setTimeout(dealRound, 500);
@@ -293,10 +294,10 @@ async function dealInitial() {
 async function dealRound() {
     if (round >= 6) { endGame(); return; }
     
-    await animateDistribution("computerHand", 4);
+    await animateDeal("computerHand", 4);
     for (let i = 0; i < 4; i++) computer.push(deck.shift());
     
-    await animateDistribution("playerHand", 4);
+    await animateDeal("playerHand", 4);
     for (let i = 0; i < 4; i++) player.push(deck.shift());
     
     round++;
@@ -433,7 +434,7 @@ async function endGame() {
         msg = `TEBRİKLER!\n${win.toLocaleString('tr-TR')}₺ Kazandınız.`;
     } else if (ps < cs) {
         playSfx("lose");
-        msg = "KAYBETTİNİZ!\nKurupier kazandı.";
+        msg = "KAYBETTİNİZ!\nKrupiyer kazandı.";
     } else {
         balance += bet;
         msg = "BERABERE!\nBahis iade edildi.";
