@@ -137,7 +137,7 @@ await signOut(auth);
 location.href="index.html";
 };
 
-/* MATCHMAKING FIXED */
+/* MATCHMAKING %0 SELF MATCH */
 findBtn.onclick=async()=>{
 findBtn.style.display="none";
 bigText.innerText="Rakip Aranıyor...";
@@ -157,7 +157,11 @@ const roomDoc=await transaction.get(roomFound.ref);
 if(!roomDoc.exists()) return;
 
 const data=roomDoc.data();
+
 if(data.state!=="waiting") return;
+
+/* 🔒 SELF MATCH BLOCK */
+if(data.player1 === uid) return;
 
 transaction.update(roomFound.ref,{
 player2:uid,
@@ -189,6 +193,7 @@ listenRoom();
 
 /* ROOM LISTENER */
 function listenRoom(){
+if(!roomId) return;
 if(unsubscribe) unsubscribe();
 
 unsubscribe=onSnapshot(doc(db,"rooms",roomId),async(snap)=>{
@@ -299,7 +304,6 @@ if(!snap.exists()) return;
 
 const d=snap.data();
 if(d.state!=="active") return;
-
 if(!d.roundStart) return;
 
 const now=Date.now();
