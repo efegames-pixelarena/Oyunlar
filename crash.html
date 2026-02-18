@@ -3,23 +3,30 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>SkyCrash: Pro Infinite</title>
+<title>SkyCrash: Ultimate Pro</title>
 <style>
+    /* CSS AYARLARI */
     *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
     html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;background:#03050a;color:white;}
+    
     .top-bar{position:fixed;top:0;width:100%;height:60px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;background:rgba(10,15,30,0.9);backdrop-filter:blur(10px);border-bottom:1px solid #1e2642;z-index:100;}
     .brand{font-size:16px;font-weight:900;background:linear-gradient(90deg,#4fd1ff,#fff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-    .nav-box{padding:6px 10px;border-radius:10px;font-weight:700;font-size:11px;min-width:90px;text-align:center;background:#1a2248;border:1px solid #4fd1ff44;color:#4fd1ff;}
-    .history-bar{position:fixed;top:60px;width:100%;height:35px;background:rgba(13,19,38,0.8);display:flex;align-items:center;gap:8px;padding:0 10px;overflow-x:auto;white-space:nowrap;z-index:90;scrollbar-width:none;}
+    .nav-box{padding:6px 10px;border-radius:10px;font-weight:700;font-size:11px;min-width:100px;text-align:center;background:#1a2248;border:1px solid #4fd1ff44;color:#4fd1ff;}
+    
+    .history-bar{position:fixed;top:60px;width:100%;height:35px;background:rgba(13,19,38,0.8);display:flex;align-items:center;gap:8px;padding:0 10px;overflow-x:auto;z-index:90;scrollbar-width:none;}
     .history-item{padding:2px 8px;border-radius:5px;font-size:11px;font-weight:800;}
+
     .main{position:absolute;top:0;bottom:180px;width:100%;overflow:hidden;}
     canvas{width:100%;height:100%;display:block;}
+
     .multiplier-overlay{position:absolute;top:45%;left:50%;transform:translate(-50%,-50%);pointer-events:none;text-align:center;z-index:10;}
     .multiplier{font-weight:900;line-height:1.1;font-variant-numeric: tabular-nums;}
     .multiplier.big{font-size:75px;color:#fff;text-shadow:0 0 30px rgba(79,209,255,0.8);}
     .multiplier.small{font-size:24px;color:#4fd1ff;}
     .multiplier.crashed{color:#ff2a4d !important; animation: shake 0.1s infinite;}
+
     @keyframes shake { 0% { transform: translate(1px, 1px); } 50% { transform: translate(-1px, -1px); } 100% { transform: translate(1px, 1px); } }
+
     .bottom{position:absolute;bottom:0;width:100%;height:180px;background:#0a0f1e;display:flex;justify-content:center;align-items:center;gap:10px;padding:0 15px;border-top:1px solid #1e2642;z-index:100;}
     .betBox{background:#161d36;padding:12px;border-radius:15px;flex:1;max-width:190px;display:flex;flex-direction:column;gap:8px;}
     .betBox input{padding:12px;border:1px solid #273c8f;border-radius:10px;text-align:center;font-weight:bold;font-size:16px;background:#050811;color:white;outline:none;}
@@ -30,12 +37,18 @@
 </head>
 <body>
 
-<div class="top-bar"><div class="brand">SKYCRASH PRO</div><div class="nav-box">₺<span id="balance">0</span></div></div>
+<div class="top-bar">
+    <div class="brand">SKYCRASH PRO</div>
+    <div class="nav-box">₺<span id="balance">0</span></div>
+</div>
+
 <div class="history-bar" id="historyBar"></div>
+
 <div class="main">
     <canvas id="graph"></canvas>
-    <div class="multiplier-overlay"><div class="multiplier small" id="multiplier">SENKRONİZE EDİLİYOR...</div></div>
+    <div class="multiplier-overlay"><div class="multiplier small" id="multiplier">BAĞLANIYOR...</div></div>
 </div>
+
 <div class="bottom">
     <div class="betBox"><input type="number" id="betInput1" value="100"><button id="btn1">BAHİS YAP</button></div>
     <div class="betBox"><input type="number" id="betInput2" value="200"><button id="btn2">BAHİS YAP</button></div>
@@ -44,7 +57,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, onSnapshot, updateDoc, increment, getDoc, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, doc, onSnapshot, updateDoc, increment, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
@@ -59,9 +72,10 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+// --- GLOBAL DEĞİŞKENLER ---
 let userRef = null, balance = 0, activeBet1 = 0, activeBet2 = 0;
 let gameData = { phase: "waiting", multiplier: 1, countdown: 0, startTime: 0, crashPoint: 0 };
-let loopLock = false; // Çakışmayı önlemek için kilit
+let loopLock = false;
 
 const canvas = document.getElementById("graph"), ctx = canvas.getContext("2d");
 const multEl = document.getElementById("multiplier");
@@ -70,30 +84,31 @@ window.addEventListener("resize", resize); resize();
 
 let stars = Array.from({length: 80}, () => ({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, s: Math.random()*2 }));
 
-// --- GÖRSEL MOTOR ---
+// --- GÖRSEL DÖNGÜ ---
 function render() {
     ctx.fillStyle = "#03050a"; ctx.fillRect(0,0,canvas.width,canvas.height);
     ctx.fillStyle = "white";
-    stars.forEach(s => { ctx.beginPath(); ctx.arc(s.x, s.y, s.s, 0, 7); ctx.fill(); s.x -= (gameData.phase === "flying" ? gameData.multiplier * 0.5 : 0.2); if(s.x<0) s.x=canvas.width; });
+    stars.forEach(s => { 
+        ctx.beginPath(); ctx.arc(s.x, s.y, s.s, 0, 7); ctx.fill(); 
+        s.x -= (gameData.phase === "flying" ? gameData.multiplier * 0.4 : 0.2); 
+        if(s.x<0) s.x=canvas.width; 
+    });
 
     if(gameData.phase === "flying") {
         const elapsed = (Date.now() - gameData.startTime) / 1000;
-        const currentM = Math.pow(1.08, elapsed); 
+        const currentM = Math.pow(1.08, elapsed); // Hız çarpanı
         
         if (currentM < gameData.crashPoint) {
             gameData.multiplier = currentM;
             multEl.className = "multiplier big";
             multEl.innerText = gameData.multiplier.toFixed(2) + "x";
         } else {
-            // Patlama anı (Sadece yerel görsel)
             gameData.phase = "crashed";
             multEl.className = "multiplier big crashed";
             multEl.innerText = gameData.crashPoint.toFixed(2) + "x";
             addHistory(gameData.crashPoint);
             activeBet1 = 0; activeBet2 = 0;
-            
-            // DÖNGÜYÜ BAŞLAT: Tur bittiğinde otomatik sıfırla
-            autoRestartCycle();
+            autoRestartCycle(); // Patlayınca yeni turu tetikle
         }
     } else if(gameData.phase === "betting") {
         multEl.className = "multiplier small";
@@ -104,59 +119,60 @@ function render() {
 }
 render();
 
-// --- OTOMATİK DÖNGÜ YÖNETİMİ ---
+// --- CRASH ALGORİTMASI VE DÖNGÜ ---
 async function autoRestartCycle() {
     if(loopLock) return;
     loopLock = true;
 
-    // 3 saniye patlama ekranında bekle
     setTimeout(async () => {
         const gRef = doc(db, "games", "current");
-        
-        // Transaction kullanarak sadece tek bir cihazın turu başlatmasını sağlıyoruz
         try {
             await runTransaction(db, async (transaction) => {
                 const sfDoc = await transaction.get(gRef);
-                if (sfDoc.data().phase === "flying" || sfDoc.data().phase === "betting") return;
+                const d = sfDoc.data();
+                if (d.phase === "flying" || d.phase === "betting") return;
 
-                // YENİ X HESAPLAMA (Tamamen Rastgele)
+                // Olasılık Eğrisi (House Edge Dahil)
                 const r = Math.random();
-                let nextCrash = 1.00;
-                if(r < 0.05) nextCrash = 1.00; // %5 ihtimalle anında patlar
-                else if(r < 0.7) nextCrash = 1.1 + (Math.random() * 2.5); // %65 orta
-                else if(r < 0.95) nextCrash = 3.5 + (Math.random() * 8); // %25 yüksek
-                else nextCrash = 12 + (Math.random() * 15); // %5 efsanevi (25x+)
+                let nextX = 1.00;
+
+                if (r < 0.03) nextX = 1.00; // %3 Instant Crash
+                else if (r < 0.50) nextX = 1.01 + (Math.random() * 0.9); // %47 Düşük (1.0-1.9)
+                else if (r < 0.85) nextX = 2.00 + (Math.random() * 8); // %35 Orta (2.0-10.0)
+                else if (r < 0.98) nextX = 10.00 + (Math.random() * 90); // %13 Yüksek (10-100)
+                else {
+                    // %2 Efsanevi (100 - 10.000.000) - Logaritmik Dağılım
+                    const expo = Math.random() * 5; 
+                    nextX = 100 * Math.pow(10, expo);
+                }
 
                 transaction.update(gRef, { 
                     phase: "betting", 
                     countdown: 5, 
-                    crashPoint: nextCrash, 
+                    crashPoint: Math.floor(nextX * 100) / 100, 
                     lastActive: Date.now() 
                 });
             });
-
-            // Geri sayımı yönet
             startCountdown(gRef);
-        } catch (e) { console.log("Döngü zaten başka cihaz tarafından başlatıldı."); }
-        
+        } catch (e) { console.log("Döngü kilitlendi veya zaten çalışıyor."); }
         loopLock = false;
     }, 3000);
 }
 
 async function startCountdown(gRef) {
-    let count = 5;
+    let c = 5;
     const timer = setInterval(async () => {
-        count--;
-        if(count <= 0) {
+        c--;
+        if(c <= 0) {
             clearInterval(timer);
             await updateDoc(gRef, { phase: "flying", startTime: Date.now(), lastActive: Date.now() });
         } else {
-            await updateDoc(gRef, { countdown: count, lastActive: Date.now() });
+            await updateDoc(gRef, { countdown: c, lastActive: Date.now() });
         }
     }, 1000);
 }
 
-// --- VERİ TAKİBİ ---
+// --- VERİ SENKRONİZASYONU ---
 onAuthStateChanged(auth, user => {
     if(!user) return;
     userRef = doc(db, "users", user.uid);
@@ -168,13 +184,12 @@ onAuthStateChanged(auth, user => {
         gameData.countdown = d.countdown;
         gameData.crashPoint = d.crashPoint;
         gameData.startTime = d.startTime;
-
-        // EĞER OYUN HERHANGİ BİR SEBEPLE DURURSA (SİSTEM ASILI KALIRSA)
+        // Eğer oyun bir şekilde takılırsa otomatik kurtarma
         if(d.phase === "crashed" && !loopLock) autoRestartCycle();
     });
 });
 
-// --- DİĞER FONKSİYONLAR (BAHİS, BUTONLAR) ---
+// --- BAHİS VE GEÇMİŞ ---
 async function handleBet(box) {
     let amt = Math.floor(document.getElementById("betInput"+box).value);
     let cur = (box === 1) ? activeBet1 : activeBet2;
@@ -193,7 +208,7 @@ function addHistory(v) {
     i.className = "history-item";
     i.style.color = v < 2 ? "#ff2a4d" : "#4fd1ff";
     i.innerText = v.toFixed(2) + "x";
-    b.prepend(i); if(b.children.length > 10) b.lastChild.remove();
+    b.prepend(i); if(b.children.length > 12) b.lastChild.remove();
 }
 
 function updateButtons() {
@@ -210,6 +225,9 @@ function updateButtons() {
     };
     u("btn1", activeBet1); u("btn2", activeBet2);
 }
+
 document.getElementById("btn1").onclick = () => handleBet(1);
 document.getElementById("btn2").onclick = () => handleBet(2);
 </script>
+</body>
+</html>
