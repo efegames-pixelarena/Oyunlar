@@ -16,21 +16,24 @@
         color:white; touch-action:manipulation; display: flex; flex-direction: column;
     }
 
-    /* ÜST BAR STİLİ */
+    /* ÜST BAR STİLİ - DÜZEN BOZUKLUĞU GİDERİLDİ */
     .top-bar {
-        position: fixed; top: 0; width: 100%; height: 55px; display: flex; align-items: center; justify-content: space-between;
-        padding: 0 16px; background: linear-gradient(135deg, #1a2a6c, #16245c);
+        position: fixed; top: 0; width: 100%; height: 60px; display: flex; align-items: center; justify-content: space-between;
+        padding: 0 10px; background: linear-gradient(135deg, #1a2a6c, #16245c);
         box-shadow: 0 4px 15px rgba(0,0,0,0.45); z-index: 100;
     }
     .brand {
-        font-size: 18px; font-weight: 800; background: linear-gradient(90deg, #4fd1ff, #fff, #4fd1ff);
+        font-size: 16px; font-weight: 900; background: linear-gradient(90deg, #4fd1ff, #fff, #4fd1ff);
         background-size: 200% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        animation: shine 3s linear infinite;
+        animation: shine 3s linear infinite; line-height: 1.1;
     }
     @keyframes shine { to { background-position: 200% center; } }
-    .right-menu { display: flex; gap: 10px; }
-    .nav-box { padding: 6px 14px; border-radius: 14px; font-weight: 700; font-size: 13px; min-width: 95px; text-align: center; }
-    .balance-box { background: #273c8f; }
+    .right-menu { display: flex; gap: 8px; }
+    .nav-box { 
+        padding: 5px 10px; border-radius: 10px; font-weight: 700; font-size: 12px; 
+        min-width: 85px; text-align: center; display: flex; flex-direction: column; justify-content: center;
+    }
+    .balance-box { background: #273c8f; border: 1px solid #4fd1ff; }
     .bet-box { background: linear-gradient(90deg, #ff8a00, #ff5f00); color: #000; }
 
     .game-container {
@@ -68,7 +71,7 @@
     #hit { background: #2ecc71; box-shadow: 0 4px #27ae60; }
     #stand { background: #e74c3c; box-shadow: 0 4px #c0392b; }
 
-    /* ÇİPLER (YUKARI TAŞINDI) */
+    /* ÇİPLER */
     .chips-area { display: flex; justify-content: center; gap: 12px; padding-bottom: 45px; }
     .chip {
         width: 62px; height: 62px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
@@ -85,10 +88,10 @@
 <body>
 
 <div class="top-bar">
-    <div class="brand">PIXEL ARENA BJ</div>
+    <div class="brand">PIXEL ARENA<br>CASINO</div>
     <div class="right-menu">
-        <div class="nav-box balance-box">Bakiye: <span id="balance">0</span>₺</div>
-        <div class="nav-box bet-box">Bahis: <span id="bet">0</span>₺</div>
+        <div class="nav-box balance-box">BAKİYE:<br><span id="balance">0</span>₺</div>
+        <div class="nav-box bet-box">BAHİS:<br><span id="bet">0</span>₺</div>
     </div>
 </div>
 
@@ -160,7 +163,8 @@ function playSound(type) {
     if(type==='card') { osc.type='triangle'; osc.frequency.setValueAtTime(400, now); g.gain.setValueAtTime(0.05, now); osc.start(); osc.stop(now+0.1); }
     if(type==='count') { osc.frequency.setValueAtTime(800, now); g.gain.setValueAtTime(0.04, now); osc.start(); osc.stop(now+0.05); }
     if(type==='win') { osc.frequency.setValueAtTime(523, now); osc.frequency.setValueAtTime(659, now+0.1); g.gain.setValueAtTime(0.1, now); osc.start(); osc.stop(now+0.4); }
-    if(type==='bust') { osc.type='sawtooth'; osc.frequency.setValueAtTime(100, now); osc.frequency.linearRampToValueAtTime(30, now+0.5); g.gain.setValueAtTime(0.2, now); osc.start(); osc.stop(now+0.5); }
+    if(type==='lose') { osc.type='sawtooth'; osc.frequency.setValueAtTime(150, now); osc.frequency.linearRampToValueAtTime(50, now+0.5); g.gain.setValueAtTime(0.2, now); osc.start(); osc.stop(now+0.5); }
+    if(type==='bust') { osc.type='square'; osc.frequency.setValueAtTime(80, now); g.gain.setValueAtTime(0.2, now); osc.start(); osc.stop(now+0.3); }
 }
 
 onAuthStateChanged(auth, user => {
@@ -201,16 +205,35 @@ async function startGame(){
     createDeck();
     await updateDoc(userRef, { balance: balance });
 
-    // 2 saniye aralıklarla dağıtım
     await draw(player, "playerCards"); await delay(2000);
     await draw(dealer, "dealerCards"); await delay(2000);
     await draw(player, "playerCards"); await delay(2000);
     await draw(dealer, "dealerCards", true);
 
-    if(total(player) === 21) { 
+    const pT = total(player);
+    const dT = total(dealer);
+
+    // KURUPİER BLACKJACK KONTROLÜ
+    if(dT === 21 && dealer.length === 2) {
+        dealerHidden = false;
+        const dc = document.getElementById("dealerCards").children;
+        dc[1].src = `https://deckofcardsapi.com/static/img/${dealer[1].v}${dealer[1].s}.png`;
+        updateScores();
+        messageEl.innerText = "KURUPİER BLACKJACK!";
+        await delay(1000);
+        endGame();
+        return;
+    }
+
+    // OYUNCU BLACKJACK KONTROLÜ
+    if(pT === 21) { 
         messageEl.innerText = "BLACKJACK!"; 
-        await delay(1000); 
-        dealerTurn(); 
+        dealerHidden = false; // Oyuncu BJ yapınca açık kartı göster
+        const dc = document.getElementById("dealerCards").children;
+        if(dc[1]) dc[1].src = `https://deckofcardsapi.com/static/img/${dealer[1].v}${dealer[1].s}.png`;
+        updateScores();
+        await delay(2000); 
+        endGame(); // Dursun ve bitir
     } else { 
         controlsEl.style.display = "flex"; 
         startActionTimer(); 
@@ -265,12 +288,17 @@ function startActionTimer(){
     actionTimer = setInterval(() => {
         s--;
         if(s>0) { messageEl.innerText = "KARAR (" + s + ")"; playSound('count'); }
-        else { clearInterval(actionTimer); stand(); }
+        else { 
+            clearInterval(actionTimer); 
+            messageEl.innerText = ""; // Karar yazısını sil
+            stand(); 
+        }
     }, 1000);
 }
 
 document.getElementById("hit").onclick = async () => {
     clearInterval(actionTimer);
+    messageEl.innerText = ""; // Karar yazısını sil
     controlsEl.style.display = "none";
     await draw(player, "playerCards");
     let pT = total(player);
@@ -282,7 +310,12 @@ document.getElementById("hit").onclick = async () => {
     }
 };
 
-const stand = () => { clearInterval(actionTimer); controlsEl.style.display="none"; dealerTurn(); };
+const stand = () => { 
+    clearInterval(actionTimer); 
+    messageEl.innerText = ""; // Karar yazısını sil
+    controlsEl.style.display="none"; 
+    dealerTurn(); 
+};
 document.getElementById("stand").onclick = stand;
 
 async function dealerTurn(){
@@ -299,11 +332,27 @@ async function dealerTurn(){
 
 async function endGame(){
     let p=total(player), d=total(dealer), m=0, txt="";
-    if(p>21) { txt="BUST! KAYBETTİN"; playSound('bust'); }
-    else if(d>21) { txt="KURUPİER BUST!"; m=2; playSound('win'); }
-    else if(p>d) { txt="KAZANDIN!"; m=2; playSound('win'); }
-    else if(d>p) { txt="KAYBETTİN"; }
-    else { txt="BERABERE"; m=1; }
+    
+    // Kazanma/Kaybetme Mantığı
+    if(p>21) { 
+        txt="BUST! KAYBETTİN"; 
+        playSound('bust'); 
+    }
+    else if(d>21) { 
+        txt="KURUPİER BUST!"; m=2; 
+        playSound('win'); 
+    }
+    else if(p>d) { 
+        txt="KAZANDIN!"; m=2; 
+        playSound('win'); 
+    }
+    else if(d>p) { 
+        txt="KAYBETTİN"; 
+        playSound('lose'); // Kaybetme sesi eklendi
+    }
+    else { 
+        txt="BERABERE"; m=1; 
+    }
     
     if(m>0) await updateDoc(userRef, { balance: increment(bet*m) });
     messageEl.innerText = txt;
