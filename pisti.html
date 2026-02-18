@@ -11,60 +11,85 @@
         height:100vh; overflow:hidden; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
         background:#0b1023; color:white; display:flex; flex-direction:column; align-items:center;
     }
+    
+    /* ÜST BAR DÜZENLEMESİ - TAŞMA YAPMAZ */
     .top-bar {
-        position:fixed; top:0; width:100%; height:55px; display:flex; align-items:center; justify-content:space-between;
-        padding:0 16px; background:linear-gradient(135deg,#1a2a6c,#16245c); box-shadow:0 4px 15px rgba(0,0,0,0.45); z-index:100;
+        position:fixed; top:0; width:100%; height:60px; display:flex; align-items:center; justify-content:space-between;
+        padding:0 12px; background:linear-gradient(135deg,#1a2a6c,#16245c); box-shadow:0 4px 15px rgba(0,0,0,0.45); z-index:1000;
     }
-    .brand { font-size:18px; font-weight:800; color:#4fd1ff; }
-    .nav-box { padding:6px 14px; border-radius:14px; font-weight:700; font-size:13px; background:#273c8f; }
+    .brand { font-size:16px; font-weight:800; color:#4fd1ff; white-space: nowrap; flex-shrink: 0; margin-right: 10px; }
+    
+    .nav-box { 
+        display: flex; gap: 8px; align-items: center; background:rgba(39, 60, 143, 0.6); 
+        padding:8px 12px; border-radius:12px; border: 1px solid rgba(79, 209, 255, 0.2);
+        max-width: 70%; overflow: hidden;
+    }
+    .nav-item { font-size:12px; font-weight:700; white-space: nowrap; color: #fff; }
+    .nav-item span { color: #4fd1ff; }
 
-    h1 { margin-top:70px; font-size: 20px; }
-    .score-board { margin: 10px 0; font-weight: bold; color: #ffcc00; }
+    h1 { margin-top:80px; font-size: 18px; letter-spacing: 1px; color: rgba(255,255,255,0.8); }
+    .score-board { margin: 8px 0; font-weight: bold; color: #ffcc00; font-size: 14px; background: rgba(0,0,0,0.3); padding: 4px 15px; border-radius: 20px; }
 
+    /* MASA VE KARTLAR */
     .table {
-        width:95%; max-width:600px; height:400px; border-radius:150px; position:relative;
-        background:radial-gradient(circle at center,#136f3a,#083d18 70%);
-        box-shadow:inset 0 0 80px #000, 0 0 30px rgba(0,255,153,0.3);
-        margin-top: 20px; transition:0.4s; border: 8px solid #3d2b1f;
+        width:92%; max-width:500px; height:360px; border-radius:180px; position:relative;
+        background:radial-gradient(circle at center,#1a8a4d,#0a4d23 80%);
+        box-shadow:inset 0 0 100px #000, 0 10px 40px rgba(0,0,0,0.5);
+        margin-top: 15px; transition:0.4s; border: 10px solid #2d1f14;
     }
 
-    .table-cards { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:80px; height:110px; }
-    .stack-card { width:80px; position:absolute; left:0; top:0; border-radius: 4px; box-shadow: 2px 2px 5px rgba(0,0,0,0.5); }
+    .table-cards { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:75px; height:105px; }
+    .stack-card { width:75px; position:absolute; left:0; top:0; border-radius: 6px; box-shadow: 0 4px 8px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); }
 
-    .hand, .computer { position:absolute; left:50%; transform:translateX(-50%); display:flex; gap:8px; width: max-content; }
-    .hand { bottom:-40px; }
-    .computer { top:-40px; }
+    .hand, .computer { position:absolute; left:50%; transform:translateX(-50%); display:flex; gap:6px; width: max-content; padding: 10px; }
+    .hand { bottom:-45px; }
+    .computer { top:-45px; }
 
-    .card { width:70px; border-radius: 5px; cursor:pointer; transition: 0.2s; }
-    .hand .card:hover { transform: translateY(-10px); }
+    .card { width:65px; border-radius: 6px; cursor:pointer; transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+    .hand .card:hover { transform: translateY(-15px) scale(1.05); z-index: 100; }
 
-    .card-throw { position:absolute; width:70px; z-index:2000; transition:all 0.4s cubic-bezier(.25,.8,.25,1); }
+    .card-throw { position:absolute; width:65px; z-index:2000; transition:all 0.45s cubic-bezier(.25,.8,.25,1); border-radius: 6px; }
 
-    .chips { position:fixed; bottom:80px; display:flex; gap:10px; }
-    .chip { width:55px; height:55px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; cursor:pointer; border: 3px dashed rgba(255,255,255,0.4); }
-    .c1 { background:#eee; color:000; } .c2 { background:#2ecc71; } .c3 { background:#e74c3c; } .c4 { background:#2c3e50; }
+    /* CHIPS & BUTTONS */
+    .chips { position:fixed; bottom:85px; display:flex; gap:12px; background: rgba(0,0,0,0.2); padding: 10px 20px; border-radius: 40px; backdrop-filter: blur(5px); }
+    .chip { 
+        width:52px; height:52px; border-radius:50%; display:flex; align-items:center; justify-content:center; 
+        font-weight:900; cursor:pointer; border: 4px dashed rgba(255,255,255,0.3); font-size: 12px;
+        transition: 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+    }
+    .chip:active { transform: scale(0.9); }
+    .c1 { background: radial-gradient(#fff, #ccc); color:#000; } 
+    .c2 { background: radial-gradient(#2ecc71, #27ae60); color:#fff; } 
+    .c3 { background: radial-gradient(#e74c3c, #c0392b); color:#fff; } 
+    .c4 { background: radial-gradient(#34495e, #2c3e50); color:#fff; }
 
     .start-btn {
-        position:fixed; bottom:20px; padding:12px 40px; background:linear-gradient(90deg,#ffb300,#ff5e00);
-        border:none; border-radius:25px; font-weight:bold; color:white; cursor:pointer;
+        position:fixed; bottom:20px; padding:14px 50px; background:linear-gradient(to bottom, #ffcc00, #ff9900);
+        border:none; border-radius:30px; font-weight:900; color:#332200; cursor:pointer; font-size: 16px;
+        box-shadow: 0 5px 20px rgba(255, 153, 0, 0.4); text-transform: uppercase;
     }
 
     #pistiDisplay {
-        position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
-        font-size: 60px; font-weight: 900; color: gold; text-shadow: 0 0 20px red;
-        display: none; z-index: 9999; pointer-events: none;
+        position: fixed; top: 40%; left: 50%; transform: translate(-50%,-50%);
+        font-size: 70px; font-weight: 900; color: #fff; 
+        text-shadow: 0 0 10px #ff0, 0 0 20px #f90, 0 0 40px #f60;
+        display: none; z-index: 9999; pointer-events: none; animation: pop 0.8s ease-out;
     }
+    @keyframes pop { 0% { scale: 0; opacity: 0; } 50% { scale: 1.2; opacity: 1; } 100% { scale: 1; opacity: 1; } }
 </style>
 </head>
 <body>
 
 <div class="top-bar">
-    <div class="brand">Pişti Casino</div>
-    <div class="nav-box">Bakiye: <span id="balance">0</span>₺ | Bahis: <span id="bet">0</span>₺</div>
+    <div class="brand">PIŞTI PRO</div>
+    <div class="nav-box">
+        <div class="nav-item">Bakiye: <span id="balance">0.00</span>₺</div>
+        <div class="nav-item">Bahis: <span id="bet">0.00</span>₺</div>
+    </div>
 </div>
 
-<h1>🃏 Pişti Pro</h1>
-<div class="score-board">Siz: <span id="ps">0</span> | Kurupier: <span id="cs">0</span></div>
+<h1>CASINO ARENA</h1>
+<div class="score-board">OYUNCU: <span id="ps">0</span> — KRUPIER: <span id="cs">0</span></div>
 
 <div class="table" id="tableArea">
     <div class="computer" id="computerHand"></div>
@@ -81,7 +106,7 @@
     <div class="chip c4" onclick="addBet(5000)">5K</div>
 </div>
 
-<button class="start-btn" id="startBtn" onclick="startGame()">OYUNU BAŞLAT</button>
+<button class="start-btn" id="startBtn" onclick="startGame()">MASAYA OTUR</button>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -101,20 +126,24 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// SES MOTORU (iOS Dostu)
+// YENİ NESİL SES MOTORU (Casino Kalitesinde)
 const sfx = {
-    chip: new Audio("https://assets.mixkit.co/active_storage/sfx/2964/2964-preview.mp3"),
-    card: new Audio("https://assets.mixkit.co/active_storage/sfx/2058/2058-preview.mp3"),
-    win: new Audio("https://assets.mixkit.co/active_storage/sfx/2001/2001-preview.mp3"),
-    lose: new Audio("https://assets.mixkit.co/active_storage/sfx/2018/2018-preview.mp3")
+    chip: new Audio("https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3"), // Çip sesi
+    card: new Audio("https://assets.mixkit.co/active_storage/sfx/2058/2058-preview.mp3"), // Kart dağıtma
+    play: new Audio("https://assets.mixkit.co/active_storage/sfx/261/261-preview.mp3"),  // Kart atma
+    win: new Audio("https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3"), // Kazanç
+    lose: new Audio("https://assets.mixkit.co/active_storage/sfx/1103/1103-preview.mp3"),// Kayıp
+    pisti: new Audio("https://assets.mixkit.co/active_storage/sfx/2017/2017-preview.mp3")// Özel pişti sesi
 };
 
 function playSfx(name) {
     sfx[name].currentTime = 0;
+    sfx[name].volume = 0.6;
     sfx[name].play().catch(()=>{});
 }
 
-document.addEventListener("click", () => {
+// iOS Sessiz Modunu Geçmek İçin Kullanıcı Onayı
+document.addEventListener("touchstart", () => {
     Object.values(sfx).forEach(s => { s.play(); s.pause(); });
 }, { once: true });
 
@@ -127,22 +156,22 @@ onAuthStateChanged(auth, user => {
     userRef = doc(db, "users", user.uid);
     onSnapshot(userRef, snap => {
         balance = snap.data().balance || 0;
-        document.getElementById("balance").innerText = balance;
+        document.getElementById("balance").innerText = balance.toLocaleString('tr-TR');
     });
 });
 
 window.addBet = async function(amount) {
     if (gameStarted) return;
-    if (balance < amount) return alert("Yetersiz bakiye!");
+    if (balance < amount) return;
     bet += amount;
     balance -= amount;
     await updateDoc(userRef, { balance });
-    document.getElementById("bet").innerText = bet;
+    document.getElementById("bet").innerText = bet.toLocaleString('tr-TR');
     playSfx("chip");
 }
 
 window.startGame = function() {
-    if (bet < 250) return alert("Minimum bahis 250₺");
+    if (bet < 250) return;
     gameStarted = true;
     document.getElementById("chipsArea").style.display = "none";
     document.getElementById("startBtn").style.display = "none";
@@ -161,7 +190,8 @@ function createDeck() {
 function dealInitial() {
     table = ["BACK", "BACK", "BACK", deck.shift()];
     render();
-    setTimeout(dealRound, 1000);
+    playSfx("card");
+    setTimeout(dealRound, 800);
 }
 
 function dealRound() {
@@ -170,8 +200,8 @@ function dealRound() {
     for (let i = 0; i < 4; i++) player.push(deck.shift());
     for (let i = 0; i < 4; i++) computer.push(deck.shift());
     round++;
-    dealing = false;
-    render();
+    playSfx("card");
+    setTimeout(() => { dealing = false; render(); }, 600);
 }
 
 function render() {
@@ -217,7 +247,7 @@ function play(i) {
 }
 
 function animateThrow(el, card, owner) {
-    playSfx("card");
+    playSfx("play");
     const rect = el.getBoundingClientRect();
     const clone = el.cloneNode();
     clone.className = "card-throw";
@@ -236,19 +266,23 @@ function animateThrow(el, card, owner) {
         table.push(card);
         checkRule(owner);
         render();
-        if (owner === "player") setTimeout(compPlay, 800);
-    }, 400);
+        if (owner === "player") {
+            setTimeout(compPlay, 800);
+        } else {
+            // Bilgisayar attıktan sonra kart bitti mi kontrolü
+            if(player.length === 0 && computer.length === 0 && deck.length > 0) {
+                setTimeout(dealRound, 600);
+            } else if (player.length === 0 && computer.length === 0 && deck.length === 0) {
+                setTimeout(endGame, 1000);
+            }
+        }
+    }, 450);
 }
 
 function compPlay() {
-    if (computer.length === 0) {
-        if (deck.length > 0) dealRound();
-        else endGame();
-        return;
-    }
+    if (computer.length === 0) return;
     const card = computer.shift();
     const el = document.querySelectorAll("#computerHand img")[0];
-    el.src = `https://deckofcardsapi.com/static/img/${card}.png`;
     animateThrow(el, card, "comp");
 }
 
@@ -257,41 +291,50 @@ function checkRule(owner) {
     const last = table[table.length - 1];
     const prev = table[table.length - 2];
 
-    if (prev === "BACK") return; // Kapalı kartın üstüne pişti olmaz
+    if (prev === "BACK") return;
 
     if (last[0] === "J" || last[0] === prev[0]) {
         let points = table.length;
         if (table.length === 2 && last[0] === prev[0]) {
-            points = 10; // Pişti
+            points = 10; 
             showPistiEffect();
         }
         if (owner === "player") ps += points; else cs += points;
         table = [];
+        playSfx("card");
     }
 }
 
 function showPistiEffect() {
+    playSfx("pisti");
     const el = document.getElementById("pistiDisplay");
     el.style.display = "block";
-    setTimeout(() => el.style.display = "none", 1200);
+    setTimeout(() => el.style.display = "none", 1500);
 }
 
 async function endGame() {
     gameStarted = false;
+    let resultMessage = "";
     if (ps > cs) {
         let winAmount = bet * 2;
         balance += winAmount;
         playSfx("win");
-        alert(`Tebrikler! ${winAmount}₺ Kazandınız.`);
-    } else {
+        resultMessage = `TEBRİKLER! ${winAmount.toLocaleString('tr-TR')}₺ Kazandınız.`;
+    } else if (ps < cs) {
         playSfx("lose");
-        alert("Kaybettiniz! Kurupier kazandı.");
+        resultMessage = "KAYBETTİNİZ! Kurupier kazandı.";
+    } else {
+        balance += bet;
+        resultMessage = "BERABERE! Bahis iade edildi.";
     }
+    
     bet = 0;
     await updateDoc(userRef, { balance });
-    document.getElementById("bet").innerText = 0;
+    document.getElementById("bet").innerText = "0.00";
     document.getElementById("chipsArea").style.display = "flex";
     document.getElementById("startBtn").style.display = "block";
+    
+    alert(resultMessage);
     render();
 }
 </script>
