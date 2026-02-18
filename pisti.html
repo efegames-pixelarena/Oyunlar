@@ -16,7 +16,7 @@
         position:fixed; top:0; width:100%; height:60px; display:flex; align-items:center; justify-content:space-between;
         padding:0 12px; background:linear-gradient(135deg,#1a2a6c,#16245c); box-shadow:0 4px 15px rgba(0,0,0,0.45); z-index:1000;
     }
-    .brand { font-size:16px; font-weight:800; color:#4fd1ff; white-space: nowrap; }
+    .brand { font-size:16px; font-weight:800; color:#4fd1ff; }
     
     .nav-box { 
         display: flex; gap: 8px; align-items: center; background:rgba(39, 60, 143, 0.6); 
@@ -28,69 +28,72 @@
     h1 { margin-top:80px; font-size: 18px; letter-spacing: 1px; color: rgba(255,255,255,0.8); }
     .score-board { margin: 8px 0; font-weight: bold; color: #ffcc00; font-size: 14px; background: rgba(0,0,0,0.3); padding: 4px 15px; border-radius: 20px; }
 
-    /* MASA BİRAZ DAHA ALTA ALINDI */
     .table {
         width:92%; max-width:500px; height:380px; border-radius:180px; position:relative;
         background:radial-gradient(circle at center,#1a8a4d,#0a4d23 80%);
         box-shadow:inset 0 0 100px #000, 0 10px 40px rgba(0,0,0,0.5);
-        margin-top: 35px; transition:0.4s; border: 10px solid #2d1f14;
+        margin-top: 40px; transition:0.4s; border: 10px solid #2d1f14;
     }
 
     .table-cards { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:75px; height:105px; }
     .stack-card { width:75px; position:absolute; left:0; top:0; border-radius: 6px; box-shadow: 0 4px 8px rgba(0,0,0,0.4); }
 
     .hand, .computer { position:absolute; left:50%; transform:translateX(-50%); display:flex; gap:6px; width: max-content; padding: 10px; }
-    .hand { bottom:-50px; }
-    .computer { top:-50px; }
+    .hand { bottom:-55px; }
+    .computer { top:-55px; }
 
     .card { width:65px; border-radius: 6px; cursor:pointer; transition: transform 0.2s; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
-    .hand .card:hover { transform: translateY(-15px) scale(1.05); z-index: 100; }
+    .hand .card:hover { transform: translateY(-15px); }
 
     .card-throw { position:absolute; width:65px; z-index:2000; transition:all 0.45s cubic-bezier(.25,.8,.25,1); border-radius: 6px; }
 
-    .chips { position:fixed; bottom:90px; display:flex; gap:12px; background: rgba(0,0,0,0.2); padding: 10px 20px; border-radius: 40px; backdrop-filter: blur(5px); }
+    .chips { position:fixed; bottom:95px; display:flex; gap:10px; background: rgba(0,0,0,0.2); padding: 10px 15px; border-radius: 40px; backdrop-filter: blur(5px); }
     .chip { 
-        width:52px; height:52px; border-radius:50%; display:flex; align-items:center; justify-content:center; 
-        font-weight:900; cursor:pointer; border: 4px dashed rgba(255,255,255,0.3); font-size: 12px;
-        transition: 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+        width:48px; height:48px; border-radius:50%; display:flex; align-items:center; justify-content:center; 
+        font-weight:900; cursor:pointer; border: 3px dashed rgba(255,255,255,0.3); font-size: 10px;
+        transition: 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.4);
     }
-    .c1 { background: radial-gradient(#fff, #ccc); color:#000; } 
-    .c2 { background: radial-gradient(#2ecc71, #27ae60); color:#fff; } 
-    .c3 { background: radial-gradient(#e74c3c, #c0392b); color:#fff; } 
-    .c4 { background: radial-gradient(#34495e, #2c3e50); color:#fff; }
+    .chip.disabled { opacity: 0.3; filter: grayscale(1); cursor: not-allowed; pointer-events: none; }
+    
+    .c-cancel { background: #e74c3c; color: #fff; border-style: solid; }
+    .c100 { background: radial-gradient(#fff, #ccc); color:#000; } 
+    .c500 { background: radial-gradient(#2ecc71, #27ae60); color:#fff; } 
+    .c2000 { background: radial-gradient(#3498db, #2980b9); color:#fff; } 
+    .c10000 { background: radial-gradient(#f1c40f, #f39c12); color:#fff; }
 
     .start-btn {
-        position:fixed; bottom:25px; padding:14px 50px; background:linear-gradient(to bottom, #ffcc00, #ff9900);
-        border:none; border-radius:30px; font-weight:900; color:#332200; cursor:pointer; font-size: 16px;
+        position:fixed; bottom:25px; padding:14px 50px; background:linear-gradient(to bottom, #4fd1ff, #007aff);
+        border:none; border-radius:30px; font-weight:900; color:white; cursor:pointer; font-size: 16px;
+        box-shadow: 0 4px 15px rgba(0, 122, 255, 0.4);
     }
 
-    /* PROFESYONEL PİŞTİ EFEKTİ */
     #pistiDisplay {
         position: fixed; top: 45%; left: 50%; transform: translate(-50%,-50%);
         font-size: 80px; font-weight: 900; color: #fff; text-align: center;
-        background: linear-gradient(to bottom, #fff 20%, #ffcc00 40%, #ff6600 70%);
+        background: linear-gradient(to bottom, #fff, #ffcc00, #ff6600);
         -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         filter: drop-shadow(0 0 15px rgba(255, 102, 0, 0.8));
         display: none; z-index: 9999; pointer-events: none; animation: pistiIn 1s ease-out;
     }
-    @keyframes pistiIn { 0% { scale: 0; opacity: 0; } 40% { scale: 1.3; opacity: 1; rotate: -5deg; } 70% { scale: 1; rotate: 5deg; } 100% { scale: 1; opacity: 1; } }
+    @keyframes pistiIn { 0% { scale: 0; opacity: 0; } 40% { scale: 1.3; rotate: -5deg; } 70% { scale: 1; rotate: 5deg; } 100% { scale: 1; opacity: 1; } }
 
-    /* ÖZEL POPUP MODAL */
+    /* MODERN CASINO MODAL */
     .modal-overlay {
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 10000;
-        backdrop-filter: blur(5px);
+        background: rgba(11, 16, 35, 0.9); display: none; align-items: center; justify-content: center; z-index: 10000;
+        backdrop-filter: blur(8px);
     }
     .modal-content {
-        background: #fff; color: #333; padding: 30px; border-radius: 20px; width: 85%; max-width: 320px;
-        text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5); animation: modalIn 0.3s ease-out;
+        background: linear-gradient(135deg, #1a2a6c, #0b1023); color: white; padding: 30px; border-radius: 25px; width: 85%; max-width: 320px;
+        text-align: center; border: 2px solid #4fd1ff; box-shadow: 0 0 30px rgba(79, 209, 255, 0.3); animation: modalIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
-    .modal-msg { font-size: 18px; font-weight: 700; margin-bottom: 25px; line-height: 1.4; }
+    .modal-msg { font-size: 20px; font-weight: 800; margin-bottom: 20px; color: #ffcc00; }
     .modal-btn {
-        background: transparent; color: #007aff; border: none; font-size: 18px; font-weight: 700;
-        cursor: pointer; padding: 10px 20px; width: 100%; border-top: 1px solid #eee;
+        background: #4fd1ff; color: #0b1023; border: none; font-size: 16px; font-weight: 800;
+        cursor: pointer; padding: 12px 30px; border-radius: 15px; width: 100%; transition: 0.2s;
     }
-    @keyframes modalIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .modal-btn:active { transform: scale(0.95); }
+    @keyframes modalIn { from { transform: scale(0.7) translateY(50px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
 </style>
 </head>
 <body>
@@ -104,7 +107,7 @@
 </div>
 
 <h1>CASINO ARENA</h1>
-<div class="score-board">OYUNCU: <span id="ps">0</span> — KRUPIER: <span id="cs">0</span></div>
+<div class="score-board">SİZ: <span id="ps">0</span> — KRUPIER: <span id="cs">0</span></div>
 
 <div class="table" id="tableArea">
     <div class="computer" id="computerHand"></div>
@@ -116,16 +119,17 @@
 
 <div class="modal-overlay" id="modalOverlay">
     <div class="modal-content">
-        <div class="modal-msg" id="modalMsg">TEBRİKLER! 400.000₺ Kazandınız.</div>
-        <button class="modal-btn" onclick="closeModal()">Kapat</button>
+        <div class="modal-msg" id="modalMsg">-</div>
+        <button class="modal-btn" onclick="closeModal()">TAMAM</button>
     </div>
 </div>
 
 <div class="chips" id="chipsArea">
-    <div class="chip c1" onclick="addBet(250)">250</div>
-    <div class="chip c2" onclick="addBet(500)">500</div>
-    <div class="chip c3" onclick="addBet(1000)">1K</div>
-    <div class="chip c4" onclick="addBet(5000)">5K</div>
+    <div class="chip c-cancel" onclick="cancelBet()">İPTAL</div>
+    <div class="chip c100" id="chip100" onclick="addBet(100)">100</div>
+    <div class="chip c500" id="chip500" onclick="addBet(500)">500</div>
+    <div class="chip c2000" id="chip2000" onclick="addBet(2000)">2K</div>
+    <div class="chip c10000" id="chip10000" onclick="addBet(10000)">10K</div>
 </div>
 
 <button class="start-btn" id="startBtn" onclick="startGame()">MASAYA OTUR</button>
@@ -148,11 +152,11 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// PROFESYONEL SES DOSYALARI
+// SES MOTORU (iOS Dostu)
 const sfx = {
-    chip: new Audio("https://www.soundjay.com/buttons/sounds/button-20.mp3"), // Tok çip sesi
-    cardThrow: new Audio("https://assets.mixkit.co/active_storage/sfx/261/261-preview.mp3"), // Swipe / Atış
-    cardCollect: new Audio("https://www.soundjay.com/misc/sounds/deck-shuffling-1.mp3"), // Toplama
+    chip: new Audio("https://www.soundjay.com/buttons/sounds/button-20.mp3"),
+    cardThrow: new Audio("https://assets.mixkit.co/active_storage/sfx/261/261-preview.mp3"),
+    cardCollect: new Audio("https://www.soundjay.com/misc/sounds/deck-shuffling-1.mp3"),
     win: new Audio("https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3"),
     lose: new Audio("https://assets.mixkit.co/active_storage/sfx/1103/1103-preview.mp3"),
     pisti: new Audio("https://assets.mixkit.co/active_storage/sfx/2017/2017-preview.mp3")
@@ -163,11 +167,12 @@ function playSfx(name) {
     sfx[name].play().catch(()=>{});
 }
 
-document.addEventListener("touchstart", () => {
+// iOS için sesleri kilidini aç
+document.addEventListener("click", () => {
     Object.values(sfx).forEach(s => { s.play(); s.pause(); });
 }, { once: true });
 
-let balance = 0, bet = 0, userRef = null, gameStarted = false, dealing = false;
+let balance = 0, bet = 0, currentBet = 0, userRef = null, gameStarted = false, dealing = false, turnLock = false;
 let deck = [], player = [], computer = [], table = [];
 let ps = 0, cs = 0, round = 0;
 
@@ -176,9 +181,44 @@ onAuthStateChanged(auth, user => {
     userRef = doc(db, "users", user.uid);
     onSnapshot(userRef, snap => {
         balance = snap.data().balance || 0;
-        document.getElementById("balance").innerText = balance.toLocaleString('tr-TR');
+        updateUI();
     });
 });
+
+function updateUI() {
+    document.getElementById("balance").innerText = balance.toLocaleString('tr-TR');
+    document.getElementById("bet").innerText = currentBet.toLocaleString('tr-TR');
+    
+    // Çip durumlarını kontrol et
+    const chipValues = [100, 500, 2000, 10000];
+    chipValues.forEach(val => {
+        const el = document.getElementById("chip" + val);
+        if (balance < val || currentBet + val > 50000) {
+            el.classList.add("disabled");
+        } else {
+            el.classList.remove("disabled");
+        }
+    });
+}
+
+window.addBet = function(amount) {
+    if (gameStarted) return;
+    if (balance < amount) return;
+    if (currentBet + amount > 50000) return;
+    
+    currentBet += amount;
+    balance -= amount;
+    playSfx("chip");
+    updateUI();
+}
+
+window.cancelBet = function() {
+    if (gameStarted) return;
+    balance += currentBet;
+    currentBet = 0;
+    playSfx("chip");
+    updateUI();
+}
 
 window.showModal = function(msg) {
     document.getElementById("modalMsg").innerText = msg;
@@ -189,19 +229,17 @@ window.closeModal = function() {
     document.getElementById("modalOverlay").style.display = "none";
 }
 
-window.addBet = async function(amount) {
-    if (gameStarted) return;
-    if (balance < amount) return;
-    bet += amount;
-    balance -= amount;
-    await updateDoc(userRef, { balance });
-    document.getElementById("bet").innerText = bet.toLocaleString('tr-TR');
-    playSfx("chip");
-}
-
-window.startGame = function() {
-    if (bet < 250) return;
+window.startGame = async function() {
+    if (currentBet < 100) {
+        showModal("Minimum bahis 100₺ olmalıdır!");
+        return;
+    }
+    
     gameStarted = true;
+    bet = currentBet;
+    // Bakiyeyi Firestore'da güncelle (Masaya oturunca düşer)
+    await updateDoc(userRef, { balance });
+    
     document.getElementById("chipsArea").style.display = "none";
     document.getElementById("startBtn").style.display = "none";
     ps = 0; cs = 0; round = 0;
@@ -266,7 +304,8 @@ function render() {
 }
 
 function play(i) {
-    if (dealing || !gameStarted) return;
+    if (dealing || !gameStarted || turnLock) return;
+    turnLock = true; // Oyuncu kart attı, kilitle
     const card = player.splice(i, 1)[0];
     const imgEl = document.querySelectorAll("#playerHand img")[i];
     animateThrow(imgEl, card, "player");
@@ -292,8 +331,10 @@ function animateThrow(el, card, owner) {
         table.push(card);
         checkRule(owner);
         render();
-        if (owner === "player") setTimeout(compPlay, 800);
-        else {
+        if (owner === "player") {
+            setTimeout(compPlay, 1000);
+        } else {
+            turnLock = false; // Bilgisayar attı, kilidi aç
             if(player.length === 0 && computer.length === 0) {
                 if (deck.length > 0) setTimeout(dealRound, 600);
                 else setTimeout(endGame, 1000);
@@ -341,21 +382,22 @@ async function endGame() {
         let win = bet * 2;
         balance += win;
         playSfx("win");
-        msg = `TEBRİKLER! ${win.toLocaleString('tr-TR')}₺ Kazandınız.`;
+        msg = `TEBRİKLER!\n${win.toLocaleString('tr-TR')}₺ Kazandınız.`;
     } else if (ps < cs) {
         playSfx("lose");
-        msg = "KAYBETTİNİZ! Kurupier kazandı.";
+        msg = "KAYBETTİNİZ!\nKurupier kazandı.";
     } else {
         balance += bet;
-        msg = "BERABERE! Bahis iade edildi.";
+        msg = "BERABERE!\nBahis iade edildi.";
     }
     
+    currentBet = 0;
     bet = 0;
     await updateDoc(userRef, { balance });
-    document.getElementById("bet").innerText = "0.00";
     document.getElementById("chipsArea").style.display = "flex";
     document.getElementById("startBtn").style.display = "block";
     showModal(msg);
+    updateUI();
     render();
 }
 </script>
