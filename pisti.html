@@ -2,427 +2,298 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Pişti Casino PRO</title>
 
 <style>
-*{
-margin:0;padding:0;box-sizing:border-box;
--webkit-tap-highlight-color:transparent;
-user-select:none;
--webkit-user-select:none;
--webkit-touch-callout:none;
-}
-body{
-height:100vh;overflow:hidden;
-font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
-background:#0b1023;color:white;
-display:flex;flex-direction:column;align-items:center;
-}
-.top-bar{
-position:fixed;top:0;width:100%;height:55px;
-display:flex;align-items:center;justify-content:space-between;
-padding:0 16px;
-background:linear-gradient(135deg,#1a2a6c,#16245c);
-box-shadow:0 4px 15px rgba(0,0,0,0.45);
-z-index:100;
-}
-.brand{
-font-size:18px;font-weight:800;
-background:linear-gradient(90deg,#4fd1ff,#fff,#4fd1ff);
-background-size:200% auto;
--webkit-background-clip:text;-webkit-text-fill-color:transparent;
-animation:shine 3s linear infinite;
-}
-@keyframes shine{to{background-position:200% center;}}
-.nav-box{
-padding:6px 14px;border-radius:14px;
-font-weight:700;font-size:13px;min-width:110px;text-align:center;
-background:#273c8f;
-}
-h1{margin-top:70px;margin-bottom:5px;}
-.score-board{margin-bottom:10px;}
+    * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; }
+    body {
+        height:100vh; overflow:hidden; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
+        background:#0b1023; color:white; display:flex; flex-direction:column; align-items:center;
+    }
+    .top-bar {
+        position:fixed; top:0; width:100%; height:55px; display:flex; align-items:center; justify-content:space-between;
+        padding:0 16px; background:linear-gradient(135deg,#1a2a6c,#16245c); box-shadow:0 4px 15px rgba(0,0,0,0.45); z-index:100;
+    }
+    .brand { font-size:18px; font-weight:800; color:#4fd1ff; }
+    .nav-box { padding:6px 14px; border-radius:14px; font-weight:700; font-size:13px; background:#273c8f; }
 
-.table{
-width:95%;max-width:900px;height:520px;border-radius:40px;
-position:relative;
-background:radial-gradient(circle at center,#136f3a,#083d18 70%);
-box-shadow:inset 0 0 120px #000,0 0 80px #00ff99,0 20px 60px rgba(0,0,0,0.6);
-overflow:hidden;
-opacity:0.2;
-pointer-events:none;
-transition:0.4s;
-}
-.table.active{
-opacity:1;
-pointer-events:auto;
-}
+    h1 { margin-top:70px; font-size: 20px; }
+    .score-board { margin: 10px 0; font-weight: bold; color: #ffcc00; }
 
-.table-cards{
-position:absolute;top:50%;left:50%;
-transform:translate(-50%,-50%);
-width:120px;height:160px;
-}
+    .table {
+        width:95%; max-width:600px; height:400px; border-radius:150px; position:relative;
+        background:radial-gradient(circle at center,#136f3a,#083d18 70%);
+        box-shadow:inset 0 0 80px #000, 0 0 30px rgba(0,255,153,0.3);
+        margin-top: 20px; transition:0.4s; border: 8px solid #3d2b1f;
+    }
 
-.stack-card{
-width:95px;
-position:absolute;
-left:0;
-top:0;
-transform-origin:center;
-}
+    .table-cards { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:80px; height:110px; }
+    .stack-card { width:80px; position:absolute; left:0; top:0; border-radius: 4px; box-shadow: 2px 2px 5px rgba(0,0,0,0.5); }
 
-.hand{
-position:absolute;bottom:15px;left:50%;
-transform:translateX(-50%);
-display:flex;gap:10px;
-}
-.computer{
-position:absolute;top:15px;left:50%;
-transform:translateX(-50%);
-display:flex;gap:10px;
-}
+    .hand, .computer { position:absolute; left:50%; transform:translateX(-50%); display:flex; gap:8px; width: max-content; }
+    .hand { bottom:-40px; }
+    .computer { top:-40px; }
 
-.card{
-width:80px;
-cursor:pointer;
-pointer-events:auto;
-}
+    .card { width:70px; border-radius: 5px; cursor:pointer; transition: 0.2s; }
+    .hand .card:hover { transform: translateY(-10px); }
 
-/* MASAYA GERÇEK ATIŞ ANİMASYONU */
-.card-throw{
-position:absolute;
-width:80px;
-z-index:2000;
-transition:all 0.45s cubic-bezier(.2,.8,.2,1);
-}
+    .card-throw { position:absolute; width:70px; z-index:2000; transition:all 0.4s cubic-bezier(.25,.8,.25,1); }
 
-.chips{
-position:fixed;bottom:70px;left:50%;
-transform:translateX(-50%);
-display:flex;gap:10px;
-}
-.chip{
-width:60px;height:60px;border-radius:50%;
-display:flex;align-items:center;justify-content:center;
-font-weight:bold;cursor:pointer;
-box-shadow:0 6px 15px rgba(0,0,0,0.6);
-}
-.c1{background:#f0f0f0;color:black;}
-.c2{background:#1eaa00;}
-.c3{background:#ff1c1c;}
-.c4{background:black;color:white;}
+    .chips { position:fixed; bottom:80px; display:flex; gap:10px; }
+    .chip { width:55px; height:55px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; cursor:pointer; border: 3px dashed rgba(255,255,255,0.4); }
+    .c1 { background:#eee; color:000; } .c2 { background:#2ecc71; } .c3 { background:#e74c3c; } .c4 { background:#2c3e50; }
 
-.start-btn{
-position:fixed;bottom:10px;left:50%;
-transform:translateX(-50%);
-padding:12px 30px;
-background:linear-gradient(90deg,#ffb300,#ff5e00);
-border:none;border-radius:20px;
-font-weight:bold;font-size:16px;
-cursor:pointer;
-}
+    .start-btn {
+        position:fixed; bottom:20px; padding:12px 40px; background:linear-gradient(90deg,#ffb300,#ff5e00);
+        border:none; border-radius:25px; font-weight:bold; color:white; cursor:pointer;
+    }
 
-.pisti-anim{
-position:fixed;
-top:50%;left:50%;
-transform:translate(-50%,-50%) scale(0.2);
-font-size:70px;
-font-weight:900;
-letter-spacing:3px;
-background:linear-gradient(90deg,#ffd700,#ff0000,#ffd700);
--webkit-background-clip:text;
--webkit-text-fill-color:transparent;
-text-shadow:0 0 20px gold,0 0 50px red,0 0 80px orange;
-z-index:3000;
-animation:pistiUltra 1.2s ease forwards;
-}
-@keyframes pistiUltra{
-0%{opacity:0;transform:translate(-50%,-50%) scale(0.2);}
-40%{opacity:1;transform:translate(-50%,-50%) scale(1.4);}
-70%{transform:translate(-50%,-50%) scale(1);}
-100%{opacity:0;transform:translate(-50%,-50%) scale(1);}
-}
+    #pistiDisplay {
+        position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
+        font-size: 60px; font-weight: 900; color: gold; text-shadow: 0 0 20px red;
+        display: none; z-index: 9999; pointer-events: none;
+    }
 </style>
 </head>
 <body>
 
 <div class="top-bar">
-<div class="brand">Pişti Casino PRO</div>
-<div class="nav-box">
-Bakiye: <span id="balance">0</span>₺ | Bahis: <span id="bet">0</span>₺
-</div>
+    <div class="brand">Pişti Casino</div>
+    <div class="nav-box">Bakiye: <span id="balance">0</span>₺ | Bahis: <span id="bet">0</span>₺</div>
 </div>
 
-<h1>🃏 Pişti</h1>
-<div class="score-board">
-Oyuncu: <span id="ps">0</span> | Kurupier: <span id="cs">0</span>
-</div>
+<h1>🃏 Pişti Pro</h1>
+<div class="score-board">Siz: <span id="ps">0</span> | Kurupier: <span id="cs">0</span></div>
 
 <div class="table" id="tableArea">
-<div class="computer" id="computerHand"></div>
-<div class="table-cards" id="tableCards"></div>
-<div class="hand" id="playerHand"></div>
+    <div class="computer" id="computerHand"></div>
+    <div class="table-cards" id="tableCards"></div>
+    <div class="hand" id="playerHand"></div>
 </div>
+
+<div id="pistiDisplay">PİŞTİ!</div>
 
 <div class="chips" id="chipsArea">
-<div class="chip c1" onclick="addBet(250)">250</div>
-<div class="chip c2" onclick="addBet(500)">500</div>
-<div class="chip c3" onclick="addBet(1000)">1K</div>
-<div class="chip c4" onclick="addBet(5000)">5K</div>
+    <div class="chip c1" onclick="addBet(250)">250</div>
+    <div class="chip c2" onclick="addBet(500)">500</div>
+    <div class="chip c3" onclick="addBet(1000)">1K</div>
+    <div class="chip c4" onclick="addBet(5000)">5K</div>
 </div>
 
-<button class="start-btn" id="startBtn" onclick="startGame()">BAŞLA</button>
+<button class="start-btn" id="startBtn" onclick="startGame()">OYUNU BAŞLAT</button>
 
 <script type="module">
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth,onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore,doc,onSnapshot,updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-const firebaseConfig={
-apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
-authDomain:"emirhan-site.firebaseapp.com",
-projectId:"emirhan-site",
-storageBucket:"emirhan-site.firebasestorage.app",
-messagingSenderId:"668871888390",
-appId:"1:668871888390:web:76568bda84cb1641f7bd87"
+const firebaseConfig = {
+    apiKey: "AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
+    authDomain: "emirhan-site.firebaseapp.com",
+    projectId: "emirhan-site",
+    storageBucket: "emirhan-site.firebasestorage.app",
+    messagingSenderId: "668871888390",
+    appId: "1:668871888390:web:76568bda84cb1641f7bd87"
 };
 
-const app=initializeApp(firebaseConfig);
-const auth=getAuth(app);
-const db=getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-/* GERÇEK SESLER - iOS UNLOCK */
-const chipSound=new Audio("https://assets.mixkit.co/active_storage/sfx/2964/2964-preview.mp3");
-const cardSound=new Audio("https://assets.mixkit.co/active_storage/sfx/2058/2058-preview.mp3");
-const winSound=new Audio("https://assets.mixkit.co/active_storage/sfx/2001/2001-preview.mp3");
-const loseSound=new Audio("https://assets.mixkit.co/active_storage/sfx/2018/2018-preview.mp3");
+// SES MOTORU (iOS Dostu)
+const sfx = {
+    chip: new Audio("https://assets.mixkit.co/active_storage/sfx/2964/2964-preview.mp3"),
+    card: new Audio("https://assets.mixkit.co/active_storage/sfx/2058/2058-preview.mp3"),
+    win: new Audio("https://assets.mixkit.co/active_storage/sfx/2001/2001-preview.mp3"),
+    lose: new Audio("https://assets.mixkit.co/active_storage/sfx/2018/2018-preview.mp3")
+};
 
-document.body.addEventListener("click",()=>{
-chipSound.play().then(()=>chipSound.pause());
-cardSound.play().then(()=>cardSound.pause());
-},{once:true});
+function playSfx(name) {
+    sfx[name].currentTime = 0;
+    sfx[name].play().catch(()=>{});
+}
 
-let balance=0,bet=0,userRef=null;
-let gameStarted=false;
-let dealing=false; // DAĞITIM KİLİDİ
+document.addEventListener("click", () => {
+    Object.values(sfx).forEach(s => { s.play(); s.pause(); });
+}, { once: true });
 
-onAuthStateChanged(auth,user=>{
-if(!user) return;
-userRef=doc(db,"users",user.uid);
-onSnapshot(userRef,snap=>{
-balance=snap.data().balance||0;
-document.getElementById("balance").innerText=balance;
+let balance = 0, bet = 0, userRef = null, gameStarted = false, dealing = false;
+let deck = [], player = [], computer = [], table = [];
+let ps = 0, cs = 0, round = 0;
+
+onAuthStateChanged(auth, user => {
+    if (!user) return;
+    userRef = doc(db, "users", user.uid);
+    onSnapshot(userRef, snap => {
+        balance = snap.data().balance || 0;
+        document.getElementById("balance").innerText = balance;
+    });
 });
-});
 
-window.addBet=async function(amount){
-if(gameStarted) return;
-if(bet+amount>15000) return alert("Maksimum bahis 15000₺");
-if(balance<amount) return;
-balance-=amount;
-bet+=amount;
-await updateDoc(userRef,{balance});
-document.getElementById("balance").innerText=balance;
-document.getElementById("bet").innerText=bet;
-chipSound.currentTime=0;
-chipSound.play();
+window.addBet = async function(amount) {
+    if (gameStarted) return;
+    if (balance < amount) return alert("Yetersiz bakiye!");
+    bet += amount;
+    balance -= amount;
+    await updateDoc(userRef, { balance });
+    document.getElementById("bet").innerText = bet;
+    playSfx("chip");
 }
 
-window.startGame=function(){
-if(bet<250) return alert("Minimum bahis 250₺");
-gameStarted=true;
-document.getElementById("tableArea").classList.add("active");
-document.getElementById("chipsArea").style.display="none";
-document.getElementById("startBtn").style.display="none";
-createDeck();
-dealInitial();
+window.startGame = function() {
+    if (bet < 250) return alert("Minimum bahis 250₺");
+    gameStarted = true;
+    document.getElementById("chipsArea").style.display = "none";
+    document.getElementById("startBtn").style.display = "none";
+    ps = 0; cs = 0; round = 0;
+    createDeck();
+    dealInitial();
 }
 
-const suits=["H","D","C","S"];
-const values=["A","2","3","4","5","6","7","8","9","0","J","Q","K"];
-let deck=[],player=[],computer=[],table=[];
-let ps=0,cs=0,round=0,totalRounds=6;
-
-function createDeck(){
-deck=[];
-for(let s of suits)
-for(let v of values)
-deck.push(v+s);
-deck.sort(()=>Math.random()-0.5);
+function createDeck() {
+    const suits = ["H", "D", "C", "S"], vals = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "0", "J", "Q", "K"];
+    deck = [];
+    suits.forEach(s => vals.forEach(v => deck.push(v + s)));
+    deck.sort(() => Math.random() - 0.5);
 }
 
-function dealInitial(){
-table=[];
-for(let i=0;i<3;i++) table.push("BACK");
-table.push(deck.shift());
-renderTable();
-setTimeout(dealRound,1000);
+function dealInitial() {
+    table = ["BACK", "BACK", "BACK", deck.shift()];
+    render();
+    setTimeout(dealRound, 1000);
 }
 
-function dealRound(){
-if(round>=totalRounds){ endGame(); return; }
-dealing=true;
-player=[]; computer=[];
-let count=0;
-
-function givePlayer(){
-if(count<4){
-player.push(deck.shift());
-render();
-count++;
-setTimeout(givePlayer,400);
-}else{
-count=0;
-setTimeout(giveComputer,400);
-}
+function dealRound() {
+    if (round >= 6) { endGame(); return; }
+    dealing = true;
+    for (let i = 0; i < 4; i++) player.push(deck.shift());
+    for (let i = 0; i < 4; i++) computer.push(deck.shift());
+    round++;
+    dealing = false;
+    render();
 }
 
-function giveComputer(){
-if(count<4){
-computer.push(deck.shift());
-render();
-count++;
-setTimeout(giveComputer,400);
-}else{
-round++;
-dealing=false; // DAĞITIM BİTTİ
-render();
-}
-}
-givePlayer();
+function render() {
+    const ph = document.getElementById("playerHand");
+    const ch = document.getElementById("computerHand");
+    const tc = document.getElementById("tableCards");
+    
+    ph.innerHTML = ""; ch.innerHTML = ""; tc.innerHTML = "";
+
+    player.forEach((c, i) => {
+        let img = document.createElement("img");
+        img.src = `https://deckofcardsapi.com/static/img/${c}.png`;
+        img.className = "card";
+        img.onclick = () => play(i);
+        ph.appendChild(img);
+    });
+
+    computer.forEach(() => {
+        let img = document.createElement("img");
+        img.src = "https://deckofcardsapi.com/static/img/back.png";
+        img.className = "card";
+        ch.appendChild(img);
+    });
+
+    table.forEach((c, i) => {
+        let img = document.createElement("img");
+        img.src = c === "BACK" ? "https://deckofcardsapi.com/static/img/back.png" : `https://deckofcardsapi.com/static/img/${c}.png`;
+        img.className = "stack-card";
+        img.style.transform = `rotate(${i * 2}deg) translate(${i}px, ${i}px)`;
+        img.style.zIndex = i;
+        tc.appendChild(img);
+    });
+
+    document.getElementById("ps").innerText = ps;
+    document.getElementById("cs").innerText = cs;
 }
 
-function img(card){
-return "https://deckofcardsapi.com/static/img/"+card+".png";
+function play(i) {
+    if (dealing || !gameStarted) return;
+    const card = player.splice(i, 1)[0];
+    const imgEl = document.querySelectorAll("#playerHand img")[i];
+    animateThrow(imgEl, card, "player");
 }
 
-function render(){
-if(!gameStarted) return;
-const ph=document.getElementById("playerHand");
-const ch=document.getElementById("computerHand");
-ph.innerHTML=""; ch.innerHTML="";
-player.forEach((c,i)=>{
-let im=document.createElement("img");
-im.src=img(c);
-im.className="card";
-im.onclick=()=>play(i);
-ph.appendChild(im);
-});
-computer.forEach(()=>{
-let im=document.createElement("img");
-im.src="https://deckofcardsapi.com/static/img/back.png";
-im.className="card";
-ch.appendChild(im);
-});
-document.getElementById("ps").innerText=ps;
-document.getElementById("cs").innerText=cs;
-renderTable();
+function animateThrow(el, card, owner) {
+    playSfx("card");
+    const rect = el.getBoundingClientRect();
+    const clone = el.cloneNode();
+    clone.className = "card-throw";
+    clone.style.left = rect.left + "px";
+    clone.style.top = rect.top + "px";
+    document.body.appendChild(clone);
+
+    setTimeout(() => {
+        const target = document.getElementById("tableCards").getBoundingClientRect();
+        clone.style.left = target.left + "px";
+        clone.style.top = target.top + "px";
+    }, 10);
+
+    setTimeout(() => {
+        clone.remove();
+        table.push(card);
+        checkRule(owner);
+        render();
+        if (owner === "player") setTimeout(compPlay, 800);
+    }, 400);
 }
 
-function renderTable(){
-const tc=document.getElementById("tableCards");
-tc.innerHTML="";
-let visible=table.filter(c=>c!=="BACK");
-visible.forEach((c,i)=>{
-let im=document.createElement("img");
-im.src=img(c);
-im.className="stack-card";
-im.style.transform=`translate(${i*1.5}px,${i*1.5}px) rotate(${i*0.5}deg)`;
-tc.appendChild(im);
-});
+function compPlay() {
+    if (computer.length === 0) {
+        if (deck.length > 0) dealRound();
+        else endGame();
+        return;
+    }
+    const card = computer.shift();
+    const el = document.querySelectorAll("#computerHand img")[0];
+    el.src = `https://deckofcardsapi.com/static/img/${card}.png`;
+    animateThrow(el, card, "comp");
 }
 
-/* GERÇEK MASAYA ATIŞ */
-function throwCardToTable(srcImg,card){
-const rect=srcImg.getBoundingClientRect();
-const clone=srcImg.cloneNode();
-clone.className="card-throw";
-clone.style.left=rect.left+"px";
-clone.style.top=rect.top+"px";
-document.body.appendChild(clone);
+function checkRule(owner) {
+    if (table.length < 2) return;
+    const last = table[table.length - 1];
+    const prev = table[table.length - 2];
 
-setTimeout(()=>{
-const tableRect=document.getElementById("tableCards").getBoundingClientRect();
-clone.style.left=tableRect.left+20+"px";
-clone.style.top=tableRect.top+20+"px";
-},10);
+    if (prev === "BACK") return; // Kapalı kartın üstüne pişti olmaz
 
-setTimeout(()=>{
-clone.remove();
-table.push(card);
-check("p");
-render();
-},450);
+    if (last[0] === "J" || last[0] === prev[0]) {
+        let points = table.length;
+        if (table.length === 2 && last[0] === prev[0]) {
+            points = 10; // Pişti
+            showPistiEffect();
+        }
+        if (owner === "player") ps += points; else cs += points;
+        table = [];
+    }
 }
 
-function play(i){
-if(dealing) return; // DAĞITIM BİTMEDEN ATAMAZ
-cardSound.currentTime=0;
-cardSound.play();
-let c=player.splice(i,1)[0];
-let imgEl=document.querySelectorAll("#playerHand img")[i];
-throwCardToTable(imgEl,c);
-setTimeout(compPlay,700);
+function showPistiEffect() {
+    const el = document.getElementById("pistiDisplay");
+    el.style.display = "block";
+    setTimeout(() => el.style.display = "none", 1200);
 }
 
-function compPlay(){
-if(computer.length===0){
-if(player.length===0) dealRound();
-return;
+async function endGame() {
+    gameStarted = false;
+    if (ps > cs) {
+        let winAmount = bet * 2;
+        balance += winAmount;
+        playSfx("win");
+        alert(`Tebrikler! ${winAmount}₺ Kazandınız.`);
+    } else {
+        playSfx("lose");
+        alert("Kaybettiniz! Kurupier kazandı.");
+    }
+    bet = 0;
+    await updateDoc(userRef, { balance });
+    document.getElementById("bet").innerText = 0;
+    document.getElementById("chipsArea").style.display = "flex";
+    document.getElementById("startBtn").style.display = "block";
+    render();
 }
-let chosen=computer.shift();
-cardSound.currentTime=0;
-cardSound.play();
-table.push(chosen);
-check("c");
-render();
-if(player.length===0 && computer.length===0)
-setTimeout(dealRound,1000);
-}
-
-function check(owner){
-let real=table.filter(x=>x!=="BACK");
-if(real.length<2) return;
-let last=real[real.length-1];
-let prev=real[real.length-2];
-let pisti=false;
-
-if(real.length===2 && last[0]===prev[0] && last[0]!=="J"){
-pisti=true;
-if(owner==="p") ps+=10;
-else cs+=10;
-}
-
-if(pisti) showPisti();
-
-if(last[0]==="J"||last[0]===prev[0]){
-if(owner==="p") ps+=real.length;
-else cs+=real.length;
-table=[];
-}
-}
-
-async function endGame(){
-if(ps>cs){
-balance+=bet*3;
-await updateDoc(userRef,{balance});
-winSound.currentTime=0;
-winSound.play();
-}else{
-loseSound.currentTime=0;
-loseSound.play();
-}
-bet=0;
-document.getElementById("bet").innerText=0;
-gameStarted=false;
-document.getElementById("tableArea").classList.remove("active");
-round=0;ps=0;cs=0;
-document.getElementById("chipsArea").style.display="flex";
-document.getElementById("startBtn").style.display="block";
-}
-
 </script>
 </body>
 </html>
