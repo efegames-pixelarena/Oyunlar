@@ -53,7 +53,7 @@
     <div class="bet-panel">
         <input type="number" id="bet" placeholder="Bahis (250 - 3000)" value="250">
         <select id="mineCount"></select>
-        <button id="startBtn" class="start">YÜKLENİYOR...</button>
+        <button id="startBtn" class="start">BAŞLAT</button>
     </div>
 </div>
 
@@ -62,49 +62,50 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, doc, onSnapshot, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// --- iOS ÖZEL SES MOTORU (WEB AUDIO API) ---
-let audioCtx;
-const soundBuffers = {};
+// --- KESİN ÇÖZÜM: iOS SES MOTORU ---
+let audioCtx = null;
+const sounds = {};
 
-const sfxUrls = {
-    bet: "https://assets.mixkit.co/sfx/preview/mixkit-modern-technology-select-3124.wav",
-    open: "https://assets.mixkit.co/sfx/preview/mixkit-classic-click-1117.wav",
-    explode: "https://assets.mixkit.co/sfx/preview/mixkit-8-bit-bomb-explosion-2811.wav",
-    win: "https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.wav"
-};
-
-async function initAudio() {
-    if (audioCtx) return;
+// iOS'ta sesin çalması için sessiz bir sesle motoru uyandırıyoruz
+async function unlockAudio() {
+    if (audioCtx) {
+        if (audioCtx.state === 'suspended') await audioCtx.resume();
+        return;
+    }
+    
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     
-    for (const [name, url] of Object.entries(sfxUrls)) {
+    const urls = {
+        bet: 'https://cdn.freesound.org/previews/256/256113_3263901-lq.mp3',
+        open: 'https://cdn.freesound.org/previews/415/415510_7914934-lq.mp3',
+        explode: 'https://cdn.freesound.org/previews/440/440455_9038237-lq.mp3',
+        win: 'https://cdn.freesound.org/previews/511/511484_10834246-lq.mp3'
+    };
+
+    for (const [name, url] of Object.entries(urls)) {
         try {
-            const response = await fetch(url);
-            const arrayBuffer = await response.arrayBuffer();
-            soundBuffers[name] = await audioCtx.decodeAudioData(arrayBuffer);
-        } catch (e) { console.warn(name + " sesi yüklenemedi."); }
+            const res = await fetch(url);
+            const buffer = await res.arrayBuffer();
+            sounds[name] = await audioCtx.decodeAudioData(buffer);
+        } catch (e) { console.error("Ses yüklenemedi:", name); }
     }
 }
 
 function playSound(name) {
-    if (!audioCtx || !soundBuffers[name]) return;
+    if (!audioCtx || !sounds[name]) return;
     if (audioCtx.state === 'suspended') audioCtx.resume();
     
     const source = audioCtx.createBufferSource();
-    source.buffer = soundBuffers[name];
+    source.buffer = sounds[name];
     source.connect(audioCtx.destination);
     source.start(0);
 }
 
-// iOS için kullanıcı etkileşimi kilidini açan event
-["click", "touchstart"].forEach(evt => {
-    document.addEventListener(evt, async () => {
-        await initAudio();
-        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-    }, { once: true });
-});
+// iOS için kritik dokunma dinleyicisi
+document.addEventListener('touchstart', unlockAudio, { once: false });
+document.addEventListener('click', unlockAudio, { once: false });
 
-// --- FIREBASE ---
+// --- FIREBASE KONFİG ---
 const firebaseConfig = {
     apiKey: "AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
     authDomain: "emirhan-site.firebaseapp.com",
@@ -129,6 +130,7 @@ const mineSelect = document.getElementById("mineCount");
 const betInput = document.getElementById("bet");
 const mineDisplay = document.getElementById("mineDisplay");
 
+// Mayın Seçenekleri
 for(let i=1; i<=24; i++){
     let opt = document.createElement("option");
     opt.value = i; opt.text = i + " Mayın";
@@ -157,7 +159,11 @@ function getMultiplier(nMines, nOpened) {
 }
 
 startBtn.addEventListener("click", async () => {
-    if (!auth.currentUser || startBtn.innerText === "YÜKLENİYOR...") return;
+    // iOS'ta her butona basıldığında sesi resume et (Zorunlu)
+    if (audioCtx) audioCtx.resume();
+    else await unlockAudio();
+
+    if (!auth.currentUser) return;
     const userRef = doc(db, "users", auth.currentUser.uid);
 
     if (gameActive) {
@@ -170,7 +176,7 @@ startBtn.addEventListener("click", async () => {
                 const snap = await t.get(userRef);
                 t.update(userRef, { balance: snap.data().balance + win });
             });
-            playSound("win"); // PARA ÇEKME SESİ
+            playSound("win"); // PARA ÇEKME
         } catch (e) { console.error(e); }
         
         resetGame();
@@ -188,12 +194,11 @@ startBtn.addEventListener("click", async () => {
     try {
         await runTransaction(db, async (t) => {
             const snap = await t.get(userRef);
-            if (!snap.exists()) throw "Kullanıcı yok!";
             if (snap.data().balance < betAmount) throw "Yetersiz Bakiye!";
             t.update(userRef, { balance: snap.data().balance - betAmount });
         });
         
-        playSound("bet"); // BAHİS YAPMA SESİ
+        playSound("bet"); // BAHİS
         opened = 0; multiplier = 1;
         mines = [];
         while(mines.length < mineTotal){
@@ -206,7 +211,7 @@ startBtn.addEventListener("click", async () => {
         betInput.disabled = true;
         mineSelect.disabled = true;
         currentBetText.innerText = betAmount;
-        startBtn.innerText = "SEÇİM YAPIN";
+        startBtn.innerText = "KAZANCI ÇEK";
     } catch (e) { alert(e); }
 });
 
@@ -215,7 +220,7 @@ function reveal(i, tile) {
 
     if (mines.includes(i)) {
         gameActive = false;
-        playSound("explode"); // BOMBA PATLAMA SESİ
+        playSound("explode"); // PATLAMA
         mines.forEach(mIdx => {
             tileElements[mIdx].classList.add("mine");
             tileElements[mIdx].innerHTML = "💣";
@@ -226,7 +231,7 @@ function reveal(i, tile) {
         opened++;
         tile.classList.add("open");
         tile.innerHTML = "💎";
-        playSound("open"); // KUTU AÇILIŞ SESİ
+        playSound("open"); // KUTU AÇILIŞ
         multiplier = getMultiplier(mineTotal, opened);
         startBtn.innerText = `Çek (₺${Math.floor(betAmount * multiplier)})`;
     }
@@ -247,7 +252,6 @@ onAuthStateChanged(auth, user => {
     onSnapshot(userRef, snap => {
         if (snap.exists()) {
             balanceText.innerText = Math.floor(snap.data().balance).toLocaleString('tr-TR');
-            if(startBtn.innerText === "YÜKLENİYOR...") startBtn.innerText = "BET";
         }
     });
 });
