@@ -6,12 +6,12 @@
 <title>Pişti Casino PRO</title>
 
 <style>
-    /* 1. ZOOM SORUNU ÇÖZÜMÜ (TÜM ÖĞELER) */
+    /* ZOOM VE ETKİLEŞİM ÇÖZÜMÜ */
     * { 
         margin:0; padding:0; box-sizing:border-box; 
         -webkit-tap-highlight-color:transparent; 
         user-select:none; 
-        touch-action: manipulation; /* Çift tık zoomu tüm tarayıcılarda engeller */
+        touch-action: manipulation; 
     }
     
     body {
@@ -52,13 +52,13 @@
     .card { width:65px; border-radius: 6px; cursor:pointer; transition: transform 0.2s; box-shadow: 0 5px 15px rgba(0,0,0,0.3); background:white;}
     .hand .card:hover { transform: translateY(-15px); }
 
-    /* 3. DAĞILIM ANİMASYONU ÖĞESİ */
+    /* DAĞILIM ANİMASYONU ÖĞESİ */
     .deal-anim-card {
         position: fixed; width: 65px; height: 91px; border-radius: 6px;
         background-image: url('https://deckofcardsapi.com/static/img/back.png');
         background-size: cover; z-index: 5000;
-        transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
-        pointer-events: none; box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+        transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+        pointer-events: none; box-shadow: 0 5px 15px rgba(0,0,0,0.5);
     }
 
     .card-throw { position:absolute; width:65px; z-index:2000; transition:all 0.4s cubic-bezier(.25,.8,.25,1); border-radius: 6px; }
@@ -162,23 +162,21 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// 2. SES MOTORU ÇÖZÜMÜ (Tüm cihazlar ve iOS için)
+// PROFESYONEL SES MOTORU (iOS Dostu Kütüphane)
 const sfx = {
     chip: new Audio("https://www.soundjay.com/buttons/sounds/button-20.mp3"),
-    cardThrow: new Audio("https://assets.mixkit.co/active_storage/sfx/261/261-preview.mp3"),
-    cardCollect: new Audio("https://www.soundjay.com/misc/sounds/deck-shuffling-1.mp3"),
-    win: new Audio("https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3"),
-    lose: new Audio("https://assets.mixkit.co/active_storage/sfx/1103/1103-preview.mp3"),
-    pisti: new Audio("https://assets.mixkit.co/active_storage/sfx/2017/2017-preview.mp3")
+    cardThrow: new Audio("https://cdn.freesound.org/previews/240/240776_4107740-lq.mp3"),
+    cardCollect: new Audio("https://cdn.freesound.org/previews/202/202029_3325145-lq.mp3"),
+    win: new Audio("https://cdn.freesound.org/previews/391/391539_5235550-lq.mp3"),
+    lose: new Audio("https://cdn.freesound.org/previews/174/174499_1079313-lq.mp3"),
+    pisti: new Audio("https://cdn.freesound.org/previews/253/253177_4404552-lq.mp3"),
+    deal: new Audio("https://cdn.freesound.org/previews/240/240776_4107740-lq.mp3")
 };
 
-// iOS'un ses kilidini açmak için Masaya Otur butonuna basıldığında tetiklenir
+// Sesleri Kilidini Açma
 function unlockAudioAndStart() {
     Object.values(sfx).forEach(sound => {
-        sound.play().then(() => {
-            sound.pause();
-            sound.currentTime = 0;
-        }).catch(() => {});
+        sound.play().then(() => { sound.pause(); sound.currentTime = 0; }).catch(() => {});
     });
     startGame();
 }
@@ -187,7 +185,8 @@ window.unlockAudioAndStart = unlockAudioAndStart;
 function playSfx(name) {
     if(sfx[name]) {
         sfx[name].currentTime = 0;
-        sfx[name].play().catch(()=>{});
+        sfx[name].volume = 0.7;
+        sfx[name].play().catch(() => {});
     }
 }
 
@@ -220,7 +219,7 @@ window.addBet = function(amount) {
     if (balance < amount || currentBet + amount > 50000) return;
     currentBet += amount;
     balance -= amount;
-    playSfx("chip"); // Çip sesi
+    playSfx("chip");
     updateUI();
 }
 
@@ -232,7 +231,7 @@ window.cancelBet = function() {
     updateUI();
 }
 
-// 3. PROFESYONEL KART DAĞILIM ANİMASYONU
+// 1. KART DAĞITIM ANİMASYONU VE SESİ
 async function animateDeals(targetId, count) {
     dealing = true;
     const targetEl = document.getElementById(targetId);
@@ -240,23 +239,21 @@ async function animateDeals(targetId, count) {
     for (let i = 0; i < count; i++) {
         const animCard = document.createElement("div");
         animCard.className = "deal-anim-card";
-        // Kartlar sağ taraftaki hayali desteden geliyor gibi başlasın
-        animCard.style.right = "-100px";
-        animCard.style.top = "50%";
+        animCard.style.left = "50%";
+        animCard.style.top = "-100px"; // Yukarıdan gelme efekti
         document.body.appendChild(animCard);
 
-        // Bir sonraki tick'te hedefe uçur
         await new Promise(r => setTimeout(r, 50)); 
         
         const rect = targetEl.getBoundingClientRect();
-        playSfx("cardThrow"); // Kart dağıtma sesi
+        playSfx("deal"); // Dağıtım Sesi
 
-        animCard.style.right = (window.innerWidth - rect.left - 65) + "px";
+        animCard.style.left = (rect.left + (i * 10)) + "px";
         animCard.style.top = rect.top + "px";
         animCard.style.transform = "rotate(360deg)";
 
-        await new Promise(r => setTimeout(r, 150)); // Kartlar arası hafif bekleme
-        setTimeout(() => animCard.remove(), 600);
+        await new Promise(r => setTimeout(r, 150)); 
+        setTimeout(() => animCard.remove(), 500);
     }
     dealing = false;
 }
@@ -272,7 +269,7 @@ window.startGame = async function() {
     ps = 0; cs = 0; round = 0;
     createDeck();
     
-    // İlk masa dağıtımı
+    // Her dağıtımda animasyon ve ses
     await animateDeals("tableCards", 4);
     table = ["BACK", "BACK", "BACK", deck.shift()];
     render();
@@ -289,9 +286,11 @@ function createDeck() {
 async function dealRound() {
     if (round >= 6) { endGame(); return; }
     
+    // Bilgisayara Dağıtım Animasyonu
     await animateDeals("computerHand", 4);
     for (let i = 0; i < 4; i++) computer.push(deck.shift());
     
+    // Oyuncuya Dağıtım Animasyonu
     await animateDeals("playerHand", 4);
     for (let i = 0; i < 4; i++) player.push(deck.shift());
     
@@ -342,7 +341,7 @@ function play(i) {
 }
 
 function animateThrow(el, card, owner) {
-    playSfx("cardThrow"); // Kart atma sesi
+    playSfx("cardThrow"); // Kart Atma Sesi
     const rect = el.getBoundingClientRect();
     const clone = el.cloneNode();
     clone.className = "card-throw";
@@ -387,7 +386,7 @@ function checkRule(owner) {
     if (prev === "BACK") return;
 
     if (last[0] === "J" || last[0] === prev[0]) {
-        playSfx("cardCollect"); // Kart alma sesi
+        playSfx("cardCollect"); // Kart Alma Sesi
         let points = table.length;
         if (table.length === 2 && last[0] === prev[0]) {
             points = 10; 
@@ -409,12 +408,12 @@ async function endGame() {
     gameStarted = false;
     let msg = "";
     if (ps > cs) {
-        let win = bet * 2;
-        balance += win;
-        playSfx("win"); // Kazanma sesi
-        msg = `TEBRİKLER!\n${win.toLocaleString('tr-TR')}₺ Kazandınız.`;
+        let winValue = bet * 2;
+        balance += winValue;
+        playSfx("win"); // Kazanç Sesi
+        msg = `TEBRİKLER!\n${winValue.toLocaleString('tr-TR')}₺ Kazandınız.`;
     } else if (ps < cs) {
-        playSfx("lose"); // Kaybetme sesi
+        playSfx("lose"); // Kaybetme Sesi
         msg = "KAYBETTİNİZ!\nKrupiyer kazandı.";
     } else {
         balance += bet;
