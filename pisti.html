@@ -15,21 +15,27 @@
     
     body {
         height:100vh; overflow:hidden; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
-        background:#0b1023; color:white; display:flex; flex-direction:column; align-items:center;
+        background:#03050a; color:white; display:flex; flex-direction:column; align-items:center;
     }
     
-    .top-bar {
-        position:fixed; top:0; width:100%; height:60px; display:flex; align-items:center; justify-content:space-between;
-        padding:0 12px; background:linear-gradient(135deg,#1a2a6c,#16245c); box-shadow:0 4px 15px rgba(0,0,0,0.45); z-index:1000;
+    /* --- YENİ SKYCRASH TASARIM ÜST BAR --- */
+    .top-bar{
+        position:fixed;top:0;width:100%;height:60px;
+        display:flex;align-items:center;justify-content:space-between;
+        padding:0 12px; background: rgba(10, 15, 30, 0.9);
+        backdrop-filter: blur(10px); border-bottom: 1px solid #1e2642; z-index:1000;
     }
-    .brand { font-size:16px; font-weight:800; color:#4fd1ff; }
-    
-    .nav-box { 
-        display: flex; gap: 8px; align-items: center; background:rgba(39, 60, 143, 0.6); 
-        padding:8px 12px; border-radius:12px; border: 1px solid rgba(79, 209, 255, 0.2);
+
+    .brand{
+        font-size:16px;font-weight:900; background:linear-gradient(90deg,#4fd1ff,#fff);
+        -webkit-background-clip:text; -webkit-text-fill-color:transparent;
     }
-    .nav-item { font-size:12px; font-weight:700; white-space: nowrap; color: #fff; }
-    .nav-item span { color: #4fd1ff; }
+
+    .right-menu{display:flex;gap:6px;}
+    .nav-box{padding:6px 10px; border-radius:10px; font-weight:700; font-size:11px; min-width:85px; text-align:center;}
+    .balance-box{background:#1a2248; border: 1px solid #4fd1ff44; color: #4fd1ff;}
+    .bet-box{background:linear-gradient(90deg,#ff8a00,#ff5f00); color:#000;}
+    /* ------------------------------------ */
 
     h1 { margin-top:80px; font-size: 18px; letter-spacing: 1px; color: rgba(255,255,255,0.8); }
     .score-board { margin: 8px 0; font-weight: bold; color: #ffcc00; font-size: 14px; background: rgba(0,0,0,0.3); padding: 4px 15px; border-radius: 20px; }
@@ -108,9 +114,9 @@
 
 <div class="top-bar">
     <div class="brand">PIŞTI PRO</div>
-    <div class="nav-box">
-        <div class="nav-item">Bakiye: <span id="balance">0.00</span>₺</div>
-        <div class="nav-item">Bahis: <span id="bet">0.00</span>₺</div>
+    <div class="right-menu">
+        <div class="nav-box balance-box">₺<span id="balance">0</span></div>
+        <div class="nav-box bet-box">B: ₺<span id="bet">0</span></div>
     </div>
 </div>
 
@@ -162,7 +168,7 @@ const db = getFirestore(app);
 
 // PROFESYONEL SES MOTORU
 const sfx = {
-    chip: new Audio("https://cdn.freesound.org/previews/201/201491_3325145-lq.mp3"), // Yeni Çip Sesi
+    chip: new Audio("https://cdn.freesound.org/previews/201/201491_3325145-lq.mp3"),
     cardThrow: new Audio("https://cdn.freesound.org/previews/240/240776_4107740-lq.mp3"),
     cardCollect: new Audio("https://cdn.freesound.org/previews/202/202029_3325145-lq.mp3"),
     win: new Audio("https://cdn.freesound.org/previews/391/391539_5235550-lq.mp3"),
@@ -320,32 +326,20 @@ function play(i) {
     animateThrow(imgEl, card, "player");
 }
 
-// KRUPİYER YAPAY ZEKA MANTIĞI
 function compPlay() {
     if (computer.length === 0) return;
     
     let cardIndex = 0;
     const topCard = table.length > 0 ? table[table.length - 1] : null;
 
-    // BAHSE GÖRE ZORLUK SEVİYESİ BELİRLEME
-    if (bet >= 15000) { // ÇOK ZOR (Kusursuz Oynayış)
+    if (bet >= 15000) { 
         let match = computer.findIndex(c => topCard && c[0] === topCard[0]);
         let jack = computer.findIndex(c => c[0] === 'J');
         if (match !== -1) cardIndex = match;
         else if (jack !== -1 && table.length > 1) cardIndex = jack;
         else cardIndex = Math.floor(Math.random() * computer.length);
     } 
-    else if (bet >= 5000) { // BİRAZ ZOR (Stratejik)
-        let match = computer.findIndex(c => topCard && c[0] === topCard[0]);
-        if (match !== -1) cardIndex = match;
-        else cardIndex = Math.floor(Math.random() * computer.length);
-    }
-    else if (bet >= 2000) { // İDEAL (Düzgün Oynayış)
-        let match = computer.findIndex(c => topCard && c[0] === topCard[0]);
-        if (match !== -1 && Math.random() > 0.2) cardIndex = match;
-        else cardIndex = Math.floor(Math.random() * computer.length);
-    }
-    else { // NORMAL (Acemi)
+    else {
         cardIndex = Math.floor(Math.random() * computer.length);
     }
 
