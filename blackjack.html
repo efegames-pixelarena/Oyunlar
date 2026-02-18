@@ -16,58 +16,43 @@
         color:white; touch-action:manipulation; display: flex; flex-direction: column;
     }
 
-    /* --- ÜST BAR TASARIMI (KAYMA YAPMAZ) --- */
+    /* --- ÜST BAR TASARIMI --- */
     .top-bar {
         position: fixed; top: 0; width: 100%; height: 55px; display: flex; align-items: center; justify-content: space-between;
         padding: 0 16px; background: linear-gradient(135deg, #1a2a6c, #16245c);
         box-shadow: 0 4px 15px rgba(0,0,0,0.45); z-index: 100;
     }
     .brand {
-        flex-shrink: 0; /* İsmin sıkışmasını engeller */
-        font-size: 18px; font-weight: 800; background: linear-gradient(90deg, #4fd1ff, #fff, #4fd1ff);
-        background-size: 200% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        animation: shine 3s linear infinite; margin-right: 10px;
+        flex-shrink: 0; font-size: 18px; font-weight: 800; background: linear-gradient(90deg, #4fd1ff, #fff, #4fd1ff);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: shine 3s linear infinite;
     }
     @keyframes shine { to { background-position: 200% center; } }
 
-    .right-menu { 
-        display: flex; gap: 10px; flex-shrink: 1; justify-content: flex-end; align-items: center; 
-    }
+    .right-menu { display: flex; gap: 8px; align-items: center; }
     .nav-box { 
-        padding: 6px 12px; border-radius: 14px; font-weight: 700; font-size: 12px; 
-        min-width: 95px; text-align: center; white-space: nowrap; /* Metnin kırılmasını önler */
+        padding: 6px 10px; border-radius: 14px; font-weight: 700; font-size: 11px; 
+        min-width: 80px; text-align: center; white-space: nowrap;
     }
     .balance-box { background: #273c8f; border: 1px solid rgba(79, 209, 255, 0.3); }
     .bet-box { background: linear-gradient(90deg, #ff8a00, #ff5f00); color: #000; }
-
-    /* --- OYUN ALANI --- */
-    .game-container {
-        flex: 1; display: flex; flex-direction: column; justify-content: space-between;
-        padding: 75px 0 20px 0; position: relative;
+    
+    /* Bahis Sil Butonu */
+    .clear-bet {
+        background: #e74c3c; color: white; border: none; width: 30px; height: 30px; 
+        border-radius: 50%; font-weight: bold; cursor: pointer; display: flex; 
+        align-items: center; justify-content: center; font-size: 16px; box-shadow: 0 2px 5px rgba(0,0,0,0.3);
     }
 
+    .game-container { flex: 1; display: flex; flex-direction: column; justify-content: space-between; padding: 75px 0 20px 0; }
     .area { width: 100%; text-align: center; }
+    .dealer-title { font-size: 18px; letter-spacing: 4px; font-weight: 800; color: #d4af37; margin-bottom: 8px; }
+    .score-badge { background: rgba(0,0,0,0.6); color: #ffd700; padding: 4px 15px; border-radius: 20px; font-size: 14px; border: 1px solid rgba(255,215,0,0.3); margin-bottom: 10px; display: inline-block; }
 
-    .dealer-title {
-        font-size: 18px; letter-spacing: 4px; font-weight: 800; color: #d4af37;
-        margin-bottom: 8px; text-transform: uppercase;
-    }
-
-    .score-badge {
-        background: rgba(0,0,0,0.6); color: #ffd700; padding: 4px 15px;
-        border-radius: 20px; font-size: 14px; font-weight: 700;
-        display: inline-block; margin-bottom: 10px; border: 1px solid rgba(255,215,0,0.3);
-    }
-
-    .cards-wrapper { display: flex; justify-content: center; gap: 8px; min-height: 105px; padding: 0 10px; }
-    .card {
-        width: 70px; height: 100px; border-radius: 8px; box-shadow: 0 6px 15px rgba(0,0,0,0.6);
-        transform: translateY(-20px) rotateY(90deg); opacity: 0; transition: all 0.4s ease-out;
-    }
+    .cards-wrapper { display: flex; justify-content: center; gap: 8px; min-height: 105px; }
+    .card { width: 70px; height: 100px; border-radius: 8px; box-shadow: 0 6px 15px rgba(0,0,0,0.6); transform: translateY(-20px) rotateY(90deg); opacity: 0; transition: all 0.4s ease-out; }
     .card.show { transform: translateY(0) rotateY(0deg); opacity: 1; }
 
-    #message { font-size: 22px; font-weight: 900; color: #fff; text-shadow: 0 2px 10px rgba(0,0,0,0.8); height: 35px; }
-
+    #message { font-size: 20px; font-weight: 900; color: #fff; text-shadow: 0 2px 10px rgba(0,0,0,0.8); height: 35px; }
     .controls { display: none; gap: 15px; justify-content: center; margin-bottom: 10px; }
     .btn { padding: 12px 25px; border-radius: 10px; border: none; font-weight: 800; font-size: 15px; color: white; cursor: pointer; }
     #hit { background: #2ecc71; box-shadow: 0 4px #27ae60; }
@@ -76,14 +61,15 @@
     .chips-area { display: flex; justify-content: center; gap: 10px; padding-bottom: 40px; }
     .chip {
         width: 58px; height: 58px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-        font-weight: 900; font-size: 15px; border: 2px dashed rgba(255,255,255,0.4);
+        font-weight: 900; font-size: 15px; border: 3px dashed rgba(255,255,255,0.4);
         box-shadow: 0 5px 15px rgba(0,0,0,0.4); cursor: pointer; transition: transform 0.2s;
     }
     .c250 { background: #fff; color: #000; }
     .c500 { background: #27ae60; color: #fff; }
     .c1k { background: #e74c3c; color: #fff; }
     .c2k { background: #000; color: #fff; border-color: #ffd700; }
-    .disabled { opacity: 0.3; pointer-events: none; }
+    
+    .disabled { opacity: 0.3; pointer-events: none; filter: grayscale(1); }
 </style>
 </head>
 <body>
@@ -91,6 +77,7 @@
 <div class="top-bar">
     <div class="brand">PixelArena BJ</div>
     <div class="right-menu">
+        <button class="clear-bet" id="clearBetBtn" onclick="clearBet()">✕</button>
         <div class="nav-box balance-box">Bakiye: <span id="balance">0</span>₺</div>
         <div class="nav-box bet-box">Bahis: <span id="bet">0</span>₺</div>
     </div>
@@ -99,12 +86,12 @@
 <div class="game-container">
     <div class="area">
         <div class="dealer-title">KURUPİER</div>
-        <div class="score-badge">Toplam: <span id="dealerScore">0</span></div>
+        <div class="score-badge">Sayı: <span id="dealerScore">0</span></div>
         <div id="dealerCards" class="cards-wrapper"></div>
     </div>
 
     <div class="area">
-        <div id="message">BAHİS YAPIN</div>
+        <div id="message">BAHİS YAPIN (Min: 250₺)</div>
         <div class="controls" id="controls">
             <button id="hit" class="btn">KART ÇEK</button>
             <button id="stand" class="btn">KAL</button>
@@ -113,7 +100,7 @@
 
     <div class="area">
         <div id="playerCards" class="cards-wrapper"></div>
-        <div class="score-badge">Toplam: <span id="playerScore">0</span></div>
+        <div class="score-badge">Sayı: <span id="playerScore">0</span></div>
     </div>
 
     <div class="chips-area" id="chipsArea">
@@ -152,20 +139,73 @@ const messageEl = document.getElementById("message");
 const controlsEl = document.getElementById("controls");
 const chipsAreaEl = document.getElementById("chipsArea");
 
+// --- iOS UYUMLU GERÇEKÇİ SES MOTORU ---
 function playSound(type) {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     if (audioCtx.state === "suspended") audioCtx.resume();
+    
     const now = audioCtx.currentTime;
     const osc = audioCtx.createOscillator();
     const g = audioCtx.createGain();
     osc.connect(g); g.connect(audioCtx.destination);
 
-    if(type==='chip') { osc.frequency.setValueAtTime(1000, now); g.gain.setValueAtTime(0.1, now); osc.start(); osc.stop(now+0.05); }
-    if(type==='card') { osc.type='triangle'; osc.frequency.setValueAtTime(400, now); g.gain.setValueAtTime(0.05, now); osc.start(); osc.stop(now+0.1); }
-    if(type==='count') { osc.frequency.setValueAtTime(800, now); g.gain.setValueAtTime(0.04, now); osc.start(); osc.stop(now+0.05); }
-    if(type==='win') { osc.frequency.setValueAtTime(523, now); osc.frequency.setValueAtTime(659, now+0.1); g.gain.setValueAtTime(0.1, now); osc.start(); osc.stop(now+0.4); }
-    if(type==='lose') { osc.type='sawtooth'; osc.frequency.setValueAtTime(150, now); osc.frequency.linearRampToValueAtTime(50, now+0.5); g.gain.setValueAtTime(0.2, now); osc.start(); osc.stop(now+0.5); }
-    if(type==='bust') { osc.type='square'; osc.frequency.setValueAtTime(80, now); g.gain.setValueAtTime(0.2, now); osc.start(); osc.stop(now+0.3); }
+    switch(type) {
+        case 'chip': // Gerçek Masaya Çip Koyma
+            osc.frequency.setValueAtTime(150, now);
+            osc.frequency.exponentialRampToValueAtTime(40, now + 0.1);
+            g.gain.setValueAtTime(0.3, now);
+            g.gain.linearRampToValueAtTime(0, now + 0.1);
+            osc.start(); osc.stop(now + 0.1);
+            break;
+        case 'clear': // Bahis Silme Sesi
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(400, now);
+            osc.frequency.linearRampToValueAtTime(200, now + 0.2);
+            g.gain.setValueAtTime(0.1, now);
+            g.gain.linearRampToValueAtTime(0, now + 0.2);
+            osc.start(); osc.stop(now + 0.2);
+            break;
+        case 'card': // Gerçek Kart Çekme Sesi
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(800, now);
+            osc.frequency.linearRampToValueAtTime(1200, now + 0.05);
+            g.gain.setValueAtTime(0.05, now);
+            g.gain.linearRampToValueAtTime(0, now + 0.1);
+            osc.start(); osc.stop(now + 0.1);
+            break;
+        case 'count': // Karar & Geri Sayım
+            osc.frequency.setValueAtTime(880, now);
+            g.gain.setValueAtTime(0.1, now);
+            g.gain.linearRampToValueAtTime(0, now + 0.05);
+            osc.start(); osc.stop(now + 0.05);
+            break;
+        case 'win': // Gerçek Kazanma
+            [523.25, 659.25, 783.99].forEach((f, i) => {
+                const o = audioCtx.createOscillator();
+                const gn = audioCtx.createGain();
+                o.frequency.value = f;
+                o.connect(gn); gn.connect(audioCtx.destination);
+                gn.gain.setValueAtTime(0.1, now + (i*0.1));
+                gn.gain.linearRampToValueAtTime(0, now + 0.4);
+                o.start(now + (i*0.1)); o.stop(now + 0.5);
+            });
+            break;
+        case 'lose': // Gerçek Kaybetme
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(110, now);
+            osc.frequency.linearRampToValueAtTime(55, now + 0.4);
+            g.gain.setValueAtTime(0.1, now);
+            g.gain.linearRampToValueAtTime(0, now + 0.4);
+            osc.start(); osc.stop(now + 0.4);
+            break;
+        case 'bust': // Gerçek Bust Sesi
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(60, now);
+            g.gain.setValueAtTime(0.4, now);
+            g.gain.linearRampToValueAtTime(0, now + 0.5);
+            osc.start(); osc.stop(now + 0.5);
+            break;
+    }
 }
 
 onAuthStateChanged(auth, user => {
@@ -178,13 +218,35 @@ onAuthStateChanged(auth, user => {
     });
 });
 
+// Bahis Ekleme
 window.addBet = (amount) => {
     if(gameState !== "betting" || balance < amount) return;
     if(bet + amount > 20000) return;
+
     playSound('chip');
     bet += amount; balance -= amount;
     balanceEl.innerText = balance; betEl.innerText = bet;
-    if(!betCountdown) startBetCountdown();
+    
+    // Maksimum Limite Ulaşınca Çipleri Kapat
+    if(bet >= 20000) chipsAreaEl.classList.add("disabled");
+    
+    if(!betCountdown && bet >= 250) startBetCountdown();
+};
+
+// Bahis Geri Çekme/Silme
+window.clearBet = () => {
+    if(gameState !== "betting" || bet === 0) return;
+    playSound('clear');
+    balance += bet;
+    bet = 0;
+    balanceEl.innerText = balance;
+    betEl.innerText = 0;
+    if(betCountdown) {
+        clearInterval(betCountdown);
+        betCountdown = null;
+    }
+    messageEl.innerText = "BAHİS YAPIN (Min: 250₺)";
+    chipsAreaEl.classList.remove("disabled");
 };
 
 function startBetCountdown(){
@@ -193,26 +255,30 @@ function startBetCountdown(){
     betCountdown = setInterval(() => {
         s--;
         if(s > 0) { messageEl.innerText = "BAŞLIYOR: " + s; playSound('count'); }
-        else { clearInterval(betCountdown); betCountdown = null; messageEl.innerText = ""; startGame(); }
+        else { clearInterval(betCountdown); betCountdown = null; startGame(); }
     }, 1000);
 }
 
 async function startGame(){
+    if(bet < 250) { 
+        messageEl.innerText = "MİNİMUM 250₺ GEREKLİ!"; 
+        return; 
+    }
     gameState = "playing";
     chipsAreaEl.classList.add("disabled");
+    document.getElementById("clearBetBtn").classList.add("disabled");
     document.getElementById("dealerCards").innerHTML = "";
     document.getElementById("playerCards").innerHTML = "";
     player = []; dealer = []; dealerHidden = true;
     createDeck();
     await updateDoc(userRef, { balance: balance });
 
-    await draw(player, "playerCards"); await delay(800);
-    await draw(dealer, "dealerCards"); await delay(800);
-    await draw(player, "playerCards"); await delay(800);
+    await draw(player, "playerCards"); await delay(700);
+    await draw(dealer, "dealerCards"); await delay(700);
+    await draw(player, "playerCards"); await delay(700);
     await draw(dealer, "dealerCards", true);
 
-    const pT = total(player);
-    if(pT === 21) { 
+    if(total(player) === 21) { 
         messageEl.innerText = "BLACKJACK!"; 
         dealerTurn();
     } else { 
@@ -269,7 +335,7 @@ function startActionTimer(){
     messageEl.innerText = "KARAR (" + s + ")";
     actionTimer = setInterval(() => {
         s--;
-        if(s>0) messageEl.innerText = "KARAR (" + s + ")";
+        if(s>0) { messageEl.innerText = "KARAR (" + s + ")"; playSound('count'); }
         else { clearInterval(actionTimer); stand(); }
     }, 1000);
 }
@@ -311,7 +377,6 @@ async function endGame(){
     if(m>0) await updateDoc(userRef, { balance: increment(bet*m) });
     messageEl.innerText = txt;
 
-    // MAÇ SONU: 3 Saniye Bekle ve Temizle
     await delay(3000);
     
     document.getElementById("dealerCards").innerHTML = "";
@@ -322,7 +387,8 @@ async function endGame(){
     bet = 0; betEl.innerText = 0;
     gameState = "betting";
     chipsAreaEl.classList.remove("disabled");
-    messageEl.innerText = "BAHİS YAPIN";
+    document.getElementById("clearBetBtn").classList.remove("disabled");
+    messageEl.innerText = "BAHİS YAPIN (Min: 250₺)";
 }
 
 function delay(ms){ return new Promise(r => setTimeout(r, ms)); }
