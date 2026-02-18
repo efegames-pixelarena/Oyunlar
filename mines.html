@@ -1,68 +1,106 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>PixelArena - Mines Pro</title>
-    <style>
-        * { margin:0; padding:0; box-sizing:border-box; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto; -webkit-tap-highlight-color:transparent; }
-        body { background:#0c111d; color:#fff; overflow:hidden; padding-bottom:env(safe-area-inset-bottom); }
-        
-        .top-bar { position:fixed; top:0; width:100%; height:60px; display:flex; align-items:center; justify-content:space-between; padding:0 15px; background:#141923; box-shadow:0 4px 20px rgba(0,0,0,0.6); z-index:1000; }
-        .brand { font-size:18px; font-weight:700; color:#00d4ff; }
-        .right-menu { display:flex; gap:8px; }
-        .nav-box { background:#1e2533; padding:6px 12px; border-radius:12px; font-weight:600; font-size:13px; border:1px solid #ffffff11; }
-        .balance-box { color:#00d4ff; }
-        .bet-box { color:#ffcc00; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>PixelArena - Mines Pro</title>
 
-        .container { position:fixed; top:60px; bottom:0; width:100%; display:flex; flex-direction:column; padding:15px; }
-        .mines-header { display:flex; justify-content:space-between; align-items:center; background:#151b26; padding:12px 15px; border-radius:14px; margin-bottom:15px; }
-        
-        #grid { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; flex:1; max-height:400px; }
-        .tile { background:#1b2232; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:24px; cursor:pointer; transition:0.2s; box-shadow:inset 0 0 10px rgba(0,0,0,0.5); border:1px solid #2a3447; position: relative; }
-        .tile.open { background:linear-gradient(135deg, #16c784, #0b8a5b); border:none; box-shadow:0 0 15px rgba(22,199,132,0.4); }
-        .tile.mine { background:linear-gradient(135deg, #ff4d4f, #cf1322); border:none; box-shadow:0 0 15px rgba(255,77,79,0.4); animation: shake 0.3s; }
+<style>
+    *{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;-webkit-tap-highlight-color:transparent;}
+    html,body{height:100%;width:100%;background:#0c111d;color:#fff;overflow:hidden;padding-bottom:env(safe-area-inset-bottom);}
 
-        @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-4px)} 75%{transform:translateX(4px)} }
+    .top-bar{position:fixed;top:0;left:0;right:0;height:60px;display:flex;align-items:center;justify-content:space-between;padding:0 15px;background:#141923;box-shadow:0 4px 20px rgba(0,0,0,0.6);z-index:1000;}
+    .brand{font-size:18px;font-weight:700;color:#fff;}
+    .right-menu{display:flex;gap:8px;}
+    .nav-box{background:#1e2533;padding:6px 12px;border-radius:12px;font-weight:600;font-size:13px;}
+    .balance-box{color:#00d4ff;}
+    .bet-box{color:#ffcc00;}
 
-        .bet-panel { background:#151b26; border-radius:16px; padding:15px; margin-top:15px; border:1px solid #1e2533; }
-        input, select { width:100%; background:#1e2533; border:1px solid #2a3447; border-radius:12px; padding:12px; color:white; margin-bottom:10px; font-size:16px; outline:none; }
-        button { width:100%; padding:15px; border-radius:12px; border:none; font-weight:bold; cursor:pointer; font-size:16px; transition:0.2s; }
-        .start-btn { background:#00c853; color:#000; }
-        .start-btn:active { transform:scale(0.98); }
-        button:disabled { background:#2a3447; color:#555; cursor:not-allowed; }
-    </style>
+    .container{position:fixed;top:60px;left:0;right:0;bottom:0;display:flex;flex-direction:column;padding:15px;overflow-y:auto;}
+    .mines-header{display:flex;justify-content:space-between;align-items:center;background:#151b26;padding:12px 15px;border-radius:14px;margin-bottom:15px;}
+    
+    #grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:20px;}
+    .tile{background:#1b2232;height:68px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;transition:0.25s;box-shadow:inset 0 0 8px rgba(0,0,0,0.6);position:relative;}
+    .tile.open{background:#16c784;box-shadow:0 0 15px #16c784;}
+    .tile.mine{background:#ff4d4f;box-shadow:0 0 18px red;animation:shake 0.3s;}
+
+    @keyframes shake{0%,100%{transform:translateX(0)} 25%{transform:translateX(-4px)} 75%{transform:translateX(4px)}}
+
+    .bet-panel{background:#151b26;border-radius:16px;padding:15px;box-shadow:0 0 20px rgba(0,0,0,0.6);margin-top:auto;}
+    input,select{width:100%;background:#1e2533;border:none;border-radius:12px;padding:12px;color:white;margin-bottom:10px;font-size:15px;outline:none;}
+    button{width:100%;padding:14px;border-radius:12px;border:none;font-weight:bold;cursor:pointer;font-size:15px;transition:0.2s;}
+    .start{background:#00c853;color:black;}
+    .start:active{transform:scale(0.98);}
+    button:disabled{background:#444;color:#999;}
+</style>
 </head>
 <body>
 
 <div class="top-bar">
-    <div class="brand">PIXELARENA</div>
+    <div class="brand">PixelArena</div>
     <div class="right-menu">
-        <div class="nav-box balance-box">₺ <span id="userBalance">---</span></div>
+        <div class="nav-box balance-box">₺ <span id="userBalance">0</span></div>
         <div class="nav-box bet-box">Bet: <span id="currentBet">0</span></div>
     </div>
 </div>
 
 <div class="container">
     <div class="mines-header">
-        <div>Mines Game</div>
+        <div>Mines</div>
         <div style="color:#aaa">Mayın: <span id="mineDisplay" style="color:#ff4d4f; font-weight:bold;">1</span></div>
     </div>
-
     <div id="grid"></div>
-
     <div class="bet-panel">
-        <input type="number" id="betInput" placeholder="Bahis Tutarı (250 - 3000)" value="250">
-        <select id="mineCountSelect"></select>
-        <button id="mainBtn" class="start-btn">BAĞLANILIYOR...</button>
+        <input type="number" id="bet" placeholder="Bahis (250 - 3000)" value="250">
+        <select id="mineCount"></select>
+        <button id="startBtn" class="start">YÜKLENİYOR...</button>
     </div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, onSnapshot, runTransaction, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, onSnapshot, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+// --- GÜÇLENDİRİLMİŞ iOS SES MOTORU ---
+let audioCtx;
+const sounds = {};
+
+async function initAudio() {
+    if (audioCtx) return;
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    const sfx = {
+        bet: "https://assets.mixkit.co/sfx/preview/mixkit-modern-technology-select-3124.wav",
+        open: "https://assets.mixkit.co/sfx/preview/mixkit-classic-click-1117.wav",
+        explode: "https://assets.mixkit.co/sfx/preview/mixkit-8-bit-bomb-explosion-2811.wav",
+        win: "https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.wav"
+    };
+
+    for (const [name, url] of Object.entries(sfx)) {
+        try {
+            const res = await fetch(url);
+            const buffer = await res.arrayBuffer();
+            sounds[name] = await audioCtx.decodeAudioData(buffer);
+        } catch (e) { console.error("Ses yükleme hatası:", name); }
+    }
+}
+
+function playSound(name) {
+    if (!audioCtx || !sounds[name]) return;
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const source = audioCtx.createBufferSource();
+    source.buffer = sounds[name];
+    source.connect(audioCtx.destination);
+    source.start(0);
+}
+
+// iOS etkileşim kilidini aç
+["click", "touchstart"].forEach(evt => {
+    document.addEventListener(evt, initAudio, { once: true });
+});
+
+// --- FIREBASE KONFİGÜRASYONU ---
 const firebaseConfig = {
     apiKey: "AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
     authDomain: "emirhan-site.firebaseapp.com",
@@ -76,31 +114,32 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-let mines = [], openedCount = 0, betAmount = 0, mineTotal = 1, multiplier = 1, gameActive = false;
+let mines = [], opened = 0, betAmount = 0, mineTotal = 1, multiplier = 1, gameActive = false;
 let tileElements = [];
 
 const gridEl = document.getElementById("grid");
-const balanceEl = document.getElementById("userBalance");
-const currentBetEl = document.getElementById("currentBet");
-const mainBtn = document.getElementById("mainBtn");
-const mineSelect = document.getElementById("mineCountSelect");
-const betInput = document.getElementById("betInput");
+const balanceText = document.getElementById("userBalance");
+const currentBetText = document.getElementById("currentBet");
+const startBtn = document.getElementById("startBtn");
+const mineSelect = document.getElementById("mineCount");
+const betInput = document.getElementById("bet");
 const mineDisplay = document.getElementById("mineDisplay");
 
-for(let i=1; i<=24; i++) {
+// Mayın Seçenekleri
+for(let i=1; i<=24; i++){
     let opt = document.createElement("option");
     opt.value = i; opt.text = i + " Mayın";
     mineSelect.appendChild(opt);
 }
 mineSelect.addEventListener("change", () => mineDisplay.innerText = mineSelect.value);
 
-function initGrid() {
+function createGrid() {
     gridEl.innerHTML = "";
     tileElements = [];
-    for(let i=0; i<25; i++) {
+    for(let i=0; i<25; i++){
         let tile = document.createElement("div");
-        tile.className = "tile";
-        tile.addEventListener("click", () => handleTileClick(i, tile));
+        tile.classList.add("tile");
+        tile.addEventListener("click", () => reveal(i, tile));
         gridEl.appendChild(tile);
         tileElements.push(tile);
     }
@@ -111,110 +150,107 @@ function getMultiplier(nMines, nOpened) {
     for (let i = 0; i < nOpened; i++) {
         prob *= (25 - nMines - i) / (25 - i);
     }
-    return (1 / prob) * 0.96; 
+    return (1 / prob) * 0.97; // %3 Kasa payı
 }
 
-mainBtn.addEventListener("click", async () => {
-    if (!auth.currentUser || mainBtn.innerText === "BAĞLANILIYOR...") return;
+startBtn.addEventListener("click", async () => {
+    if (!auth.currentUser || startBtn.innerText === "YÜKLENİYOR...") return;
     const userRef = doc(db, "users", auth.currentUser.uid);
 
     if (gameActive) {
-        if (openedCount === 0) return;
+        if (opened === 0) return;
         gameActive = false;
-        const winAmount = Math.floor(betAmount * multiplier);
-
+        const win = Math.floor(betAmount * multiplier);
+        
         try {
-            await runTransaction(db, async (transaction) => {
-                const snap = await transaction.get(userRef);
-                transaction.update(userRef, { balance: (snap.data().balance || 0) + winAmount });
+            await runTransaction(db, async (t) => {
+                const snap = await t.get(userRef);
+                t.update(userRef, { balance: snap.data().balance + win });
             });
+            playSound("win");
         } catch (e) { console.error(e); }
+        
         resetGame();
         return;
     }
 
     betAmount = parseInt(betInput.value);
-    mineTotal = parseInt(mineSelect.value);
-
-    if (isNaN(betAmount) || betAmount < 250 || betAmount > 3000) {
-        alert("Bahis 250₺ - 3000₺ arasında olmalıdır!");
+    if(isNaN(betAmount) || betAmount < 250 || betAmount > 3000) {
+        alert("Bahis 250₺ - 3000₺ arası olmalıdır.");
         return;
     }
+
+    mineTotal = parseInt(mineSelect.value);
 
     try {
         await runTransaction(db, async (t) => {
             const snap = await t.get(userRef);
-            if (!snap.exists()) throw "Kullanıcı kaydı bulunamadı!";
-            const bal = snap.data().balance || 0;
-            if (bal < betAmount) throw "Yetersiz Bakiye!";
-            t.update(userRef, { balance: bal - betAmount });
+            if (!snap.exists()) throw "Kullanıcı yok!";
+            if (snap.data().balance < betAmount) throw "Yetersiz Bakiye!";
+            t.update(userRef, { balance: snap.data().balance - betAmount });
         });
-    } catch (e) { alert(e); return; }
-
-    mines = [];
-    while(mines.length < mineTotal) {
-        let r = Math.floor(Math.random() * 25);
-        if(!mines.includes(r)) mines.push(r);
-    }
-
-    openedCount = 0; multiplier = 1; gameActive = true;
-    initGrid();
-    betInput.disabled = true; mineSelect.disabled = true;
-    currentBetEl.innerText = betAmount;
-    mainBtn.innerText = "ELMAS SEÇİN";
-    mainBtn.style.background = "#555";
+        
+        playSound("bet");
+        opened = 0; multiplier = 1;
+        mines = [];
+        while(mines.length < mineTotal){
+            let r = Math.floor(Math.random() * 25);
+            if(!mines.includes(r)) mines.push(r);
+        }
+        
+        createGrid();
+        gameActive = true;
+        betInput.disabled = true;
+        mineSelect.disabled = true;
+        currentBetText.innerText = betAmount;
+        startBtn.innerText = "SEÇİM YAPIN";
+    } catch (e) { alert(e); }
 });
 
-function handleTileClick(index, tile) {
-    if (!gameActive || tile.classList.contains("open") || tile.classList.contains("mine")) return;
+function reveal(i, tile) {
+    if (!gameActive || tile.classList.contains("open")) return;
 
-    if (mines.includes(index)) {
+    if (mines.includes(i)) {
         gameActive = false;
+        playSound("explode");
         mines.forEach(mIdx => {
             tileElements[mIdx].classList.add("mine");
             tileElements[mIdx].innerHTML = "💣";
         });
-        mainBtn.innerText = "KAYBETTİN!";
-        mainBtn.style.background = "#ff4d4f";
-        setTimeout(resetGame, 2500);
+        startBtn.innerText = "PATLADI!";
+        setTimeout(resetGame, 2000);
     } else {
-        openedCount++;
+        opened++;
         tile.classList.add("open");
         tile.innerHTML = "💎";
-        multiplier = getMultiplier(mineTotal, openedCount);
-        mainBtn.style.background = "#00c853";
-        mainBtn.innerText = `ÇEK (₺${Math.floor(betAmount * multiplier)})`;
+        playSound("open");
+        multiplier = getMultiplier(mineTotal, opened);
+        startBtn.innerText = `Çek (₺${Math.floor(betAmount * multiplier)})`;
     }
 }
 
 function resetGame() {
-    gameActive = false; betInput.disabled = false; mineSelect.disabled = false;
-    mainBtn.innerText = "OYUNU BAŞLAT";
-    mainBtn.style.background = "#00c853";
-    currentBetEl.innerText = "0";
-    initGrid();
+    gameActive = false;
+    betInput.disabled = false;
+    mineSelect.disabled = false;
+    startBtn.innerText = "BET";
+    currentBetText.innerText = "0";
+    createGrid();
 }
 
-// OTOMATİK BAKİYE TANIMLAMASI KALDIRILDI
-signInAnonymously(auth).catch(e => console.error("Giriş Hatası"));
-
-onAuthStateChanged(auth, async (user) => {
+onAuthStateChanged(auth, user => {
     if (!user) return;
     const userRef = doc(db, "users", user.uid);
-    
-    // Sadece mevcut veriyi dinle, yeni veri oluşturma (setDoc kaldırıldı)
-    onSnapshot(userRef, (s) => {
-        if (s.exists()) {
-            const data = s.data();
-            balanceEl.innerText = Math.floor(data.balance || 0).toLocaleString('tr-TR');
-        } else {
-            balanceEl.innerText = "0"; // Veritabanında yoksa 0 göster
+    onSnapshot(userRef, snap => {
+        if (snap.exists()) {
+            balanceText.innerText = Math.floor(snap.data().balance).toLocaleString('tr-TR');
+            if(startBtn.innerText === "YÜKLENİYOR...") startBtn.innerText = "BET";
         }
-        if(mainBtn.innerText === "BAĞLANILIYOR...") mainBtn.innerText = "OYUNU BAŞLAT";
     });
 });
 
-initGrid();
+createGrid();
 </script>
+
 </body>
 </html>
