@@ -16,26 +16,27 @@
         color:white; touch-action:manipulation; display: flex; flex-direction: column;
     }
 
-    /* --- ÜST BAR (KAYMA YAPMAZ) --- */
+    /* --- YENİ ENTEGRE EDİLEN ÜST BAR (SkyCrash Stil) --- */
     .top-bar {
-        position: fixed; top: 0; width: 100%; height: 55px; display: flex; align-items: center; justify-content: space-between;
-        padding: 0 16px; background: linear-gradient(135deg, #1a2a6c, #16245c);
-        box-shadow: 0 4px 15px rgba(0,0,0,0.45); z-index: 100;
+        position:fixed; top:0; width:100%; height:60px;
+        display:flex; align-items:center; justify-content:space-between;
+        padding:0 12px; background: rgba(10, 15, 30, 0.9);
+        backdrop-filter: blur(10px); border-bottom: 1px solid #1e2642; z-index:100;
     }
-    .brand {
-        flex-shrink: 0; font-size: 18px; font-weight: 800; background: linear-gradient(90deg, #4fd1ff, #fff, #4fd1ff);
-        background-size: 200% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        animation: shine 3s linear infinite; margin-right: 10px;
-    }
-    @keyframes shine { to { background-position: 200% center; } }
 
-    .right-menu { display: flex; gap: 10px; flex-shrink: 1; justify-content: flex-end; align-items: center; }
-    .nav-box { 
-        padding: 6px 12px; border-radius: 14px; font-weight: 700; font-size: 12px; 
-        min-width: 95px; text-align: center; white-space: nowrap;
+    .brand {
+        font-size:16px; font-weight:900; background:linear-gradient(90deg,#4fd1ff,#fff);
+        -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+        letter-spacing: 1px;
     }
-    .balance-box { background: #273c8f; border: 1px solid rgba(79, 209, 255, 0.3); }
-    .bet-box { background: linear-gradient(90deg, #ff8a00, #ff5f00); color: #000; }
+
+    .right-menu { display:flex; gap:6px; align-items: center; }
+    .nav-box { 
+        padding:6px 10px; border-radius:10px; font-weight:700; font-size:11px; 
+        min-width:85px; text-align:center; white-space: nowrap;
+    }
+    .balance-box { background:#1a2248; border: 1px solid #4fd1ff44; color: #4fd1ff; }
+    .bet-box { background:linear-gradient(90deg,#ff8a00,#ff5f00); color:#000; }
 
     /* --- OYUN ALANI --- */
     .game-container { flex: 1; display: flex; flex-direction: column; justify-content: space-between; padding: 75px 0 20px 0; }
@@ -78,10 +79,10 @@
 <body>
 
 <div class="top-bar">
-    <div class="brand">PixelArena BJ</div>
+    <div class="brand">PIXELARENA BJ</div>
     <div class="right-menu">
-        <div class="nav-box balance-box">Bakiye: <span id="balance">0</span>₺</div>
-        <div class="nav-box bet-box">Bahis: <span id="bet">0</span>₺</div>
+        <div class="nav-box balance-box">₺<span id="balance">0</span></div>
+        <div class="nav-box bet-box">B: ₺<span id="bet">0</span></div>
     </div>
 </div>
 
@@ -142,7 +143,7 @@ const messageEl = document.getElementById("message");
 const controlsEl = document.getElementById("controls");
 const chipsAreaEl = document.getElementById("chipsArea");
 
-// --- iOS UYUMLU PROFESYONEL SES MOTORU (UPGRADED) ---
+// --- iOS UYUMLU PROFESYONEL SES MOTORU ---
 function playSound(type) {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     if (audioCtx.state === "suspended") audioCtx.resume();
@@ -161,39 +162,20 @@ function playSound(type) {
         o.start(startTime); o.stop(stopTime);
     };
 
-    if(type==='chip') {
-        playOsc(150, 'sine', 0.3, now, now + 0.1, 40);
-    }
-    
+    if(type==='chip') playOsc(150, 'sine', 0.3, now, now + 0.1, 40);
     if(type==='card') { 
-        // PROFESYONEL KART SESİ: 2 Katmanlı (Sürtünme + Masaya Konma)
-        // Katman 1: Desteden kayma sesi (Yüksek frekanslı hışırtı)
         playOsc(1000, 'triangle', 0.03, now, now + 0.05, 1500);
-        // Katman 2: Masaya vuruş sesi (Düşük frekanslı tok ses)
         playOsc(200, 'sine', 0.05, now + 0.03, now + 0.1);
     }
-
-    if(type==='clear') {
-        playOsc(400, 'sine', 0.1, now, now + 0.2, 200);
-    }
-
-    if(type==='count') {
-        playOsc(880, 'sine', 0.08, now, now + 0.05);
-    }
-
+    if(type==='clear') playOsc(400, 'sine', 0.1, now, now + 0.2, 200);
+    if(type==='count') playOsc(880, 'sine', 0.08, now, now + 0.05);
     if(type==='win') {
         [523.25, 659.25, 783.99].forEach((f, i) => {
             playOsc(f, 'sine', 0.1, now + i*0.1, now + i*0.1 + 0.4);
         });
     }
-
-    if(type==='lose') {
-        playOsc(110, 'square', 0.1, now, now + 0.4, 55);
-    }
-
-    if(type==='bust') {
-        playOsc(60, 'sawtooth', 0.2, now, now + 0.5);
-    }
+    if(type==='lose') playOsc(110, 'square', 0.1, now, now + 0.4, 55);
+    if(type==='bust') playOsc(60, 'sawtooth', 0.2, now, now + 0.5);
 }
 
 onAuthStateChanged(auth, user => {
@@ -201,7 +183,7 @@ onAuthStateChanged(auth, user => {
     userRef = doc(db, "users", user.uid);
     onSnapshot(userRef, snap => {
         balance = snap.data().balance || 0;
-        balanceEl.innerText = balance;
+        balanceEl.innerText = balance.toLocaleString('tr-TR');
         if(gameState === "loading") gameState = "betting";
     });
 });
@@ -212,12 +194,10 @@ window.addBet = (amount) => {
     
     playSound('chip');
     bet += amount; balance -= amount;
-    balanceEl.innerText = balance; betEl.innerText = bet;
+    balanceEl.innerText = balance.toLocaleString('tr-TR');
+    betEl.innerText = bet.toLocaleString('tr-TR');
     
-    if(bet >= 20000) {
-        document.querySelectorAll('.chip').forEach(c => c.classList.add("disabled"));
-    }
-    
+    if(bet >= 20000) document.querySelectorAll('.chip').forEach(c => c.classList.add("disabled"));
     if(!betCountdown && bet >= 250) startBetCountdown();
 };
 
@@ -226,7 +206,7 @@ window.cancelBet = () => {
     playSound('clear');
     balance += bet;
     bet = 0;
-    balanceEl.innerText = balance;
+    balanceEl.innerText = balance.toLocaleString('tr-TR');
     betEl.innerText = 0;
     if(betCountdown) { clearInterval(betCountdown); betCountdown = null; }
     messageEl.innerText = "BAHİS YAPIN";
