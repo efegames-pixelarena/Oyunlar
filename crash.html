@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>SkyCrash: Infinite Loop</title>
+<title>SkyCrash: Pro Infinite</title>
 <style>
     *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
     html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;background:#03050a;color:white;}
@@ -18,12 +18,13 @@
     .multiplier{font-weight:900;line-height:1.1;font-variant-numeric: tabular-nums;}
     .multiplier.big{font-size:75px;color:#fff;text-shadow:0 0 30px rgba(79,209,255,0.8);}
     .multiplier.small{font-size:24px;color:#4fd1ff;}
-    .multiplier.crashed{color:#ff2a4d !important;}
+    .multiplier.crashed{color:#ff2a4d !important; animation: shake 0.1s infinite;}
+    @keyframes shake { 0% { transform: translate(1px, 1px); } 50% { transform: translate(-1px, -1px); } 100% { transform: translate(1px, 1px); } }
     .bottom{position:absolute;bottom:0;width:100%;height:180px;background:#0a0f1e;display:flex;justify-content:center;align-items:center;gap:10px;padding:0 15px;border-top:1px solid #1e2642;z-index:100;}
     .betBox{background:#161d36;padding:12px;border-radius:15px;flex:1;max-width:190px;display:flex;flex-direction:column;gap:8px;}
     .betBox input{padding:12px;border:1px solid #273c8f;border-radius:10px;text-align:center;font-weight:bold;font-size:16px;background:#050811;color:white;outline:none;}
     .betBox button{padding:14px;border:none;border-radius:10px;font-weight:800;font-size:14px;cursor:pointer;background:#5743d6;color:white;}
-    .betBox button:disabled{opacity:0.3;}
+    .betBox button:disabled{opacity:0.3; background: #222;}
     .cashout{background:#00b894 !important;}
 </style>
 </head>
@@ -43,7 +44,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, onSnapshot, updateDoc, increment, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, doc, onSnapshot, updateDoc, increment, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
@@ -58,13 +59,10 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// --- SES VE GÖRSEL AYARLAR ---
-let audioCtx = null;
-const initAudio = () => { if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); };
-const playSfx = (f, t="sine", d=0.2) => { if(!audioCtx) return; const o=audioCtx.createOscillator(), g=audioCtx.createGain(); o.type=t; o.frequency.value=f; g.gain.value=0.1; o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+d); };
-
+// --- GLOBAL STATE ---
 let userRef = null, balance = 0, activeBet1 = 0, activeBet2 = 0;
 let gameData = { phase: "waiting", multiplier: 1, countdown: 0, startTime: 0, crashPoint: 0 };
+let isCrashedHandled = false;
 
 const canvas = document.getElementById("graph"), ctx = canvas.getContext("2d");
 const multEl = document.getElementById("multiplier");
@@ -73,42 +71,43 @@ window.addEventListener("resize", resize); resize();
 
 let stars = Array.from({length: 80}, () => ({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, s: Math.random()*2 }));
 
-// --- ANA DÖNGÜ (RENDER) ---
-function draw() {
+// --- ENGINE (60 FPS) ---
+function render() {
     ctx.fillStyle = "#03050a"; ctx.fillRect(0,0,canvas.width,canvas.height);
     ctx.fillStyle = "white";
-    stars.forEach(s => { ctx.beginPath(); ctx.arc(s.x, s.y, s.s, 0, 7); ctx.fill(); s.x -= (gameData.phase === "flying" ? gameData.multiplier * 0.4 : 0.2); if(s.x<0) s.x=canvas.width; });
+    stars.forEach(s => { ctx.beginPath(); ctx.arc(s.x, s.y, s.s, 0, 7); ctx.fill(); s.x -= (gameData.phase === "flying" ? gameData.multiplier * 0.5 : 0.2); if(s.x<0) s.x=canvas.width; });
 
     if(gameData.phase === "flying") {
         const elapsed = (Date.now() - gameData.startTime) / 1000;
-        const currentM = Math.pow(1.07, elapsed); // Yavaş ve stabil artış
+        const currentM = Math.pow(1.07, elapsed); 
         
         if (currentM < gameData.crashPoint) {
             gameData.multiplier = currentM;
             multEl.className = "multiplier big";
             multEl.innerText = gameData.multiplier.toFixed(2) + "x";
-        } else {
-            gameData.phase = "crashed";
-            multEl.className = "multiplier big crashed";
-            multEl.innerText = gameData.crashPoint.toFixed(2) + "x";
-            playSfx(100, "sawtooth", 0.4);
-            addHistory(gameData.crashPoint);
-            activeBet1 = 0; activeBet2 = 0;
-            // PATLADIĞINDA SADECE 1 KİŞİ DÖNGÜYÜ YÖNETİR
-            if(auth.currentUser.uid.endsWith("a")) { // Basit admin mantığı veya interval
-                 setTimeout(triggerNewLoop, 3000);
-            }
+        } else if(!isCrashedHandled) {
+            handleLocalCrash();
         }
     } else if(gameData.phase === "betting") {
         multEl.className = "multiplier small";
         multEl.innerText = "UÇUŞA " + gameData.countdown + "s";
+    } else if(gameData.phase === "crashed") {
+        multEl.className = "multiplier big crashed";
+        multEl.innerText = gameData.crashPoint.toFixed(2) + "x\nPATLADI!";
     }
     updateButtons();
-    requestAnimationFrame(draw);
+    requestAnimationFrame(render);
 }
-draw();
+render();
 
-// --- FIREBASE VE SONSUZ DÖNGÜ MANTIĞI ---
+function handleLocalCrash() {
+    isCrashedHandled = true;
+    gameData.phase = "crashed";
+    addHistory(gameData.crashPoint);
+    activeBet1 = 0; activeBet2 = 0;
+}
+
+// --- FIREBASE DÖNGÜSÜ ---
 onAuthStateChanged(auth, user => {
     if(!user) return;
     userRef = doc(db, "users", user.uid);
@@ -117,13 +116,20 @@ onAuthStateChanged(auth, user => {
     onSnapshot(doc(db, "games", "current"), s => {
         if(!s.exists()) return;
         const d = s.data();
+        
+        // Eğer veritabanında yeni tur başladıysa yerel durumu sıfırla
+        if(d.phase === "betting" && gameData.phase !== "betting") {
+            isCrashedHandled = false;
+        }
+
         gameData.phase = d.phase;
         gameData.countdown = d.countdown;
         gameData.crashPoint = d.crashPoint;
         gameData.startTime = d.startTime;
 
-        // EĞER OYUN DURURSA VEYA CRASHED'DA KALIRSA OTOMATİK BAŞLAT
-        if(d.phase === "crashed" || Date.now() - d.lastActive > 12000) {
+        // DÖNGÜ KONTROLÜ: Eğer oyun patlamışsa veya 10 saniyedir hareketsizse yeni turu tetikle
+        // Bu kod her oyuncuda çalışır ama updateDoc sayesinde sadece 1 tanesi başarılı olur.
+        if(d.phase === "crashed" || Date.now() - d.lastActive > 15000) {
             setTimeout(triggerNewLoop, 3000);
         }
     });
@@ -131,29 +137,28 @@ onAuthStateChanged(auth, user => {
 
 async function triggerNewLoop() {
     const gRef = doc(db, "games", "current");
-    const nextCrash = 1.05 + (Math.random() * (Math.random() < 0.1 ? 12 : 3.5)); // Rastgele yeni X
+    const snap = await getDoc(gRef);
+    if(snap.data().phase !== "crashed" && Date.now() - snap.data().lastActive < 10000) return;
+
+    const nextCrash = 1.05 + (Math.random() * (Math.random() < 0.15 ? 15 : 4.5));
     
-    // Bahis evresine geç
+    // 1. ADIM: Bahis Başlat
     await updateDoc(gRef, { 
         phase: "betting", 
         countdown: 5, 
         lastActive: Date.now(), 
-        crashPoint: nextCrash,
-        multiplier: 1 
+        crashPoint: nextCrash 
     });
 
-    let c = 5;
+    // 2. ADIM: Geri Sayım Botu
+    let count = 5;
     const timer = setInterval(async () => {
-        c--;
-        if(c <= 0) {
+        count--;
+        if(count <= 0) {
             clearInterval(timer);
-            await updateDoc(gRef, { 
-                phase: "flying", 
-                startTime: Date.now(), 
-                lastActive: Date.now() 
-            });
+            await updateDoc(gRef, { phase: "flying", startTime: Date.now(), lastActive: Date.now() });
         } else {
-            await updateDoc(gRef, { countdown: c, lastActive: Date.now() });
+            await updateDoc(gRef, { countdown: count, lastActive: Date.now() });
         }
     }, 1000);
 }
@@ -164,21 +169,18 @@ function addHistory(v) {
     i.className = "history-item";
     i.style.color = v < 2 ? "#ff2a4d" : "#4fd1ff";
     i.innerText = v.toFixed(2) + "x";
-    b.prepend(i); if(b.children.length > 15) b.lastChild.remove();
+    b.prepend(i); if(b.children.length > 10) b.lastChild.remove();
 }
 
 async function handleBet(box) {
-    initAudio();
     let amt = Math.floor(document.getElementById("betInput"+box).value);
     let cur = box === 1 ? activeBet1 : activeBet2;
     if(gameData.phase === "betting" && cur === 0 && balance >= amt) {
         await updateDoc(userRef, { balance: increment(-amt) });
         if(box===1) activeBet1=amt; else activeBet2=amt;
-        playSfx(440);
     } else if(gameData.phase === "flying" && cur > 0) {
         await updateDoc(userRef, { balance: increment(Math.floor(cur * gameData.multiplier)) });
         if(box===1) activeBet1=0; else activeBet2=0;
-        playSfx(880);
     }
 }
 
