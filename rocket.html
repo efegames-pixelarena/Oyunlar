@@ -6,113 +6,18 @@
     <title>SPACE WAR | ULTIMATE EDITION</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --neon: #00ff88;
-            --accent: #00f2ff;
-            --bg: #020205;
-        }
-
+        :root { --neon: #00ff88; --accent: #00f2ff; --bg: #020205; }
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
-
-        body {
-            background: var(--bg);
-            height: 100vh;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            font-family: 'Orbitron', sans-serif;
-        }
-
-        #game-container {
-            position: relative;
-            border: 2px solid rgba(0, 255, 136, 0.3);
-            border-radius: 20px;
-            overflow: hidden;
-            box-shadow: 0 0 50px rgba(0, 255, 136, 0.1);
-        }
-
-        canvas {
-            background: radial-gradient(circle at center, #0a0a1a 0%, #020205 100%);
-            display: block;
-        }
-
-        .ui-overlay {
-            position: absolute;
-            top: 0; left: 0; width: 100%;
-            padding: 15px;
-            display: flex;
-            justify-content: space-between;
-            pointer-events: none;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.5), transparent);
-        }
-
-        .stat-box {
-            color: var(--neon);
-            text-shadow: 0 0 10px var(--neon);
-            font-size: 12px;
-            font-weight: 700;
-        }
-
-        .controls {
-            width: 100%;
-            max-width: 440px;
-            display: flex;
-            justify-content: space-between;
-            padding: 20px 40px;
-            margin-top: 10px;
-        }
-
-        .btn {
-            width: 85px;
-            height: 85px;
-            background: rgba(255, 255, 255, 0.03);
-            border: 2px solid rgba(0, 255, 136, 0.2);
-            border-radius: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--neon);
-            font-size: 32px;
-            backdrop-filter: blur(5px);
-            transition: all 0.1s;
-        }
-
-        .btn:active {
-            background: rgba(0, 255, 136, 0.1);
-            border-color: var(--neon);
-            transform: scale(0.95);
-        }
-
-        #restartBtn {
-            position: absolute;
-            top: 60%; left: 50%;
-            transform: translate(-50%, -50%);
-            display: none;
-            padding: 15px 40px;
-            background: var(--neon);
-            color: black;
-            border: none;
-            border-radius: 12px;
-            font-family: 'Orbitron';
-            font-weight: 900;
-            cursor: pointer;
-            box-shadow: 0 0 30px var(--neon);
-            z-index: 100;
-        }
-
-        .game-over-screen {
-            position: absolute;
-            inset: 0;
-            background: rgba(0,0,0,0.85);
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            z-index: 90;
-        }
+        body { background: var(--bg); height: 100vh; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Orbitron', sans-serif; }
+        #game-container { position: relative; border: 2px solid rgba(0, 255, 136, 0.3); border-radius: 20px; overflow: hidden; box-shadow: 0 0 50px rgba(0, 255, 136, 0.1); }
+        canvas { background: radial-gradient(circle at center, #0a0a1a 0%, #020205 100%); display: block; }
+        .ui-overlay { position: absolute; top: 0; left: 0; width: 100%; padding: 15px; display: flex; justify-content: space-between; pointer-events: none; background: linear-gradient(to bottom, rgba(0,0,0,0.5), transparent); }
+        .stat-box { color: var(--neon); text-shadow: 0 0 10px var(--neon); font-size: 12px; font-weight: 700; }
+        .controls { width: 100%; max-width: 440px; display: flex; justify-content: space-between; padding: 20px 40px; margin-top: 10px; }
+        .btn { width: 85px; height: 85px; background: rgba(255, 255, 255, 0.03); border: 2px solid rgba(0, 255, 136, 0.2); border-radius: 24px; display: flex; align-items: center; justify-content: center; color: var(--neon); font-size: 32px; backdrop-filter: blur(5px); transition: all 0.1s; }
+        .btn:active { background: rgba(0, 255, 136, 0.1); border-color: var(--neon); transform: scale(0.95); }
+        #restartBtn { position: absolute; top: 60%; left: 50%; transform: translate(-50%, -50%); display: none; padding: 15px 40px; background: var(--neon); color: black; border: none; border-radius: 12px; font-family: 'Orbitron'; font-weight: 900; cursor: pointer; box-shadow: 0 0 30px var(--neon); z-index: 100; }
+        .game-over-screen { position: absolute; inset: 0; background: rgba(0,0,0,0.85); display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; z-index: 90; }
     </style>
 </head>
 <body>
@@ -122,12 +27,10 @@
         <div class="stat-box" id="scoreUI">SCORE: 000</div>
         <div class="stat-box" id="highScoreUI">BEST: 000</div>
     </div>
-    
     <div class="game-over-screen" id="gameOver">
         <h1 style="color: var(--neon); font-size: 32px; margin-bottom: 10px;">MISSION FAILED</h1>
         <p style="color: white; opacity: 0.6; font-size: 14px;" id="finalScore">SCORE: 0</p>
     </div>
-
     <button id="restartBtn">REDEPLOY</button>
     <canvas id="game"></canvas>
 </div>
@@ -141,27 +44,17 @@
     const canvas = document.getElementById("game");
     const ctx = canvas.getContext("2d");
     const restartBtn = document.getElementById("restartBtn");
-
-    // Ekran Boyutu Ayarı
-    const W = 380;
-    const H = 500;
-    canvas.width = W;
-    canvas.height = H;
+    const W = 380, H = 500;
+    canvas.width = W; canvas.height = H;
 
     let state = {
-        highScore: localStorage.getItem("proSpaceScore") || 0,
-        score: 0,
-        lives: 3,
-        running: false,
-        frame: 0,
-        baseX: W/2 - 20,
-        moveLeft: false,
-        moveRight: false
+        highScore: parseInt(localStorage.getItem("proSpaceScore")) || 0,
+        score: 0, lives: 3, running: false, frame: 0, baseX: W/2 - 20,
+        moveLeft: false, moveRight: false
     };
 
     let entities = { rockets: [], mermiler: [], enemies: [], boss: null, particles: [], powerups: [], stars: [] };
 
-    // Ses Motoru
     const audio = {
         ctx: new (window.AudioContext || window.webkitAudioContext)(),
         play(f, t='square', v=0.05, d=100) {
@@ -177,6 +70,7 @@
 
     function init() {
         state.score = 0; state.lives = 3; state.running = true; state.frame = 0; state.baseX = W/2 - 20;
+        state.highScore = parseInt(localStorage.getItem("proSpaceScore")) || 0;
         entities = {
             rockets: [{ off: 0 }], mermiler: [], enemies: [], boss: null, particles: [], powerups: [],
             stars: Array.from({length: 80}, () => ({ x: Math.random()*W, y: Math.random()*H, s: Math.random()*2, v: Math.random()*2 + 0.5 }))
@@ -193,80 +87,73 @@
 
     function createExplosion(x, y, color, count = 12) {
         for(let i=0; i<count; i++) {
-            entities.particles.push({
-                x, y, vx: (Math.random()-0.5)*6, vy: (Math.random()-0.5)*6,
-                l: 1, c: color, s: Math.random()*3 + 1
-            });
+            entities.particles.push({ x, y, vx: (Math.random()-0.5)*6, vy: (Math.random()-0.5)*6, l: 1, c: color, s: Math.random()*3 + 1 });
         }
+    }
+
+    // Gelişmiş Çarpışma: Mermilerin içinden geçmesini engellemek için mermi boyutu sanal olarak büyütüldü
+    function checkHit(obj1, obj2, w1, h1, w2, h2) {
+        return obj1.x < obj2.x + w2 && obj1.x + w1 > obj2.x && obj1.y < obj2.y + h2 && obj1.y + h1 > obj2.y;
     }
 
     function update() {
         if(!state.running) return;
         state.frame++;
 
-        // Yıldızlar & Akış
         entities.stars.forEach(s => { s.y += s.v; if(s.y > H) s.y = 0; });
-
-        // Hareket Hassasiyeti
         if(state.moveLeft) state.baseX = Math.max(10, state.baseX - 7);
         if(state.moveRight) state.baseX = Math.min(W-50, state.baseX + 7);
 
-        // Ateşleme Sistemi (Kare Bazlı)
         if(state.frame % 10 === 0) {
-            entities.rockets.forEach(r => {
-                entities.mermiler.push({ x: state.baseX + r.off + 18, y: 420 });
-            });
+            entities.rockets.forEach(r => { entities.mermiler.push({ x: state.baseX + r.off + 18, y: 420 }); });
             audio.play(150, 'sine', 0.03, 50);
         }
 
-        // Düşman Üretimi (Zorlaşan)
         let spawnRate = Math.max(15, 40 - Math.floor(state.score/10));
         if(state.frame % spawnRate === 0) {
             entities.enemies.push({ x: Math.random()*(W-40), y: -40, v: 2 + (state.score*0.05) });
         }
 
-        // Boss Girişi
         if(state.score > 0 && state.score % 40 === 0 && !entities.boss) {
-            entities.boss = { x: W/2-40, y: -100, hp: 40, max: 40, phase: 0 };
+            entities.boss = { x: W/2-40, y: -100, hp: 40, max: 40 };
         }
 
-        // Mermi Fizikleri
         entities.mermiler.forEach((m, i) => {
             m.y -= 12;
             if(m.y < -20) entities.mermiler.splice(i, 1);
         });
 
-        // Çarpışma ve Düşman Mantığı
         entities.enemies.forEach((e, i) => {
             e.y += e.v;
             if(e.y > H) { state.lives--; entities.enemies.splice(i, 1); audio.play(100, 'sawtooth', 0.1, 200); }
 
-            entities.mermiler.forEach((m, mi) => {
-                if(m.x > e.x && m.x < e.x+35 && m.y > e.y && m.y < e.y+35) {
+            // Mermi - Düşman Çarpışması (Hitbox genişletildi: 35x35 düşman için mermi alanı ayarlandı)
+            for(let mi = entities.mermiler.length-1; mi >= 0; mi--) {
+                let m = entities.mermiler[mi];
+                if(checkHit(m, e, 4, 15, 35, 35)) { // h1: 15 yapıldı mermi boyu içinden geçmeyi önler
                     createExplosion(e.x+17, e.y+17, "#00ff88");
                     entities.enemies.splice(i, 1);
                     entities.mermiler.splice(mi, 1);
                     state.score++;
                     updateUI();
-                    audio.play(400 + state.score, 'square', 0.05, 80);
+                    audio.play(400 + (state.score % 500), 'square', 0.05, 80);
+                    break;
                 }
-            });
+            }
         });
 
-        // Boss Savaşı
         if(entities.boss) {
             let b = entities.boss;
             b.y = Math.min(60, b.y + 1.5);
             b.x += Math.sin(state.frame/20) * 2;
-            
-            entities.mermiler.forEach((m, mi) => {
-                if(m.x > b.x && m.x < b.x+80 && m.y > b.y && m.y < b.y+80) {
+            for(let mi = entities.mermiler.length-1; mi >= 0; mi--) {
+                let m = entities.mermiler[mi];
+                if(checkHit(m, b, 4, 15, 80, 80)) {
                     b.hp--;
                     entities.mermiler.splice(mi, 1);
                     audio.play(200, 'sawtooth', 0.02, 50);
                 }
-            });
-
+            }
             if(b.hp <= 0) {
                 createExplosion(b.x+40, b.y+40, "#ff0055", 40);
                 state.score += 15; entities.boss = null;
@@ -275,110 +162,70 @@
             }
         }
 
-        // Güçlendirici (Power-up)
         if(state.frame % 800 === 0) entities.powerups.push({ x: Math.random()*(W-30), y: -30, t: Math.random() > 0.5 ? 'W' : 'L' });
-
         entities.powerups.forEach((p, i) => {
             p.y += 2.5;
-            if(p.x > state.baseX && p.x < state.baseX+40 && p.y > 420 && p.y < 460) {
+            if(checkHit({x: state.baseX, y: 420}, p, 40, 40, 30, 30)) {
                 if(p.t === 'W' && entities.rockets.length < 3) {
                     entities.rockets.push({ off: entities.rockets.length === 1 ? -25 : 25 });
-                } else { state.lives = Math.min(5, state.lives + 1); }
+                } else if (p.t === 'L') { state.lives = Math.min(5, state.lives + 1); }
                 entities.powerups.splice(i, 1);
                 audio.play(800, 'triangle', 0.2, 400);
             }
         });
 
-        // Partikül Sistemi
         entities.particles.forEach((p, i) => {
             p.x += p.vx; p.y += p.vy; p.l -= 0.04;
             if(p.l <= 0) entities.particles.splice(i, 1);
         });
 
-        // Game Over Kontrol
         if(state.lives <= 0) {
             state.running = false;
-            if(state.score > state.highScore) localStorage.setItem("proSpaceScore", state.score);
+            // SKOR KAYDETME DÜZELTME
+            if(state.score > state.highScore) {
+                state.highScore = state.score;
+                localStorage.setItem("proSpaceScore", state.highScore.toString());
+            }
             document.getElementById("gameOver").style.display = "flex";
             document.getElementById("finalScore").innerText = `FINAL SCORE: ${state.score}`;
             restartBtn.style.display = "block";
+            updateUI(); // UI'yı son kez güncelle
         }
     }
 
     function draw() {
         ctx.clearRect(0,0,W,H);
-
-        // Arka Plan Katmanı
         ctx.fillStyle = "white";
-        entities.stars.forEach(s => {
-            ctx.globalAlpha = s.v/2.5;
-            ctx.fillRect(s.x, s.y, s.s, s.s);
-        });
-
-        // Partiküller (Glow)
-        entities.particles.forEach(p => {
-            ctx.globalAlpha = p.l;
-            ctx.shadowBlur = 10; ctx.shadowColor = p.c;
-            ctx.fillStyle = p.c;
-            ctx.fillRect(p.x, p.y, p.s, p.s);
-        });
+        entities.stars.forEach(s => { ctx.globalAlpha = s.v/2.5; ctx.fillRect(s.x, s.y, s.s, s.s); });
+        entities.particles.forEach(p => { ctx.globalAlpha = p.l; ctx.shadowBlur = 10; ctx.shadowColor = p.c; ctx.fillStyle = p.c; ctx.fillRect(p.x, p.y, p.s, p.s); });
         ctx.shadowBlur = 0; ctx.globalAlpha = 1;
 
-        // Gemiler (Model Çizimi)
         entities.rockets.forEach(r => {
             ctx.font = "40px Arial";
             ctx.fillText("🚀", state.baseX + r.off, 460);
-            // İtki Ateşi
             ctx.fillStyle = state.frame % 2 === 0 ? "#ffaa00" : "#ff4400";
             ctx.fillRect(state.baseX + r.off + 16, 465, 8, 10 + Math.random()*10);
         });
 
-        // Mermiler (Neon)
         ctx.fillStyle = "#00f2ff";
-        entities.mermiler.forEach(m => {
-            ctx.shadowBlur = 15; ctx.shadowColor = "#00f2ff";
-            ctx.fillRect(m.x, m.y, 4, 12);
-        });
+        entities.mermiler.forEach(m => { ctx.shadowBlur = 15; ctx.shadowColor = "#00f2ff"; ctx.fillRect(m.x, m.y, 4, 12); });
         ctx.shadowBlur = 0;
 
-        // Düşmanlar
-        entities.enemies.forEach(e => {
-            ctx.font = "32px Arial";
-            ctx.fillText("👾", e.x, e.y + 30);
-        });
+        entities.enemies.forEach(e => { ctx.font = "32px Arial"; ctx.fillText("👾", e.x, e.y + 30); });
 
-        // Boss
         if(entities.boss) {
             let b = entities.boss;
-            ctx.font = "80px Arial";
-            ctx.fillText("👽", b.x, b.y + 70);
-            // Health Bar
-            ctx.fillStyle = "rgba(255,255,255,0.1)";
-            ctx.fillRect(b.x, b.y - 10, 80, 5);
-            ctx.fillStyle = "#ff0055";
-            ctx.fillRect(b.x, b.y - 10, (b.hp/b.max)*80, 5);
+            ctx.font = "80px Arial"; ctx.fillText("👽", b.x, b.y + 70);
+            ctx.fillStyle = "rgba(255,255,255,0.1)"; ctx.fillRect(b.x, b.y - 10, 80, 5);
+            ctx.fillStyle = "#ff0055"; ctx.fillRect(b.x, b.y - 10, (b.hp/b.max)*80, 5);
         }
 
-        // Power-ups
-        entities.powerups.forEach(p => {
-            ctx.font = "28px Arial";
-            ctx.fillText(p.t === 'W' ? "⚡" : "❤️", p.x, p.y);
-        });
-
-        // Can Göstergesi (HUD)
-        for(let i=0; i<state.lives; i++) {
-            ctx.font = "18px Arial";
-            ctx.fillText("❤️", 15 + i*22, 70);
-        }
+        entities.powerups.forEach(p => { ctx.font = "28px Arial"; ctx.fillText(p.t === 'W' ? "⚡" : "❤️", p.x, p.y); });
+        for(let i=0; i<state.lives; i++) { ctx.font = "18px Arial"; ctx.fillText("❤️", 15 + i*22, 70); }
     }
 
-    function loop() {
-        update();
-        draw();
-        requestAnimationFrame(loop);
-    }
+    function loop() { update(); draw(); requestAnimationFrame(loop); }
 
-    // Modern Kontrol Kurulumu
     const handleCtrl = (id, type) => {
         const el = document.getElementById(id);
         const set = (v) => { if(type === 'L') state.moveLeft = v; else state.moveRight = v; audio.ctx.resume(); };
@@ -387,13 +234,9 @@
         el.addEventListener("touchcancel", (e) => { e.preventDefault(); set(false); });
     };
 
-    handleCtrl("leftBtn", 'L');
-    handleCtrl("rightBtn", 'R');
-    
+    handleCtrl("leftBtn", 'L'); handleCtrl("rightBtn", 'R');
     restartBtn.onclick = init;
-    
-    init();
-    loop();
+    init(); loop();
 </script>
 </body>
 </html>
