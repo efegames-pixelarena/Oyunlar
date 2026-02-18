@@ -6,72 +6,104 @@
 <title>PixelArena - Mines Pro</title>
 
 <style>
-    *{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;-webkit-tap-highlight-color:transparent;user-select:none;}
-    html,body{height:100%;width:100%;background:#0c111d;color:#fff;overflow:hidden;padding-bottom:env(safe-area-inset-bottom);}
+    /* SKYCRASH GENEL RESET */
+    *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
+    html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;background:#03050a;color:white;}
 
-    /* --- SKYCRASH STİL ÜST BAR (SABİT DÜZEN) --- */
-    .top-bar {
-        position:fixed; top:0; width:100%; height:60px;
-        display:flex; align-items:center; justify-content:space-between;
+    /* BİREBİR SKYCRASH TOP BAR */
+    .top-bar{
+        position:fixed;top:0;width:100%;height:60px;
+        display:flex;align-items:center;justify-content:space-between;
         padding:0 12px; background: rgba(10, 15, 30, 0.9);
         backdrop-filter: blur(10px); border-bottom: 1px solid #1e2642; z-index:1000;
     }
 
-    .brand {
-        flex: 1;
-        font-size:16px; font-weight:900; background:linear-gradient(90deg,#4fd1ff,#fff);
+    .brand{
+        font-size:16px;font-weight:900; background:linear-gradient(90deg,#4fd1ff,#fff);
         -webkit-background-clip:text; -webkit-text-fill-color:transparent;
         letter-spacing: 1px;
     }
 
-    .right-menu { 
-        display:flex; 
-        gap:6px; 
-        align-items: center; 
-        justify-content: flex-end; 
-    }
-
-    .nav-box { 
-        height: 34px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0 10px;
-        border-radius:10px; 
-        font-weight:700; 
-        font-size:11px; 
-        min-width:100px; /* Kaymayı önleyen sabit genişlik */
-        text-align:center; 
-        white-space: nowrap;
-        overflow: hidden;
-    }
-
-    .balance-box { background:#1a2248; border: 1px solid #4fd1ff44; color: #4fd1ff; }
-    .bet-box { background:linear-gradient(90deg,#ff8a00,#ff5f00); color:#000; }
-
-    /* --- OYUN ALANI --- */
-    .container{position:fixed;top:60px;left:0;right:0;bottom:0;display:flex;flex-direction:column;padding:15px;overflow-y:auto;}
-    .mines-header{display:flex;justify-content:space-between;align-items:center;background:#151b26;padding:12px 15px;border-radius:14px;margin-bottom:15px;}
+    .right-menu{display:flex;gap:6px;align-items: center;}
     
+    .nav-box{
+        padding:6px 10px; border-radius:10px; font-weight:700; font-size:11px; 
+        min-width:100px; text-align:center; display: flex; align-items: center; justify-content: center;
+        height: 32px;
+    }
+    
+    .balance-box{background:#1a2248; border: 1px solid #4fd1ff44; color: #4fd1ff;}
+    .bet-box{background:linear-gradient(90deg,#ff8a00,#ff5f00); color:#000;}
+
+    /* OYUN ALANI DÜZENLEME */
+    .container{
+        position:absolute;top:60px;bottom:0;width:100%;
+        display:flex;flex-direction:column;padding:15px;overflow-y:auto;
+        background: radial-gradient(circle at 50% 50%, #0a0f1e 0%, #03050a 100%);
+    }
+
+    .mines-header{
+        display:flex;justify-content:space-between;align-items:center;
+        background:rgba(26, 34, 72, 0.5); padding:12px 15px; border-radius:14px; 
+        margin-bottom:15px; border: 1px solid #1e2642;
+    }
+    
+    /* GRID TASARIMI */
     #grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:20px;}
-    .tile{background:#1b2232;height:68px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;transition:0.25s;box-shadow:inset 0 0 8px rgba(0,0,0,0.6);position:relative;}
-    .tile.open{background:#16c784;box-shadow:0 0 15px #16c784;}
-    .tile.mine{background:#ff4d4f;box-shadow:0 0 18px red;animation:shake 0.3s;}
+    
+    .tile{
+        background:#161d36; height:68px; border-radius:14px; 
+        display:flex; align-items:center; justify-content:center; 
+        font-size:22px; cursor:pointer; transition:0.25s;
+        border: 1px solid #273c8f;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+    
+    .tile.open{
+        background: linear-gradient(145deg, #00b894, #00d2ad);
+        border-color: #55efc4;
+        box-shadow: 0 0 15px rgba(0, 184, 148, 0.4);
+    }
+    
+    .tile.mine{
+        background: linear-gradient(145deg, #d63031, #ff7675);
+        border-color: #ff7675;
+        box-shadow: 0 0 20px rgba(214, 48, 49, 0.5);
+        animation: shake 0.3s;
+    }
 
     @keyframes shake{0%,100%{transform:translateX(0)} 25%{transform:translateX(-4px)} 75%{transform:translateX(4px)}}
 
-    .bet-panel{background:#151b26;border-radius:16px;padding:15px;box-shadow:0 0 20px rgba(0,0,0,0.6);margin-top:auto;}
-    input,select{width:100%;background:#1e2533;border:none;border-radius:12px;padding:12px;color:white;margin-bottom:10px;font-size:15px;outline:none;}
-    button{width:100%;padding:14px;border-radius:12px;border:none;font-weight:bold;cursor:pointer;font-size:15px;transition:0.2s;}
-    .start{background:#00c853;color:black;}
-    .start:active{transform:scale(0.98);}
-    button:disabled{background:#444;color:#999;}
+    /* ALT PANEL (SKYCRASH BETBOX STİLİ) */
+    .bet-panel{
+        background:#0a0f1e; border-top: 1px solid #1e2642;
+        padding:20px 15px; margin: 0 -15px -15px -15px;
+        display: flex; flex-direction: column; gap: 10px;
+    }
+
+    input, select{
+        width:100%; background:#050811; border:1px solid #273c8f; 
+        border-radius:12px; padding:12px; color:white; 
+        font-weight: bold; font-size:16px; outline:none; text-align: center;
+    }
+
+    button{
+        width:100%; padding:15px; border-radius:12px; border:none; 
+        font-weight:900; cursor:pointer; font-size:15px; 
+        background:#5743d6; color:white; transition: 0.2s;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+    }
+
+    .start-active{ background:#00b894 !important; color: white; }
+    .is-lose{ background:#d63031 !important; }
+
+    button:disabled{opacity:0.4; pointer-events:none;}
 </style>
 </head>
 <body>
 
 <div class="top-bar">
-    <div class="brand">PIXELARENA MINES</div>
+    <div class="brand">SKYCRASH MINES</div>
     <div class="right-menu">
         <div class="nav-box balance-box">₺<span id="userBalance">0</span></div>
         <div class="nav-box bet-box">B: ₺<span id="currentBet">0</span></div>
@@ -80,14 +112,16 @@
 
 <div class="container">
     <div class="mines-header">
-        <div>Mines Pro</div>
-        <div style="color:#aaa">Mayın: <span id="mineDisplay" style="color:#ff4d4f; font-weight:bold;">1</span></div>
+        <div style="font-weight: 800; color: #4fd1ff; font-size: 14px;">MINES PRO</div>
+        <div style="color:#aaa; font-size: 12px; font-weight: 700;">MAYIN: <span id="mineDisplay" style="color:#ff2a4d;">1</span></div>
     </div>
+
     <div id="grid"></div>
+
     <div class="bet-panel">
-        <input type="number" id="bet" placeholder="Bahis (250 - 3000)" value="250">
+        <input type="number" id="bet" placeholder="Bahis Miktarı" value="250">
         <select id="mineCount"></select>
-        <button id="startBtn" class="start">BAŞLAT</button>
+        <button id="startBtn">BAHİS YAP</button>
     </div>
 </div>
 
@@ -158,7 +192,7 @@ const mineDisplay = document.getElementById("mineDisplay");
 
 for(let i=1; i<=24; i++){
     let opt = document.createElement("option");
-    opt.value = i; opt.text = i + " Mayın";
+    opt.value = i; opt.text = i + " MAYIN";
     mineSelect.appendChild(opt);
 }
 mineSelect.addEventListener("change", () => mineDisplay.innerText = mineSelect.value);
@@ -204,8 +238,8 @@ startBtn.addEventListener("click", async () => {
     }
 
     betAmount = parseInt(betInput.value);
-    if(isNaN(betAmount) || betAmount < 250 || betAmount > 1000000) {
-        alert("Geçersiz bahis miktarı.");
+    if(isNaN(betAmount) || betAmount < 250) {
+        alert("Minimum bahis 250₺.");
         return;
     }
 
@@ -214,7 +248,7 @@ startBtn.addEventListener("click", async () => {
     try {
         await runTransaction(db, async (t) => {
             const snap = await t.get(userRef);
-            if (snap.data().balance < betAmount) throw "Yetersiz Bakiye!";
+            if (snap.data().balance < betAmount) throw "YETERSİZ BAKİYE!";
             t.update(userRef, { balance: snap.data().balance - betAmount });
         });
         
@@ -230,6 +264,7 @@ startBtn.addEventListener("click", async () => {
         mineSelect.disabled = true;
         currentBetText.innerText = betAmount.toLocaleString('tr-TR');
         startBtn.innerText = "KAZANCI ÇEK";
+        startBtn.classList.add("start-active");
     } catch (e) { alert(e); }
 });
 
@@ -244,6 +279,8 @@ function reveal(i, tile) {
             tileElements[mIdx].innerHTML = "💣";
         });
         startBtn.innerText = "PATLADI!";
+        startBtn.classList.remove("start-active");
+        startBtn.classList.add("is-lose");
         setTimeout(resetGame, 2000);
     } else {
         opened++;
@@ -251,7 +288,7 @@ function reveal(i, tile) {
         tile.innerHTML = "💎";
         playSound("open");
         multiplier = getMultiplier(mineTotal, opened);
-        startBtn.innerText = `Çek (₺${Math.floor(betAmount * multiplier).toLocaleString('tr-TR')})`;
+        startBtn.innerText = `ÇEK (₺${Math.floor(betAmount * multiplier).toLocaleString('tr-TR')})`;
     }
 }
 
@@ -259,7 +296,8 @@ function resetGame() {
     gameActive = false;
     betInput.disabled = false;
     mineSelect.disabled = false;
-    startBtn.innerText = "BAŞLAT";
+    startBtn.innerText = "BAHİS YAP";
+    startBtn.classList.remove("start-active", "is-lose");
     currentBetText.innerText = "0";
     createGrid();
 }
