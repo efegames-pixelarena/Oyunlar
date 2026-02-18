@@ -2,373 +2,294 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-
-<!-- DOUBLE TAP & PINCH ZOOM FIX -->
-<meta name="viewport"
-content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-
-<title>Pattern Master</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Pattern Master PRO</title>
 
 <style>
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
--webkit-tap-highlight-color:transparent;
-user-select:none;
-touch-action:manipulation;
-}
+    *{
+        margin:0; padding:0; box-sizing:border-box;
+        font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
+        -webkit-tap-highlight-color:transparent;
+        user-select:none; touch-action:manipulation;
+    }
 
-html,body{
-overscroll-behavior:none;
-touch-action:manipulation;
-}
+    body {
+        background:#0f0f1a; color:white; display:flex; flex-direction:column;
+        align-items:center; justify-content:center; height:100vh; overflow:hidden;
+        transition: background .2s;
+    }
 
-body{
-background:#0f0f1a;
-color:white;
-display:flex;
-flex-direction:column;
-align-items:center;
-justify-content:center;
-height:100vh;
-overflow:hidden;
-transition:background .2s, transform .1s;
-}
+    /* EFEKTLER */
+    .flash { background:#ffffff !important; }
+    .shake { animation: shakeAnim .35s ease; }
+    @keyframes shakeAnim {
+        0%, 100% {transform:translateX(0);}
+        20%, 60% {transform:translateX(-8px);}
+        40%, 80% {transform:translateX(8px);}
+    }
 
-/* FLASH */
-.flash{
-background:#ffffff !important;
-}
+    .top-bar {
+        position:fixed; top:0; width:100%; height:55px; display:flex;
+        align-items:center; justify-content:center;
+        background:linear-gradient(135deg,#1a2a6c,#16245c);
+        box-shadow:0 4px 15px rgba(0,0,0,0.45); z-index:100;
+    }
 
-/* SHAKE */
-.shake{
-animation:shakeAnim .35s ease;
-}
+    .brand {
+        font-size:18px; font-weight:800; letter-spacing:2px;
+        background:linear-gradient(90deg,#00f5ff,#ff00c8);
+        background-size:200% auto; -webkit-background-clip:text;
+        -webkit-text-fill-color:transparent; animation:shine 3s linear infinite;
+    }
+    @keyframes shine { to { background-position:200% center; } }
 
-@keyframes shakeAnim{
-0%{transform:translateX(0);}
-20%{transform:translateX(-8px);}
-40%{transform:translateX(8px);}
-60%{transform:translateX(-6px);}
-80%{transform:translateX(6px);}
-100%{transform:translateX(0);}
-}
+    .game-wrapper {
+        margin-top:55px; display:flex; flex-direction:column;
+        align-items:center; justify-content:center; height:calc(100vh - 55px);
+    }
 
-/* TOP BAR */
-.top-bar{
-position:fixed;
-top:0;
-width:100%;
-height:55px;
-display:flex;
-align-items:center;
-justify-content:center;
-background:linear-gradient(135deg,#1a2a6c,#16245c);
-box-shadow:0 4px 15px rgba(0,0,0,0.45);
-z-index:100;
-}
+    #info { margin-bottom:20px; text-align:center; opacity:.9; font-weight:bold; }
+    
+    /* GRID KORUMASI */
+    #grid {
+        display:grid; grid-template-columns:repeat(2,120px);
+        grid-template-rows:repeat(2,120px); gap:20px; margin-bottom:25px;
+    }
+    #grid.disabled { pointer-events: none; } /* İzleme sırasında tıklamayı keser */
 
-.brand{
-font-size:18px;
-font-weight:800;
-letter-spacing:2px;
-background:linear-gradient(90deg,#00f5ff,#ff00c8);
-background-size:200% auto;
--webkit-background-clip:text;
--webkit-text-fill-color:transparent;
-animation:shine 3s linear infinite;
-}
+    .btn {
+        display:flex; align-items:center; justify-content:center;
+        font-size:40px; border-radius:25px; cursor:pointer;
+        transition: .15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        background:#1a1a2e; border: 2px solid rgba(255,255,255,0.05);
+        box-shadow:0 8px 20px rgba(0,0,0,0.3);
+    }
+    .btn:active { transform: scale(0.92); }
 
-@keyframes shine{
-to{background-position:200% center;}
-}
+    .neon-up { color:#00f5ff; border-color: #00f5ff33; }
+    .neon-right { color:#ff00c8; border-color: #ff00c833; }
+    .neon-left { color:#00ff88; border-color: #00ff8833; }
+    .neon-down { color:#ffaa00; border-color: #ffaa0033; }
 
-.game-wrapper{
-margin-top:55px;
-display:flex;
-flex-direction:column;
-align-items:center;
-justify-content:center;
-height:calc(100vh - 55px);
-}
+    .active {
+        box-shadow: 0 0 35px currentColor;
+        background: currentColor; color: #111;
+        transform: scale(1.08);
+    }
 
-#info{margin-bottom:20px;text-align:center;opacity:.9;}
+    .wrong { background: #ff0000 !important; color: white !important; box-shadow: 0 0 30px #ff0000; }
 
-#grid{
-display:grid;
-grid-template-columns:repeat(2,120px);
-grid-template-rows:repeat(2,120px);
-gap:20px;
-margin-bottom:25px;
-}
+    #status { height:30px; margin-bottom:15px; font-weight:800; color: #4fd1ff; }
 
-.btn{
-display:flex;
-align-items:center;
-justify-content:center;
-font-size:40px;
-border-radius:20px;
-cursor:pointer;
-transition:.2s;
-background:#1a1a2e;
-box-shadow:0 0 15px rgba(0,255,255,.2);
-}
-.btn:active{transform:scale(.95);}
+    #startBtn {
+        padding:12px 40px; border:none; border-radius:30px;
+        background:linear-gradient(90deg,#00f5ff,#ff00c8);
+        color:white; font-weight:900; cursor:pointer; font-size: 16px;
+        box-shadow: 0 5px 15px rgba(255, 0, 200, 0.3);
+    }
 
-.neon-up{color:#00f5ff;}
-.neon-down{color:#ff00c8;}
-.neon-left{color:#00ff88;}
-.neon-right{color:#ffaa00;}
-
-.active{
-box-shadow:0 0 30px currentColor;
-background:#111;
-transform:scale(1.1);
-}
-
-.perfect{
-animation:perfectGlow .6s ease;
-}
-
-@keyframes perfectGlow{
-0%{box-shadow:0 0 0px #fff;}
-50%{box-shadow:0 0 40px #fff;}
-100%{box-shadow:0 0 0px #fff;}
-}
-
-#status{
-height:30px;
-margin-bottom:15px;
-font-weight:600;
-}
-
-#startBtn{
-padding:10px 25px;
-border:none;
-border-radius:20px;
-background:linear-gradient(90deg,#00f5ff,#ff00c8);
-color:white;
-font-weight:700;
-cursor:pointer;
-}
-
-.hidden{display:none;}
-
-#highscore{
-margin-top:10px;
-opacity:.7;
-font-size:14px;
-}
+    .hidden { display:none; }
+    #highscore { margin-top:15px; opacity:.6; font-size:13px; font-weight: bold; }
 </style>
 </head>
 <body>
 
 <div class="top-bar">
-<div class="brand">PATTERN MASTER</div>
+    <div class="brand">PATTERN MASTER</div>
 </div>
 
 <div class="game-wrapper">
+    <div id="info">Level: <span id="level">1</span> | Combo: <span id="combo">0</span></div>
+    <div id="status">HAZIR MISIN?</div>
 
-<div id="info">
-Level: <span id="level">1</span> |
-Combo: <span id="combo">0</span>
-</div>
+    <div id="grid">
+        <div class="btn neon-up" data-dir="up">🚗</div>
+        <div class="btn neon-right" data-dir="right">⚽️</div>
+        <div class="btn neon-left" data-dir="left">🍓</div>
+        <div class="btn neon-down" data-dir="down">💎</div>
+    </div>
 
-<div id="status"></div>
-
-<div id="grid">
-<div class="btn neon-up" data-dir="up">🚗</div>
-<div class="btn neon-right" data-dir="right">⚽️</div>
-<div class="btn neon-left" data-dir="left">🍓</div>
-<div class="btn neon-down" data-dir="down">💎</div>
-</div>
-
-<button id="startBtn">Başla</button>
-<div id="highscore"></div>
-
+    <button id="startBtn">OYUNA BAŞLA</button>
+    <div id="highscore">High Score: 0</div>
 </div>
 
 <script>
-const buttons=document.querySelectorAll(".btn");
-const levelEl=document.getElementById("level");
-const comboEl=document.getElementById("combo");
-const statusEl=document.getElementById("status");
-const startBtn=document.getElementById("startBtn");
-const highscoreEl=document.getElementById("highscore");
+    const buttons = document.querySelectorAll(".btn");
+    const grid = document.getElementById("grid");
+    const levelEl = document.getElementById("level");
+    const comboEl = document.getElementById("combo");
+    const statusEl = document.getElementById("status");
+    const startBtn = document.getElementById("startBtn");
+    const highscoreEl = document.getElementById("highscore");
 
-let pattern=[];
-let playerIndex=0;
-let level=1;
-let combo=0;
-let speed=800;
-let isShowing=false;
-let gameActive=false;
-let perfectRound=true;
+    let pattern = [];
+    let playerIndex = 0;
+    let level = 1;
+    let combo = 0;
+    let speed = 800;
+    let isShowing = false;
+    let gameActive = false;
+    let perfectRound = true;
 
-let highScore=localStorage.getItem("patternHigh")||0;
-highscoreEl.innerText="High Score: "+highScore;
+    let highScore = localStorage.getItem("patternHigh") || 0;
+    highscoreEl.innerText = "High Score: " + highScore;
 
-/* ===== MAX IOS SAFE AUDIO ===== */
-let audioCtx;
+    let audioCtx;
 
-function unlockAudio(){
-if(!audioCtx){
-audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-}
-if(audioCtx.state==="suspended"){
-audioCtx.resume();
-}
-}
+    // iOS İÇİN GÜÇLENDİRİLMİŞ SES AÇICI
+    function unlockAudio() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx.state === "suspended") {
+            audioCtx.resume();
+        }
+        // Boş bir buffer ile iOS ses kanalını aktif tut
+        const buffer = audioCtx.createBuffer(1, 1, 22050);
+        const source = audioCtx.createBufferSource();
+        source.buffer = buffer;
+        source.connect(audioCtx.destination);
+        source.start(0);
+    }
 
-function playBeep(freq,duration=0.15){
-if(!audioCtx)return;
+    function playBeep(freq, duration = 0.15) {
+        if (!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
 
-const osc=audioCtx.createOscillator();
-const gain=audioCtx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
 
-osc.type="sine";
-osc.frequency.value=freq;
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
 
-gain.gain.value=0.25;
-gain.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
 
-osc.connect(gain);
-gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+    }
 
-osc.start();
-osc.stop(audioCtx.currentTime+duration);
-}
+    // OYUN MANTIĞI
+    function randomDir() {
+        const dirs = ["up", "down", "left", "right"];
+        return dirs[Math.floor(Math.random() * 4)];
+    }
 
-document.addEventListener("pointerdown",unlockAudio,{once:true});
-document.addEventListener("visibilitychange",()=>{
-if(audioCtx && audioCtx.state==="suspended"){
-audioCtx.resume();
-}
-});
+    function flashButton(dir) {
+        const btn = document.querySelector(`[data-dir='${dir}']`);
+        btn.classList.add("active");
+        setTimeout(() => btn.classList.remove("active"), Math.max(150, speed - 250));
+    }
 
-/* GAME */
+    async function showPattern() {
+        isShowing = true;
+        grid.classList.add("disabled");
+        statusEl.innerText = "DİKKATLE İZLE...";
+        
+        for (let i = 0; i < pattern.length; i++) {
+            await new Promise(r => setTimeout(r, i === 0 ? 500 : speed / 2));
+            flashButton(pattern[i]);
+            playBeep(300 + (i * 40), 0.15);
+            await new Promise(r => setTimeout(r, speed / 2));
+        }
+        
+        isShowing = false;
+        grid.classList.remove("disabled");
+        statusEl.innerText = "SENİN SIRAN!";
+    }
 
-function randomDir(){
-const dirs=["up","down","left","right"];
-return dirs[Math.floor(Math.random()*4)];
-}
+    function startGame() {
+        unlockAudio();
+        gameActive = true;
+        startBtn.classList.add("hidden");
+        pattern = [];
+        level = 1;
+        combo = 0;
+        speed = 800;
+        nextRound();
+    }
 
-function flashButton(dir){
-const btn=document.querySelector(`[data-dir='${dir}']`);
-btn.classList.add("active");
-setTimeout(()=>btn.classList.remove("active"),speed-200);
-}
+    function nextRound() {
+        playerIndex = 0;
+        perfectRound = true;
+        pattern.push(randomDir());
+        levelEl.innerText = level;
+        comboEl.innerText = combo;
+        showPattern();
+    }
 
-async function showPattern(){
-isShowing=true;
-statusEl.innerText="İzle...";
-for(let i=0;i<pattern.length;i++){
-flashButton(pattern[i]);
-playBeep(300+i*60,0.12);
-await new Promise(r=>setTimeout(r,speed));
-}
-isShowing=false;
-statusEl.innerText="Sıranı Yap!";
-}
+    function levelUp() {
+        document.body.classList.add("flash");
+        setTimeout(() => document.body.classList.remove("flash"), 100);
+        playBeep(880, 0.3);
 
-function screenFlash(){
-document.body.classList.add("flash");
-setTimeout(()=>document.body.classList.remove("flash"),150);
-}
+        statusEl.innerText = "MÜKEMMEL!";
+        level++;
+        speed = Math.max(350, speed - 50);
 
-function screenShake(){
-document.body.classList.add("shake");
-setTimeout(()=>document.body.classList.remove("shake"),350);
-}
+        setTimeout(nextRound, 800);
+    }
 
-function startGame(){
-unlockAudio();
-gameActive=true;
-startBtn.classList.add("hidden");
+    function gameOver(wrongBtn) {
+        gameActive = false;
+        document.body.classList.add("shake");
+        setTimeout(() => document.body.classList.remove("shake"), 350);
+        
+        if(wrongBtn) {
+            wrongBtn.classList.add("wrong");
+            setTimeout(() => wrongBtn.classList.remove("wrong"), 500);
+        }
 
-pattern=[];
-level=1;
-combo=0;
-speed=800;
-perfectRound=true;
+        playBeep(150, 0.5);
+        statusEl.innerText = "OYUN BİTTİ!";
+        
+        if (level - 1 > highScore) {
+            highScore = level - 1;
+            localStorage.setItem("patternHigh", highScore);
+            highscoreEl.innerText = "High Score: " + highScore;
+        }
 
-nextRound();
-}
+        setTimeout(() => {
+            startBtn.classList.remove("hidden");
+            startBtn.innerText = "TEKRAR DENE";
+        }, 1000);
+    }
 
-function nextRound(){
-playerIndex=0;
-perfectRound=true;
-pattern.push(randomDir());
-levelEl.innerText=level;
-comboEl.innerText=combo;
-showPattern();
-}
+    // EVENT LISTENERS
+    buttons.forEach(btn => {
+        btn.addEventListener("pointerdown", (e) => {
+            e.preventDefault(); // Zoom engelleme desteği
+            if (!gameActive || isShowing) return;
 
-function levelUp(){
-screenFlash();
-playBeep(950,.2);
+            const dir = btn.dataset.dir;
+            flashButton(dir);
+            playBeep(500, 0.1);
 
-if(perfectRound){
-combo+=10;
-statusEl.innerText="🔥 PERFECT +10";
-document.querySelectorAll(".btn").forEach(b=>{
-b.classList.add("perfect");
-setTimeout(()=>b.classList.remove("perfect"),600);
-});
-}else{
-statusEl.innerText="Level Up!";
-}
+            if (dir === pattern[playerIndex]) {
+                playerIndex++;
+                combo++;
+                comboEl.innerText = combo;
 
-level++;
-speed=Math.max(300,speed-40);
+                if (playerIndex === pattern.length) {
+                    levelUp();
+                }
+            } else {
+                gameOver(btn);
+            }
+        });
+    });
 
-setTimeout(nextRound,700);
-}
+    startBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        startGame();
+    });
 
-function gameOver(){
-gameActive=false;
-screenShake();
-playBeep(140,.4);
-
-statusEl.innerText="Yanlış! Oyun Bitti";
-combo=0;
-comboEl.innerText=combo;
-
-startBtn.classList.remove("hidden");
-
-if(level-1>highScore){
-highScore=level-1;
-localStorage.setItem("patternHigh",highScore);
-highscoreEl.innerText="High Score: "+highScore;
-}
-}
-
-buttons.forEach(btn=>{
-btn.addEventListener("pointerdown",()=>{
-if(!gameActive || isShowing)return;
-
-const dir=btn.dataset.dir;
-flashButton(dir);
-playBeep(550,0.12);
-
-if(dir===pattern[playerIndex]){
-playerIndex++;
-combo++;
-comboEl.innerText=combo;
-
-if(playerIndex===pattern.length){
-levelUp();
-}
-}else{
-perfectRound=false;
-gameOver();
-}
-});
-});
-
-startBtn.addEventListener("pointerdown",startGame);
+    // Sayfa gizlenirse AudioContext'i askıya al/devam ettir (Pil tasarrufu)
+    document.addEventListener("visibilitychange", () => {
+        if (audioCtx && document.hidden) audioCtx.suspend();
+        else if (audioCtx) audioCtx.resume();
+    });
 </script>
 
 </body>
