@@ -79,7 +79,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import {
 getFirestore, doc, updateDoc, deleteDoc,
 onSnapshot, collection, query, where, getDocs,
-serverTimestamp, runTransaction, getDoc, setDoc, addDoc
+serverTimestamp, runTransaction, getDoc, setDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
@@ -100,8 +100,11 @@ let uid,username;
 let roomId=null;
 let unsubscribe=null;
 let countdownInterval=null;
+let heartbeatInterval=null;
 let tapLock=false;
 let countdownStarted=false;
+
+const HEARTBEAT_TIMEOUT = 15000; // 15 saniye
 
 /* DOM */
 const scoreboard=document.getElementById("scoreboard");
@@ -128,6 +131,16 @@ username=snap.data().username || "Player";
 document.getElementById("userBox").innerText=username;
 });
 
+/* SAYFA KAPANIRSA */
+window.addEventListener("beforeunload",async()=>{
+if(roomId){
+await updateDoc(doc(db,"rooms",roomId),{
+state:"abandoned",
+abandonedBy:uid
+});
+}
+});
+
 /* LOGOUT */
 document.getElementById("logoutBtn").onclick=async()=>{
 if(roomId){
@@ -140,14 +153,22 @@ await signOut(auth);
 location.href="/";
 };
 
-/* MATCHMAKING — ÇİFT ODA %0 */
+/* MATCHMAKING + AUTO CLEAN */
 findBtn.onclick=async()=>{
 findBtn.style.display="none";
 bigText.innerText="Rakip Aranıyor...";
 
+/* 🔥 BOŞ / ESKİ ODALARI TEMİZLE */
+const allRooms=await getDocs(collection(db,"rooms"));
+for(const r of allRooms.docs){
+const data=r.data();
+if(data.state==="waiting" && !data.player2){
+await deleteDoc(r.ref);
+}
+}
+
 await runTransaction(db, async (transaction)=>{
 
-/* 1️⃣ Kullanıcının aktif odası var mı? */
 const myRooms=query(collection(db,"rooms"),
 where("players","array-contains",uid),
 where("state","in",["waiting","matched","countdown","active"])
@@ -159,7 +180,6 @@ roomId=existing.docs[0].id;
 return;
 }
 
-/* 2️⃣ Bekleyen oda bul */
 const waiting=query(collection(db,"rooms"),where("state","==","waiting"));
 const snap=await getDocs(waiting);
 
@@ -191,14 +211,34 @@ score2:0,
 round:1,
 state:"waiting",
 host:uid,
-createdAt:serverTimestamp()
+createdAt:serverTimestamp(),
+lastSeen1:Date.now(),
+lastSeen2:null
 });
 roomId=newRoom.id;
 }
 });
 
 listenRoom();
+startHeartbeat();
 };
+
+/* HEARTBEAT */
+function startHeartbeat(){
+heartbeatInterval=setInterval(async()=>{
+if(!roomId) return;
+const ref=doc(db,"rooms",roomId);
+const snap=await getDoc(ref);
+if(!snap.exists()) return;
+const d=snap.data();
+
+if(uid===d.player1){
+await updateDoc(ref,{lastSeen1:Date.now()});
+}else if(uid===d.player2){
+await updateDoc(ref,{lastSeen2:Date.now()});
+}
+},5000);
+}
 
 /* ROOM LISTENER */
 function listenRoom(){
@@ -211,6 +251,19 @@ if(!snap.exists()){location.reload();return;}
 const d=snap.data();
 scoreboard.style.display="flex";
 
+/* OFFLINE KONTROL */
+if(d.player2){
+const now=Date.now();
+if(d.lastSeen1 && d.lastSeen2){
+if(now-d.lastSeen1>HEARTBEAT_TIMEOUT ||
+now-d.lastSeen2>HEARTBEAT_TIMEOUT){
+if(uid===d.host){
+await deleteDoc(doc(db,"rooms",roomId));
+}
+}
+}
+}
+
 /* Scoreboard */
 if(uid===d.player1){
 p1.innerText=d.player1Name+" ("+d.score1+")";
@@ -221,15 +274,20 @@ p2.innerText=d.player1Name+" ("+d.score1+")";
 }
 roundInfo.innerText="Round "+d.round+" / 7";
 
-/* Disconnect */
+/* Eğer oda boşsa sil */
+if(!d.player1 && !d.player2){
+await deleteDoc(doc(db,"rooms",roomId));
+return;
+}
+
+/* Abandoned */
 if(d.state==="abandoned"){
-clearInterval(countdownInterval);
 bigText.innerText="Rakip Ayrıldı!";
 subText.innerText="Maçı kazandın.";
 return;
 }
 
-/* HOST START SAFE */
+/* Host countdown */
 if(d.state==="matched" && uid===d.host && !d.startAt){
 await updateDoc(doc(db,"rooms",roomId),{
 state:"countdown",
@@ -237,7 +295,6 @@ startAt:Date.now()+4000
 });
 }
 
-/* COUNTDOWN SAFE */
 if(d.state==="countdown"){
 if(countdownStarted) return;
 countdownStarted=true;
@@ -245,15 +302,12 @@ countdownStarted=true;
 countdownInterval=setInterval(async()=>{
 const fresh=await getDoc(doc(db,"rooms",roomId));
 if(!fresh.exists()) return;
-
 const data=fresh.data();
 const diff=data.startAt-Date.now();
 
 if(diff<=0){
 clearInterval(countdownInterval);
-countdownInterval=null;
 countdownStarted=false;
-
 if(uid===data.host){
 await updateDoc(doc(db,"rooms",roomId),{
 state:"active",
@@ -266,45 +320,20 @@ bigText.innerText=Math.ceil(diff/1000);
 },200);
 }
 
-/* ACTIVE */
 if(d.state==="active"){
 bigText.innerText="TAP!";
 subText.innerText="";
 }
 
-/* RESULT */
 if(d.state==="result"){
 bigText.innerText=d.lastWinner+" Kazandı!";
 subText.innerText=d.reaction;
-
-setTimeout(async()=>{
-if(uid===d.host){
-if(d.score1===4||d.score2===4){
-await updateDoc(doc(db,"rooms",roomId),{state:"finished"});
-}else{
-await updateDoc(doc(db,"rooms",roomId),{
-round:d.round+1,
-state:"countdown",
-startAt:Date.now()+4000
-});
-}
-}
-},2500);
-}
-
-/* FINISHED */
-if(d.state==="finished"){
-afterMatch.innerHTML=`<button id="newMatchBtn">Yeni Maç</button>`;
-document.getElementById("newMatchBtn").onclick=async()=>{
-await deleteDoc(doc(db,"rooms",roomId));
-location.reload();
-};
 }
 
 });
 }
 
-/* TAP SYSTEM — FULL ANTI CHEAT */
+/* TAP SYSTEM */
 document.addEventListener("pointerdown",async()=>{
 if(tapLock||!roomId)return;
 tapLock=true;
@@ -313,52 +342,24 @@ await runTransaction(db,async(t)=>{
 const ref=doc(db,"rooms",roomId);
 const snap=await t.get(ref);
 if(!snap.exists()) return;
-
 const d=snap.data();
 if(d.state!=="active") return;
-if(!d.roundStart) return;
 
-/* already result guard */
-if(d.state==="result") return;
+const reaction=Date.now()-d.roundStart.toMillis();
 
-const now=Date.now();
-const reaction=now - d.roundStart.toMillis();
-
-/* 50ms auto disqualify */
 if(reaction<50){
 if(uid===d.player1){
-t.update(ref,{
-score2:d.score2+1,
-state:"result",
-lastWinner:d.player2Name,
-reaction:"False Start"
-});
+t.update(ref,{score2:d.score2+1,state:"result",lastWinner:d.player2Name,reaction:"False Start"});
 }else{
-t.update(ref,{
-score1:d.score1+1,
-state:"result",
-lastWinner:d.player1Name,
-reaction:"False Start"
-});
+t.update(ref,{score1:d.score1+1,state:"result",lastWinner:d.player1Name,reaction:"False Start"});
 }
 return;
 }
 
-/* normal win */
 if(uid===d.player1){
-t.update(ref,{
-score1:d.score1+1,
-state:"result",
-lastWinner:d.player1Name,
-reaction:reaction+" ms"
-});
+t.update(ref,{score1:d.score1+1,state:"result",lastWinner:d.player1Name,reaction:reaction+" ms"});
 }else{
-t.update(ref,{
-score2:d.score2+1,
-state:"result",
-lastWinner:d.player2Name,
-reaction:reaction+" ms"
-});
+t.update(ref,{score2:d.score2+1,state:"result",lastWinner:d.player2Name,reaction:reaction+" ms"});
 }
 });
 
