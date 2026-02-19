@@ -3,24 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>PixelArena Space</title>
+    <title>PixelArena Space Pro</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-        :root { --neon: #00ff88; --accent: #00f2ff; --bg: #020205; }
+        :root { --neon: #00ff88; --accent: #00f2ff; --bg: #020205; --red: #ff0055; }
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
         body { background: var(--bg); height: 100vh; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Orbitron', sans-serif; }
+        
+        /* Geri Tuşu Tasarımı */
+        .back-nav { position: absolute; top: 15px; left: 15px; z-index: 1000; pointer-events: auto; }
+        .btn-back { padding: 8px 15px; background: rgba(0, 255, 136, 0.1); border: 1px solid var(--neon); color: var(--neon); text-decoration: none; font-size: 10px; border-radius: 8px; font-weight: 900; box-shadow: 0 0 10px rgba(0, 255, 136, 0.2); }
+
         #game-container { position: relative; border: 2px solid rgba(0, 255, 136, 0.3); border-radius: 20px; overflow: hidden; box-shadow: 0 0 50px rgba(0, 255, 136, 0.1); }
         canvas { background: radial-gradient(circle at center, #0a0a1a 0%, #020205 100%); display: block; }
-        .ui-overlay { position: absolute; top: 0; left: 0; width: 100%; padding: 15px; display: flex; justify-content: space-between; pointer-events: none; background: linear-gradient(to bottom, rgba(0,0,0,0.5), transparent); }
-        .stat-box { color: var(--neon); text-shadow: 0 0 10px var(--neon); font-size: 12px; font-weight: 700; }
+        
+        .ui-overlay { position: absolute; top: 0; left: 0; width: 100%; padding: 15px 15px 15px 85px; display: flex; justify-content: space-between; pointer-events: none; background: linear-gradient(to bottom, rgba(0,0,0,0.5), transparent); }
+        .stat-box { color: var(--neon); text-shadow: 0 0 10px var(--neon); font-size: 11px; font-weight: 700; }
+        
         .controls { width: 100%; max-width: 440px; display: flex; justify-content: space-between; padding: 20px 40px; margin-top: 10px; }
-        .btn { width: 85px; height: 85px; background: rgba(255, 255, 255, 0.03); border: 2px solid rgba(0, 255, 136, 0.2); border-radius: 24px; display: flex; align-items: center; justify-content: center; color: var(--neon); font-size: 32px; backdrop-filter: blur(5px); transition: all 0.1s; }
+        .btn { width: 85px; height: 85px; background: rgba(255, 255, 255, 0.03); border: 2px solid rgba(0, 255, 136, 0.2); border-radius: 24px; display: flex; align-items: center; justify-content: center; color: var(--neon); font-size: 32px; backdrop-filter: blur(5px); transition: all 0.1s; cursor: pointer; }
         .btn:active { background: rgba(0, 255, 136, 0.1); border-color: var(--neon); transform: scale(0.95); }
+        
         #restartBtn { position: absolute; top: 60%; left: 50%; transform: translate(-50%, -50%); display: none; padding: 15px 40px; background: var(--neon); color: black; border: none; border-radius: 12px; font-family: 'Orbitron'; font-weight: 900; cursor: pointer; box-shadow: 0 0 30px var(--neon); z-index: 100; }
         .game-over-screen { position: absolute; inset: 0; background: rgba(0,0,0,0.85); display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; z-index: 90; }
     </style>
 </head>
 <body>
+
+<div class="back-nav">
+    <a href="index.html" class="btn-back">⇠ GERİ</a>
+</div>
 
 <div id="game-container">
     <div class="ui-overlay">
@@ -91,7 +103,7 @@
         }
     }
 
-    // Gelişmiş Çarpışma: Mermilerin içinden geçmesini engellemek için mermi boyutu sanal olarak büyütüldü
+    // Gelişmiş Hitbox Sistemi
     function checkHit(obj1, obj2, w1, h1, w2, h2) {
         return obj1.x < obj2.x + w2 && obj1.x + w1 > obj2.x && obj1.y < obj2.y + h2 && obj1.y + h1 > obj2.y;
     }
@@ -104,51 +116,65 @@
         if(state.moveLeft) state.baseX = Math.max(10, state.baseX - 7);
         if(state.moveRight) state.baseX = Math.min(W-50, state.baseX + 7);
 
-        if(state.frame % 10 === 0) {
-            entities.rockets.forEach(r => { entities.mermiler.push({ x: state.baseX + r.off + 18, y: 420 }); });
+        // Ateşleme Hızı
+        if(state.frame % 12 === 0) {
+            entities.rockets.forEach(r => { entities.mermiler.push({ x: state.baseX + r.off + 18, y: 430 }); });
             audio.play(150, 'sine', 0.03, 50);
         }
 
-        let spawnRate = Math.max(15, 40 - Math.floor(state.score/10));
+        let spawnRate = Math.max(15, 45 - Math.floor(state.score/15));
         if(state.frame % spawnRate === 0) {
-            entities.enemies.push({ x: Math.random()*(W-40), y: -40, v: 2 + (state.score*0.05) });
+            entities.enemies.push({ x: Math.random()*(W-40), y: -40, v: 2 + (state.score*0.04) });
         }
 
-        if(state.score > 0 && state.score % 40 === 0 && !entities.boss) {
+        if(state.score > 0 && state.score % 50 === 0 && !entities.boss) {
             entities.boss = { x: W/2-40, y: -100, hp: 40, max: 40 };
         }
 
-        entities.mermiler.forEach((m, i) => {
-            m.y -= 12;
-            if(m.y < -20) entities.mermiler.splice(i, 1);
+        // Mermi Hareketi ve Powerup'ları Vurma Özelliği
+        entities.mermiler.forEach((m, mi) => {
+            m.y -= 10; 
+            if(m.y < -20) entities.mermiler.splice(mi, 1);
+
+            // Powerup vurulursa
+            entities.powerups.forEach((p, pi) => {
+                if(checkHit(m, p, 4, 15, 25, 25)) {
+                    createExplosion(p.x+12, p.y+12, p.t === 'W' ? "#00f2ff" : "#ff0055");
+                    entities.powerups.splice(pi, 1);
+                    entities.mermiler.splice(mi, 1);
+                    audio.play(300, 'square', 0.1, 100);
+                }
+            });
         });
 
+        // Düşmanlar
         entities.enemies.forEach((e, i) => {
             e.y += e.v;
             if(e.y > H) { state.lives--; entities.enemies.splice(i, 1); audio.play(100, 'sawtooth', 0.1, 200); }
 
-            // Mermi - Düşman Çarpışması (Hitbox genişletildi: 35x35 düşman için mermi alanı ayarlandı)
             for(let mi = entities.mermiler.length-1; mi >= 0; mi--) {
                 let m = entities.mermiler[mi];
-                if(checkHit(m, e, 4, 15, 35, 35)) { // h1: 15 yapıldı mermi boyu içinden geçmeyi önler
+                // Düşman Hitbox'ı mermiler için optimize edildi (35x35 düşman için 8px pay eklendi)
+                if(checkHit(m, e, 4, 20, 32, 32)) { 
                     createExplosion(e.x+17, e.y+17, "#00ff88");
                     entities.enemies.splice(i, 1);
                     entities.mermiler.splice(mi, 1);
                     state.score++;
                     updateUI();
-                    audio.play(400 + (state.score % 500), 'square', 0.05, 80);
+                    audio.play(400 + (state.score % 100), 'square', 0.05, 80);
                     break;
                 }
             }
         });
 
+        // Boss
         if(entities.boss) {
             let b = entities.boss;
-            b.y = Math.min(60, b.y + 1.5);
-            b.x += Math.sin(state.frame/20) * 2;
+            b.y = Math.min(60, b.y + 1);
+            b.x += Math.sin(state.frame/20) * 2.5;
             for(let mi = entities.mermiler.length-1; mi >= 0; mi--) {
                 let m = entities.mermiler[mi];
-                if(checkHit(m, b, 4, 15, 80, 80)) {
+                if(checkHit(m, b, 4, 20, 80, 80)) {
                     b.hp--;
                     entities.mermiler.splice(mi, 1);
                     audio.play(200, 'sawtooth', 0.02, 50);
@@ -156,16 +182,17 @@
             }
             if(b.hp <= 0) {
                 createExplosion(b.x+40, b.y+40, "#ff0055", 40);
-                state.score += 15; entities.boss = null;
+                state.score += 20; entities.boss = null;
                 audio.play(80, 'square', 0.2, 600);
                 updateUI();
             }
         }
 
-        if(state.frame % 800 === 0) entities.powerups.push({ x: Math.random()*(W-30), y: -30, t: Math.random() > 0.5 ? 'W' : 'L' });
+        // Powerup Üretimi ve Toplama
+        if(state.frame % 900 === 0) entities.powerups.push({ x: Math.random()*(W-30), y: -30, t: Math.random() > 0.5 ? 'W' : 'L' });
         entities.powerups.forEach((p, i) => {
-            p.y += 2.5;
-            if(checkHit({x: state.baseX, y: 420}, p, 40, 40, 30, 30)) {
+            p.y += 2;
+            if(checkHit({x: state.baseX, y: 420}, p, 40, 40, 25, 25)) {
                 if(p.t === 'W' && entities.rockets.length < 3) {
                     entities.rockets.push({ off: entities.rockets.length === 1 ? -25 : 25 });
                 } else if (p.t === 'L') { state.lives = Math.min(5, state.lives + 1); }
@@ -181,7 +208,6 @@
 
         if(state.lives <= 0) {
             state.running = false;
-            // SKOR KAYDETME DÜZELTME
             if(state.score > state.highScore) {
                 state.highScore = state.score;
                 localStorage.setItem("proSpaceScore", state.highScore.toString());
@@ -189,7 +215,7 @@
             document.getElementById("gameOver").style.display = "flex";
             document.getElementById("finalScore").innerText = `FINAL SCORE: ${state.score}`;
             restartBtn.style.display = "block";
-            updateUI(); // UI'yı son kez güncelle
+            updateUI();
         }
     }
 
@@ -208,7 +234,7 @@
         });
 
         ctx.fillStyle = "#00f2ff";
-        entities.mermiler.forEach(m => { ctx.shadowBlur = 15; ctx.shadowColor = "#00f2ff"; ctx.fillRect(m.x, m.y, 4, 12); });
+        entities.mermiler.forEach(m => { ctx.shadowBlur = 15; ctx.shadowColor = "#00f2ff"; ctx.fillRect(m.x, m.y, 4, 15); });
         ctx.shadowBlur = 0;
 
         entities.enemies.forEach(e => { ctx.font = "32px Arial"; ctx.fillText("👾", e.x, e.y + 30); });
@@ -221,7 +247,7 @@
         }
 
         entities.powerups.forEach(p => { ctx.font = "28px Arial"; ctx.fillText(p.t === 'W' ? "⚡" : "❤️", p.x, p.y); });
-        for(let i=0; i<state.lives; i++) { ctx.font = "18px Arial"; ctx.fillText("❤️", 15 + i*22, 70); }
+        for(let i=0; i<state.lives; i++) { ctx.font = "18px Arial"; ctx.fillText("❤️", 15 + i*22, 100); }
     }
 
     function loop() { update(); draw(); requestAnimationFrame(loop); }
