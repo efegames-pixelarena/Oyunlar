@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Neon Conquest | Pro V4</title>
+    <title>Neon Conquest | Pro V6</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@500;800&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -18,13 +18,12 @@
             display: flex; flex-direction: column; position: relative;
         }
 
-        /* --- ARKA PLAN ANİMASYONU --- */
-        .bg-animate {
-            position: fixed; inset: 0; z-index: -1;
+        /* --- SİBER ARKA PLAN ANİMASYONU --- */
+        .bg-container {
+            position: fixed; inset: 0; z-index: -1; overflow: hidden;
             background: radial-gradient(circle at 50% 50%, #0a1020 0%, #020408 100%);
-            overflow: hidden;
         }
-        .bg-grid {
+        .grid-anim {
             position: absolute; width: 200%; height: 200%; top: -50%; left: -50%;
             background-image: 
                 linear-gradient(to right, rgba(0, 255, 65, 0.05) 1px, transparent 1px),
@@ -35,69 +34,69 @@
         }
         @keyframes moveGrid { from { transform: perspective(500px) rotateX(60deg) translateY(0); } to { transform: perspective(500px) rotateX(60deg) translateY(50px); } }
 
-        /* --- HEADER --- */
+        /* --- ÜST PANEL --- */
         .header {
             height: 70px; padding: 0 15px; display: flex; align-items: center; justify-content: space-between;
             background: rgba(0,0,0,0.8); border-bottom: 1px solid var(--border); backdrop-filter: blur(15px); z-index: 100;
         }
-        .logo { font-family: 'Orbitron'; font-weight: 900; font-size: 0.9rem; color: #fff; text-shadow: 0 0 10px var(--p1); }
+        .logo { font-family: 'Orbitron'; font-weight: 900; font-size: 0.8rem; text-shadow: 0 0 10px var(--p1); }
+        .user-badge { font-size: 0.6rem; color: var(--p1); border: 1px solid var(--p1); padding: 4px 8px; border-radius: 4px; }
 
-        /* --- LOBİ & KARTLAR --- */
+        /* --- LOBİ --- */
         #lobby { flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto; z-index: 10; }
         .room-card {
             background: var(--glass); border: 1px solid var(--border); padding: 15px; border-radius: 15px;
-            display: flex; justify-content: space-between; align-items: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;
         }
         .room-info b { color: var(--p1); font-size: 0.8rem; }
-        .room-status { font-size: 0.6rem; padding: 2px 6px; border-radius: 4px; margin-top: 5px; display: inline-block; }
-        .status-wait { background: rgba(0, 255, 65, 0.1); color: var(--p1); border: 1px solid var(--p1); }
-        .status-play { background: rgba(255, 0, 247, 0.1); color: var(--p2); border: 1px solid var(--p2); }
+        .room-stats { font-size: 0.6rem; color: #888; margin-top: 5px; display: flex; gap: 8px; }
+        .tag { padding: 2px 6px; border-radius: 4px; font-weight: bold; }
+        .tag-waiting { background: rgba(0,255,65,0.1); color: var(--p1); }
+        .tag-playing { background: rgba(255,0,247,0.1); color: var(--p2); }
 
-        /* --- MODAL TASARIMLARI --- */
+        /* --- MODAL (POP-UP) TASARIMI --- */
         .modal-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px);
             display: none; align-items: center; justify-content: center; z-index: 2000; padding: 20px;
         }
         .modal-content {
             background: var(--glass); border: 2px solid var(--p1); padding: 25px; border-radius: 20px;
-            width: 100%; max-width: 350px; text-align: center; box-shadow: 0 0 30px rgba(0,255,65,0.2);
+            width: 100%; max-width: 320px; text-align: center; box-shadow: 0 0 30px rgba(0,255,65,0.2);
         }
-        .modal-content h3 { font-family: 'Orbitron'; margin-bottom: 20px; font-size: 1rem; color: var(--p1); }
+        .modal-content h3 { font-family: 'Orbitron'; margin-bottom: 20px; color: #fff; font-size: 1rem; }
         .modal-input {
             width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border);
             padding: 12px; border-radius: 10px; color: #fff; margin-bottom: 15px; outline: none; text-align: center;
         }
 
-        /* --- GAME VIEW --- */
-        #game-view { display: none; flex: 1; flex-direction: column; position: relative; z-index: 10; }
-        .game-hud { display: grid; grid-template-columns: 1fr auto 1fr; padding: 20px; align-items: center; background: rgba(0,0,0,0.5); }
-        .score { font-family: 'Orbitron'; font-size: 2rem; }
+        /* --- OYUN EKRANI --- */
+        #game-view { display: none; flex: 1; flex-direction: column; z-index: 10; }
+        .game-hud { display: grid; grid-template-columns: 1fr auto 1fr; padding: 15px; align-items: center; background: rgba(0,0,0,0.5); }
+        .score { font-family: 'Orbitron'; font-size: 1.8rem; }
         .grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; width: 90vw; max-width: 380px; margin: auto; }
         .cell { aspect-ratio: 1/1; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 6px; }
         .cell.p1 { background: var(--p1); box-shadow: 0 0 15px var(--p1); border: none; }
         .cell.p2 { background: var(--p2); box-shadow: 0 0 15px var(--p2); border: none; }
 
-        /* --- BUTTONS --- */
-        .btn-neon { background: var(--p1); color: #000; border: none; padding: 12px 20px; border-radius: 10px; font-family: 'Orbitron'; font-weight: 900; cursor: pointer; transition: 0.3s; }
-        .btn-neon:active { transform: scale(0.95); }
-        .btn-close { background: transparent; color: #ff4444; border: none; margin-top: 10px; cursor: pointer; font-size: 0.8rem; }
+        /* --- BUTONLAR --- */
+        .btn-neon { background: var(--p1); color: #000; border: none; padding: 12px; border-radius: 10px; font-family: 'Orbitron'; font-weight: 900; cursor: pointer; }
+        .btn-ghost { background: transparent; color: #888; border: none; margin-top: 10px; cursor: pointer; font-size: 0.7rem; }
     </style>
 </head>
 <body onclick="unlockAudio()">
 
-    <div class="bg-animate"><div class="bg-grid"></div></div>
+    <div class="bg-container"><div class="grid-anim"></div></div>
 
     <div class="header">
         <div class="user-badge" id="meName">YÜKLENİYOR...</div>
         <div class="logo">NEON CONQUEST</div>
-        <button class="btn-exit" id="gameLeave" style="background:none; border:1px solid #ff4444; color:#ff4444; padding:5px 10px; border-radius:5px; font-size:0.6rem;">AYRIL</button>
+        <button onclick="location.reload()" style="background:none; border:1px solid #ff4444; color:#ff4444; padding:4px 8px; border-radius:4px; font-size:0.6rem;">AYRIL</button>
     </div>
 
     <div id="lobby">
-        <button class="btn-neon" style="width:100%; margin-bottom:10px; background:#fff;" onclick="openModal('quickModal')">HIZLI KATIL</button>
+        <button class="btn-neon" style="background:#fff;" onclick="openModal('quickModal')">HIZLI KATIL</button>
         <div id="roomList"></div>
-        <button class="btn-neon" style="position:fixed; bottom:30px; left:50%; transform:translateX(-50%); width:200px;" onclick="openModal('createModal')">ODA KUR</button>
+        <button class="btn-neon" style="position:fixed; bottom:30px; left:50%; transform:translateX(-50%); width:200px; box-shadow: 0 0 20px var(--p1);" onclick="openModal('createModal')">ODA KUR</button>
     </div>
 
     <div id="game-view">
@@ -111,26 +110,35 @@
 
     <div id="createModal" class="modal-overlay">
         <div class="modal-content">
-            <h3>ARENA OLUŞTUR</h3>
-            <input type="password" id="createPass" class="modal-input" placeholder="ODA ŞİFRESİ (OPSİYONEL)">
+            <h3>YENİ ARENA</h3>
+            <input type="password" id="createPass" class="modal-input" placeholder="ŞİFRE (OPSİYONEL)">
             <button class="btn-neon" style="width:100%" id="confirmCreate">OLUŞTUR</button>
-            <button class="btn-close" onclick="closeModal('createModal')">İPTAL</button>
+            <button class="btn-ghost" onclick="closeModal('createModal')">VAZGEÇ</button>
         </div>
     </div>
 
-    <div id="joinModal" class="modal-overlay">
+    <div id="passwordModal" class="modal-overlay">
         <div class="modal-content">
-            <h3>GİRİŞ ŞİFRESİ</h3>
-            <input type="password" id="joinPass" class="modal-input" placeholder="ŞİFREYİ GİRİN">
-            <button class="btn-neon" style="width:100%" id="confirmJoin">KATIL</button>
-            <button class="btn-close" onclick="closeModal('joinModal')">İPTAL</button>
+            <h3>KİLİTLİ ODA</h3>
+            <input type="password" id="joinPassInput" class="modal-input" placeholder="ŞİFREYİ GİRİN">
+            <button class="btn-neon" style="width:100%" id="confirmJoin">GİRİŞ YAP</button>
+            <button class="btn-ghost" onclick="closeModal('passwordModal')">İPTAL</button>
         </div>
     </div>
 
-    <div id="resultModal" class="modal-overlay" style="display:none; flex-direction:column;">
+    <div id="quickModal" class="modal-overlay">
+        <div class="modal-content" style="border-color: #fff;">
+            <h3>HIZLI KATIL</h3>
+            <p style="font-size:0.7rem; color:#888; margin-bottom:15px;">Uygun bir rakip aranıyor...</p>
+            <button class="btn-neon" style="width:100%" id="quickJoinTrigger">TARAMAYI BAŞLAT</button>
+            <button class="btn-ghost" onclick="closeModal('quickModal')">KAPAT</button>
+        </div>
+    </div>
+
+    <div id="resultModal" class="modal-overlay">
         <div class="modal-content">
             <h1 id="winnerLabel">ZAFER!</h1>
-            <div id="scoreLabel" style="font-size:2rem; margin:20px 0;">0 - 0</div>
+            <div id="scoreLabel" style="font-size:2.5rem; margin:20px 0;">0 - 0</div>
             <button class="btn-neon" style="width:100%" onclick="location.reload()">LOBİYE DÖN</button>
         </div>
     </div>
@@ -153,7 +161,6 @@
     const db = getFirestore(app);
     const auth = getAuth(app);
 
-    // SESLER
     const sfx = {
         box: new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3'),
         win: new Audio('https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3'),
@@ -169,17 +176,15 @@
     };
     const play = (k) => { if(audioReady) sfx[k].cloneNode(true).play(); };
 
-    // GLOBALS
     let uid, username, curRoomId, myRole, isFin = false, canClick = false, timer = null;
 
-    // MODAL OPS
     window.openModal = (id) => document.getElementById(id).style.display = 'flex';
     window.closeModal = (id) => document.getElementById(id).style.display = 'none';
 
     onAuthStateChanged(auth, async user => {
         if(!user) { signInAnonymously(auth); return; }
         uid = user.uid;
-        username = "PILOT_" + uid.slice(0,4);
+        username = "PLAYER_" + uid.slice(0,4);
         document.getElementById('meName').innerText = username;
         listenLobby();
     });
@@ -192,21 +197,21 @@
                 const r = d.data();
                 if(r.status === 'finished') return;
                 
-                // Skor Hesapla
-                let s1 = 0, s2 = 0;
+                let s1=0, s2=0;
                 Object.values(r.cells || {}).forEach(v => v === 'p1' ? s1++ : s2++);
 
                 const card = document.createElement('div');
                 card.className = "room-card";
                 card.innerHTML = `
-                    <div class="room-info">
-                        <b>${r.p1Name} ${r.p2 ? 'vs '+r.p2Name : '(BEKLİYOR)'}</b><br>
-                        <span class="room-status ${r.p2 ? 'status-play' : 'status-wait'}">
-                            ${r.p2 ? 'DOLU ('+s1+'-'+s2+')' : 'BOŞ'} ${r.pass ? '🔒' : ''}
-                        </span>
+                    <div>
+                        <b>${r.p1Name} ${r.p2 ? 'vs '+r.p2Name : '(BEKLİYOR)'} ${r.pass ? '🔒' : ''}</b>
+                        <div class="room-stats">
+                            <span class="tag ${r.p2 ? 'tag-playing' : 'tag-waiting'}">${r.p2 ? 'DOLU' : 'BOŞ'}</span>
+                            <span>Skor: ${s1}-${s2}</span>
+                        </div>
                     </div>
                     <button class="btn-neon" style="padding:5px 15px; font-size:0.7rem;" 
-                        onclick="checkJoin('${d.id}', '${r.pass || ''}', '${r.p1}')">GİR</button>
+                        onclick="checkRoom('${d.id}', '${r.pass || ''}', '${r.p1}')">GİR</button>
                 `;
                 list.appendChild(card);
             });
@@ -226,27 +231,36 @@
         enterGame(id);
     };
 
-    // KATILMA KONTROLÜ
-    let targetRoom = "";
-    let targetPass = "";
-    window.checkJoin = (id, pass, p1Id) => {
-        if(p1Id === uid) { alert("Kendi odana katılamazsın!"); return; }
+    // ODAYA GİRİŞ KONTROLÜ
+    let targetRoom = "", targetPass = "";
+    window.checkRoom = (id, pass, owner) => {
+        if(owner === uid) return;
         if(pass) {
             targetRoom = id; targetPass = pass;
-            openModal('joinModal');
-        } else {
-            finalizeJoin(id);
-        }
+            openModal('passwordModal');
+        } else finalizeJoin(id);
     };
 
     document.getElementById('confirmJoin').onclick = () => {
-        const input = document.getElementById('joinPass').value;
-        if(input === targetPass) {
-            closeModal('joinModal');
+        if(document.getElementById('joinPassInput').value === targetPass) {
+            closeModal('passwordModal');
             finalizeJoin(targetRoom);
-        } else {
-            alert("Hatalı Şifre!");
-        }
+        } else alert("Hatalı Şifre!");
+    };
+
+    // HIZLI KATIL SİSTEMİ
+    document.getElementById('quickJoinTrigger').onclick = async () => {
+        const q = query(collection(db, "conquest_rooms"), where("status", "==", "waiting"));
+        const snap = await getDocs(q);
+        let found = false;
+        snap.forEach(d => {
+            if(!found && !d.data().pass && d.data().p1 !== uid) {
+                found = true;
+                closeModal('quickModal');
+                finalizeJoin(d.id);
+            }
+        });
+        if(!found) alert("Uygun boş oda bulunamadı!");
     };
 
     async function finalizeJoin(id) {
@@ -260,7 +274,7 @@
         document.getElementById('game-view').style.display = 'flex';
         const g = document.getElementById('grid');
         g.innerHTML = "";
-        for(let i=0; i<36; i++){
+        for(let i=0; i<36; i++) {
             const c = document.createElement('div');
             c.className = 'cell';
             c.onclick = () => { if(canClick){ play('box'); updateDoc(doc(db, "conquest_rooms", id), { [`cells.${i}`]: myRole }); }};
@@ -270,7 +284,6 @@
         onSnapshot(doc(db, "conquest_rooms", id), snap => {
             if(!snap.exists()) { if(!isFin) location.reload(); return; }
             const data = snap.data();
-            
             document.getElementById('n1').innerText = data.p1Name;
             document.getElementById('n2').innerText = data.p2Name;
             document.getElementById('timer-box').innerText = data.timer;
@@ -295,11 +308,11 @@
             document.getElementById('s1').innerText = s1;
             document.getElementById('s2').innerText = s2;
 
-            if(data.timer <= 0 || Object.keys(data.cells).length === 36) finish(s1, s2, data);
+            if(data.timer <= 0 || Object.keys(data.cells).length === 36) finish(s1, s2);
         });
     }
 
-    function finish(s1, s2, data) {
+    function finish(s1, s2) {
         if(isFin) return; isFin = true; clearInterval(timer);
         const win = (myRole === 'p1' && s1 > s2) || (myRole === 'p2' && s2 > s1);
         play(win ? 'win' : 'lose');
@@ -308,9 +321,6 @@
         openModal('resultModal');
         if(myRole === 'p1') updateDoc(doc(db, "conquest_rooms", curRoomId), { status: 'finished' });
     }
-
-    document.getElementById('gameLeave').onclick = () => location.reload();
-
 </script>
 </body>
 </html>
