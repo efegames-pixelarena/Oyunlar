@@ -40,7 +40,7 @@
     }
     .history span{padding:3px 8px; border-radius:6px; font-size:10px; font-weight:800; white-space:nowrap;}
 
-    .main{position:absolute;top:0;bottom:200px;width:100%;overflow:hidden;}
+    .main{position:absolute;top:0;bottom:240px;width:100%;overflow:hidden;}
     canvas{width:100%; height:100%; display: block;}
 
     .multiplier-overlay{
@@ -59,7 +59,7 @@
     }
 
     .bottom{
-        position:absolute;bottom:0;width:100%;height:200px;
+        position:absolute;bottom:0;width:100%;height:240px;
         background:#0a0f1e; display:flex; justify-content:center; align-items:center; gap:8px; padding:0 10px;
         border-top: 1px solid #1e2642; z-index: 100;
     }
@@ -71,29 +71,32 @@
     }
 
     .betBox input{
-        padding:10px; border:1px solid #273c8f; border-radius:8px;
-        text-align:center; font-weight:bold; font-size:15px; background:#050811; color:white; outline:none;
+        padding:8px; border:1px solid #273c8f; border-radius:8px;
+        text-align:center; font-weight:bold; font-size:14px; background:#050811; color:white; outline:none;
     }
 
-    .auto-bet-ui {
+    .ui-row {
         display: flex; align-items: center; justify-content: space-between;
-        background: #0d1326; padding: 5px 8px; border-radius: 8px;
+        background: #0d1326; padding: 4px 8px; border-radius: 8px; gap: 4px;
     }
-    .auto-bet-ui span { font-size: 10px; font-weight: 800; color: #4fd1ff; }
+    .ui-row span { font-size: 9px; font-weight: 800; color: #4fd1ff; white-space: nowrap; }
+    
+    .auto-input { width: 45px !important; padding: 4px !important; font-size: 11px !important; }
+
     .switch {
-        position: relative; display: inline-block; width: 34px; height: 18px;
+        position: relative; display: inline-block; width: 30px; height: 16px;
     }
     .switch input { opacity: 0; width: 0; height: 0; }
     .slider {
         position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
-        background-color: #273c8f; transition: .3s; border-radius: 18px;
+        background-color: #273c8f; transition: .3s; border-radius: 16px;
     }
     .slider:before {
-        position: absolute; content: ""; height: 12px; width: 12px; left: 3px; bottom: 3px;
+        position: absolute; content: ""; height: 10px; width: 10px; left: 3px; bottom: 3px;
         background-color: white; transition: .3s; border-radius: 50%;
     }
     input:checked + .slider { background-color: #00b894; }
-    input:checked + .slider:before { transform: translateX(16px); }
+    input:checked + .slider:before { transform: translateX(14px); }
 
     .betBox button{
         padding:12px; border:none; border-radius:10px; font-weight:800;
@@ -128,23 +131,28 @@
 <div class="bottom">
     <div class="betBox">
         <input type="number" id="betInput1" value="100">
-        <div class="auto-bet-ui">
-            <span>OTOMATİK</span>
-            <label class="switch">
-                <input type="checkbox" id="autoSwitch1">
-                <span class="slider"></span>
-            </label>
+        <div class="ui-row">
+            <span>OTO BAHİS</span>
+            <label class="switch"><input type="checkbox" id="autoSwitch1"><span class="slider"></span></label>
+        </div>
+        <div class="ui-row">
+            <span>OTO ÇEK X</span>
+            <input type="number" id="autoCash1" value="2.00" step="0.1" class="auto-input">
+            <label class="switch"><input type="checkbox" id="autoCashSwitch1"><span class="slider"></span></label>
         </div>
         <button id="btn1">BAHİS YAP</button>
     </div>
+
     <div class="betBox">
         <input type="number" id="betInput2" value="200">
-        <div class="auto-bet-ui">
-            <span>OTOMATİK</span>
-            <label class="switch">
-                <input type="checkbox" id="autoSwitch2">
-                <span class="slider"></span>
-            </label>
+        <div class="ui-row">
+            <span>OTO BAHİS</span>
+            <label class="switch"><input type="checkbox" id="autoSwitch2"><span class="slider"></span></label>
+        </div>
+        <div class="ui-row">
+            <span>OTO ÇEK X</span>
+            <input type="number" id="autoCash2" value="2.00" step="0.1" class="auto-input">
+            <label class="switch"><input type="checkbox" id="autoCashSwitch2"><span class="slider"></span></label>
         </div>
         <button id="btn2">BAHİS YAP</button>
     </div>
@@ -168,7 +176,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// --- GELİŞTİRİLMİŞ İOS SES MOTORU ---
+// --- SES MOTORU ---
 let audioCtx = null;
 const initAudio = () => {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -178,57 +186,34 @@ const initAudio = () => {
 function playSfx(type) {
     initAudio();
     const now = audioCtx.currentTime;
-    
     if(type==='countdown') {
-        const osc = audioCtx.createOscillator();
-        const g = audioCtx.createGain();
+        const osc = audioCtx.createOscillator(); const g = audioCtx.createGain();
         osc.connect(g); g.connect(audioCtx.destination);
-        osc.frequency.setValueAtTime(600, now);
-        g.gain.setValueAtTime(0.05, now);
-        g.gain.exponentialRampToValueAtTime(0.01, now+0.1);
-        osc.start(); osc.stop(now+0.1);
+        osc.frequency.setValueAtTime(600, now); g.gain.setValueAtTime(0.05, now);
+        g.gain.exponentialRampToValueAtTime(0.01, now+0.1); osc.start(); osc.stop(now+0.1);
     }
     if(type==='bet') { 
-        const osc = audioCtx.createOscillator();
-        const g = audioCtx.createGain();
+        const osc = audioCtx.createOscillator(); const g = audioCtx.createGain();
         osc.connect(g); g.connect(audioCtx.destination);
-        osc.frequency.setValueAtTime(440, now); 
-        g.gain.setValueAtTime(0.1, now); g.gain.exponentialRampToValueAtTime(0.01, now+0.1);
-        osc.start(); osc.stop(now+0.1); 
+        osc.frequency.setValueAtTime(440, now); g.gain.setValueAtTime(0.1, now);
+        g.gain.exponentialRampToValueAtTime(0.01, now+0.1); osc.start(); osc.stop(now+0.1); 
     }
     if(type==='cash') {
-        const osc = audioCtx.createOscillator();
-        const g = audioCtx.createGain();
+        const osc = audioCtx.createOscillator(); const g = audioCtx.createGain();
         osc.connect(g); g.connect(audioCtx.destination);
         osc.frequency.setValueAtTime(800, now); osc.frequency.exponentialRampToValueAtTime(1600, now+0.3);
-        g.gain.setValueAtTime(0.1, now); g.gain.linearRampToValueAtTime(0, now+0.3);
-        osc.start(); osc.stop(now+0.3); 
+        g.gain.setValueAtTime(0.1, now); g.gain.linearRampToValueAtTime(0, now+0.3); osc.start(); osc.stop(now+0.3); 
     }
-    if(type==='lose') {
-        const osc = audioCtx.createOscillator();
-        const g = audioCtx.createGain();
-        osc.connect(g); g.connect(audioCtx.destination);
-        osc.frequency.setValueAtTime(150, now);
-        g.gain.setValueAtTime(0.2, now); g.gain.linearRampToValueAtTime(0, now+0.4);
-        osc.start(); osc.stop(now+0.4);
-    }
-    if(type==='crash') { // DAHA GÜZEL VE TOK PATLAMA (White Noise + Sawtooth)
+    if(type==='crash') {
         const bufferSize = audioCtx.sampleRate * 0.5;
         const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
         const data = buffer.getChannelData(0);
         for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-
-        const noise = audioCtx.createBufferSource();
-        noise.buffer = buffer;
-        const filter = audioCtx.createBiquadFilter();
-        filter.type = 'lowpass';
-        filter.frequency.setValueAtTime(400, now);
-        filter.frequency.exponentialRampToValueAtTime(40, now + 0.5);
-
-        const g = audioCtx.createGain();
-        g.gain.setValueAtTime(0.4, now);
+        const noise = audioCtx.createBufferSource(); noise.buffer = buffer;
+        const filter = audioCtx.createBiquadFilter(); filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(400, now); filter.frequency.exponentialRampToValueAtTime(40, now + 0.5);
+        const g = audioCtx.createGain(); g.gain.setValueAtTime(0.4, now);
         g.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
-
         noise.connect(filter); filter.connect(g); g.connect(audioCtx.destination);
         noise.start(); noise.stop(now + 0.5);
     }
@@ -237,7 +222,7 @@ function playSfx(type) {
 // --- DEĞİŞKENLER ---
 let userRef = null, balance = 0, phase = "betting", multiplier = 1, crashPoint = 0;
 let activeBet1 = 0, activeBet2 = 0, startTime = 0;
-let auto1 = false, auto2 = false;
+let auto1 = false, auto2 = false, autoCash1 = false, autoCash2 = false;
 
 const multEl = document.getElementById("multiplier");
 const balEl = document.getElementById("balance");
@@ -248,12 +233,10 @@ const canvas = document.getElementById("graph");
 const ctx = canvas.getContext("2d");
 function resize() { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; }
 window.addEventListener("resize", resize); resize();
-
 let stars = Array.from({length: 80}, () => ({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, s: Math.random()*1.5 }));
 
 function draw() {
-    ctx.fillStyle = "#03050a";
-    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = "#03050a"; ctx.fillRect(0,0,canvas.width,canvas.height);
     let speedMult = phase === "flying" ? (multiplier * 2) : 0.5;
     ctx.fillStyle = "#fff";
     stars.forEach(s => {
@@ -290,15 +273,25 @@ onAuthStateChanged(auth, user => {
 });
 
 function getCrashPoint() {
-    const random = Math.random();
-    if (random < 0.03) return 1.00; // %3 Kasa Avantajı
-    return (0.97 / (1 - random)).toFixed(2);
+    const r = Math.random();
+    return r < 0.03 ? 1.00 : (0.97 / (1 - r)).toFixed(2);
 }
 
 function updateMultiplier() {
     if(phase !== "flying") return;
     const elapsed = (Date.now() - startTime) / 1000;
     multiplier = Math.pow(1.11, elapsed);
+    
+    // Auto Cashout Kontrolü
+    if(autoCash1 && activeBet1 > 0) {
+        let target = parseFloat(document.getElementById("autoCash1").value);
+        if(multiplier >= target) handleBet(1);
+    }
+    if(autoCash2 && activeBet2 > 0) {
+        let target = parseFloat(document.getElementById("autoCash2").value);
+        if(multiplier >= target) handleBet(2);
+    }
+
     if(multiplier >= crashPoint) { doCrash(); } 
     else {
         multEl.className = "multiplier big";
@@ -311,21 +304,15 @@ function updateMultiplier() {
 async function startCountdown() {
     phase = "betting"; multiplier = 1; let sec = 5;
     multEl.className = "multiplier small";
-    
-    // Auto Bet Kontrolü
     if(auto1) handleBet(1, true);
     if(auto2) handleBet(2, true);
-    
     updateButtons();
-
     let timer = setInterval(() => {
         multEl.innerText = `UÇUŞA ${sec} SN`;
         if(sec > 0) playSfx('countdown');
         if(sec <= 0) {
-            clearInterval(timer);
-            phase = "flying";
-            startTime = Date.now();
-            crashPoint = parseFloat(getCrashPoint());
+            clearInterval(timer); phase = "flying";
+            startTime = Date.now(); crashPoint = parseFloat(getCrashPoint());
             updateMultiplier();
         }
         sec--;
@@ -333,11 +320,9 @@ async function startCountdown() {
 }
 
 function doCrash() {
-    phase = "crashed";
-    playSfx('crash');
-    if (activeBet1 > 0 || activeBet2 > 0) playSfx('lose');
+    phase = "crashed"; playSfx('crash');
     multEl.className = "multiplier big crashed";
-    multEl.innerText = multiplier.toFixed(2) + "x\nPATLADI!";
+    multEl.innerText = multiplier.toFixed(2) + "x"; // Mavi "PATLADI" kaldırıldı
     addHistory(multiplier);
     activeBet1 = 0; activeBet2 = 0;
     betTotalEl.innerText = "0";
@@ -348,14 +333,12 @@ function addHistory(val) {
     const span = document.createElement("span");
     span.innerText = parseFloat(val).toFixed(2) + "x";
     span.style.background = val < 2 ? "#ff2a4d" : "#00b894";
-    const h = document.getElementById("history");
-    h.prepend(span);
+    const h = document.getElementById("history"); h.prepend(span);
     if(h.children.length > 20) h.lastChild.remove();
 }
 
 async function handleBet(box, isAuto = false) {
-    initAudio();
-    if(!userRef) return;
+    initAudio(); if(!userRef) return;
     let input = document.getElementById("betInput"+box);
     let amount = Math.floor(parseInt(input.value)) || 0;
     let currentActive = box === 1 ? activeBet1 : activeBet2;
@@ -383,18 +366,12 @@ function updateButtons() {
     const u = (id, active) => {
         const b = document.getElementById(id);
         if(phase === "betting") {
-            b.disabled = false;
-            b.innerText = active > 0 ? "İPTAL" : "BAHİS YAP";
+            b.disabled = false; b.innerText = active > 0 ? "İPTAL" : "BAHİS YAP";
             b.className = active > 0 ? "cancel" : "";
         } else if (phase === "flying" && active > 0) {
-            b.disabled = false;
-            b.innerText = `ÇEK (₺${Math.floor(active * multiplier)})`;
+            b.disabled = false; b.innerText = `ÇEK (₺${Math.floor(active * multiplier)})`;
             b.className = "cashout";
-        } else {
-            b.disabled = true;
-            b.innerText = "BEKLENİYOR";
-            b.className = "";
-        }
+        } else { b.disabled = true; b.innerText = "BEKLENİYOR"; b.className = ""; }
     };
     u("btn1", activeBet1); u("btn2", activeBet2);
 }
@@ -403,6 +380,8 @@ document.getElementById("btn1").onclick = () => handleBet(1);
 document.getElementById("btn2").onclick = () => handleBet(2);
 document.getElementById("autoSwitch1").onchange = (e) => auto1 = e.target.checked;
 document.getElementById("autoSwitch2").onchange = (e) => auto2 = e.target.checked;
+document.getElementById("autoCashSwitch1").onchange = (e) => autoCash1 = e.target.checked;
+document.getElementById("autoCashSwitch2").onchange = (e) => autoCash2 = e.target.checked;
 document.addEventListener('touchstart', initAudio, { once: true });
 </script>
 </body>
