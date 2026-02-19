@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Neon Conquest | Ultimate V7</title>
+    <title>Neon Conquest | Ultimate V7 Fixed</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@500;800&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -18,19 +18,12 @@
             display: flex; flex-direction: column; position: relative;
         }
 
-        /* --- SİBER ARKA PLAN ANİMASYONU (Lobby & Game) --- */
-        .bg-fx {
-            position: fixed; inset: 0; z-index: -1;
-            background: radial-gradient(circle at 50% 50%, #0a1020 0%, #020408 100%);
-        }
+        /* --- SİBER ARKA PLAN ANİMASYONU --- */
+        .bg-fx { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at 50% 50%, #0a1020 0%, #020408 100%); }
         .grid-layer {
             position: absolute; width: 200%; height: 200%; top: -50%; left: -50%;
-            background-image: 
-                linear-gradient(to right, rgba(0, 255, 65, 0.05) 1px, transparent 1px),
-                linear-gradient(to bottom, rgba(0, 255, 65, 0.05) 1px, transparent 1px);
-            background-size: 45px 45px;
-            transform: perspective(500px) rotateX(60deg);
-            animation: gridMove 12s linear infinite;
+            background-image: linear-gradient(to right, rgba(0, 255, 65, 0.05) 1px, transparent 1px), linear-gradient(to bottom, rgba(0, 255, 65, 0.05) 1px, transparent 1px);
+            background-size: 45px 45px; transform: perspective(500px) rotateX(60deg); animation: gridMove 12s linear infinite;
         }
         @keyframes gridMove { from { transform: perspective(500px) rotateX(60deg) translateY(0); } to { transform: perspective(500px) rotateX(60deg) translateY(45px); } }
 
@@ -46,28 +39,17 @@
         #lobby { flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto; z-index: 10; }
         .room-card {
             background: var(--glass); border: 1px solid var(--border); padding: 15px; border-radius: 15px;
-            display: flex; justify-content: space-between; align-items: center; animation: fadeIn 0.4s ease;
+            display: flex; justify-content: space-between; align-items: center; animation: fadeIn 0.4s ease; margin-bottom: 10px;
         }
-        .room-info b { font-size: 0.85rem; color: var(--p1); }
         .room-stats { font-size: 0.65rem; color: #888; margin-top: 5px; display: flex; gap: 10px; }
         .tag { padding: 2px 6px; border-radius: 4px; font-weight: 800; font-size: 0.55rem; }
         .tag-waiting { background: rgba(0,255,65,0.1); color: var(--p1); }
         .tag-playing { background: rgba(255,0,247,0.1); color: var(--p2); }
 
-        /* --- MODAL TASARIMI --- */
-        .modal {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(10px);
-            display: none; align-items: center; justify-content: center; z-index: 2000; padding: 20px;
-        }
-        .modal-box {
-            background: var(--glass); border: 2px solid var(--p1); padding: 30px; border-radius: 20px;
-            width: 100%; max-width: 340px; text-align: center; box-shadow: 0 0 30px rgba(0,255,65,0.2);
-        }
-        .modal-box h3 { font-family: 'Orbitron'; margin-bottom: 20px; color: #fff; font-size: 1rem; }
-        .modal-input {
-            width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border);
-            padding: 12px; border-radius: 10px; color: #fff; margin-bottom: 15px; outline: none; text-align: center;
-        }
+        /* --- MODALLAR --- */
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(10px); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 20px; }
+        .modal-box { background: var(--glass); border: 2px solid var(--p1); padding: 30px; border-radius: 20px; width: 100%; max-width: 340px; text-align: center; box-shadow: 0 0 30px rgba(0,255,65,0.2); }
+        .modal-input { width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border); padding: 12px; border-radius: 10px; color: #fff; margin-bottom: 15px; outline: none; text-align: center; }
 
         /* --- OYUN ALANI --- */
         #game-view { display: none; flex: 1; flex-direction: column; z-index: 10; }
@@ -78,11 +60,7 @@
         .cell.p1 { background: var(--p1); box-shadow: 0 0 15px var(--p1); border: none; }
         .cell.p2 { background: var(--p2); box-shadow: 0 0 15px var(--p2); border: none; }
 
-        /* --- BUTONLAR --- */
-        .btn-neon { 
-            background: var(--p1); color: #000; border: none; padding: 12px; border-radius: 10px; 
-            font-family: 'Orbitron'; font-weight: 900; cursor: pointer; text-transform: uppercase; font-size: 0.8rem;
-        }
+        .btn-neon { background: var(--p1); color: #000; border: none; padding: 12px; border-radius: 10px; font-family: 'Orbitron'; font-weight: 900; cursor: pointer; text-transform: uppercase; font-size: 0.8rem; }
         .floating-create { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 220px; z-index: 100; box-shadow: 0 0 20px var(--p1); }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -93,18 +71,18 @@
     <div class="bg-fx"><div class="grid-layer"></div></div>
 
     <div class="header">
-        <div class="user-badge" id="meName">...</div>
+        <div class="user-badge" id="meName">GİRİŞ...</div>
         <div class="logo">NEON CONQUEST</div>
         <button onclick="location.reload()" style="background:none; border:1px solid #ff4444; color:#ff4444; padding:5px 10px; border-radius:5px; font-size:0.6rem; cursor:pointer;">AYRIL</button>
     </div>
 
     <div id="lobby">
-        <button class="btn-neon" style="background:#fff;" onclick="openQuickModal()">HIZLI KATIL</button>
+        <button class="btn-neon" style="background:#fff;" onclick="window.openQuickModal()">HIZLI KATIL</button>
         <div class="search-box" style="background:var(--glass); padding:12px; border-radius:12px; border:1px solid var(--border);">
             <input type="text" id="searchInput" placeholder="ODA ARA..." style="width:100%; background:none; border:none; color:var(--p1); outline:none;">
         </div>
         <div id="roomList"></div>
-        <button class="btn-neon floating-create" onclick="toggleModal('createModal', true)">ODA KUR</button>
+        <button class="btn-neon floating-create" onclick="window.toggleModal('createModal', true)">ODA KUR</button>
     </div>
 
     <div id="game-view">
@@ -120,9 +98,9 @@
     <div id="createModal" class="modal">
         <div class="modal-box">
             <h3>ARENA OLUŞTUR</h3>
-            <input type="password" id="createPass" class="modal-input" placeholder="ŞİFRE (BOŞ BIRAKABİLİRSİN)">
+            <input type="password" id="createPass" class="modal-input" placeholder="ŞİFRE (OPSİYONEL)">
             <button class="btn-neon" style="width:100%" id="confirmCreate">BAŞLAT</button>
-            <button onclick="toggleModal('createModal', false)" style="background:none; color:#888; border:none; margin-top:15px; cursor:pointer;">İPTAL</button>
+            <button onclick="window.toggleModal('createModal', false)" style="background:none; color:#888; border:none; margin-top:15px; cursor:pointer;">İPTAL</button>
         </div>
     </div>
 
@@ -131,7 +109,7 @@
             <h3>KİLİTLİ ODA</h3>
             <input type="password" id="joinPassInput" class="modal-input" placeholder="ŞİFREYİ YAZ">
             <button class="btn-neon" style="width:100%" id="confirmJoin">GİRİŞ YAP</button>
-            <button onclick="toggleModal('passModal', false)" style="background:none; color:#888; border:none; margin-top:15px; cursor:pointer;">VAZGEÇ</button>
+            <button onclick="window.toggleModal('passModal', false)" style="background:none; color:#888; border:none; margin-top:15px; cursor:pointer;">VAZGEÇ</button>
         </div>
     </div>
 
@@ -139,12 +117,12 @@
         <div class="modal-box" style="border-color:#fff">
             <h3 id="quickStatus">TARANIYOR...</h3>
             <div style="margin:20px 0; color:var(--p1); font-size:0.7rem;">Uygun boş oda aranıyor...</div>
-            <button onclick="toggleModal('quickModal', false)" class="btn-neon" style="background:#ff4444; width:100%">DURDUR</button>
+            <button onclick="window.toggleModal('quickModal', false)" class="btn-neon" style="background:#ff4444; width:100%">DURDUR</button>
         </div>
     </div>
 
     <div id="resultModal" class="modal">
-        <div class="modal-box" style="border-color:gold">
+        <div class="modal-box" id="resultBox">
             <h2 id="winnerLabel" style="font-family:'Orbitron'; margin-bottom:10px;">ZAFER!</h2>
             <div id="scoreLabel" style="font-size:2.5rem; color:var(--p1); margin-bottom:20px;">0 - 0</div>
             <button class="btn-neon" style="width:100%" onclick="location.reload()">LOBİYE DÖN</button>
@@ -185,13 +163,14 @@
     const play = (k) => { if(audioReady) sfx[k].cloneNode(true).play(); };
 
     let uid, username, curRoomId, myRole, isFin = false, canPlay = false, timerInt = null;
+    let pRoom = "", pPass = "";
 
-    window.toggleModal = (id, show) => document.getElementById(id).style.display = show ? 'flex' : 'none';
+    // 1. GLOBAL FONKSİYONLAR (window'a bağlandı)
+    window.toggleModal = (id, show) => { document.getElementById(id).style.display = show ? 'flex' : 'none'; };
 
     onAuthStateChanged(auth, async user => {
         if(!user) { signInAnonymously(auth); return; }
         uid = user.uid;
-        // Firebase'den kullanıcı adı çekme
         const uSnap = await getDoc(doc(db, "users", uid));
         username = uSnap.exists() ? uSnap.data().username : "PILOT_" + uid.slice(0,3);
         document.getElementById('meName').innerText = username;
@@ -199,11 +178,21 @@
         cleanOldRooms();
     });
 
+    // 4. TEMİZLİK FİLTRESİ (Sadece beklemedeki eski odaları siler)
     async function cleanOldRooms() {
-        const q = query(collection(db, "conquest_rooms"), where("p1", "==", uid));
+        const q = query(collection(db, "conquest_rooms"), where("p1", "==", uid), where("status", "==", "waiting"));
         const snap = await getDocs(q);
         snap.forEach(d => deleteDoc(d.ref));
     }
+
+    // 5. SEARCH FİLTRELEME
+    document.getElementById('searchInput').oninput = (e) => {
+        const term = e.target.value.toLowerCase();
+        document.querySelectorAll('.room-card').forEach(card => {
+            const name = card.getAttribute('data-name').toLowerCase();
+            card.style.display = name.includes(term) ? 'flex' : 'none';
+        });
+    };
 
     function listenLobby() {
         onSnapshot(collection(db, "conquest_rooms"), snap => {
@@ -218,6 +207,7 @@
 
                 const card = document.createElement('div');
                 card.className = "room-card";
+                card.setAttribute('data-name', r.p1Name);
                 card.innerHTML = `
                     <div>
                         <b>${r.p1Name} ${r.pass ? '🔒' : ''}</b>
@@ -227,14 +217,13 @@
                         </div>
                     </div>
                     <button class="btn-neon" style="padding:6px 15px; font-size:0.6rem;" 
-                        onclick="joinReq('${d.id}', '${r.pass || ''}', '${r.p1}')">KATIL</button>
+                        onclick="window.joinReq('${d.id}', '${r.pass || ''}', '${r.p1}')">KATIL</button>
                 `;
                 list.appendChild(card);
             });
         });
     }
 
-    // ODA KURMA
     document.getElementById('confirmCreate').onclick = async () => {
         const pass = document.getElementById('createPass').value;
         const id = Math.random().toString(36).substring(2,7);
@@ -243,39 +232,38 @@
             p1: uid, p1Name: username, p2: null, p2Name: "...",
             cells: {}, timer: 60, status: 'waiting', pass: pass
         });
-        toggleModal('createModal', false);
+        window.toggleModal('createModal', false);
         enterGame(id);
     };
 
-    // KATILMA MANTIĞI
-    let pRoom = "", pPass = "";
     window.joinReq = (id, pass, p1) => {
         if(p1 === uid) return;
         if(pass) {
             pRoom = id; pPass = pass;
-            toggleModal('passModal', true);
+            window.toggleModal('passModal', true);
         } else finalizeJoin(id);
     };
 
     document.getElementById('confirmJoin').onclick = () => {
         if(document.getElementById('joinPassInput').value === pPass) {
-            toggleModal('passModal', false);
+            window.toggleModal('passModal', false);
             finalizeJoin(pRoom);
-        } else alert("Yanlış Şifre!");
+        } else alert("Hatalı Şifre!");
     };
 
     window.openQuickModal = async () => {
-        toggleModal('quickModal', true);
+        window.toggleModal('quickModal', true);
+        document.getElementById('quickStatus').innerText = "TARANIYOR...";
         const q = query(collection(db, "conquest_rooms"), where("status", "==", "waiting"));
         const snap = await getDocs(q);
         let found = false;
         snap.forEach(d => {
             if(!found && !d.data().pass && d.data().p1 !== uid) {
                 found = true;
-                setTimeout(() => { toggleModal('quickModal', false); finalizeJoin(d.id); }, 1500);
+                setTimeout(() => { window.toggleModal('quickModal', false); finalizeJoin(d.id); }, 1200);
             }
         });
-        if(!found) setTimeout(() => { document.getElementById('quickStatus').innerText = "ODA BULUNAMADI!"; }, 2000);
+        if(!found) setTimeout(() => { document.getElementById('quickStatus').innerText = "ODA BULUNAMADI"; }, 2000);
     };
 
     async function finalizeJoin(id) {
@@ -292,7 +280,7 @@
         for(let i=0; i<36; i++) {
             const c = document.createElement('div');
             c.className = 'cell';
-            c.onclick = () => { if(canPlay) { play('box'); updateDoc(doc(db, "conquest_rooms", id), { [`cells.${i}`]: myRole }); }};
+            c.onclick = () => { if(canPlay && !isFin) { play('box'); updateDoc(doc(db, "conquest_rooms", id), { [`cells.${i}`]: myRole }); }};
             g.appendChild(c);
         }
 
@@ -305,16 +293,23 @@
 
             if(d.status === 'playing') {
                 if(!canPlay) { play('start'); canPlay = true; document.getElementById('statusInfo').style.display='none'; }
-                if(myRole === 'p1' && !timerInt) {
+                // 2. TİMER ÇAKIŞMA ÖNLEYİCİ
+                if(myRole === 'p1' && !timerInt && !isFin) {
                     timerInt = setInterval(() => {
-                        if(d.timer > 0) updateDoc(doc(db, "conquest_rooms", id), { timer: d.timer - 1 });
+                        if(!isFin) {
+                            getDoc(doc(db, "conquest_rooms", id)).then(s => {
+                                let t = s.data().timer;
+                                if(t > 0) updateDoc(doc(db, "conquest_rooms", id), { timer: t - 1 });
+                                else finishGame(id);
+                            });
+                        }
                     }, 1000);
                 }
             }
 
             let s1=0, s2=0;
             document.querySelectorAll('.cell').forEach((c, i) => {
-                if(d.cells[i]) {
+                if(d.cells && d.cells[i]) {
                     c.className = 'cell ' + d.cells[i];
                     d.cells[i] === 'p1' ? s1++ : s2++;
                 }
@@ -322,17 +317,27 @@
             document.getElementById('s1').innerText = s1;
             document.getElementById('s2').innerText = s2;
 
-            if(d.timer <= 0 || Object.keys(d.cells).length === 36) finish(s1, s2);
+            if((d.timer <= 0 || (d.cells && Object.keys(d.cells).length === 36)) && !isFin) finish(s1, s2);
         });
     }
 
+    async function finishGame(id) { if(myRole === 'p1') await updateDoc(doc(db, "conquest_rooms", id), { timer: 0 }); }
+
+    // 3. EKSİK isFin KONTROLÜ
     function finish(s1, s2) {
-        if(isFin) return; isFin = true; clearInterval(timerInt);
+        if(isFin) return; 
+        isFin = true; 
+        clearInterval(timerInt);
+        
         const win = (myRole === 'p1' && s1 > s2) || (myRole === 'p2' && s2 > s1);
-        play(win ? 'win' : 'lose');
-        document.getElementById('winnerLabel').innerText = s1 === s2 ? "BERABERE" : (win ? "ZAFER!" : "KAYBETTİN");
+        const draw = s1 === s2;
+        
+        play(draw ? 'lose' : (win ? 'win' : 'lose'));
+        document.getElementById('winnerLabel').innerText = draw ? "BERABERE" : (win ? "ZAFER!" : "KAYBETTİN");
         document.getElementById('scoreLabel').innerText = `${s1} - ${s2}`;
-        toggleModal('resultModal', true);
+        document.getElementById('resultBox').style.borderColor = draw ? 'white' : (win ? 'var(--p1)' : '#ff4444');
+        
+        window.toggleModal('resultModal', true);
         if(myRole === 'p1') updateDoc(doc(db, "conquest_rooms", curRoomId), { status: 'finished' });
     }
 </script>
