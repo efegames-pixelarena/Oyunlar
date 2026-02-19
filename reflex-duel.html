@@ -84,7 +84,8 @@ body::before {
 .arena { 
     flex: 1; display: flex; flex-direction: column; justify-content: center; 
     align-items: center; cursor: pointer; position: relative;
-    touch-action: none; /* Mobilde zoom engelleme */
+    touch-action: none;
+    -webkit-touch-callout: none; /* iOS basılı tutma engelleme */
 }
 #bigText { font-family: 'Orbitron'; font-size: 70px; font-weight: 900; transition: transform 0.1s; text-align: center;}
 #subText { font-family: 'Orbitron'; font-size: 0.9rem; letter-spacing: 3px; color: #555; margin-top: 15px; text-align: center;}
@@ -188,8 +189,10 @@ const auth = getAuth(app);
 
 let uid, username, currentRoomId = null, unsubRoom = null, unsubLobby = null, tapLock = false;
 let countdownInterval = null, lastTapTime = 0, lastState = "";
+let serverOffset = 0; // Zaman senkronizasyonu için
 
-const getServerTime = () => Date.now(); 
+// Sunucu zamanını yaklaşık olarak hesaplayan fonksiyon
+const getServerTime = () => Date.now() + serverOffset;
 
 let audioCtx = null;
 const initAudio = () => {
@@ -239,7 +242,7 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 function listenLobby() {
-    if(unsubLobby) unsubLobby(); // Zombi dinleyiciyi engelle
+    if(unsubLobby) unsubLobby(); 
     const q = query(collection(db, "rooms"), where("state", "in", ["waiting", "matched", "countdown", "active", "result"]));
     unsubLobby = onSnapshot(q, (snap) => {
         const list = document.getElementById("roomList");
@@ -296,7 +299,7 @@ window.joinRoom = async (id, isLocked) => {
 };
 
 function enterRoom() {
-    if(unsubLobby) { unsubLobby(); unsubLobby = null; } // Lobi dinlemesini durdur
+    if(unsubLobby) { unsubLobby(); unsubLobby = null; } 
     document.getElementById("lobby").style.display = "none";
     document.getElementById("lobbyExitBtn").style.display = "none";
     document.getElementById("game-view").style.display = "flex";
@@ -306,20 +309,27 @@ function enterRoom() {
     unsubRoom = onSnapshot(doc(db, "rooms", currentRoomId), (snap) => {
         if (!snap.exists()) { quitGame(); return; }
         const d = snap.data();
+
+        // --- ZAMAN SENKRONİZASYONU (Sadece ilk girişte) ---
+        if (d.createdAt && serverOffset === 0) {
+            const serverTimeMillis = d.createdAt.toMillis();
+            serverOffset = serverTimeMillis - Date.now();
+        }
         
-        // --- RAKİP AYRILMA KONTROLÜ ---
+        // --- RAKİP AYRILMA KONTROLÜ (Döngü Engellendi) ---
         if (["matched", "countdown", "active", "result"].includes(d.state)) {
             if (!d.player1 || !d.player2) {
-                const imP1 = uid === d.player1;
-                updateDoc(doc(db, "rooms", currentRoomId), { 
-                    state: "finished", 
-                    score1: imP1 ? 11 : d.score1, 
-                    score2: !imP1 ? 11 : d.score2 
-                });
-                return;
+                if (d.state !== "finished") {
+                    const imP1 = uid === d.player1;
+                    updateDoc(doc(db, "rooms", currentRoomId), { 
+                        state: "finished", 
+                        score1: imP1 ? 11 : d.score1, 
+                        score2: !imP1 ? 11 : d.score2 
+                    });
+                    return;
+                }
             }
         }
-        // -----------------------------
 
         document.getElementById("p1Name").innerText = (d.player1Name || "Bilinmiyor").toUpperCase();
         document.getElementById("p1Score").innerText = d.score1;
@@ -372,12 +382,14 @@ function enterRoom() {
                 if (uid === d.host) {
                     setTimeout(() => {
                         const finalWin = (d.score1 >= 11 || d.score2 >= 11);
-                        updateDoc(doc(db, "rooms", currentRoomId), { 
-                            state: finalWin ? "finished" : "countdown", 
-                            startTime: getServerTime() + 2500,
-                            round: finalWin ? d.round : d.round + 1,
-                            penalty: false
-                        });
+                        if (currentRoomId) { // Oda hala mevcutsa güncelle
+                            updateDoc(doc(db, "rooms", currentRoomId), { 
+                                state: finalWin ? "finished" : "countdown", 
+                                startTime: getServerTime() + 2500,
+                                round: finalWin ? d.round : d.round + 1,
+                                penalty: false
+                            });
+                        }
                     }, 2000);
                 }
             }
@@ -459,9 +471,10 @@ async function quitGame() {
             }
         }
     } catch (err) {
-        console.error(err);
+        console.error("Çıkış hatası:", err);
     } finally {
-        location.reload();
+        currentRoomId = null;
+        location.reload(); // Her şey bittiğinde temizle
     }
 }
 
