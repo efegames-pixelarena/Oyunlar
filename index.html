@@ -45,9 +45,10 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
 
 .right-menu { display: flex; gap: 8px; align-items: center; }
 
+/* USER PILL */
 .user-pill { display: none; align-items: center; gap: 10px; background: rgba(255,255,255,0.05); padding: 4px 4px 4px 12px; border-radius: 12px; border: 1px solid var(--border); cursor: pointer; position: relative; }
 .balance-info b { font-size: 13px; color: var(--success); font-family: 'Inter', monospace; }
-.avatar { width: 32px; height: 32px; border-radius: 8px; overflow: hidden; background: #1e2642; display: flex; align-items: center; justify-content: center; }
+.avatar { width: 32px; height: 32px; border-radius: 8px; overflow: hidden; background: #1e2642; border: 1px solid var(--border); }
 .avatar img { width: 100%; height: 100%; object-fit: cover; }
 
 .dropdown {
@@ -57,6 +58,7 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
     box-shadow: 0 15px 40px rgba(0,0,0,0.9); z-index: 3000; padding: 6px;
 }
 .dropdown.active { display: flex; animation: slideUp 0.3s ease-out; }
+@keyframes slideUp { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
 
 .drop-item { padding: 10px 14px; display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text-dim); font-weight: 600; font-size: 13px; transition: 0.2s; border-radius: 10px; }
 .drop-item i { width: 18px; font-size: 14px; color: var(--primary); }
@@ -66,33 +68,33 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
 .login-btn { background: #1e2642; color: white; border: 1px solid rgba(255,255,255,0.1); }
 .register-btn { background: var(--primary); color: #000; }
 
+/* --- GAME CARDS --- */
+.section-title { padding: 30px 10% 15px; font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; color: var(--text-dim); display: flex; align-items: center; gap: 10px; }
+.section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.games-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; padding: 0 10%; }
+.game-card { background: var(--card-bg); border-radius: 20px; padding: 30px 20px; text-align: center; border: 1px solid var(--border); position: relative; transition: 0.3s; cursor: pointer; z-index: 10; }
+.game-card:hover { transform: translateY(-5px); border-color: var(--primary); }
+
 /* --- MODALS --- */
-.modal-overlay {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.9); backdrop-filter: blur(15px);
-    display: none; align-items: center; justify-content: center; z-index: 5000;
-}
-.modal-card { width: 95%; max-width: 450px; padding: 25px; border-radius: 25px; background: #0f172a; border: 1px solid var(--border); text-align: center; max-height: 90vh; overflow-y: auto; }
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); backdrop-filter: blur(15px); display: none; align-items: center; justify-content: center; z-index: 5000; }
+.modal-card { width: 95%; max-width: 450px; padding: 25px; border-radius: 25px; background: #0f172a; border: 1px solid var(--border); text-align: center; max-height: 85vh; overflow-y: auto; position: relative; }
+.modal-card h2 { margin-bottom: 15px; font-size: 20px; font-family: 'Montserrat', sans-serif; }
 .modal-card input { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 12px; background: #050811; border: 1px solid var(--border); color: white; outline: none; font-size: 14px; }
-.modal-card input:disabled { opacity: 0.5; cursor: not-allowed; border-style: dashed; }
-.modal-btn { width: 100%; padding: 14px; border-radius: 12px; border: none; background: var(--primary); color: #000; font-weight: 900; cursor: pointer; }
+.modal-card input:disabled { opacity: 0.4; cursor: not-allowed; }
 
-/* Avatar Selection Grid */
-.avatar-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 15px 0; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 15px; max-height: 200px; overflow-y: auto; }
-.avatar-opt { width: 100%; aspect-ratio: 1/1; border-radius: 10px; cursor: pointer; border: 2px solid transparent; overflow: hidden; transition: 0.2s; }
-.avatar-opt:hover { transform: scale(1.05); border-color: var(--primary); }
-.avatar-opt.active { border-color: var(--success); box-shadow: 0 0 10px var(--success); }
-.avatar-opt img { width: 100%; height: 100%; object-fit: cover; }
-.cat-title { font-size: 10px; text-transform: uppercase; color: var(--primary); text-align: left; margin: 10px 0 5px; font-weight: 800; }
+/* AVATAR SELECTOR */
+.avatar-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 15px 0; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 15px; }
+.avatar-item { width: 100%; aspect-ratio: 1; border-radius: 10px; border: 2px solid transparent; cursor: pointer; transition: 0.2s; overflow: hidden; }
+.avatar-item img { width: 100%; height: 100%; object-fit: cover; }
+.avatar-item.active { border-color: var(--primary); box-shadow: 0 0 10px var(--primary-glow); }
+.category-label { font-size: 10px; text-transform: uppercase; color: var(--primary); margin: 10px 0 5px; text-align: left; font-weight: 800; }
 
-/* --- WHEEL STYLES --- */
+/* WHEEL PRO */
 .wheel-container { position: relative; width: 280px; height: 280px; margin: 20px auto; }
-#wheelImg { width: 100%; height: 100%; transition: 5s cubic-bezier(0.15, 0, 0.15, 1); filter: drop-shadow(0 0 15px var(--primary-glow)); }
-.wheel-pointer { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 40px; z-index: 10; }
+#wheelImg { width: 100%; height: 100%; transition: 5s cubic-bezier(0.15, 0, 0.15, 1); }
+.wheel-pointer { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 40px; z-index: 10; filter: drop-shadow(0 0 5px black); }
 
-@media(max-width: 768px) {
-    .games-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 0 15px; }
-}
+.footer { background: #010204; padding: 40px 20px; border-top: 1px solid var(--border); text-align: center; margin-top: 50px; position: relative; z-index: 10; }
 </style>
 </head>
 <body>
@@ -107,7 +109,7 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
 
         <div class="user-pill" id="userPill">
             <div class="balance-info"><b id="userBalance">0 ₺</b></div>
-            <div class="avatar" id="avatarTrigger"><img id="userThumb" src=""></div>
+            <div class="avatar" id="avatarTrigger"><img id="headerAvatar" src=""></div>
             <div class="dropdown" id="userDropdown">
                 <div class="drop-item" onclick="openModal('profileModal')"><i class="fa-solid fa-user-gear"></i> Profil Ayarları</div>
                 <div class="drop-item" onclick="openModal('wheelModal')"><i class="fa-solid fa-dharmachakra"></i> Günlük Çark</div>
@@ -117,43 +119,41 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
     </div>
 </div>
 
-<main style="margin-top: 100px;">
-    <div class="section-title" style="padding: 20px 10%;">OYUNLAR</div>
-    <div class="games-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; padding: 0 10%;">
-        <div class="game-card" style="background: var(--card-bg); border-radius: 20px; padding: 30px; text-align: center; border: 1px solid var(--border);" onclick="checkLogin('duel.html')">
-            <span style="font-size: 40px;">⚡</span><br>
-            <b style="display:block; margin-top:10px;">Reflex Duel</b>
-        </div>
-        <div class="game-card" style="background: var(--card-bg); border-radius: 20px; padding: 30px; text-align: center; border: 1px solid var(--border);" onclick="checkLogin('skycrash.html')">
-            <span style="font-size: 40px;">🚀</span><br>
-            <b style="display:block; margin-top:10px;">SkyCrash</b>
-        </div>
+<main id="games" style="margin-top: 100px;">
+    <div class="section-title">Oyun Salonu</div>
+    <div class="games-grid">
+        <div class="game-card" onclick="checkLogin('duel.html')"><span>⚡ Reflex Duel</span></div>
+        <div class="game-card" onclick="checkLogin('skycrash.html')"><span>🚀 SkyCrash</span></div>
     </div>
 </main>
 
 <div class="modal-overlay" id="profileModal">
     <div class="modal-card">
         <h2>Profil Ayarları</h2>
-        <p style="font-size: 11px; color: var(--text-dim); margin-bottom: 15px;">Bilgilerinizi buradan güncelleyebilirsiniz.</p>
         
-        <input type="email" id="profEmail" disabled title="E-posta değiştirilemez">
-        <input type="text" id="profRealName" placeholder="Ad Soyad">
-        <input type="text" id="profPhone" placeholder="Telefon Numarası">
-        <input type="text" id="profUser" placeholder="Kullanıcı Adı">
-        <p id="nameChangeAlert" style="font-size: 10px; color: var(--accent); margin-bottom: 10px; display: none;">⚠️ Kullanıcı adı değiştirme hakkınız kalmadı.</p>
+        <label style="display:block; text-align:left; font-size:11px; color:var(--text-dim); margin-left:5px;">E-Posta (Değiştirilemez)</label>
+        <input type="text" id="profEmail" disabled>
+        
+        <input type="text" id="profFullName" placeholder="Adınız Soyadınız">
+        <input type="text" id="profPhone" placeholder="Telefon Numaranız">
+        
+        <div style="position:relative;">
+            <input type="text" id="profUsername" placeholder="Kullanıcı Adı">
+            <small id="usernameHint" style="display:block; color:var(--accent); font-size:10px; margin-bottom:10px;">* Sadece 1 kez değiştirme hakkınız var.</small>
+        </div>
 
-        <div class="cat-title">Avatarını Seç</div>
-        <div class="avatar-grid" id="avatarList">
+        <div class="category-label">Avatar Değiştir</div>
+        <div class="avatar-grid" id="avatarGrid">
             </div>
 
-        <button class="modal-btn" onclick="updateProfile()">GÜNCELLE</button>
+        <button class="modal-btn" onclick="updateProfile()">BİLGİLERİ KAYDET</button>
         <p onclick="closeModal('profileModal')" style="margin-top:15px;cursor:pointer;opacity:0.5;font-size:13px;">Kapat</p>
     </div>
 </div>
 
 <div class="modal-overlay" id="wheelModal">
     <div class="modal-card">
-        <h2 style="color:var(--primary)">Şans Çarkı</h2>
+        <h2>Şans Çarkı</h2>
         <div class="wheel-container">
             <img src="https://i.ibb.co/mRT80Pz/wheel.png" id="wheelImg">
             <img src="https://i.ibb.co/9H6S4xy/pointer.png" class="wheel-pointer">
@@ -184,39 +184,36 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// --- AVATAR KÜTÜPHANESİ ---
-const avatarLib = [
-    { cat: "Takımlar", urls: ["https://i.ibb.co/S6XzY8q/gs.png", "https://i.ibb.co/L8vT9Qp/fb.png", "https://i.ibb.co/9vP0mXq/bjk.png"] },
-    { cat: "Arabalar", urls: ["https://i.ibb.co/7N7zY8q/bmw.png", "https://i.ibb.co/M8vT9Qp/mercedes.png"] },
-    { cat: "Youtuber/Influencer", urls: ["https://i.ibb.co/5vP0mXq/mrbeast.png", "https://i.ibb.co/6N7zY8q/enes.png"] },
-    { cat: "Film Karakterleri", urls: ["https://i.ibb.co/Q8vT9Qp/joker.png", "https://i.ibb.co/TvP0mXq/batman.png"] }
+// --- AVATAR LİSTESİ ---
+const avatars = [
+    { cat: 'Futbol', img: 'https://i.ibb.co/L8vT9Qp/fb.png' },
+    { cat: 'Futbol', img: 'https://i.ibb.co/S6XzY8q/gs.png' },
+    { cat: 'Araba', img: 'https://i.ibb.co/7N7zY8q/bmw.png' },
+    { cat: 'Youtuber', img: 'https://i.ibb.co/5vP0mXq/mrbeast.png' },
+    { cat: 'Film', img: 'https://i.ibb.co/Q8vT9Qp/joker.png' }
 ];
 
-let selectedAvatarUrl = "";
+let selectedAvatar = "";
 
-// Avatar Gridini Oluştur
-function renderAvatars() {
-    const grid = document.getElementById("avatarList");
+function initAvatars() {
+    const grid = document.getElementById("avatarGrid");
     grid.innerHTML = "";
-    avatarLib.forEach(item => {
-        grid.innerHTML += `<div class="cat-title">${item.cat}</div>`;
-        item.urls.forEach(url => {
-            grid.innerHTML += `
-                <div class="avatar-opt ${selectedAvatarUrl === url ? 'active' : ''}" onclick="selectAvatar('${url}')">
-                    <img src="${url}" onerror="this.src='https://ui-avatars.com/api/?name=PA'">
-                </div>`;
-        });
+    avatars.forEach(av => {
+        const div = document.createElement("div");
+        div.className = "avatar-item";
+        div.innerHTML = `<img src="${av.img}">`;
+        div.onclick = () => {
+            document.querySelectorAll(".avatar-item").forEach(el => el.classList.remove("active"));
+            div.classList.add("active");
+            selectedAvatar = av.img;
+        };
+        grid.appendChild(div);
     });
 }
-window.selectAvatar = (url) => {
-    selectedAvatarUrl = url;
-    renderAvatars();
-};
 
-// --- AUTH İŞLEMLERİ ---
+// --- AUTH MANTIĞI ---
 let isLogin = true;
 const authOverlay = document.getElementById("authOverlay");
-
 document.getElementById("loginBtn").onclick = () => { isLogin=true; updateAuthUI(); authOverlay.style.display="flex"; };
 document.getElementById("regBtn").onclick = () => { isLogin=false; updateAuthUI(); authOverlay.style.display="flex"; };
 document.getElementById("switchMode").onclick = () => { isLogin = !isLogin; updateAuthUI(); };
@@ -237,11 +234,11 @@ document.getElementById("authSubmit").onclick = async () => {
             await setDoc(doc(db, "users", res.user.uid), { 
                 username: userN, 
                 balance: 1000, 
-                lastSpin: 0, 
-                nameChangeQuota: 1,
-                realName: "",
+                lastSpin: 0,
+                nameChangeCount: 0,
+                fullName: "",
                 phone: "",
-                avatarUrl: "https://ui-avatars.com/api/?name=" + userN 
+                avatar: "https://ui-avatars.com/api/?name="+userN
             });
         }
         authOverlay.style.display = "none";
@@ -253,23 +250,21 @@ onAuthStateChanged(auth, user => {
         document.getElementById("loginBtn").style.display="none"; 
         document.getElementById("regBtn").style.display="none";
         document.getElementById("userPill").style.display="flex";
+        initAvatars();
         onSnapshot(doc(db, "users", user.uid), s => {
             if(s.exists()) {
                 const data = s.data();
                 document.getElementById("userBalance").innerText = data.balance.toLocaleString() + " ₺";
-                document.getElementById("userThumb").src = data.avatarUrl;
-                // Modal alanlarını doldur
+                document.getElementById("headerAvatar").src = data.avatar;
+                // Modal Verileri
                 document.getElementById("profEmail").value = user.email;
-                document.getElementById("profRealName").value = data.realName || "";
+                document.getElementById("profFullName").value = data.fullName || "";
                 document.getElementById("profPhone").value = data.phone || "";
-                document.getElementById("profUser").value = data.username;
-                selectedAvatarUrl = data.avatarUrl;
-                
-                if(data.nameChangeQuota <= 0) {
-                    document.getElementById("profUser").disabled = true;
-                    document.getElementById("nameChangeAlert").style.display = "block";
+                document.getElementById("profUsername").value = data.username;
+                if(data.nameChangeCount >= 1) {
+                    document.getElementById("profUsername").disabled = true;
+                    document.getElementById("usernameHint").innerText = "Kullanıcı adı değiştirme hakkınız doldu.";
                 }
-                renderAvatars();
             }
         });
     } else {
@@ -282,101 +277,98 @@ onAuthStateChanged(auth, user => {
 // --- PROFİL GÜNCELLEME ---
 window.updateProfile = async () => {
     const user = auth.currentUser;
-    const userDocRef = doc(db, "users", user.uid);
-    const snap = await getDoc(userDocRef);
+    const docRef = doc(db, "users", user.uid);
+    const snap = await getDoc(docRef);
     const data = snap.data();
 
-    const newName = document.getElementById("profUser").value;
-    const newRealName = document.getElementById("profRealName").value;
+    const newUsername = document.getElementById("profUsername").value;
+    const newFullName = document.getElementById("profFullName").value;
     const newPhone = document.getElementById("profPhone").value;
 
-    let updateData = {
-        realName: newRealName,
-        phone: newPhone,
-        avatarUrl: selectedAvatarUrl
+    let updates = {
+        fullName: newFullName,
+        phone: newPhone
     };
 
-    // İsim değişikliği kontrolü
-    if(newName !== data.username) {
-        if(data.nameChangeQuota > 0) {
-            updateData.username = newName;
-            updateData.nameChangeQuota = 0;
-        } else {
-            alert("Kullanıcı adı değiştirme hakkınız kalmadı!");
-            return;
-        }
+    if(selectedAvatar) updates.avatar = selectedAvatar;
+
+    if(newUsername !== data.username && data.nameChangeCount === 0) {
+        updates.username = newUsername;
+        updates.nameChangeCount = 1;
     }
 
-    await updateDoc(userDocRef, updateData);
-    alert("Profil başarıyla güncellendi!");
+    await updateDoc(docRef, updates);
+    alert("Profil Güncellendi!");
     closeModal('profileModal');
 };
 
-// --- PROFESYONEL ÇARK SİSTEMİ ---
+// --- PROFESYONEL ÇARK SİSTEMİ (AĞIRLIKLI OLASILIK) ---
 window.spinWheel = async () => {
+    const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
+    const now = Date.now();
+    if (now - (userDoc.data().lastSpin || 0) < 86400000) return alert("Bugün zaten çevirdiniz!");
+
     const wheel = document.getElementById("wheelImg");
     const spinBtn = document.getElementById("spinBtn");
     
     // Olasılık Hesaplama
     const rand = Math.random() * 100;
-    let win = 0;
-    let stopDeg = 0;
+    let prize = 1000;
+    let stopDeg = 0; // Çarkın duracağı dilim (Görsel temsil için)
 
-    if(rand < 1) { win = 20000; stopDeg = 60; }        // %1
-    else if(rand < 4) { win = 15000; stopDeg = 120; }  // %3
-    else if(rand < 9) { win = 10000; stopDeg = 180; }  // %5
-    else if(rand < 39) { win = 5000; stopDeg = 240; }  // %30
-    else if(rand < 100) { win = 2500; stopDeg = 300; } // %60 (Kalan aralık)
-    // Not: %80'lik 1.000 TL ödülünü tablonuzdaki toplam %100'ü aşmaması için 2.500 bandına dahil ettim.
+    if(rand <= 1) { prize = 20000; stopDeg = 60; }
+    else if(rand <= 4) { prize = 15000; stopDeg = 120; }
+    else if(rand <= 9) { prize = 10000; stopDeg = 180; }
+    else if(rand <= 39) { prize = 5000; stopDeg = 240; }
+    else if(rand <= 70) { prize = 2500; stopDeg = 300; }
+    else { prize = 1000; stopDeg = 360; }
 
-    const totalDeg = 3600 + stopDeg; // 10 tur + duruş açısı
+    const totalDeg = 3600 + stopDeg; // 10 tam tur + ödül açısı
     wheel.style.transform = `rotate(${totalDeg}deg)`;
     spinBtn.disabled = true;
 
     setTimeout(async () => {
         await updateDoc(doc(db, "users", auth.currentUser.uid), { 
-            balance: increment(win), 
+            balance: increment(prize), 
             lastSpin: Date.now() 
         });
-        alert(`Tebrikler! ${win.toLocaleString()} ₺ Kazandınız.`);
+        alert(`Tebrikler! ${prize.toLocaleString()} ₺ Kazandınız.`);
         checkWheelCooldown();
     }, 5000);
 };
 
+// Yardımcı Fonksiyonlar
+window.openModal = (id) => { document.getElementById(id).style.display = 'flex'; if(id==='wheelModal') checkWheelCooldown(); };
+window.closeModal = (id) => document.getElementById(id).style.display = 'none';
+window.checkLogin = (url) => { if(!auth.currentUser) openModal('authOverlay'); else location.href = url; };
+document.getElementById("logoutBtn").onclick = () => signOut(auth);
+
 async function checkWheelCooldown() {
     const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
-    const lastSpin = userDoc.data().lastSpin || 0;
-    const now = Date.now();
-    const cooldown = 24 * 60 * 60 * 1000;
-    if (now - lastSpin < cooldown) {
+    const diff = Date.now() - (userDoc.data().lastSpin || 0);
+    const cooldown = 86400000;
+    if (diff < cooldown) {
         document.getElementById("spinBtn").disabled = true;
-        startTimer(cooldown - (now - lastSpin));
+        startTimer(cooldown - diff);
     } else {
         document.getElementById("spinBtn").disabled = false;
         document.getElementById("wheelTimer").innerText = "Çark Hazır!";
     }
 }
 
-function startTimer(diff) {
+function startTimer(ms) {
     const timer = document.getElementById("wheelTimer");
     const intv = setInterval(() => {
-        if(diff <= 0) { clearInterval(intv); checkWheelCooldown(); return; }
-        diff -= 1000;
-        const h = Math.floor(diff / 3600000);
-        const m = Math.floor((diff % 3600000) / 60000);
-        const s = Math.floor((diff % 60000) / 1000);
+        ms -= 1000;
+        if(ms <= 0) { clearInterval(intv); checkWheelCooldown(); return; }
+        const h = Math.floor(ms / 3600000);
+        const m = Math.floor((ms % 3600000) / 60000);
+        const s = Math.floor((ms % 60000) / 1000);
         timer.innerText = `Kalan: ${h}:${m}:${s}`;
     }, 1000);
 }
 
-// Global modal helpers
-window.openModal = (id) => { document.getElementById(id).style.display = 'flex'; if(id==='wheelModal') checkWheelCooldown(); };
-window.closeModal = (id) => document.getElementById(id).style.display = 'none';
-document.getElementById("logoutBtn").onclick = () => signOut(auth);
-document.getElementById("avatarTrigger").onclick = (e) => { e.stopPropagation(); document.getElementById("userDropdown").classList.toggle("active"); };
-window.onclick = () => document.getElementById("userDropdown").classList.remove("active");
-
-// Snow effect
+// Kar Efekti
 const canvas = document.getElementById("snow");
 const ctx = canvas.getContext("2d");
 let particles = [];
@@ -384,8 +376,13 @@ function resize() { canvas.width = window.innerWidth; canvas.height = window.inn
 window.onresize = resize; resize();
 for(let i=0; i<100; i++) particles.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, r:Math.random()*2+1, d:Math.random()*0.5+0.5});
 function drawSnow() {
-    ctx.clearRect(0,0,canvas.width, canvas.height); ctx.fillStyle = "rgba(255,255,255,0.6)"; ctx.beginPath();
-    particles.forEach(p => { ctx.moveTo(p.x, p.y); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); p.y += p.d; if(p.y > canvas.height) p.y = -5; });
+    ctx.clearRect(0,0,canvas.width, canvas.height);
+    ctx.fillStyle = "rgba(255,255,255,0.6)";
+    ctx.beginPath();
+    particles.forEach(p => {
+        ctx.moveTo(p.x, p.y); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+        p.y += p.d; if(p.y > canvas.height) p.y = -5;
+    });
     ctx.fill(); requestAnimationFrame(drawSnow);
 }
 drawSnow();
