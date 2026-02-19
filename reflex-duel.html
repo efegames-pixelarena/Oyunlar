@@ -390,12 +390,12 @@ function enterRoom() {
         const d = snap.data();
         roomData = d;
 
-        if (d.createdAt && d.createdAt.toMillis && !snap.metadata.hasPendingWrites) {
-            const diff = d.createdAt.toMillis() - (Date.now() - (performance.now() % 1));
-            if (!offsetCalculated || Math.abs(serverOffset - diff) > 2000) {
-                serverOffset = diff;
-                offsetCalculated = true;
-            }
+        // SERVER TIME OFFSET HESAPLAMA (Senkronizasyon için en kritik nokta)
+        if (d.createdAt && d.createdAt.toMillis && !offsetCalculated) {
+             const fireTime = d.createdAt.toMillis();
+             const localTime = Date.now();
+             serverOffset = fireTime - localTime;
+             offsetCalculated = true;
         }
         
         document.getElementById("p1Name").innerText = (d.player1Name || "---").toUpperCase();
@@ -407,38 +407,39 @@ function enterRoom() {
         if (d.state !== lastState) {
             if (countdownInterval) clearInterval(countdownInterval);
             
-            // MAÇ BAŞLANGICI (İLK RAUND)
+            // ODA KURUCU SÜREYİ BELİRLER
             if (d.state === "matched" && uid === d.host) {
                 updateDoc(doc(db, "rooms", currentRoomId), { 
                     state: "countdown", 
-                    startTime: getServerTime() + 3500 // 3 Saniye + Buffer
+                    startTime: getServerTime() + 3100 // Tam 3 saniye + 100ms ağ gecikmesi payı
                 });
             }
 
-            // GERİ SAYIM MANTIĞI
+            // KÖKTEN ÇÖZÜLEN GERİ SAYIM MANTIĞI
             if (d.state === "countdown") {
                 document.getElementById("arena").classList.remove("flash");
                 document.getElementById("subText").classList.remove("penalty");
-                let lastTick = -1;
+                let lastTickValue = -1;
                 
                 countdownInterval = setInterval(() => {
                     const now = getServerTime();
+                    // Firebase'deki sabit zamandan şimdiki zamanı çıkarıyoruz
                     const diffMs = d.startTime - now;
-                    const diffSec = Math.max(0, Math.ceil(diffMs / 1000));
+                    const diffSec = Math.ceil(diffMs / 1000);
                     
-                    if (diffSec > 0) {
+                    if (diffSec > 0 && diffSec <= 3) {
                         document.getElementById("bigText").innerText = diffSec;
                         document.getElementById("subText").innerText = "HAZIRLAN";
-                        if (diffSec !== lastTick) {
+                        if (diffSec !== lastTickValue) {
                             sounds.tick();
-                            lastTick = diffSec;
+                            lastTickValue = diffSec;
                         }
                     }
 
+                    // Süre bittiğinde GO!
                     if (diffMs <= 0) {
                         clearInterval(countdownInterval);
                         document.getElementById("bigText").innerText = "GO!";
-                        // Sadece Host active durumuna geçirir
                         if (uid === d.host) {
                             updateDoc(doc(db, "rooms", currentRoomId), { 
                                 state: "active", 
@@ -446,7 +447,7 @@ function enterRoom() {
                             });
                         }
                     }
-                }, 50);
+                }, 16); // 60 FPS hassasiyetinde kontrol
             }
 
             if (d.state === "active") {
@@ -456,7 +457,6 @@ function enterRoom() {
                 document.getElementById("subText").innerText = "ŞİMDİ VUR!";
             }
 
-            // SONUÇ EKRANI VE RAUND GEÇİŞİ
             if (d.state === "result") {
                 document.getElementById("arena").classList.remove("flash");
                 document.getElementById("bigText").innerText = d.reaction || "WIN";
@@ -468,18 +468,17 @@ function enterRoom() {
                     document.getElementById("subText").innerText = (d.lastWinner || "PLAYER").toUpperCase() + " KAZANDI";
                 }
                 
-                // HOST: 2.5 saniye sonra yeni raundu başlatır
+                // HOST: Raund geçiş süresini yönetir
                 if (uid === d.host) {
                     setTimeout(() => {
                         if(!currentRoomId) return;
                         const isFinal = (d.score1 >= 11 || d.score2 >= 11);
-                        if (isFinal) {
-                            updateDoc(doc(db, "rooms", currentRoomId), { state: "finished" });
+                        if(isFinal) {
+                             updateDoc(doc(db, "rooms", currentRoomId), { state: "finished" });
                         } else {
-                            // KÖKTEN ÇÖZÜM: Yeni startTime her raund için host tarafından tekrar set edilir.
-                            updateDoc(doc(db, "rooms", currentRoomId), { 
+                             updateDoc(doc(db, "rooms", currentRoomId), { 
                                 state: "countdown", 
-                                startTime: getServerTime() + 3500, // <--- 3 SANİYE GERİ SAYIM
+                                startTime: getServerTime() + 3100, // Her raund başı 3 saniye fix
                                 round: d.round + 1,
                                 penalty: false
                             });
@@ -508,7 +507,6 @@ document.getElementById("arena").addEventListener('pointerdown', async (e) => {
     const d = roomData;
     const roomRef = doc(db, "rooms", currentRoomId);
     
-    // Erken Basma (Countdown veya Matched aşamasında basılırsa)
     if (d.state === "countdown" || (d.state === "matched" && d.player2)) {
         tapLock = true;
         const isP1 = uid === d.player1;
@@ -522,7 +520,6 @@ document.getElementById("arena").addEventListener('pointerdown', async (e) => {
         });
         setTimeout(() => tapLock = false, 1000);
     } 
-    // Doğru Basma
     else if (d.state === "active") {
         tapLock = true;
         const reaction = now - d.roundStart;
