@@ -26,7 +26,6 @@
     .balance-box{background:#1a2248; border: 1px solid #4fd1ff44; color: #4fd1ff;}
     .bet-box{background:linear-gradient(90deg,#ff8a00,#ff5f00); color:#000;}
     
-    /* KIRMIZI GERİ BUTONU */
     .back-btn{
         background:#d63031; color:white; padding:6px 12px; border-radius:10px; 
         font-weight:800; font-size:11px; text-decoration:none; display:flex; 
@@ -135,9 +134,8 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// --- GELİŞTİRİLMİŞ İOS SES MOTORU ---
+// --- GELİŞTİRİLMİŞ İOS SES MOTORU (UÇUŞ SESİ KALDIRILDI) ---
 let audioCtx = null;
-let flightOsc = null;
 
 const initAudio = () => {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -172,17 +170,7 @@ function playSfx(type) {
         g.gain.setValueAtTime(0.2, now); g.gain.linearRampToValueAtTime(0, now+0.4);
         osc.start(); osc.stop(now+0.4);
     }
-    if(type==='flight') { // UÇUŞ SESİ (SÜREKLİ)
-        flightOsc = audioCtx.createOscillator();
-        const fGain = audioCtx.createGain();
-        flightOsc.type = 'sawtooth';
-        flightOsc.frequency.setValueAtTime(40, now);
-        flightOsc.connect(fGain); fGain.connect(audioCtx.destination);
-        fGain.gain.setValueAtTime(0.02, now);
-        flightOsc.start();
-    }
     if(type==='crash') { // PATLAMA SESİ
-        if(flightOsc) { flightOsc.stop(); flightOsc = null; }
         osc.type = 'square'; osc.frequency.setValueAtTime(100, now);
         osc.frequency.linearRampToValueAtTime(30, now+0.5);
         g.gain.setValueAtTime(0.25, now); g.gain.linearRampToValueAtTime(0, now+0.5);
@@ -198,7 +186,7 @@ const multEl = document.getElementById("multiplier");
 const balEl = document.getElementById("balance");
 const betTotalEl = document.getElementById("bet");
 
-// --- UZAY SİMÜLASYONU ---
+// --- GRAFİK ---
 const canvas = document.getElementById("graph");
 const ctx = canvas.getContext("2d");
 function resize() { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; }
@@ -246,10 +234,10 @@ onAuthStateChanged(auth, user => {
     }
 });
 
-// GERÇEK KASA AVANTAJLI ALGORİTMA (%3 House Edge)
+// KASA AVANTAJLI ALGORİTMA (%3 House Edge)
 function getCrashPoint() {
     const random = Math.random();
-    if (random < 0.03) return 1.00; // %3 ihtimalle anında patlar
+    if (random < 0.03) return 1.00;
     return (0.97 / (1 - random)).toFixed(2);
 }
 
@@ -281,7 +269,6 @@ function startCountdown() {
             phase = "flying";
             startTime = Date.now();
             crashPoint = parseFloat(getCrashPoint());
-            playSfx('flight');
             updateMultiplier();
         }
         sec--;
@@ -357,8 +344,6 @@ function updateButtons() {
 
 document.getElementById("btn1").onclick = () => handleBet(1);
 document.getElementById("btn2").onclick = () => handleBet(2);
-
-// iOS Ses Aktivasyonu İçin İlk Dokunuş
 document.addEventListener('touchstart', initAudio, { once: true });
 </script>
 </body>
