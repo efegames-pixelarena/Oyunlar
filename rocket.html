@@ -102,7 +102,7 @@
 
     function addRocket() {
         if(entities.rockets.length >= 5) return;
-        const offsets = [0, -35, 35, -70, 70];
+        const offsets = [0, -40, 40, -80, 80]; // Daha net ayrım için ofsetler
         entities.rockets.push({ off: offsets[entities.rockets.length] });
         audio.play(500, 'triangle', 0.1, 200);
     }
@@ -121,11 +121,18 @@
 
         entities.stars.forEach(s => { s.y += s.v; if(s.y > H) s.y = 0; });
 
-        // Dinamik Sınırlar
-        const currentWidth = entities.rockets.length > 3 ? 140 : (entities.rockets.length > 1 ? 80 : 40);
-        const margin = currentWidth / 2;
-        if(state.moveLeft) state.baseX = Math.max(margin, state.baseX - 7);
-        if(state.moveRight) state.baseX = Math.min(W - margin - 40, state.baseX + 7);
+        // DÜZELTİLMİŞ SINIR HESAPLAMA
+        let minOff = 0, maxOff = 0;
+        entities.rockets.forEach(r => {
+            if(r.off < minOff) minOff = r.off;
+            if(r.off > maxOff) maxOff = r.off;
+        });
+
+        const leftLimit = -minOff + 5;
+        const rightLimit = W - maxOff - 45;
+
+        if(state.moveLeft) state.baseX = Math.max(leftLimit, state.baseX - 7);
+        if(state.moveRight) state.baseX = Math.min(rightLimit, state.baseX + 7);
 
         // Ateş Etme
         if(state.frame % 12 === 0) {
@@ -133,7 +140,7 @@
             audio.play(150, 'sine', 0.02, 50);
         }
 
-        // Düşman ve Boss Oluşumu
+        // Düşman Oluşumu
         if(state.frame % Math.max(15, 45 - Math.floor(state.score/15)) === 0) entities.enemies.push({ x: Math.random()*(W-40), y: -40, v: 2 + (state.score*0.04) });
         if(state.score > 0 && state.score % 50 === 0 && !entities.boss) entities.boss = { x: W/2-40, y: -100, hp: 40, max: 40 };
 
@@ -167,7 +174,7 @@
             });
         });
 
-        // Powerup Üretimi (Max 5 roketten sonra sadece kalp)
+        // Powerup
         if(state.frame % 800 === 0) {
             const type = (entities.rockets.length < 5) ? (Math.random() > 0.4 ? 'W' : 'L') : 'L';
             entities.powerups.push({ x: Math.random()*(W-40), y: -40, t: type });
@@ -175,14 +182,15 @@
 
         entities.powerups.forEach((p, i) => {
             p.y += 2;
-            if(checkHit({x: state.baseX - 50, y: 430}, p, 140, 50, 30, 30)) {
+            // Temas alanı roketlerin genişliğine göre ayarlandı
+            if(checkHit({x: state.baseX + minOff, y: 430}, p, (maxOff - minOff) + 40, 50, 30, 30)) {
                 if(p.t === 'W') addRocket(); else state.lives = Math.min(5, state.lives + 1);
                 entities.powerups.splice(i, 1);
                 audio.play(800, 'triangle', 0.1, 300);
             }
         });
 
-        // Boss ve Parçacıklar
+        // Boss
         if(entities.boss) {
             entities.boss.y = Math.min(60, entities.boss.y + 1);
             entities.boss.x += Math.sin(state.frame/20)*2;
@@ -195,6 +203,7 @@
         }
 
         entities.particles.forEach((p, i) => { p.x += p.vx; p.y += p.vy; p.l -= 0.03; if(p.l <= 0) entities.particles.splice(i, 1); });
+        
         if(state.lives <= 0) { 
             state.running = false; 
             if(state.score > state.highScore) localStorage.setItem("proSpaceScore", state.score);
