@@ -20,6 +20,7 @@
     --text-main: #f1f5f9;
     --text-dim: #94a3b8;
     --success: #00ffa3;
+    --danger: #ff4d4d;
 }
 
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;font-family: 'Inter', sans-serif;}
@@ -87,10 +88,9 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
 .game-card:hover { transform: translateY(-5px); border-color: var(--primary); box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
 .game-icon { font-size: 40px; margin-bottom: 15px; display: block; }
 .game-card span { font-weight: 800; font-size: 15px; display: block; margin-bottom: 8px; color: #fff; }
-.badge { font-size: 9px; font-weight: 900; padding: 4px 10px; border-radius: 6px; display: inline-block; background: rgba(79, 209, 255, 0.1); color: var(--primary); text-transform: uppercase; transition: all 0.3s ease; }
-.badge-free { color: var(--success); background: rgba(0, 255, 163, 0.1); }
+.badge { font-size: 9px; font-weight: 900; padding: 4px 10px; border-radius: 6px; display: inline-block; background: rgba(255, 255, 255, 0.05); color: var(--text-dim); text-transform: uppercase; transition: all 0.3s ease; }
+.badge-free { color: var(--success) !important; background: rgba(0, 255, 163, 0.1) !important; }
 
-/* EKSTRA TASARIM DOKUNUŞU */
 #searchInput:focus {
     border-color: var(--primary) !important;
     box-shadow: 0 0 20px var(--primary-glow);
@@ -106,7 +106,6 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
 }
 .social-btn:hover { background: var(--primary); transform: translateY(-3px); color: #000; border-color: var(--primary); }
 
-/* MODALS */
 .modal-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(0,0,0,0.9); backdrop-filter: blur(15px);
@@ -117,7 +116,6 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
 .modal-card input:disabled { opacity: 0.5; cursor: not-allowed; }
 .modal-btn { width: 100%; padding: 14px; border-radius: 12px; border: none; background: var(--primary); color: #000; font-weight: 900; cursor: pointer; }
 
-/* AVATAR SELECTOR */
 .avatar-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 15px 0; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 15px; }
 .avatar-item { width: 100%; aspect-ratio: 1/1; border-radius: 8px; cursor: pointer; border: 2px solid transparent; transition: 0.2s; overflow: hidden; }
 .avatar-item img { width: 100%; height: 100%; object-fit: cover; }
@@ -168,13 +166,12 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
         <div class="game-card" data-name="reflex duel" onclick="checkLogin('duel.html')">
             <div class="game-icon">⚡</div>
             <span>Reflex Duel</span>
-            <div class="badge premium-badge">ONLINE PVP</div>
+            <div class="badge auth-badge">ONLINE PVP</div>
         </div>
-
         <div class="game-card" data-name="neon grid conquest" onclick="checkLogin('conquest.html')">
             <div class="game-icon">🟩</div>
             <span>Grid Conquest</span>
-            <div class="badge premium-badge">ALAN SAVAŞI</div>
+            <div class="badge auth-badge">ALAN SAVAŞI</div>
         </div>
     </div>
 
@@ -183,22 +180,22 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
         <div class="game-card" data-name="skycrash" onclick="checkLogin('skycrash.html')">
             <div class="game-icon">🚀</div>
             <span>SkyCrash</span>
-            <div class="badge premium-badge">Giriş Gerekir</div>
+            <div class="badge auth-badge">Giriş Gerekir</div>
         </div>
         <div class="game-card" data-name="mines" onclick="checkLogin('mines.html')">
             <div class="game-icon">💣</div>
             <span>Mines</span>
-            <div class="badge premium-badge">Giriş Gerekir</div>
+            <div class="badge auth-badge">Giriş Gerekir</div>
         </div>
         <div class="game-card" data-name="blackjack" onclick="checkLogin('blackjack.html')">
             <div class="game-icon">🃏</div>
             <span>BlackJack</span>
-            <div class="badge premium-badge">Giriş Gerekir</div>
+            <div class="badge auth-badge">Giriş Gerekir</div>
         </div>
         <div class="game-card" data-name="pisti" onclick="checkLogin('pisti.html')">
             <div class="game-icon">🎴</div>
             <span>Pişti</span>
-            <div class="badge premium-badge">Giriş Gerekir</div>
+            <div class="badge auth-badge">Giriş Gerekir</div>
         </div>    
     </div>
 
@@ -280,79 +277,77 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// --- TEKNİK İPUCU: ARAMA MOTORU FONKSİYONU ---
+// ARAMA MOTORU
 document.getElementById('searchInput').addEventListener('input', (e) => {
     const term = e.target.value.toLowerCase().trim();
-    const cards = document.querySelectorAll('.game-card');
-    cards.forEach(card => {
+    document.querySelectorAll('.game-card').forEach(card => {
         const name = card.getAttribute('data-name').toLowerCase();
         card.style.display = name.includes(term) ? 'block' : 'none';
     });
 });
 
-// --- TASARIM DOKUNUŞU: DİNAMİK BADGE GÜNCELLEME ---
+// DİNAMİK RENK VE BADGE GÜNCELLEME
 function updateUIForAuth(isLoggedIn) {
-    const badges = document.querySelectorAll('.premium-badge');
-    badges.forEach(badge => {
-        if(isLoggedIn) {
-            badge.innerHTML = '<i class="fa-solid fa-play"></i> HEMEN OYNA';
-            badge.style.color = "var(--success)";
-            badge.style.background = "rgba(0, 255, 163, 0.1)";
-        } else {
-            badge.innerText = 'Giriş Gerekir';
-            badge.style.color = "var(--primary)";
-            badge.style.background = "rgba(79, 209, 255, 0.1)";
-        }
+    const grids = document.querySelectorAll('.games-grid');
+    
+    grids.forEach(grid => {
+        const title = grid.previousElementSibling.innerText.toUpperCase();
+        const badges = grid.querySelectorAll('.badge');
+
+        badges.forEach(badge => {
+            if (isLoggedIn) {
+                badge.innerHTML = '<i class="fa-solid fa-play"></i> HEMEN OYNA';
+                
+                if (title.includes("MULTIPLAYER")) {
+                    badge.style.color = "var(--danger)"; // Kırmızı
+                    badge.style.background = "rgba(255, 77, 77, 0.1)";
+                } else if (title.includes("PREMIUM")) {
+                    badge.style.color = "var(--primary)"; // Mavi
+                    badge.style.background = "rgba(79, 209, 255, 0.1)";
+                } else {
+                    badge.style.color = "var(--success)"; // Yeşil (Free Play)
+                    badge.style.background = "rgba(0, 255, 163, 0.1)";
+                }
+            } else {
+                // Giriş Yoksa
+                if (!badge.classList.contains('badge-free')) {
+                    badge.innerText = 'Giriş Gerekir';
+                    badge.style.color = "var(--text-dim)";
+                    badge.style.background = "rgba(255, 255, 255, 0.05)";
+                } else {
+                    badge.innerText = 'Giriş Gerekmez';
+                }
+            }
+        });
     });
 }
 
-// AVATAR KÜTÜPHANESİ
-const avatarLinks = [
-    "https://i.pravatar.cc/150?img=11", "https://i.pravatar.cc/150?img=12",
-    "https://i.pravatar.cc/150?img=13", "https://i.pravatar.cc/150?img=14",
-    "https://i.pravatar.cc/150?img=15", "https://i.pravatar.cc/150?img=16",
-    "https://i.pravatar.cc/150?img=17", "https://i.pravatar.cc/150?img=18"
-];
+// AVATAR SİSTEMİ
+const avatarLinks = ["https://i.pravatar.cc/150?img=11", "https://i.pravatar.cc/150?img=12", "https://i.pravatar.cc/150?img=13", "https://i.pravatar.cc/150?img=14", "https://i.pravatar.cc/150?img=15", "https://i.pravatar.cc/150?img=16", "https://i.pravatar.cc/150?img=17", "https://i.pravatar.cc/150?img=18"];
 let selectedAvatar = "";
-
 function loadAvatars(current) {
-    const container = document.getElementById("avatarLibrary");
-    container.innerHTML = "";
+    const container = document.getElementById("avatarLibrary"); container.innerHTML = "";
     avatarLinks.forEach(link => {
-        const div = document.createElement("div");
-        div.className = `avatar-item ${link === current ? 'active' : ''}`;
+        const div = document.createElement("div"); div.className = `avatar-item ${link === current ? 'active' : ''}`;
         div.innerHTML = `<img src="${link}">`;
-        div.onclick = () => {
-            document.querySelectorAll(".avatar-item").forEach(i => i.classList.remove("active"));
-            div.classList.add("active");
-            selectedAvatar = link;
-        };
+        div.onclick = () => { document.querySelectorAll(".avatar-item").forEach(i => i.classList.remove("active")); div.classList.add("active"); selectedAvatar = link; };
         container.appendChild(div);
     });
 }
 
-window.openModal = (id) => { 
-    document.getElementById(id).style.display = 'flex';
-    if(id === 'wheelModal') checkWheelCooldown();
-};
+// MODAL & DROPDOWN
+window.openModal = (id) => { document.getElementById(id).style.display = 'flex'; if(id === 'wheelModal') checkWheelCooldown(); };
 window.closeModal = (id) => document.getElementById(id).style.display = 'none';
-
-document.getElementById("avatarTrigger").onclick = (e) => {
-    e.stopPropagation();
-    document.getElementById("userDropdown").classList.toggle("active");
-};
+document.getElementById("avatarTrigger").onclick = (e) => { e.stopPropagation(); document.getElementById("userDropdown").classList.toggle("active"); };
 window.onclick = () => document.getElementById("userDropdown").classList.remove("active");
 
+// AUTH İŞLEMLERİ
 let isLogin = true;
 const authOverlay = document.getElementById("authOverlay");
 document.getElementById("loginBtn").onclick = () => { isLogin=true; updateAuthUI(); authOverlay.style.display="flex"; };
 document.getElementById("regBtn").onclick = () => { isLogin=false; updateAuthUI(); authOverlay.style.display="flex"; };
 document.getElementById("switchMode").onclick = () => { isLogin = !isLogin; updateAuthUI(); };
-
-function updateAuthUI() {
-    document.getElementById("authTitle").innerText = isLogin ? "Giriş Yap" : "Kayıt Ol";
-    document.getElementById("authUsername").style.display = isLogin ? "none" : "block";
-}
+function updateAuthUI() { document.getElementById("authTitle").innerText = isLogin ? "Giriş Yap" : "Kayıt Ol"; document.getElementById("authUsername").style.display = isLogin ? "none" : "block"; }
 
 document.getElementById("authSubmit").onclick = async () => {
     const email = document.getElementById("authEmail").value;
@@ -362,15 +357,7 @@ document.getElementById("authSubmit").onclick = async () => {
         if(isLogin) { await signInWithEmailAndPassword(auth, email, pass); }
         else {
             const res = await createUserWithEmailAndPassword(auth, email, pass);
-            await setDoc(doc(db, "users", res.user.uid), { 
-                username: userN, 
-                balance: 1000, 
-                lastSpin: 0,
-                nameChanges: 0,
-                fullName: "",
-                phone: "",
-                avatar: "https://i.pravatar.cc/150?img=3"
-            });
+            await setDoc(doc(db, "users", res.user.uid), { username: userN, balance: 1000, lastSpin: 0, nameChanges: 0, fullName: "", phone: "", avatar: "https://i.pravatar.cc/150?img=3" });
         }
         authOverlay.style.display = "none";
     } catch(e) { alert("Hata: " + e.message); }
@@ -381,8 +368,7 @@ onAuthStateChanged(auth, user => {
         document.getElementById("loginBtn").style.display="none"; 
         document.getElementById("regBtn").style.display="none";
         document.getElementById("userPill").style.display="flex";
-        updateUIForAuth(true); // Tasarım dokunuşu aktif
-
+        updateUIForAuth(true);
         onSnapshot(doc(db, "users", user.uid), s => {
             if(s.exists()) {
                 const data = s.data();
@@ -400,60 +386,34 @@ onAuthStateChanged(auth, user => {
         document.getElementById("loginBtn").style.display="block"; 
         document.getElementById("regBtn").style.display="block";
         document.getElementById("userPill").style.display="none";
-        updateUIForAuth(false); // Tasarım dokunuşu pasif
+        updateUIForAuth(false);
     }
 });
 
 document.getElementById("logoutBtn").onclick = () => signOut(auth);
 
-// ÇARK SİSTEMİ
+// ÇARK & PROFİL GÜNCELLEME (MEVCUT FONKSİYONLARIN)
 window.spinWheel = async () => {
-    const wheel = document.getElementById("wheelImg");
-    const spinBtn = document.getElementById("spinBtn");
-    const rand = Math.random() * 100;
-    let prize = 0; let rotation = 0;
-
-    if (rand <= 1) { prize = 20000; rotation = 60; }
-    else if (rand <= 4) { prize = 15000; rotation = 120; }
-    else if (rand <= 9) { prize = 10000; rotation = 180; }
-    else if (rand <= 39) { prize = 5000; rotation = 240; }
-    else if (rand <= 70) { prize = 2500; rotation = 300; }
-    else { prize = 1000; rotation = 360; }
-
-    wheel.style.transform = `rotate(${(360 * 10) + rotation}deg)`;
-    spinBtn.disabled = true;
-
-    setTimeout(async () => {
-        await updateDoc(doc(db, "users", auth.currentUser.uid), { balance: increment(prize), lastSpin: Date.now() });
-        alert(`Tebrikler! ${prize.toLocaleString()} ₺ Kazandınız.`);
-        checkWheelCooldown();
-    }, 5000);
+    const wheel = document.getElementById("wheelImg"); const spinBtn = document.getElementById("spinBtn");
+    const rand = Math.random() * 100; let prize = 0; let rotation = 0;
+    if (rand <= 1) { prize = 20000; rotation = 60; } else if (rand <= 4) { prize = 15000; rotation = 120; } else if (rand <= 9) { prize = 10000; rotation = 180; } else if (rand <= 39) { prize = 5000; rotation = 240; } else if (rand <= 70) { prize = 2500; rotation = 300; } else { prize = 1000; rotation = 360; }
+    wheel.style.transform = `rotate(${(360 * 10) + rotation}deg)`; spinBtn.disabled = true;
+    setTimeout(async () => { await updateDoc(doc(db, "users", auth.currentUser.uid), { balance: increment(prize), lastSpin: Date.now() }); alert(`Tebrikler! ${prize.toLocaleString()} ₺ Kazandınız.`); checkWheelCooldown(); }, 5000);
 };
 
 async function checkWheelCooldown() {
     const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
     const lastSpin = userDoc.data().lastSpin || 0;
-    const cooldown = 24 * 60 * 60 * 1000;
-    const diff = cooldown - (Date.now() - lastSpin);
-    if (diff > 0) {
-        document.getElementById("spinBtn").disabled = true;
-        startTimer(diff);
-    } else {
-        document.getElementById("spinBtn").disabled = false;
-        document.getElementById("wheelTimer").innerText = "Hazır!";
-    }
+    const diff = (24 * 60 * 60 * 1000) - (Date.now() - lastSpin);
+    if (diff > 0) { document.getElementById("spinBtn").disabled = true; startTimer(diff); } 
+    else { document.getElementById("spinBtn").disabled = false; document.getElementById("wheelTimer").innerText = "Hazır!"; }
 }
 
 function startTimer(diff) {
     const timer = document.getElementById("wheelTimer");
-    const intv = setInterval(() => {
-        diff -= 1000;
-        if(diff <= 0) { clearInterval(intv); checkWheelCooldown(); return; }
-        const h = Math.floor(diff / 3600000);
-        const m = Math.floor((diff % 3600000) / 60000);
-        const s = Math.floor((diff % 60000) / 1000);
-        timer.innerText = `${h}:${m}:${s}`;
-    }, 1000);
+    const intv = setInterval(() => { diff -= 1000; if(diff <= 0) { clearInterval(intv); checkWheelCooldown(); return; }
+    const h = Math.floor(diff / 3600000); const m = Math.floor((diff % 3600000) / 60000); const s = Math.floor((diff % 60000) / 1000);
+    timer.innerText = `${h}:${m}:${s}`; }, 1000);
 }
 
 window.updateProfile = async () => {
@@ -462,34 +422,18 @@ window.updateProfile = async () => {
     const newName = document.getElementById("profUser").value;
     let updates = { fullName: document.getElementById("profNameSurname").value, phone: document.getElementById("profPhone").value, avatar: selectedAvatar || userData.avatar };
     if(newName !== userData.username && userData.nameChanges < 1) { updates.username = newName; updates.nameChanges = 1; }
-    await updateDoc(doc(db, "users", auth.currentUser.uid), updates);
-    alert("Profil güncellendi!");
-    closeModal('profileModal');
+    await updateDoc(doc(db, "users", auth.currentUser.uid), updates); alert("Profil güncellendi!"); closeModal('profileModal');
 };
 
 // KAR EFEKTİ
-const canvas = document.getElementById("snow");
-const ctx = canvas.getContext("2d");
-let particles = [];
+const canvas = document.getElementById("snow"); const ctx = canvas.getContext("2d"); let particles = [];
 function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
 window.onresize = resize; resize();
 for(let i=0; i<100; i++) particles.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, r:Math.random()*2+1, d:Math.random()*1+0.5});
-function drawSnow() {
-    ctx.clearRect(0,0,canvas.width, canvas.height);
-    ctx.fillStyle = "rgba(255,255,255,0.6)";
-    ctx.beginPath();
-    particles.forEach(p => {
-        ctx.moveTo(p.x, p.y); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
-        p.y += p.d; if(p.y > canvas.height) p.y = -5;
-    });
-    ctx.fill(); requestAnimationFrame(drawSnow);
-}
+function drawSnow() { ctx.clearRect(0,0,canvas.width, canvas.height); ctx.fillStyle = "rgba(255,255,255,0.6)"; ctx.beginPath(); particles.forEach(p => { ctx.moveTo(p.x, p.y); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); p.y += p.d; if(p.y > canvas.height) p.y = -5; }); ctx.fill(); requestAnimationFrame(drawSnow); }
 drawSnow();
 
-window.checkLogin = (url) => {
-    if(!auth.currentUser) document.getElementById("authOverlay").style.display="flex";
-    else location.href = url;
-};
+window.checkLogin = (url) => { if(!auth.currentUser) document.getElementById("authOverlay").style.display="flex"; else location.href = url; };
 </script>
 </body>
 </html>
