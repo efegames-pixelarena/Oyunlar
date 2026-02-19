@@ -25,100 +25,97 @@
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;font-family: 'Inter', sans-serif;}
 body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.5;}
 
-#snow { position:fixed; top:0; left:0; width:100%; height:100%; z-index:1; pointer-events:none; opacity: 0.8; }
+#snow { position:fixed; top:0; left:0; width:100%; height:100%; z-index:1; pointer-events:none; opacity: 0.6; }
 
-/* --- NAVIGATION --- */
+/* --- NAVIGATION (FIXED TAŞMA) --- */
 .top-bar {
-    position: fixed; top: 0; width: 100%; height: 75px;
+    position: fixed; top: 0; width: 100%; height: 65px;
     display: flex; align-items: center; justify-content: space-between;
-    padding: 0 30px; background: var(--glass);
+    padding: 0 15px; background: var(--glass);
     backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); z-index: 2000;
 }
 
 .brand {
-    font-family: 'Montserrat', sans-serif; font-size: 24px; font-weight: 900; 
-    letter-spacing: 1px; background: linear-gradient(90deg, var(--primary), #fff, var(--primary));
+    font-family: 'Montserrat', sans-serif; font-size: 18px; font-weight: 900; 
+    letter-spacing: 0.5px; background: linear-gradient(90deg, var(--primary), #fff, var(--primary));
     background-size: 200% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     animation: shine 4s linear infinite;
+    flex-shrink: 0;
 }
 @keyframes shine { to { background-position: 200% center; } }
 
-.right-menu { display: flex; gap: 15px; align-items: center; }
+.right-menu { display: flex; gap: 8px; align-items: center; }
 
-/* USER PILL & DROPDOWN */
-.user-pill { display: none; align-items: center; gap: 12px; background: rgba(255,255,255,0.05); padding: 5px 5px 5px 15px; border-radius: 14px; border: 1px solid var(--border); cursor: pointer; position: relative; }
-.balance-info b { font-size: 15px; color: var(--success); font-family: 'Inter', monospace; }
-.avatar { width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg, var(--primary), #0066ff); display: flex; align-items: center; justify-content: center; font-weight: 900; color: #fff; box-shadow: 0 0 15px var(--primary-glow); }
+/* USER PILL */
+.user-pill { display: none; align-items: center; gap: 10px; background: rgba(255,255,255,0.05); padding: 4px 4px 4px 12px; border-radius: 12px; border: 1px solid var(--border); cursor: pointer; position: relative; }
+.balance-info b { font-size: 13px; color: var(--success); font-family: 'Inter', monospace; }
+.avatar { width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, var(--primary), #0066ff); display: flex; align-items: center; justify-content: center; font-weight: 900; color: #fff; font-size: 14px; }
 
 .dropdown {
-    position: absolute; top: 65px; right: 0; width: 230px;
+    position: absolute; top: 55px; right: 0; width: 220px;
     background: #0d1117; border: 1px solid var(--border);
-    border-radius: 20px; display: none; flex-direction: column; overflow: hidden;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.9); z-index: 3000; padding: 8px;
+    border-radius: 18px; display: none; flex-direction: column; overflow: hidden;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.9); z-index: 3000; padding: 6px;
 }
 .dropdown.active { display: flex; animation: slideUp 0.3s ease-out; }
 @keyframes slideUp { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
 
-.drop-item { padding: 12px 15px; display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--text-dim); font-weight: 600; font-size: 13px; transition: 0.2s; border-radius: 12px; }
-.drop-item i { width: 20px; font-size: 16px; color: var(--primary); }
+.drop-item { padding: 10px 14px; display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text-dim); font-weight: 600; font-size: 13px; transition: 0.2s; border-radius: 10px; }
+.drop-item i { width: 18px; font-size: 14px; color: var(--primary); }
 .drop-item:hover { background: rgba(255,255,255,0.06); color: #fff; }
 
-/* --- MODAL SYSTEM --- */
+.btn { padding: 8px 14px; border-radius: 10px; border: none; font-weight: 800; font-size: 11px; cursor: pointer; transition: 0.3s; }
+.login-btn { background: #1e2642; color: white; border: 1px solid rgba(255,255,255,0.1); }
+.register-btn { background: var(--primary); color: #000; }
+
+/* --- GAME CARDS --- */
+.section-title {
+    padding: 30px 10% 15px; font-size: 12px; font-weight: 900;
+    text-transform: uppercase; letter-spacing: 2px; color: var(--text-dim);
+    display: flex; align-items: center; gap: 10px;
+}
+.section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+.games-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); 
+    gap: 15px; padding: 0 10%;
+}
+
+.game-card {
+    background: var(--card-bg); border-radius: 20px; padding: 30px 20px;
+    text-align: center; border: 1px solid var(--border); position: relative;
+    transition: 0.3s; cursor: pointer; z-index: 10;
+}
+.game-card:hover { transform: translateY(-5px); border-color: var(--primary); box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+.game-icon { font-size: 40px; margin-bottom: 15px; display: block; }
+.game-card span { font-weight: 800; font-size: 15px; display: block; margin-bottom: 8px; color: #fff; }
+.badge { font-size: 9px; font-weight: 900; padding: 4px 10px; border-radius: 6px; display: inline-block; background: rgba(79, 209, 255, 0.1); color: var(--primary); text-transform: uppercase; }
+.badge-free { color: var(--success); background: rgba(0, 255, 163, 0.1); }
+
+/* --- FOOTER (EKLENDİ) --- */
+.footer { background: #010204; padding: 40px 20px; border-top: 1px solid var(--border); text-align: center; margin-top: 50px; position: relative; z-index: 10; }
+.social-icons { display: flex; justify-content: center; gap: 12px; margin: 20px 0; }
+.social-btn {
+    width: 40px; height: 40px; background: #0f172a; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center; transition: 0.3s;
+    border: 1px solid var(--border); text-decoration: none; color: white; font-size: 18px;
+}
+.social-btn:hover { background: var(--primary); transform: translateY(-3px); color: #000; border-color: var(--primary); }
+
+/* --- MODALS --- */
 .modal-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(0,0,0,0.9); backdrop-filter: blur(15px);
     display: none; align-items: center; justify-content: center; z-index: 5000;
 }
-.modal-card {
-    width: 90%; max-width: 450px; padding: 40px; border-radius: 30px;
-    background: #0f172a; border: 1px solid var(--border); text-align: center;
-}
-.modal-card input {
-    width: 100%; padding: 16px; margin-bottom: 15px; border-radius: 15px;
-    background: #050811; border: 1px solid var(--border); color: white; outline: none; text-align: center;
-}
-.modal-btn { width: 100%; padding: 16px; border-radius: 15px; border: none; background: var(--primary); color: #000; font-weight: 900; cursor: pointer; }
-
-/* --- GÜNCEL KART TASARIMI (ALINAN) --- */
-.section-title {
-    padding: 40px 10% 15px; font-size: 14px; font-weight: 900;
-    text-transform: uppercase; letter-spacing: 3px; color: var(--text-dim);
-    display: flex; align-items: center; gap: 15px;
-}
-.section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-
-.games-grid {
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); 
-    gap: 20px; padding: 0 10%;
-}
-
-.game-card {
-    background: var(--card-bg); border-radius: 24px; padding: 35px 25px;
-    text-align: center; border: 1px solid var(--border); position: relative;
-    transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); overflow: hidden;
-    cursor: pointer; z-index: 10;
-}
-.game-card:hover { transform: translateY(-10px); border-color: var(--primary); box-shadow: 0 15px 35px rgba(0,0,0,0.6); }
-
-.game-icon { font-size: 50px; margin-bottom: 20px; display: block; filter: drop-shadow(0 0 10px rgba(0,0,0,0.5)); transition: 0.3s; }
-.game-card:hover .game-icon { transform: scale(1.1); filter: drop-shadow(0 0 12px var(--primary-glow)); }
-.game-card span { font-weight: 800; font-size: 16px; display: block; margin-bottom: 8px; color: #fff; }
-
-.badge {
-    font-size: 10px; font-weight: 900; padding: 5px 12px; border-radius: 8px;
-    display: inline-block; background: rgba(79, 209, 255, 0.1); color: var(--primary);
-    text-transform: uppercase;
-}
-.badge-free { color: var(--success); background: rgba(0, 255, 163, 0.1); }
-
-/* --- WHEEL --- */
-.wheel-container { position: relative; width: 280px; height: 280px; margin: 20px auto; }
-#wheelImg { width: 100%; height: 100%; transition: transform 4s cubic-bezier(0.15, 0, 0.15, 1); }
-.wheel-pointer { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 40px; z-index: 10; }
-#wheelTimer { margin-top: 15px; font-weight: 800; color: var(--accent); font-family: monospace; }
+.modal-card { width: 90%; max-width: 400px; padding: 30px; border-radius: 25px; background: #0f172a; border: 1px solid var(--border); text-align: center; }
+.modal-card input { width: 100%; padding: 14px; margin-bottom: 12px; border-radius: 12px; background: #050811; border: 1px solid var(--border); color: white; outline: none; text-align: center; }
+.modal-btn { width: 100%; padding: 14px; border-radius: 12px; border: none; background: var(--primary); color: #000; font-weight: 900; cursor: pointer; }
 
 @media(max-width: 768px) {
-    .games-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 0 15px; }
+    .games-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 0 15px; }
+    .top-bar { padding: 0 12px; height: 60px; }
+    .brand { font-size: 16px; }
 }
 </style>
 </head>
@@ -129,8 +126,8 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
 <div class="top-bar">
     <div class="brand">PIXELARENA</div>
     <div class="right-menu">
-        <button class="btn login-btn" id="loginBtn" style="padding: 10px 18px; border-radius: 12px; background: #1e2642; color: white; border: 1px solid rgba(255,255,255,0.1); cursor:pointer;">GİRİŞ</button>
-        <button class="btn register-btn" id="regBtn" style="padding: 10px 18px; border-radius: 12px; background: var(--primary); color: #000; border:none; font-weight:800; cursor:pointer;">KATIL</button>
+        <button class="btn login-btn" id="loginBtn">GİRİŞ</button>
+        <button class="btn register-btn" id="regBtn">KATIL</button>
 
         <div class="user-pill" id="userPill">
             <div class="balance-info"><b id="userBalance">0 ₺</b></div>
@@ -145,9 +142,9 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
     </div>
 </div>
 
-<div class="hero-search" style="margin-top: 110px; padding: 0 20px; text-align:center;">
-    <div class="search-container" style="max-width: 600px; margin: 0 auto; position:relative;">
-        <input type="text" id="searchInput" placeholder="Oyunlarda ara..." style="width: 100%; padding: 18px 25px; border-radius: 20px; background: #0f172a; border: 1px solid var(--border); color: white; outline: none;">
+<div class="hero-search" style="margin-top: 100px; padding: 0 20px; text-align:center;">
+    <div class="search-container" style="max-width: 500px; margin: 0 auto; position:relative;">
+        <input type="text" id="searchInput" placeholder="Oyunlarda ara..." style="width: 100%; padding: 15px 20px; border-radius: 15px; background: #0f172a; border: 1px solid var(--border); color: white; outline: none; font-size: 14px;">
     </div>
 </div>
 
@@ -178,11 +175,6 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
             <span>BlackJack</span>
             <div class="badge">Casino</div>
         </div>
-        <div class="game-card" data-name="pişti" onclick="checkLogin('pisti.html')">
-            <div class="game-icon">🎴</div>
-            <span>Pişti Online</span>
-            <div class="badge">Klasik</div>
-        </div>
     </div>
 
     <div class="section-title">Free Play</div>
@@ -197,57 +189,25 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
             <span>Space Pro</span>
             <div class="badge badge-free">Ücretsiz</div>
         </div>
-        <div class="game-card" data-name="yılan" onclick="location.href='snakepro.html'">
-            <div class="game-icon">🐍</div>
-            <span>Snake Pro</span>
-            <div class="badge badge-free">Ücretsiz</div>
-        </div>
     </div>
 </main>
 
-<div class="modal-overlay" id="profileModal">
-    <div class="modal-card">
-        <div class="avatar" style="width: 80px; height: 80px; margin: 0 auto 20px; font-size: 30px;" id="modalAvatar">?</div>
-        <h2>Profil Ayarları</h2>
-        <input type="text" id="newUsername" placeholder="Yeni Kullanıcı Adı">
-        <button class="modal-btn" onclick="updateProfile()">GÜNCELLE</button>
-        <p onclick="closeModal('profileModal')" style="margin-top: 15px; cursor: pointer; opacity: 0.5;">Kapat</p>
+<footer class="footer">
+    <div class="brand" style="font-size:22px; margin-bottom: 10px;">PIXELARENA</div>
+    <p style="color: var(--text-dim); font-size: 12px;">Profesyonel oyun deneyimi ve yüksek kazanç adresi.</p>
+    <div class="social-icons">
+        <a href="#" class="social-btn"><i class="fa-brands fa-discord"></i></a>
+        <a href="#" class="social-btn"><i class="fa-brands fa-instagram"></i></a>
+        <a href="#" class="social-btn"><i class="fa-brands fa-telegram"></i></a>
+        <a href="#" class="social-btn"><i class="fa-brands fa-x-twitter"></i></a>
     </div>
-</div>
+    <p style="color:#444; font-size:11px; margin-top: 20px;">© 2026 PixelArena Global. Tüm Hakları Saklıdır.</p>
+</footer>
 
-<div class="modal-overlay" id="bonusModal">
-    <div class="modal-card">
-        <i class="fa-solid fa-gift" style="font-size: 40px; color: var(--primary); margin-bottom: 20px;"></i>
-        <h2>Bonus Kodu Kullan</h2>
-        <input type="text" id="bonusInput" placeholder="Kodu Buraya Yazın">
-        <button class="modal-btn" onclick="claimBonus()">KODU AKTİF ET</button>
-        <p onclick="closeModal('bonusModal')" style="margin-top: 15px; cursor: pointer; opacity: 0.5;">Vazgeç</p>
-    </div>
-</div>
-
-<div class="modal-overlay" id="wheelModal">
-    <div class="modal-card">
-        <h2>Şans Çarkı</h2>
-        <div class="wheel-container">
-            <img src="https://i.ibb.co/mRT80Pz/wheel.png" id="wheelImg">
-            <img src="https://i.ibb.co/9H6S4xy/pointer.png" class="wheel-pointer">
-        </div>
-        <button class="modal-btn" id="spinBtn" onclick="spinWheel()">ÇEVİR</button>
-        <div id="wheelTimer"></div>
-        <p onclick="closeModal('wheelModal')" style="margin-top: 15px; cursor: pointer; opacity: 0.5;">Kapat</p>
-    </div>
-</div>
-
-<div class="modal-overlay" id="authOverlay">
-    <div class="modal-card">
-        <h2 id="authTitle">Giriş Yap</h2>
-        <input type="email" id="authEmail" placeholder="E-posta">
-        <input type="password" id="authPassword" placeholder="Şifre">
-        <input type="text" id="authUsername" placeholder="Kullanıcı Adı" style="display:none;">
-        <button class="modal-btn" id="authSubmit">DEVAM ET</button>
-        <p id="switchMode" style="margin-top:20px; font-size:13px; cursor:pointer;">Hesabın yok mu? <b style="color:var(--primary)">Kayıt Ol</b></p>
-    </div>
-</div>
+<div class="modal-overlay" id="profileModal"><div class="modal-card"><div class="avatar" style="width:70px;height:70px;margin:0 auto 15px;font-size:24px;" id="modalAvatar">?</div><h2>Profil Ayarları</h2><input type="text" id="newUsername" placeholder="Yeni Kullanıcı Adı"><button class="modal-btn" onclick="updateProfile()">GÜNCELLE</button><p onclick="closeModal('profileModal')" style="margin-top:15px;cursor:pointer;opacity:0.5;">Kapat</p></div></div>
+<div class="modal-overlay" id="bonusModal"><div class="modal-card"><i class="fa-solid fa-gift" style="font-size:40px;color:var(--primary);margin-bottom:15px;"></i><h2>Bonus Kodu</h2><input type="text" id="bonusInput" placeholder="Kodu Yazın"><button class="modal-btn" onclick="claimBonus()">AKTİF ET</button><p onclick="closeModal('bonusModal')" style="margin-top:15px;cursor:pointer;opacity:0.5;">Vazgeç</p></div></div>
+<div class="modal-overlay" id="wheelModal"><div class="modal-card"><h2>Şans Çarkı</h2><div style="position:relative;width:240px;height:240px;margin:15px auto;"><img src="https://i.ibb.co/mRT80Pz/wheel.png" id="wheelImg" style="width:100%;height:100%;transition:4s cubic-bezier(0.15,0,0.15,1);"><img src="https://i.ibb.co/9H6S4xy/pointer.png" style="position:absolute;top:-5px;left:50%;transform:translateX(-50%);width:30px;z-index:10;"></div><button class="modal-btn" id="spinBtn" onclick="spinWheel()">ÇEVİR</button><div id="wheelTimer" style="margin-top:10px;font-weight:800;color:var(--accent);"></div><p onclick="closeModal('wheelModal')" style="margin-top:15px;cursor:pointer;opacity:0.5;">Kapat</p></div></div>
+<div class="modal-overlay" id="authOverlay"><div class="modal-card"><h2 id="authTitle">Giriş Yap</h2><input type="email" id="authEmail" placeholder="E-posta"><input type="password" id="authPassword" placeholder="Şifre"><input type="text" id="authUsername" placeholder="Kullanıcı Adı" style="display:none;"><button class="modal-btn" id="authSubmit">DEVAM ET</button><p id="switchMode" style="margin-top:20px;font-size:13px;cursor:pointer;">Hesabın yok mu? <b style="color:var(--primary)">Kayıt Ol</b></p></div></div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -337,7 +297,7 @@ async function checkWheelCooldown() {
     } else {
         document.getElementById("spinBtn").disabled = false;
         document.getElementById("spinBtn").style.opacity = "1";
-        document.getElementById("wheelTimer").innerText = "Çevirmeye Hazır!";
+        document.getElementById("wheelTimer").innerText = "Hazır!";
     }
 }
 
@@ -349,7 +309,7 @@ function startTimer(diff) {
         const h = Math.floor(diff / 3600000);
         const m = Math.floor((diff % 3600000) / 60000);
         const s = Math.floor((diff % 60000) / 1000);
-        timer.innerText = `Kalan: ${h}sa ${m}dk ${s}sn`;
+        timer.innerText = `${h}:${m}:${s}`;
     }, 1000);
 }
 
@@ -359,7 +319,8 @@ window.spinWheel = async () => {
     wheel.style.transform = `rotate(${randomDeg}deg)`;
     document.getElementById("spinBtn").disabled = true;
     setTimeout(async () => {
-        const win = 100;
+        const prizes = [10, 50, 100, 250, 0, 500];
+        const win = prizes[Math.floor(Math.random()*prizes.length)];
         await updateDoc(doc(db, "users", auth.currentUser.uid), { balance: increment(win), lastSpin: Date.now() });
         alert(`Tebrikler! ${win} ₺ Kazandınız.`);
         checkWheelCooldown();
@@ -389,10 +350,10 @@ const ctx = canvas.getContext("2d");
 let particles = [];
 function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
 window.onresize = resize; resize();
-for(let i=0; i<150; i++) particles.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, r:Math.random()*3+1, d:Math.random()*2+1});
+for(let i=0; i<100; i++) particles.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, r:Math.random()*2+1, d:Math.random()*1+0.5});
 function drawSnow() {
     ctx.clearRect(0,0,canvas.width, canvas.height);
-    ctx.fillStyle = "rgba(255,255,255,0.8)";
+    ctx.fillStyle = "rgba(255,255,255,0.6)";
     ctx.beginPath();
     particles.forEach(p => {
         ctx.moveTo(p.x, p.y); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
