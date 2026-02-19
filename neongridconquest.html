@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Neon Conquest | Cyber Tactical</title>
+    <title>Neon Conquest | Ultimate Edition</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@500;800&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -22,91 +22,55 @@
         /* --- PROFESYONEL ÜST BAR --- */
         .header {
             height: 70px; padding: 0 20px; display: flex; align-items: center; justify-content: space-between;
-            background: rgba(0,0,0,0.5); border-bottom: 1px solid var(--border); backdrop-filter: blur(10px);
+            background: rgba(0,0,0,0.5); border-bottom: 1px solid var(--border); backdrop-filter: blur(10px); z-index: 100;
         }
-        .logo { font-family: 'Orbitron'; font-weight: 900; font-size: 1.2rem; letter-spacing: 2px; color: #fff; }
+        .logo { font-family: 'Orbitron'; font-weight: 900; font-size: 1.1rem; letter-spacing: 2px; color: #fff; }
+        .user-badge { font-size: 0.7rem; color: var(--p1); border: 1px solid var(--p1); padding: 5px 12px; border-radius: 4px; text-transform: uppercase; }
 
         /* --- GELİŞMİŞ LOBİ --- */
-        #lobby {
-            flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 20px;
-            animation: fadeIn 0.5s ease;
-        }
-
-        .search-box {
-            background: var(--glass); border: 1px solid var(--border); padding: 15px;
-            border-radius: 20px; display: flex; align-items: center; gap: 10px;
-        }
-        .search-box input {
-            flex: 1; background: transparent; border: none; color: var(--p1);
-            font-size: 1rem; outline: none; font-weight: 800;
-        }
-
-        .room-list {
-            flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px;
-            padding-right: 5px;
-        }
-        .room-list::-webkit-scrollbar { width: 4px; }
-        .room-list::-webkit-scrollbar-thumb { background: var(--p1); border-radius: 10px; }
-
+        #lobby { flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 20px; animation: fadeIn 0.5s ease; }
+        .search-box { background: var(--glass); border: 1px solid var(--border); padding: 15px; border-radius: 20px; display: flex; align-items: center; }
+        .search-box input { flex: 1; background: transparent; border: none; color: var(--p1); font-size: 1rem; outline: none; font-weight: 800; }
+        
+        .room-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
         .room-card {
             background: linear-gradient(90deg, var(--glass), rgba(255,255,255,0.02));
             border: 1px solid var(--border); padding: 20px; border-radius: 15px;
-            display: flex; justify-content: space-between; align-items: center;
-            transition: 0.3s;
+            display: flex; justify-content: space-between; align-items: center; transition: 0.3s;
         }
-        .room-card:hover { border-color: var(--p1); transform: translateX(5px); }
+        .btn-join { background: var(--p1); color: #000; border: none; padding: 10px 20px; border-radius: 10px; font-family: 'Orbitron'; font-weight: 900; cursor: pointer; }
 
-        .btn-join {
-            background: var(--p1); color: #000; border: none; padding: 10px 20px;
-            border-radius: 10px; font-family: 'Orbitron'; font-weight: 900; cursor: pointer;
-        }
-
-        /* --- OYUN TASARIMI (UI) --- */
+        /* --- OYUN TASARIMI --- */
         #game-view { display: none; flex: 1; flex-direction: column; }
-        
-        .game-hud {
-            display: grid; grid-template-columns: 1fr auto 1fr; padding: 20px;
-            align-items: center; background: rgba(0,0,0,0.3);
-        }
+        .game-hud { display: grid; grid-template-columns: 1fr auto 1fr; padding: 20px; align-items: center; background: rgba(0,0,0,0.3); }
         .p-info { display: flex; flex-direction: column; }
         .p-info.r { align-items: flex-end; }
-        .score { font-family: 'Orbitron'; font-size: 2.5rem; font-weight: 900; line-height: 1; }
-        
-        #timer-box {
-            width: 80px; height: 80px; border: 3px solid var(--p1); border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-family: 'Orbitron'; font-weight: 900; font-size: 1.5rem;
-            box-shadow: 0 0 20px var(--p1-shadow); background: #000;
-        }
+        .score { font-family: 'Orbitron'; font-size: 2.2rem; font-weight: 900; }
+        #timer-box { width: 70px; height: 70px; border: 3px solid var(--p1); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Orbitron'; font-weight: 900; background: #000; box-shadow: 0 0 15px var(--p1-shadow); }
 
-        .grid-area {
-            flex: 1; display: flex; align-items: center; justify-content: center;
-            perspective: 1000px;
-        }
-        .grid {
-            display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px;
-            width: 90vw; max-width: 400px; transform: rotateX(15deg);
-        }
-
-        .cell {
-            aspect-ratio: 1/1; background: #0f172a; border-radius: 6px;
-            border: 1px solid rgba(255,255,255,0.1); transition: 0.2s;
-            cursor: pointer;
-        }
+        .grid-area { flex: 1; display: flex; align-items: center; justify-content: center; perspective: 1000px; }
+        .grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; width: 90vw; max-width: 400px; transform: rotateX(15deg); }
+        .cell { aspect-ratio: 1/1; background: #0f172a; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; transition: 0.2s; }
         .cell.p1 { background: var(--p1); box-shadow: 0 0 15px var(--p1); border: none; }
         .cell.p2 { background: var(--p2); box-shadow: 0 0 15px var(--p2); border: none; }
 
-        /* --- BUTONLAR --- */
-        .btn-exit {
-            background: rgba(255,0,0,0.1); color: #ff4444; border: 1px solid #ff4444;
-            padding: 8px 15px; border-radius: 8px; font-weight: 800; font-size: 0.7rem;
+        /* --- MODAL POPUP --- */
+        #resultModal {
+            position: fixed; inset: 0; background: rgba(2, 4, 8, 0.95);
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 1000; backdrop-filter: blur(10px);
         }
-        .floating-create {
-            position: fixed; bottom: 30px; align-self: center;
-            background: linear-gradient(45deg, var(--p1), #00d4ff);
-            color: #000; border: none; padding: 18px 40px; border-radius: 50px;
-            font-family: 'Orbitron'; font-weight: 900; box-shadow: 0 10px 30px var(--p1-shadow);
+        .modal-card {
+            background: var(--glass); border: 2px solid var(--p1); padding: 40px;
+            border-radius: 30px; text-align: center; box-shadow: 0 0 50px rgba(0, 255, 65, 0.2);
+            max-width: 320px; width: 90%;
         }
+        .winner-name { font-family: 'Orbitron'; font-size: 1.5rem; margin: 15px 0; color: #fff; }
+        .final-score { font-size: 2rem; font-weight: 900; margin-bottom: 25px; color: var(--p1); }
+
+        /* --- BUTTONS --- */
+        .btn-exit { background: rgba(255,0,0,0.1); color: #ff4444; border: 1px solid #ff4444; padding: 8px 15px; border-radius: 8px; font-weight: 800; font-size: 0.7rem; cursor: pointer; }
+        .floating-create { position: fixed; bottom: 30px; align-self: center; background: var(--p1); color: #000; padding: 18px 40px; border-radius: 50px; font-family: 'Orbitron'; font-weight: 900; border: none; box-shadow: 0 10px 30px var(--p1-shadow); cursor: pointer; }
 
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
@@ -114,17 +78,17 @@
 <body>
 
     <div class="header">
+        <div class="user-badge" id="meName">...</div>
         <div class="logo">NEON CONQUEST</div>
-        <button class="btn-exit" id="lobbyExit">ÇIKIŞ</button>
-        <button class="btn-exit" id="gameLeave" style="display:none;">AYRIL</button>
+        <button class="btn-exit" id="gameLeave">AYRIL</button>
     </div>
 
     <div id="lobby">
         <div class="search-box">
-            <input type="text" id="searchInput" placeholder="ARENA KODU VEYA OYUNCU ARA...">
+            <input type="text" id="searchInput" placeholder="ODA VEYA OYUNCU ARA...">
         </div>
         <div class="room-list" id="roomList"></div>
-        <button class="floating-create" id="createBtn">ARENA OLUŞTUR</button>
+        <button class="floating-create" id="createBtn">YENİ ARENA</button>
     </div>
 
     <div id="game-view">
@@ -141,6 +105,15 @@
         </div>
         <div class="grid-area">
             <div class="grid" id="grid"></div>
+        </div>
+    </div>
+
+    <div id="resultModal">
+        <div class="modal-card">
+            <div id="modalIcon" style="font-size: 4rem;">🏆</div>
+            <div class="winner-name" id="winnerLabel">ZAFER!</div>
+            <div class="final-score" id="scoreLabel">0 - 0</div>
+            <button class="btn-join" style="width: 100%;" onclick="location.reload()">LOBİYE DÖN</button>
         </div>
     </div>
 
@@ -162,12 +135,13 @@
     const db = getFirestore(app);
     const auth = getAuth(app);
 
-    let uid, username, currentRoomId, myRole, timerInterval = null;
+    let uid, username, currentRoomId, myRole, timerInterval = null, isFinished = false;
 
     onAuthStateChanged(auth, async (user) => {
         if (!user) { signInAnonymously(auth); return; }
         uid = user.uid;
-        username = "Agent_" + uid.slice(0,4);
+        username = "AGENT_" + Math.floor(1000 + Math.random() * 9000);
+        document.getElementById('meName').innerText = username;
         listenLobby();
     });
 
@@ -183,7 +157,7 @@
                     const card = document.createElement('div');
                     card.className = "room-card";
                     card.innerHTML = `<div><b style="color:var(--p1)">${r.p1Name}</b><br><small>#${d.id.toUpperCase()}</small></div>
-                                     <button class="btn-join" onclick="joinRoom('${d.id}')">KATIL</button>`;
+                                     <button class="btn-join" onclick="window.joinRoom('${d.id}')">GİR</button>`;
                     list.appendChild(card);
                 }
             });
@@ -191,29 +165,26 @@
     }
 
     document.getElementById('searchInput').oninput = listenLobby;
-    document.getElementById('lobbyExit').onclick = () => location.href = "index.html";
 
     document.getElementById('createBtn').onclick = async () => {
         const id = Math.random().toString(36).substring(2, 7);
-        myRole = 'p1'; currentRoomId = id;
+        currentRoomId = id; myRole = 'p1';
         await setDoc(doc(db, "conquest_rooms", id), {
-            p1: uid, p1Name: username, p2: null, p2Name: "...",
+            p1: uid, p1Name: username, p2: null, p2Name: "BEKLENİYOR...",
             cells: {}, timer: 60, status: 'waiting'
         });
-        enterGameView(id);
+        enterGame(id);
     };
 
     window.joinRoom = async (id) => {
-        myRole = 'p2'; currentRoomId = id;
+        currentRoomId = id; myRole = 'p2';
         await updateDoc(doc(db, "conquest_rooms", id), { p2: uid, p2Name: username, status: 'playing' });
-        enterGameView(id);
+        enterGame(id);
     };
 
-    function enterGameView(id) {
+    function enterGame(id) {
         document.getElementById('lobby').style.display = 'none';
         document.getElementById('game-view').style.display = 'flex';
-        document.getElementById('lobbyExit').style.display = 'none';
-        document.getElementById('gameLeave').style.display = 'block';
         
         const grid = document.getElementById('grid');
         grid.innerHTML = "";
@@ -225,11 +196,10 @@
         }
 
         onSnapshot(doc(db, "conquest_rooms", id), (snap) => {
-            if(!snap.exists()) { quitGame(); return; }
+            if(!snap.exists() && !isFinished) { handleAbruptEnd(); return; }
             const data = snap.data();
-            renderGame(data);
+            if(data) updateUI(data);
             
-            // Süre Yönetimi (Sadece Host)
             if(myRole === 'p1' && data.status === 'playing' && !timerInterval) {
                 startTimer(id, data.timer);
             }
@@ -242,7 +212,7 @@
         await updateDoc(ref, up);
     }
 
-    function renderGame(data) {
+    function updateUI(data) {
         document.getElementById('n1').innerText = data.p1Name;
         document.getElementById('n2').innerText = data.p2Name;
         document.getElementById('timer-box').innerText = data.timer;
@@ -259,11 +229,8 @@
         document.getElementById('s1').innerText = s1;
         document.getElementById('s2').innerText = s2;
 
-        // BİTİŞ KOŞULLARI: Süre bitimi VEYA Tüm hücrelerin dolması
-        const isAllFull = Object.keys(data.cells || {}).length === 36;
-        if((data.timer <= 0 || isAllFull) && data.status !== 'finished') {
-            finishGame(s1, s2);
-        }
+        const isFull = Object.keys(data.cells || {}).length === 36;
+        if((data.timer <= 0 || isFull) && !isFinished) endGame(s1, s2);
     }
 
     function startTimer(id, start) {
@@ -275,21 +242,33 @@
         }, 1000);
     }
 
-    async function finishGame(s1, s2) {
+    async function endGame(s1, s2) {
+        isFinished = true;
         if(timerInterval) clearInterval(timerInterval);
-        const winner = s1 > s2 ? "OYUNCU 1" : (s2 > s1 ? "OYUNCU 2" : "BERABERE");
-        alert("OYUN BİTTİ!\nKAZANAN: " + winner);
-        await updateDoc(doc(db, "conquest_rooms", currentRoomId), { status: 'finished' });
-        quitGame();
+        
+        const winner = s1 > s2 ? "PLAYER 1" : (s2 > s1 ? "PLAYER 2" : "BERABERE");
+        const modal = document.getElementById('resultModal');
+        document.getElementById('winnerLabel').innerText = winner + " KAZANDI!";
+        document.getElementById('scoreLabel').innerText = `${s1} - ${s2}`;
+        modal.style.display = 'flex';
+
+        if(myRole === 'p1') {
+            await updateDoc(doc(db, "conquest_rooms", currentRoomId), { status: 'finished' });
+            setTimeout(() => deleteDoc(doc(db, "conquest_rooms", currentRoomId)), 3000);
+        }
     }
 
-    async function quitGame() {
-        if(timerInterval) clearInterval(timerInterval);
+    function handleAbruptEnd() {
+        document.getElementById('winnerLabel').innerText = "RAKİP AYRILDI!";
+        document.getElementById('scoreLabel').innerText = "HÜKMEL GALİP";
+        document.getElementById('modalIcon').innerText = "🔌";
+        document.getElementById('resultModal').style.display = 'flex';
+    }
+
+    document.getElementById('gameLeave').onclick = async () => {
         if(currentRoomId && myRole === 'p1') await deleteDoc(doc(db, "conquest_rooms", currentRoomId));
         location.reload();
-    }
-
-    document.getElementById('gameLeave').onclick = quitGame;
+    };
 </script>
 </body>
 </html>
