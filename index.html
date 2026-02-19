@@ -88,35 +88,30 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
 .menu-btn-item:hover { background: rgba(79, 209, 255, 0.1); color: var(--primary); }
 .logout-item { color: #ff4d4d !important; margin-top: 5px; border: 1px solid rgba(255,77,77,0.1); }
 
-/* --- MODAL POPUP GENERAL --- */
-.modal-overlay {
+/* --- CUSTOM MODALS --- */
+.custom-modal {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(0,0,0,0.85); backdrop-filter: blur(10px);
     display: none; align-items: center; justify-content: center; z-index: 6000;
 }
-.modal-content {
-    background: var(--card-gradient); border: 1px solid var(--border);
+.modal-box {
     width: 90%; max-width: 400px; padding: 30px; border-radius: 25px;
-    position: relative; text-align: center;
+    background: var(--card-gradient); border: 1px solid var(--border);
+    text-align: center; position: relative;
 }
-.close-modal { position: absolute; top: 15px; right: 20px; font-size: 20px; cursor: pointer; opacity: 0.5; }
 
-/* --- WHEEL SPECIFIC --- */
-.wheel-box { position: relative; width: 260px; height: 260px; margin: 20px auto; }
-#mainWheel {
+/* WHEEL STYLE */
+.wheel-container {
+    position: relative; width: 260px; height: 260px; margin: 20px auto;
+}
+#wheelCanvas {
     width: 100%; height: 100%; border-radius: 50%;
-    border: 5px solid var(--border); background: conic-gradient(
-        #ff8a00 0deg 90deg, 
-        #4fd1ff 90deg 180deg, 
-        #ff5f00 180deg 270deg, 
-        #1e2642 270deg 360deg
-    );
-    transition: transform 4s cubic-bezier(0.1, 0, 0.2, 1);
+    border: 5px solid var(--border); transition: transform 4s cubic-bezier(0.15, 0, 0.15, 1);
 }
 .wheel-pointer {
     position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
-    width: 0; height: 0; border-left: 15px solid transparent;
-    border-right: 15px solid transparent; border-top: 30px solid white; z-index: 10;
+    width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent;
+    border-top: 30px solid var(--accent); z-index: 10;
 }
 
 /* AUTH BUTTONS */
@@ -193,8 +188,8 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
                 <div class="menu-links">
                     <a href="index.html" class="menu-btn-item">🏠 Ana Sayfa</a>
                     <a href="panel.html" class="menu-btn-item">👤 Hesabım</a>
-                    <a href="javascript:void(0)" class="menu-btn-item" id="openWheel">💎 Çark Çevir</a>
-                    <a href="javascript:void(0)" class="menu-btn-item" id="openBonus">🎁 Bonus Kod</a>
+                    <a href="javascript:void(0)" class="menu-btn-item" onclick="openWheel()">💎 Çark Çevir</a>
+                    <a href="javascript:void(0)" class="menu-btn-item" onclick="openBonusModal()">🎁 Bonus Kod</a>
                     <a href="https://www.instagram.com/pixel_arena_games" target="_blank" class="menu-btn-item">🚔 Destek</a>
                     <a href="javascript:void(0)" class="menu-btn-item logout-item" id="logoutBtn">🔴 Çıkış Yap</a>
                 </div>
@@ -203,26 +198,25 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
     </div>
 </div>
 
-<div class="modal-overlay" id="wheelModal">
-    <div class="modal-content">
-        <span class="close-modal" onclick="closeModal('wheelModal')">✕</span>
-        <h3 style="margin-bottom:10px; color:var(--primary)">💎 GÜNLÜK ÇARK</h3>
-        <p style="font-size:12px; color:#8892b0;">Her gün 1 kez çevirme hakkın var!</p>
-        <div class="wheel-box">
+<div class="custom-modal" id="wheelModal">
+    <div class="modal-box">
+        <h3 style="color:var(--primary); letter-spacing:1px;">💎 ŞANSLI ÇARK</h3>
+        <div class="wheel-container">
             <div class="wheel-pointer"></div>
-            <div id="mainWheel"></div>
+            <canvas id="wheelCanvas" width="500" height="500"></canvas>
         </div>
-        <button class="auth-btn" id="spinAction">HEMEN ÇEVİR</button>
-        <div id="spinResult" style="margin-top:15px; font-weight:bold; color:var(--accent);"></div>
+        <button class="auth-btn" id="spinBtn">ÇEVİR (ÜCRETSİZ)</button>
+        <p id="wheelMsg" style="margin-top:15px; font-size:12px; color:#8892b0;">Bakiyene anında yansır.</p>
+        <p onclick="closeModal('wheelModal')" style="margin-top:20px; font-size:12px; cursor:pointer; opacity:0.5;">KAPAT</p>
     </div>
 </div>
 
-<div class="modal-overlay" id="bonusModal">
-    <div class="modal-content">
-        <span class="close-modal" onclick="closeModal('bonusModal')">✕</span>
-        <h3 style="margin-bottom:15px; color:var(--accent)">🎁 BONUS KOD KULLAN</h3>
-        <input type="text" id="bonusInput" placeholder="Kodunuzu buraya girin..." style="width:100%; padding:15px; background:#050811; border:1px solid var(--border); border-radius:12px; color:white; outline:none; text-align:center;">
-        <button class="auth-btn" style="margin-top:15px;" id="redeemBonus">KODU AKTİF ET</button>
+<div class="custom-modal" id="bonusCodeModal">
+    <div class="modal-box">
+        <h3 style="color:var(--accent); margin-bottom:20px;">🎁 BONUS KOD GİR</h3>
+        <input type="text" id="bonusCodeInput" placeholder="Kodu buraya yazın..." style="width: 100%; padding: 15px; border-radius: 12px; background: #050811; border: 1px solid var(--border); color: white; outline: none; margin-bottom: 15px; text-align: center; text-transform: uppercase;">
+        <button class="auth-btn" id="redeemBtn">KODU KULLAN</button>
+        <p onclick="closeModal('bonusCodeModal')" style="margin-top:20px; font-size:12px; cursor:pointer; opacity:0.5;">İPTAL</p>
     </div>
 </div>
 
@@ -336,57 +330,96 @@ const loginBtn = document.getElementById("loginBtn");
 const regBtn = document.getElementById("regBtn");
 const overlay = document.getElementById("authOverlay");
 
+// --- MODAL FUNCTIONS ---
+window.openWheel = () => { document.getElementById("wheelModal").style.display = "flex"; userDropdown.classList.remove("active"); drawWheel(); };
+window.openBonusModal = () => { document.getElementById("bonusCodeModal").style.display = "flex"; userDropdown.classList.remove("active"); };
+window.closeModal = (id) => { document.getElementById(id).style.display = "none"; };
+
+// --- WHEEL LOGIC ---
+const rewards = [
+    { label: "1.000₺", color: "#1e2642", chance: 80 },
+    { label: "2.500₺", color: "#4fd1ff", chance: 60 },
+    { label: "5.000₺", color: "#ff8a00", chance: 30 },
+    { label: "10.000₺", color: "#ff5f00", chance: 10 }
+];
+
+function drawWheel() {
+    const canvas = document.getElementById("wheelCanvas");
+    const ctx = canvas.getContext("2d");
+    const arc = Math.PI / (rewards.length / 2);
+    ctx.clearRect(0,0,500,500);
+    rewards.forEach((reward, i) => {
+        const angle = i * arc;
+        ctx.fillStyle = reward.color;
+        ctx.beginPath();
+        ctx.moveTo(250, 250);
+        ctx.arc(250, 250, 240, angle, angle + arc);
+        ctx.fill();
+        ctx.save();
+        ctx.fillStyle = "white";
+        ctx.translate(250 + Math.cos(angle + arc / 2) * 160, 250 + Math.sin(angle + arc / 2) * 160);
+        ctx.rotate(angle + arc / 2 + Math.PI / 2);
+        ctx.font = "bold 24px Arial";
+        ctx.fillText(reward.label, -ctx.measureText(reward.label).width / 2, 0);
+        ctx.restore();
+    });
+}
+
+let isSpinning = false;
+document.getElementById("spinBtn").onclick = async () => {
+    if(isSpinning) return;
+    if(!auth.currentUser) return alert("Önce giriş yapmalısınız!");
+
+    isSpinning = true;
+    const canvas = document.getElementById("wheelCanvas");
+    const msg = document.getElementById("wheelMsg");
+    
+    // Probability Calculator
+    const rand = Math.random() * 100;
+    let selectedIdx = 0;
+    if(rand <= 10) selectedIdx = 3; // 10k
+    else if(rand <= 30) selectedIdx = 2; // 5k
+    else if(rand <= 60) selectedIdx = 1; // 2.5k
+    else selectedIdx = 0; // 1k
+
+    const arcSize = 360 / rewards.length;
+    const stopAngle = 360 - (selectedIdx * arcSize) - (arcSize / 2);
+    const totalRotation = 1440 + stopAngle; // 4 full turns + target
+
+    canvas.style.transform = `rotate(${totalRotation}deg)`;
+    msg.innerText = "Şansın dönüyor...";
+
+    setTimeout(async () => {
+        const winAmount = parseInt(rewards[selectedIdx].label.replace(".", "").replace("₺", ""));
+        await updateDoc(doc(db, "users", auth.currentUser.uid), { balance: increment(winAmount) });
+        msg.innerHTML = `<b style="color:var(--primary)">TEBRİKLER! ${rewards[selectedIdx].label} KAZANDIN!</b>`;
+        isSpinning = false;
+        // Reset rotation for next time
+        setTimeout(() => {
+            canvas.style.transition = "none";
+            canvas.style.transform = `rotate(${stopAngle}deg)`;
+            setTimeout(() => { canvas.style.transition = "transform 4s cubic-bezier(0.15, 0, 0.15, 1)"; }, 50);
+        }, 2000);
+    }, 4000);
+};
+
+// --- BONUS CODE LOGIC ---
+document.getElementById("redeemBtn").onclick = () => {
+    const code = document.getElementById("bonusCodeInput").value.toUpperCase();
+    if(code === "PIXEL2026") {
+        alert("Tebrikler! 5.000₺ Bonus Eklendi.");
+        closeModal('bonusCodeModal');
+    } else {
+        alert("Geçersiz veya kullanılmış kod!");
+    }
+};
+
 // Dropdown Aç/Kapat
 avatarTrigger.onclick = (e) => { 
     e.stopPropagation(); 
     userDropdown.classList.toggle("active"); 
 };
 window.onclick = () => userDropdown.classList.remove("active");
-
-// --- MODAL CONTROLS ---
-window.closeModal = (id) => { document.getElementById(id).style.display = "none"; }
-document.getElementById("openWheel").onclick = () => { document.getElementById("wheelModal").style.display = "flex"; userDropdown.classList.remove("active"); }
-document.getElementById("openBonus").onclick = () => { document.getElementById("bonusModal").style.display = "flex"; userDropdown.classList.remove("active"); }
-
-// --- SPIN LOGIC (PROBABILITY) ---
-let isSpinning = false;
-document.getElementById("spinAction").onclick = async () => {
-    if(isSpinning) return;
-    isSpinning = true;
-    const wheel = document.getElementById("mainWheel");
-    const resultDiv = document.getElementById("spinResult");
-    resultDiv.innerText = "Çark dönüyor...";
-
-    // Probability Logic
-    const rand = Math.random() * 100;
-    let winAmount = 0;
-    let deg = 0;
-
-    if(rand <= 10) { winAmount = 10000; deg = 315; } // %10 ihtimal (Top-Left)
-    else if(rand <= 40) { winAmount = 5000; deg = 225; } // %30 ihtimal (Bottom-Left)
-    else if(rand <= 60) { winAmount = 2500; deg = 135; } // %20 ihtimal (Bottom-Right) - Not: %60 total için düzenlendi
-    else { winAmount = 1000; deg = 45; } // %80'e tamamlayan ana ihtimal
-
-    const totalDeg = (360 * 5) + deg; // 5 tur + hedef açı
-    wheel.style.transform = `rotate(${totalDeg}deg)`;
-
-    setTimeout(async () => {
-        isSpinning = false;
-        resultDiv.innerText = `TEBRİKLER! ${winAmount.toLocaleString()} ₺ Kazandın!`;
-        if(auth.currentUser) {
-            await updateDoc(doc(db, "users", auth.currentUser.uid), { balance: increment(winAmount) });
-        }
-    }, 4000);
-};
-
-// --- BONUS CODE LOGIC ---
-document.getElementById("redeemBonus").onclick = async () => {
-    const code = document.getElementById("bonusInput").value;
-    if(code.trim() === "") return alert("Lütfen kod girin!");
-    alert("Kod kontrol ediliyor...");
-    // Burada Firestore üzerinden kod kontrolü yapabilirsin.
-    document.getElementById("bonusModal").style.display = "none";
-};
 
 // --- AUTH LOGIC ---
 let isLogin = true;
