@@ -9,7 +9,6 @@
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: 'Segoe UI', sans-serif; }
         body { background: #02040a; color: white; height: 100vh; overflow: hidden; }
 
-        /* ÜST BAR */
         .top-bar {
             position: fixed; top: 0; width: 100%; height: 60px;
             display: flex; align-items: center; justify-content: space-between;
@@ -23,7 +22,6 @@
         .bet-box { background: linear-gradient(135deg, #ff8a00, #e65100); color: #fff; }
         .back-btn { background: #d63031; color: white; padding: 8px 15px; border-radius: 10px; font-weight: 800; font-size: 11px; border: none; cursor: pointer; transition: 0.3s; }
 
-        /* GEÇMİŞ */
         .history {
             position: fixed; top: 60px; width: 100%; height: 40px;
             display: flex; align-items: center; gap: 8px; padding: 0 15px;
@@ -31,11 +29,9 @@
         }
         .history span { padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 800; font-family: 'Orbitron'; }
 
-        /* OYUN ALANI */
         .game-container { position: absolute; top: 0; left: 0; width: 100%; height: calc(100% - 240px); z-index: 1; }
         canvas { width: 100%; height: 100%; }
 
-        /* MERKEZİ X EKRANI */
         .multiplier-display {
             position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%);
             text-align: center; pointer-events: none; z-index: 10; width: 100%;
@@ -51,7 +47,6 @@
             0% { transform: translate(1px, 1px); } 50% { transform: translate(-2px, -1px); } 100% { transform: translate(1px, 1px); }
         }
 
-        /* ALT PANEL */
         .bottom-panel {
             position: fixed; bottom: 0; width: 100%; height: 240px;
             background: #080c18; border-top: 2px solid #161d36;
@@ -143,7 +138,7 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // --- SES SİSTEMİ (iOS UNLOCKED) ---
+    // --- GELİŞMİŞ SES SİSTEMİ (GERÇEKÇİ EFEKTLER) ---
     let audioCtx = null;
     const unlockAudio = () => {
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -153,28 +148,78 @@
     function playSfx(type) {
         if(!audioCtx) return;
         const now = audioCtx.currentTime;
-        const o = audioCtx.createOscillator();
-        const g = audioCtx.createGain();
-        o.connect(g); g.connect(audioCtx.destination);
-        if(type==='countdown') { o.frequency.setValueAtTime(600, now); g.gain.setValueAtTime(0.1, now); g.gain.exponentialRampToValueAtTime(0.01, now+0.1); o.start(); o.stop(now+0.1); }
-        if(type==='crash') { 
-            const b = audioCtx.createBuffer(1, audioCtx.sampleRate*0.3, audioCtx.sampleRate);
-            const d = b.getChannelData(0); for(let i=0; i<b.length; i++) d[i]=Math.random()*2-1;
-            const s = audioCtx.createBufferSource(); s.buffer=b; 
-            const f = audioCtx.createBiquadFilter(); f.type='lowpass'; f.frequency.setValueAtTime(400, now);
-            const gn = audioCtx.createGain(); gn.gain.setValueAtTime(0.3, now); gn.gain.exponentialRampToValueAtTime(0.01, now+0.3);
-            s.connect(f); f.connect(gn); gn.connect(audioCtx.destination); s.start(); s.stop(now+0.3);
+        
+        if(type==='countdown') {
+            const o = audioCtx.createOscillator();
+            const g = audioCtx.createGain();
+            o.connect(g); g.connect(audioCtx.destination);
+            o.frequency.setValueAtTime(500, now);
+            g.gain.setValueAtTime(0.1, now);
+            g.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+            o.start(); o.stop(now + 0.1);
         }
-        if(type==='bet') { o.frequency.setValueAtTime(400, now); g.gain.setValueAtTime(0.1, now); o.start(); o.stop(now+0.1); }
-        if(type==='cash') { o.frequency.setValueAtTime(800, now); o.frequency.exponentialRampToValueAtTime(1200, now+0.2); g.gain.setValueAtTime(0.1, now); o.start(); o.stop(now+0.2); }
+        
+        if(type==='crash') { 
+            // 1. Darbe (Low-Thump)
+            const lowOsc = audioCtx.createOscillator();
+            const lowGain = audioCtx.createGain();
+            lowOsc.type = 'sine';
+            lowOsc.frequency.setValueAtTime(120, now);
+            lowOsc.frequency.exponentialRampToValueAtTime(40, now + 0.4);
+            lowGain.gain.setValueAtTime(0.5, now);
+            lowGain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+            lowOsc.connect(lowGain); lowGain.connect(audioCtx.destination);
+            lowOsc.start(); lowOsc.stop(now + 0.4);
+
+            // 2. Gürültü (Explosion Noise)
+            const bufferSize = audioCtx.sampleRate * 0.5;
+            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+            const noise = audioCtx.createBufferSource();
+            const noiseGain = audioCtx.createGain();
+            const filter = audioCtx.createBiquadFilter();
+            noise.buffer = buffer;
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(800, now);
+            filter.frequency.exponentialRampToValueAtTime(100, now + 0.5);
+            noiseGain.gain.setValueAtTime(0.3, now);
+            noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+            noise.connect(filter); filter.connect(noiseGain); noiseGain.connect(audioCtx.destination);
+            noise.start(); noise.stop(now + 0.5);
+        }
+
+        if(type==='bet') {
+            const o = audioCtx.createOscillator();
+            const g = audioCtx.createGain();
+            o.frequency.setValueAtTime(400, now);
+            g.gain.setValueAtTime(0.1, now);
+            o.connect(g); g.connect(audioCtx.destination);
+            o.start(); o.stop(now + 0.05);
+        }
+
+        if(type==='cash') {
+            // "Bling-Bling" Efekti (İki nota yukarı)
+            [0, 0.08].forEach((delay, i) => {
+                const o = audioCtx.createOscillator();
+                const g = audioCtx.createGain();
+                o.type = 'triangle';
+                o.frequency.setValueAtTime(800 + (i * 400), now + delay);
+                g.gain.setValueAtTime(0.1, now + delay);
+                g.gain.exponentialRampToValueAtTime(0.01, now + delay + 0.2);
+                o.connect(g); g.connect(audioCtx.destination);
+                o.start(now + delay); o.stop(now + delay + 0.2);
+            });
+        }
     }
 
-    // --- OYUN MOTORU & UZAY ---
+    // --- OYUN MOTORU & DİNAMİK ÇİZGİ ---
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     let width, height, stars = [];
     let multiplier = 1.00, phase = "WAITING", balance = 0, userRef = null;
     let activeBet1 = 0, activeBet2 = 0, auto1 = false, auto2 = false;
+    let lineProgress = 0; // Çizgi ilerleme yüzdesi
 
     function initStars() {
         stars = []; for(let i=0; i<100; i++) stars.push({x: Math.random()*width, y: Math.random()*height, s: Math.random()*2});
@@ -184,21 +229,43 @@
 
     function draw() {
         ctx.fillStyle = "#02050e"; ctx.fillRect(0,0,width,height);
+        
+        // Yıldızlar
         ctx.fillStyle = "white";
         stars.forEach(s => {
             s.y += (phase === "FLYING" ? multiplier * 0.5 : 0.2);
             if(s.y > height) s.y = 0;
             ctx.beginPath(); ctx.arc(s.x, s.y, s.s, 0, Math.PI*2); ctx.fill();
         });
+
+        // Dinamik İlerleyen Çizgi
         if(phase === "FLYING") {
-            ctx.strokeStyle = "#4fd1ff"; ctx.lineWidth = 3; ctx.beginPath();
-            ctx.moveTo(0, height); ctx.quadraticCurveTo(width*0.5, height*0.9, width*0.8, height*0.3); ctx.stroke();
+            ctx.save();
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = "#4fd1ff";
+            ctx.strokeStyle = "#4fd1ff";
+            ctx.lineWidth = 4;
+            ctx.lineCap = "round";
+            
+            // Çizgi yolu tanımı
+            const startX = 0, startY = height;
+            const cpX = width * 0.5, cpY = height * 0.9;
+            const endX = width * 0.8, endY = height * 0.3;
+
+            // Çizgiyi çarpan hızına göre yavaşça uzat (lineProgress her tick'te artar)
+            ctx.setLineDash([width * 2]); // Çok uzun bir çizgi tanımla
+            ctx.lineDashOffset = (width * 2) * (1 - lineProgress); // Offset ile göster
+
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.quadraticCurveTo(cpX, cpY, endX, endY);
+            ctx.stroke();
+            ctx.restore();
         }
         requestAnimationFrame(draw);
     }
     draw();
 
-    // --- FIREBASE & BAŞLATMA ---
     onAuthStateChanged(auth, user => {
         if(user) {
             userRef = doc(db, "users", user.uid);
@@ -210,14 +277,14 @@
                 }
             });
         } else {
-            signInAnonymously(auth); // Otomatik giriş
-            setTimeout(() => { if(phase === "WAITING") startNewRound(); }, 3000); // Fallback
+            signInAnonymously(auth);
+            setTimeout(() => { if(phase === "WAITING") startNewRound(); }, 3000);
         }
     });
 
     function startNewRound() {
         if(phase === "COUNTDOWN" || phase === "FLYING") return;
-        phase = "COUNTDOWN"; multiplier = 1.00;
+        phase = "COUNTDOWN"; multiplier = 1.00; lineProgress = 0;
         document.getElementById('multiplier').classList.remove('crashed-text');
         document.getElementById('statusText').innerText = "HAZIRLANIN";
         document.getElementById('betInput1').disabled = false;
@@ -239,13 +306,16 @@
         document.getElementById('betInput1').disabled = true;
         document.getElementById('betInput2').disabled = true;
         let startTime = Date.now();
+        // Gerçekçi Crash Hesabı
         let crashPoint = parseFloat((Math.random() < 0.03 ? 1.00 : (0.97 / (1 - Math.random()))).toFixed(2));
         
         const tick = () => {
             if(phase !== "FLYING") return;
             const elapsed = (Date.now() - startTime) / 1000;
-            // YAVAŞ BAŞLAYAN İVME
+            
             multiplier = 1 + (Math.pow(elapsed * 0.2, 1.4));
+            // Çizgi ilerlemesini çarpan değerine göre ayarla (Maksimum 1.0 olacak şekilde)
+            lineProgress = Math.min(1, (multiplier - 1) / 5); 
             
             if(multiplier >= crashPoint) {
                 phase = "CRASHED";
