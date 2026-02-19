@@ -178,15 +178,25 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
                     <div class="stat-item">Durum: <b style="color:#00ff88">AKTİF</b></div>
                 </div>
                 <div class="menu-links">
-                    <a href="panel.html" class="menu-btn-item">👤Hesabım</a>
-                    <a href="#" class="menu-btn-item">💎Bonus/Çark</a>
-                    <a href="https://www.instagram.com/pixel_arena_games" class="menu-btn-item">🚔 Destek</a>
+                    <a href="javascript:void(0)" class="menu-btn-item side-trigger-item" id="openSideFromAvatar">☰ Menüyü Aç</a>
+                    <a href="panel.html" class="menu-btn-item">👤 Hesabım</a>
+                    <a href="#" class="menu-btn-item">💰 Para Yatır</a>
+                    <a href="#" class="menu-btn-item">🎁 Bonuslarım</a>
                     <a href="#" class="menu-btn-item logout-item" id="logoutBtn">🔴 Çıkış Yap</a>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<div id="sideMenu" class="side-menu">
+    <div class="menu-header">MENU <span id="closeMenu" style="cursor:pointer">✕</span></div>
+    <a href="index.html">🏠 Ana Sayfa</a>
+    <a href="panel.html">💎 Bonus / Çark</a>
+    <a href="#games">🕹️ Oyunlar</a>
+    <a href="https://www.instagram.com/pixel_arena_games" target="_blank">🚔 Destek</a>
+</div>
+<div id="menuOverlay" class="menu-overlay"></div>
 
 <div class="hero-search">
     <div class="search-container">
