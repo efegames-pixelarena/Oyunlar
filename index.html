@@ -21,16 +21,15 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
 
 #snow { position:fixed; top:0; left:0; width:100%; height:100%; z-index:1; pointer-events:none; opacity: 0.6; }
 
-/* --- SKYCRASH STYLE TOP BAR (FIXED LAYOUT) --- */
+/* --- SKYCRASH STYLE TOP BAR --- */
 .top-bar {
-    position: fixed; top: 0; width: 100%; height: 65px;
+    position: fixed; top: 0; width: 100%; height: 60px;
     display: flex; align-items: center; justify-content: space-between;
     padding: 0 15px; background: var(--glass);
     backdrop-filter: blur(15px); border-bottom: 1px solid var(--border); z-index: 2000;
 }
 
-/* Sol Kısım Sabit */
-.brand-section { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+.brand-section { display: flex; align-items: center; gap: 15px; flex-shrink: 0; }
 .brand {
     font-size: 18px; font-weight: 900; letter-spacing: 1px;
     background: linear-gradient(90deg, var(--primary), #fff);
@@ -39,75 +38,43 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
 }
 @keyframes shine { to { background-position: 200% center; } }
 
-/* Sağ Kısım - Kaymayı önleyen düzen */
-.right-menu { 
-    display: flex; 
-    gap: 8px; 
-    align-items: center; 
-    justify-content: flex-end;
-    max-width: 70%; /* Ekranın çok büyük kısmını kaplamasın */
-}
+.right-menu { display: flex; gap: 8px; align-items: center; }
 
-/* Bakiye Kutusu - Sabit Genişlik ve Esneklik */
+/* --- DÜZENLENMİŞ BAKİYE KUTUSU --- */
 .nav-box { 
-    padding: 8px 12px; border-radius: 12px; font-weight: 800; font-size: 12px; 
+    padding: 7px 12px; border-radius: 12px; font-weight: 800; font-size: 12px; 
     text-align: center; display: flex; align-items: center; justify-content: center;
-    white-space: nowrap; /* Yazıyı tek satırda tut */
+    white-space: nowrap;
 }
-.balance-box { 
-    background: #1a2248; 
-    border: 1px solid rgba(79, 209, 255, 0.2); 
-    color: var(--primary); 
-    display: none; 
-    flex-shrink: 0; /* Küçülmesin */
-}
+.balance-box { background: #1a2248; border: 1px solid rgba(79, 209, 255, 0.2); color: var(--primary); display: none; }
 
-/* Profil Kartı - Uzun isimlerde taşmayı önler */
+/* --- SADECE PROFİL FOTOĞRAFI (ICON) --- */
 .user-profile-section {
-    display: none; align-items: center; gap: 10px; cursor: pointer;
-    background: rgba(255,255,255,0.05); padding: 5px 12px; border-radius: 15px;
-    border: 1px solid var(--border); transition: 0.3s;
-    overflow: hidden; /* İçerik taşarsa gizle */
-    max-width: 150px; /* Maksimum genişlik sınırı */
+    display: none; align-items: center; justify-content: center; cursor: pointer;
+    transition: 0.3s; padding: 2px;
 }
-.user-profile-section:hover { background: rgba(79, 209, 255, 0.1); border-color: var(--primary); }
 
 .avatar {
-    width: 30px; height: 30px; border-radius: 50%;
+    width: 36px; height: 36px; border-radius: 50%;
     background: var(--primary); display: flex; align-items: center;
-    justify-content: center; font-weight: 900; color: #000; font-size: 14px;
-    box-shadow: 0 0 10px var(--primary); flex-shrink: 0;
-}
-.user-info-text { 
-    display: flex; flex-direction: column; line-height: 1.2; 
-    overflow: hidden; /* Uzun isimler için */
-}
-.u-name { 
-    font-size: 11px; font-weight: 800; color: white; text-transform: uppercase;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; /* İsmi ... ile kes */
-}
-.u-level { font-size: 9px; color: var(--primary); font-weight: 700; }
-
-/* Butonların küçülmesini engelle */
-.btn {
-    padding: 8px 14px; border-radius: 10px; border: none; cursor: pointer;
-    font-weight: 800; font-size: 12px; transition: 0.3s;
+    justify-content: center; font-weight: 900; color: #000; font-size: 16px;
+    box-shadow: 0 0 12px rgba(79, 209, 255, 0.4);
+    border: 2px solid rgba(255,255,255,0.1);
     flex-shrink: 0;
+}
+.user-profile-section:hover .avatar { transform: scale(1.05); border-color: var(--primary); }
+
+/* AUTH BUTTONS */
+.btn {
+    padding: 8px 16px; border-radius: 10px; border: none; cursor: pointer;
+    font-weight: 800; font-size: 12px; transition: 0.3s; flex-shrink: 0;
 }
 .login-btn { background: #1e2642; color: white; border: 1px solid rgba(255,255,255,0.1); }
 .register-btn { background: linear-gradient(90deg, #ff8a00, #ff5f00); color: #000; }
 .logout-btn { background: #ff2a4d; color: white; display: none; }
 
-/* Mobil Ayarlamalar */
-@media (max-width: 480px) {
-    .user-profile-section { max-width: 100px; padding: 5px 8px; }
-    .nav-box { min-width: auto; padding: 8px 10px; }
-    .brand { font-size: 16px; }
-    .right-menu { gap: 5px; }
-}
-
 /* --- SEARCH SECTION --- */
-.hero-search { margin-top: 95px; padding: 0 20px; text-align: center; }
+.hero-search { margin-top: 85px; padding: 0 20px; text-align: center; }
 .search-container { max-width: 600px; margin: 0 auto; position: relative; }
 .search-container input {
     width: 100%; padding: 16px 20px 16px 50px; border-radius: 20px;
@@ -201,17 +168,12 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
         <div id="menuBtn" style="cursor:pointer; font-size:24px;">☰</div>
         <div class="brand">PixelArena</div>
     </div>
-    
     <div class="right-menu">
         <div class="nav-box balance-box" id="balanceBox">
             ₺<span id="userBalance">0</span>
         </div>
 
         <div class="user-profile-section" id="userProfile" onclick="location.href='panel.html'">
-            <div class="user-info-text">
-                <span class="u-name" id="profileName">Loading</span>
-                <span class="u-level">LVL 1</span>
-            </div>
             <div class="avatar" id="avatarInitial">?</div>
         </div>
 
@@ -332,7 +294,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// --- SNOW EFFECT ---
+// --- PROFESSIONAL SNOW EFFECT ---
 const canvas = document.getElementById("snow");
 const ctx = canvas.getContext("2d");
 let particles = [];
@@ -361,7 +323,6 @@ const regBtn = document.querySelector(".register-btn");
 const logoutBtn = document.querySelector(".logout-btn");
 const balanceBox = document.getElementById("balanceBox");
 const userProfile = document.getElementById("userProfile");
-const profileName = document.getElementById("profileName");
 const avatarInitial = document.getElementById("avatarInitial");
 
 let isLogin = true;
@@ -401,11 +362,11 @@ onAuthStateChanged(auth, user => {
         logoutBtn.style.display="block"; 
         balanceBox.style.display="flex";
         userProfile.style.display="flex";
+
         onSnapshot(doc(db, "users", user.uid), s => {
             if(s.exists()) {
                 const userData = s.data();
                 document.getElementById("userBalance").innerText = userData.balance.toLocaleString();
-                profileName.innerText = userData.username;
                 avatarInitial.innerText = userData.username.charAt(0).toUpperCase();
             }
         });
