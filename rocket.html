@@ -65,8 +65,7 @@
         ctx: null,
         init() { if(!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); if(this.ctx.state === 'suspended') this.ctx.resume(); },
         play(f, t='square', v=0.05, d=100) {
-            this.init();
-            if(!this.ctx) return;
+            this.init(); if(!this.ctx) return;
             const o = this.ctx.createOscillator(), g = this.ctx.createGain();
             o.type = t; o.frequency.setValueAtTime(f, this.ctx.currentTime);
             g.gain.setValueAtTime(v, this.ctx.currentTime);
@@ -102,13 +101,13 @@
 
     function addRocket() {
         if(entities.rockets.length >= 5) return;
-        const offsets = [0, -40, 40, -80, 80]; // Daha net ayrım için ofsetler
+        const offsets = [0, -40, 40, -80, 80];
         entities.rockets.push({ off: offsets[entities.rockets.length] });
         audio.play(500, 'triangle', 0.1, 200);
     }
 
-    function createExplosion(x, y, color) {
-        for(let i=0; i<10; i++) entities.particles.push({ x, y, vx: (Math.random()-0.5)*6, vy: (Math.random()-0.5)*6, l: 1, c: color, s: Math.random()*3 + 1 });
+    function createExplosion(x, y, color, amount = 10) {
+        for(let i=0; i<amount; i++) entities.particles.push({ x, y, vx: (Math.random()-0.5)*6, vy: (Math.random()-0.5)*6, l: 1, c: color, s: Math.random()*3 + 1 });
     }
 
     function checkHit(a, b, wa, ha, wb, hb) {
@@ -121,7 +120,6 @@
 
         entities.stars.forEach(s => { s.y += s.v; if(s.y > H) s.y = 0; });
 
-        // DÜZELTİLMİŞ SINIR HESAPLAMA
         let minOff = 0, maxOff = 0;
         entities.rockets.forEach(r => {
             if(r.off < minOff) minOff = r.off;
@@ -134,21 +132,25 @@
         if(state.moveLeft) state.baseX = Math.max(leftLimit, state.baseX - 7);
         if(state.moveRight) state.baseX = Math.min(rightLimit, state.baseX + 7);
 
-        // Ateş Etme
         if(state.frame % 12 === 0) {
             entities.rockets.forEach(r => entities.mermiler.push({ x: state.baseX + r.off + 18, y: 430 }));
             audio.play(150, 'sine', 0.02, 50);
         }
 
-        // Düşman Oluşumu
         if(state.frame % Math.max(15, 45 - Math.floor(state.score/15)) === 0) entities.enemies.push({ x: Math.random()*(W-40), y: -40, v: 2 + (state.score*0.04) });
-        if(state.score > 0 && state.score % 50 === 0 && !entities.boss) entities.boss = { x: W/2-40, y: -100, hp: 40, max: 40 };
+        
+        // Boss Spawn
+        if(state.score > 0 && state.score % 50 === 0 && !entities.boss) {
+            entities.boss = { x: W/2-40, y: -100, hp: 40, max: 40 };
+        }
 
-        // Mermi Hareket ve Çarpışma
-        entities.mermiler.forEach((m, mi) => {
+        // Mermiler
+        for(let mi = entities.mermiler.length - 1; mi >= 0; mi--) {
+            let m = entities.mermiler[mi];
             m.y -= 10;
-            if(m.y < -20) entities.mermiler.splice(mi, 1);
+            if(m.y < -20) { entities.mermiler.splice(mi, 1); continue; }
             
+            // Powerup'ları vurma
             entities.powerups.forEach((p, pi) => {
                 if(checkHit(m, p, 4, 15, 30, 30)) {
                     if(p.t === 'W') addRocket(); else state.lives = Math.min(5, state.lives + 1);
@@ -157,7 +159,7 @@
                     entities.mermiler.splice(mi, 1);
                 }
             });
-        });
+        }
 
         // Düşmanlar
         entities.enemies.forEach((e, i) => {
@@ -174,15 +176,15 @@
             });
         });
 
-        // Powerup
+        // Powerup Üretimi
         if(state.frame % 800 === 0) {
             const type = (entities.rockets.length < 5) ? (Math.random() > 0.4 ? 'W' : 'L') : 'L';
             entities.powerups.push({ x: Math.random()*(W-40), y: -40, t: type });
         }
 
+        // Powerup Toplama (Çarpışma)
         entities.powerups.forEach((p, i) => {
             p.y += 2;
-            // Temas alanı roketlerin genişliğine göre ayarlandı
             if(checkHit({x: state.baseX + minOff, y: 430}, p, (maxOff - minOff) + 40, 50, 30, 30)) {
                 if(p.t === 'W') addRocket(); else state.lives = Math.min(5, state.lives + 1);
                 entities.powerups.splice(i, 1);
@@ -190,16 +192,37 @@
             }
         });
 
-        // Boss
+        // BOSS MANTIĞI VE KALP SPAM
         if(entities.boss) {
-            entities.boss.y = Math.min(60, entities.boss.y + 1);
-            entities.boss.x += Math.sin(state.frame/20)*2;
-            entities.mermiler.forEach((m, mi) => {
-                if(checkHit(m, entities.boss, 4, 15, 80, 80)) {
-                    entities.boss.hp--; entities.mermiler.splice(mi, 1);
-                    if(entities.boss.hp <= 0) { state.score += 20; entities.boss = null; updateUI(); }
+            let b = entities.boss;
+            b.y = Math.min(60, b.y + 1);
+            b.x += Math.sin(state.frame/20)*2;
+            
+            for(let mi = entities.mermiler.length - 1; mi >= 0; mi--) {
+                let m = entities.mermiler[mi];
+                if(checkHit(m, b, 4, 15, 80, 80)) {
+                    b.hp--;
+                    entities.mermiler.splice(mi, 1);
+                    audio.play(200, 'sawtooth', 0.02, 50);
+                    
+                    if(b.hp <= 0) {
+                        // Boss Öldü: Kalp Spam Başlat
+                        for(let k=0; k<5; k++) {
+                            entities.powerups.push({ 
+                                x: b.x + Math.random()*60, 
+                                y: b.y + Math.random()*40, 
+                                t: 'L' 
+                            });
+                        }
+                        createExplosion(b.x+40, b.y+40, '#ff0055', 30);
+                        state.score += 20;
+                        entities.boss = null; 
+                        updateUI();
+                        audio.play(80, 'square', 0.2, 500); // Patlama sesi
+                        break; 
+                    }
                 }
-            });
+            }
         }
 
         entities.particles.forEach((p, i) => { p.x += p.vx; p.y += p.vy; p.l -= 0.03; if(p.l <= 0) entities.particles.splice(i, 1); });
