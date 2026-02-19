@@ -172,12 +172,14 @@ let audioCtx = null, balance = 0, bet = 0, userRef = null;
 let gameState = "loading", betCountdown = null, actionTimer = null;
 let deck = [], player = [], dealer = [], dealerHidden = true;
 
+const messageEl = document.getElementById("message");
+
 function initAudio() {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     if (audioCtx.state === 'suspended') audioCtx.resume();
 }
 
-// --- PROFESYONEL KART VE OYUN SESLERİ ---
+// --- PROFESYONEL SES MOTORU ---
 function playSound(type) {
     initAudio();
     const now = audioCtx.currentTime;
@@ -195,34 +197,31 @@ function playSound(type) {
     };
 
     if(type === 'card') {
-        // KATMAN 1: Kartın desteden çıkış sürtünme sesi (Friction)
-        const bufferSize = audioCtx.sampleRate * 0.2;
+        // Gerçekçi Kart Sesi: Sürtünme + Masaya Vuruş
+        const bufferSize = audioCtx.sampleRate * 0.25;
         const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
         const data = buffer.getChannelData(0);
         for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-        
         const noise = audioCtx.createBufferSource();
         noise.buffer = buffer;
         const filter = audioCtx.createBiquadFilter();
         filter.type = 'bandpass';
-        filter.frequency.setValueAtTime(1000, now);
-        filter.frequency.exponentialRampToValueAtTime(3000, now + 0.15);
+        filter.frequency.setValueAtTime(1200, now);
+        filter.frequency.exponentialRampToValueAtTime(400, now + 0.2);
         const g = audioCtx.createGain();
-        g.gain.setValueAtTime(0.07, now);
+        g.gain.setValueAtTime(0.08, now);
         g.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
         noise.connect(filter); filter.connect(g); g.connect(audioCtx.destination);
         noise.start();
-
-        // KATMAN 2: Kartın masaya inişindeki tok ses (Tap)
-        playOsc(180, 'sine', 0.05, now + 0.1, now + 0.2);
+        playOsc(200, 'sine', 0.06, now + 0.1, now + 0.2);
     }
 
-    if(type==='chip') playOsc(220, 'sine', 0.4, now, now + 0.1, 60);
+    if(type==='chip') playOsc(240, 'sine', 0.3, now, now + 0.08, 80);
     if(type==='win') [523, 659, 783, 1046].forEach((f, i) => playOsc(f, 'sine', 0.1, now + i*0.1, now + i*0.1 + 0.3));
     if(type==='lose') playOsc(130, 'sawtooth', 0.2, now, now + 0.5, 40);
     if(type==='bust') playOsc(70, 'square', 0.3, now, now + 0.4, 30);
-    if(type==='count') playOsc(800, 'sine', 0.1, now, now + 0.05);
-    if(type==='clear') playOsc(350, 'sine', 0.2, now, now + 0.15, 100);
+    if(type==='count') playOsc(850, 'sine', 0.1, now, now + 0.05);
+    if(type==='clear') playOsc(400, 'sine', 0.2, now, now + 0.1, 150);
 }
 
 onAuthStateChanged(auth, user => {
@@ -253,26 +252,29 @@ window.cancelBet = () => {
     document.getElementById("balance").innerText = balance.toLocaleString('tr-TR');
     document.getElementById("bet").innerText = 0;
     if(betCountdown) { clearInterval(betCountdown); betCountdown = null; }
-    document.getElementById("message").innerText = "BAHİS YAPIN";
+    messageEl.innerText = "BAHİS YAPIN";
     document.querySelectorAll('.chip').forEach(c => c.classList.remove("disabled"));
 };
 
 function startBetCountdown(){
     let s = 5;
-    document.getElementById("message").innerText = "BAŞLIYOR: " + s;
+    messageEl.innerText = "BAŞLIYOR: " + s;
     betCountdown = setInterval(() => {
         s--;
-        if(s > 0) { document.getElementById("message").innerText = "BAŞLIYOR: " + s; playSound('count'); }
-        else { 
+        if(s > 0) { 
+            messageEl.innerText = "BAŞLIYOR: " + s; 
+            playSound('count'); 
+        } else { 
             clearInterval(betCountdown); 
             betCountdown = null; 
+            messageEl.innerText = ""; // Yazı burada temizlenir
             startGame(); 
         }
     }, 1000);
 }
 
 async function startGame(){
-    if(bet < 250) { document.getElementById("message").innerText = "MİNİMUM 250₺!"; return; }
+    if(bet < 250) { messageEl.innerText = "MİNİMUM 250₺!"; return; }
     gameState = "playing";
     document.getElementById("chipsArea").classList.add("disabled");
     document.getElementById("dealerCards").innerHTML = "";
@@ -287,11 +289,11 @@ async function startGame(){
     await draw(dealer, "dealerCards", true);
 
     if(total(player) === 21) { 
-        document.getElementById("message").innerText = "BLACKJACK!"; 
+        messageEl.innerText = "BLACKJACK!"; 
         await delay(1200);
         dealerTurn(true); 
     } else { 
-        document.getElementById("message").innerText = "";
+        messageEl.innerText = "";
         document.getElementById("controls").style.display = "flex"; 
         startActionTimer(); 
     }
@@ -310,14 +312,10 @@ async function draw(hand, divId, hidden=false){
     `;
     
     document.getElementById(divId).appendChild(cardCont);
-    
     setTimeout(() => {
         cardCont.classList.add("show");
-        if(!hidden) {
-            setTimeout(() => cardCont.classList.add("flipped"), 600);
-        }
+        if(!hidden) setTimeout(() => cardCont.classList.add("flipped"), 600);
     }, 50);
-    
     updateScores();
 }
 
@@ -358,17 +356,25 @@ function getSmartCard(isDealer) {
 
 function startActionTimer(){
     let s = 10;
-    document.getElementById("message").innerText = "KARAR (" + s + ")";
+    messageEl.innerText = "KARAR (" + s + ")";
     actionTimer = setInterval(() => {
         s--;
-        if(s > 0) { document.getElementById("message").innerText = "KARAR (" + s + ")"; playSound('count'); }
-        else { clearInterval(actionTimer); stand(); }
+        if(s > 0) { 
+            messageEl.innerText = "KARAR (" + s + ")"; 
+            playSound('count'); 
+        } else { 
+            clearInterval(actionTimer); 
+            actionTimer = null;
+            messageEl.innerText = ""; // Yazı burada temizlenir
+            stand(); 
+        }
     }, 1000);
 }
 
 document.getElementById("hit").onclick = async () => {
     initAudio();
-    clearInterval(actionTimer); 
+    if(actionTimer) { clearInterval(actionTimer); actionTimer = null; }
+    messageEl.innerText = "";
     document.getElementById("controls").style.display = "none";
     await draw(player, "playerCards");
     if(total(player) >= 21) {
@@ -381,7 +387,8 @@ document.getElementById("hit").onclick = async () => {
 
 const stand = () => { 
     initAudio();
-    clearInterval(actionTimer); 
+    if(actionTimer) { clearInterval(actionTimer); actionTimer = null; }
+    messageEl.innerText = "";
     document.getElementById("controls").style.display="none"; 
     dealerTurn(); 
 };
@@ -418,7 +425,7 @@ async function endGame(){
     else { txt="BERABERE"; m=1; playSound('clear'); }
     
     if(m>0) await updateDoc(userRef, { balance: increment(Math.floor(bet*m)) });
-    document.getElementById("message").innerText = txt;
+    messageEl.innerText = txt;
     await delay(3000);
     
     document.getElementById("dealerCards").innerHTML = "";
@@ -429,7 +436,7 @@ async function endGame(){
     gameState = "betting";
     document.getElementById("chipsArea").classList.remove("disabled");
     document.querySelectorAll('.chip').forEach(c => c.classList.remove("disabled"));
-    document.getElementById("message").innerText = "BAHİS YAPIN";
+    messageEl.innerText = "BAHİS YAPIN";
 }
 
 function delay(ms){ return new Promise(r => setTimeout(r, ms)); }
