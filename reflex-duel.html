@@ -94,6 +94,13 @@ body::before {
     font-family: 'Orbitron';
 }
 
+.exit-btn {
+    background: #333; color: #ff4444; border: 1px solid #444; padding: 6px 10px; 
+    border-radius: 6px; font-weight: 800; font-size: 0.65rem; cursor: pointer;
+    font-family: 'Orbitron'; transition: all 0.2s;
+}
+.exit-btn:active { background: #ff4444; color: white; }
+
 .penalty { color: var(--a) !important; animation: shake 0.3s infinite; }
 @keyframes shake { 0%,100%{transform: scale(1);} 50%{transform: scale(1.1);} }
 </style>
@@ -104,7 +111,8 @@ body::before {
     <div class="brand">PRO ELITE</div>
     <div style="display:flex; gap:10px; align-items:center;">
         <div id="userBox" style="font-weight: 700; color: var(--p); font-size: 0.8rem;">...</div>
-        <button id="leaveBtn" class="back-btn" style="display:none;">GERİ DÖN</button>
+        <button id="lobbyExitBtn" class="exit-btn" onclick="location.reload()">ÇIKIŞ</button>
+        <button id="leaveBtn" class="back-btn" style="display:none;">LOBBY'E DÖN</button>
     </div>
 </div>
 
@@ -173,7 +181,6 @@ let uid, username, currentRoomId = null, unsubRoom = null, tapLock = false;
 let countdownInterval = null, lastTapTime = 0, lastState = "";
 let serverOffset = 0;
 
-// Server Time Senkronizasyonu
 const syncTime = async () => {
     const offsetRef = doc(db, ".info/serverTimeOffset");
     onSnapshot(offsetRef, (snap) => {
@@ -182,7 +189,6 @@ const syncTime = async () => {
 };
 const getServerTime = () => Date.now() + serverOffset;
 
-// iOS Audio Context Fix
 let audioCtx = null;
 const initAudio = () => {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -270,23 +276,16 @@ document.getElementById("confirmCreateBtn").onclick = async () => {
 window.joinRoom = async (id, isLocked) => {
     initAudio();
     const roomRef = doc(db, "rooms", id);
-    
     try {
         await runTransaction(db, async (transaction) => {
             const snap = await transaction.get(roomRef);
             const data = snap.data();
             if (data.player2) throw "Arena Dolu!";
-            
             if (isLocked) {
                 const pass = prompt("ARENA ŞİFRESİ:");
                 if (data.password !== pass) throw "Şifre Hatalı!";
             }
-            
-            transaction.update(roomRef, { 
-                player2: uid, 
-                player2Name: username, 
-                state: "matched" 
-            });
+            transaction.update(roomRef, { player2: uid, player2Name: username, state: "matched" });
             currentRoomId = id;
         });
         enterRoom();
@@ -295,6 +294,7 @@ window.joinRoom = async (id, isLocked) => {
 
 function enterRoom() {
     document.getElementById("lobby").style.display = "none";
+    document.getElementById("lobbyExitBtn").style.display = "none";
     document.getElementById("game-view").style.display = "flex";
     document.getElementById("leaveBtn").style.display = "block";
     
@@ -303,14 +303,12 @@ function enterRoom() {
         if (!snap.exists()) { quitGame(); return; }
         const d = snap.data();
         
-        // UI Güncelleme - Güvenli İsimler
         document.getElementById("p1Name").innerText = (d.player1Name || "Bilinmiyor").toUpperCase();
         document.getElementById("p1Score").innerText = d.score1;
         document.getElementById("p2Name").innerText = (d.player2Name || "BEKLENİYOR").toUpperCase();
         document.getElementById("p2Score").innerText = d.score2;
         document.getElementById("roundNum").innerText = `RD ${d.round}`;
 
-        // Rakip ayrılma kontrolü
         if ((d.state === "countdown" || d.state === "active") && (!d.player1 || !d.player2)) {
             updateDoc(doc(db, "rooms", currentRoomId), { state: "finished" });
             return;
@@ -337,7 +335,7 @@ function enterRoom() {
                         clearInterval(countdownInterval);
                         if (uid === d.host) updateDoc(doc(db, "rooms", currentRoomId), { state: "active", roundStart: getServerTime() });
                     }
-                }, 50); // Daha akıcı kontrol
+                }, 50);
             }
 
             if (d.state === "active") {
@@ -405,7 +403,7 @@ document.getElementById("arena").addEventListener('pointerdown', async (e) => {
             lastWinner: isP1 ? (d.player2Name || "Rakip") : (d.player1Name || "Host"),
             reaction: "HATA!"
         });
-        setTimeout(() => { tapLock = false; }, 1000);
+        setTimeout(() => { tapLock = false; }, 500);
         return; 
     }
 
@@ -413,7 +411,6 @@ document.getElementById("arena").addEventListener('pointerdown', async (e) => {
 
     tapLock = true;
     const reactionTime = now - d.roundStart;
-
     try {
         await runTransaction(db, async (transaction) => {
             const fSnap = await transaction.get(roomRef);
@@ -429,7 +426,7 @@ document.getElementById("arena").addEventListener('pointerdown', async (e) => {
             });
         });
     } catch (e) {}
-    setTimeout(() => { tapLock = false; }, 1000);
+    setTimeout(() => { tapLock = false; }, 500);
 });
 
 async function quitGame() {
