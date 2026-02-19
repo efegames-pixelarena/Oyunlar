@@ -407,13 +407,15 @@ function enterRoom() {
         if (d.state !== lastState) {
             if (countdownInterval) clearInterval(countdownInterval);
             
+            // MAÇ BAŞLANGICI (İLK RAUND)
             if (d.state === "matched" && uid === d.host) {
                 updateDoc(doc(db, "rooms", currentRoomId), { 
                     state: "countdown", 
-                    startTime: getServerTime() + 5500 
+                    startTime: getServerTime() + 3500 // 3 Saniye + Buffer
                 });
             }
 
+            // GERİ SAYIM MANTIĞI
             if (d.state === "countdown") {
                 document.getElementById("arena").classList.remove("flash");
                 document.getElementById("subText").classList.remove("penalty");
@@ -424,7 +426,7 @@ function enterRoom() {
                     const diffMs = d.startTime - now;
                     const diffSec = Math.max(0, Math.ceil(diffMs / 1000));
                     
-                    if (diffSec > 0 && diffSec <= 5) {
+                    if (diffSec > 0) {
                         document.getElementById("bigText").innerText = diffSec;
                         document.getElementById("subText").innerText = "HAZIRLAN";
                         if (diffSec !== lastTick) {
@@ -436,11 +438,15 @@ function enterRoom() {
                     if (diffMs <= 0) {
                         clearInterval(countdownInterval);
                         document.getElementById("bigText").innerText = "GO!";
+                        // Sadece Host active durumuna geçirir
                         if (uid === d.host) {
-                            updateDoc(doc(db, "rooms", currentRoomId), { state: "active", roundStart: getServerTime() });
+                            updateDoc(doc(db, "rooms", currentRoomId), { 
+                                state: "active", 
+                                roundStart: getServerTime() 
+                            });
                         }
                     }
-                }, 30);
+                }, 50);
             }
 
             if (d.state === "active") {
@@ -450,6 +456,7 @@ function enterRoom() {
                 document.getElementById("subText").innerText = "ŞİMDİ VUR!";
             }
 
+            // SONUÇ EKRANI VE RAUND GEÇİŞİ
             if (d.state === "result") {
                 document.getElementById("arena").classList.remove("flash");
                 document.getElementById("bigText").innerText = d.reaction || "WIN";
@@ -461,16 +468,22 @@ function enterRoom() {
                     document.getElementById("subText").innerText = (d.lastWinner || "PLAYER").toUpperCase() + " KAZANDI";
                 }
                 
+                // HOST: 2.5 saniye sonra yeni raundu başlatır
                 if (uid === d.host) {
                     setTimeout(() => {
                         if(!currentRoomId) return;
                         const isFinal = (d.score1 >= 11 || d.score2 >= 11);
-                        updateDoc(doc(db, "rooms", currentRoomId), { 
-                            state: isFinal ? "finished" : "countdown", 
-                            startTime: getServerTime() + 5500, // <--- HER RAUND İÇİN 5 SANİYE FİX
-                            round: isFinal ? d.round : d.round + 1,
-                            penalty: false
-                        });
+                        if (isFinal) {
+                            updateDoc(doc(db, "rooms", currentRoomId), { state: "finished" });
+                        } else {
+                            // KÖKTEN ÇÖZÜM: Yeni startTime her raund için host tarafından tekrar set edilir.
+                            updateDoc(doc(db, "rooms", currentRoomId), { 
+                                state: "countdown", 
+                                startTime: getServerTime() + 3500, // <--- 3 SANİYE GERİ SAYIM
+                                round: d.round + 1,
+                                penalty: false
+                            });
+                        }
                     }, 2500);
                 }
             }
@@ -495,6 +508,7 @@ document.getElementById("arena").addEventListener('pointerdown', async (e) => {
     const d = roomData;
     const roomRef = doc(db, "rooms", currentRoomId);
     
+    // Erken Basma (Countdown veya Matched aşamasında basılırsa)
     if (d.state === "countdown" || (d.state === "matched" && d.player2)) {
         tapLock = true;
         const isP1 = uid === d.player1;
@@ -506,8 +520,9 @@ document.getElementById("arena").addEventListener('pointerdown', async (e) => {
             lastWinner: isP1 ? d.player2Name : d.player1Name,
             reaction: "HATA!"
         });
-        setTimeout(() => tapLock = false, 800);
+        setTimeout(() => tapLock = false, 1000);
     } 
+    // Doğru Basma
     else if (d.state === "active") {
         tapLock = true;
         const reaction = now - d.roundStart;
@@ -524,7 +539,7 @@ document.getElementById("arena").addEventListener('pointerdown', async (e) => {
                 });
             });
         } catch(e) {}
-        setTimeout(() => tapLock = false, 800);
+        setTimeout(() => tapLock = false, 1000);
     }
 });
 
