@@ -28,9 +28,9 @@
     
     /* KIRMIZI GERİ BUTONU */
     .back-btn{
-        background:#d63031; color:white; padding:7px 12px; border-radius:10px; 
-        font-weight:800; font-size:11px; text-decoration:none; text-align:center;
-        border: 1px solid rgba(255,255,255,0.2);
+        background:#d63031; color:white; padding:6px 12px; border-radius:10px; 
+        font-weight:800; font-size:11px; text-decoration:none; display:flex; 
+        align-items:center; border:none; cursor:pointer;
     }
 
     .history{
@@ -93,7 +93,7 @@
     <div class="right-menu">
         <div class="nav-box balance-box">₺<span id="balance">0</span></div>
         <div class="nav-box bet-box">B: ₺<span id="bet">0</span></div>
-        <a href="javascript:history.back()" class="back-btn">GERİ</a>
+        <button class="back-btn" onclick="window.history.back()">GERİ</button>
     </div>
 </div>
 
@@ -137,8 +137,7 @@ const db = getFirestore(app);
 
 // --- GELİŞTİRİLMİŞ İOS SES MOTORU ---
 let audioCtx = null;
-let engineOsc = null;
-let engineGain = null;
+let flightOsc = null;
 
 const initAudio = () => {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -155,33 +154,38 @@ function playSfx(type) {
     if(type==='countdown') {
         osc.frequency.setValueAtTime(600, now);
         g.gain.setValueAtTime(0.1, now);
-        g.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-        osc.start(); osc.stop(now + 0.1);
+        g.gain.exponentialRampToValueAtTime(0.01, now+0.1);
+        osc.start(); osc.stop(now+0.1);
     }
-    if(type==='fly_start') {
-        engineOsc = audioCtx.createOscillator();
-        engineGain = audioCtx.createGain();
-        engineOsc.type = 'sawtooth';
-        engineOsc.connect(engineGain);
-        engineGain.connect(audioCtx.destination);
-        engineOsc.frequency.setValueAtTime(50, now);
-        engineGain.gain.setValueAtTime(0, now);
-        engineGain.gain.linearRampToValueAtTime(0.05, now + 0.5);
-        engineOsc.start();
+    if(type==='bet') { 
+        osc.frequency.setValueAtTime(440, now); 
+        g.gain.setValueAtTime(0.1, now); g.gain.exponentialRampToValueAtTime(0.01, now+0.1);
+        osc.start(); osc.stop(now+0.1); 
     }
-    if(type==='fly_loop' && engineOsc) {
-        engineOsc.frequency.setTargetAtTime(50 + (multiplier * 15), now, 0.1);
-    }
-    if(type==='win') { 
-        osc.frequency.setValueAtTime(800, now); osc.frequency.exponentialRampToValueAtTime(1500, now+0.2);
-        g.gain.setValueAtTime(0.2, now); g.gain.linearRampToValueAtTime(0, now+0.3);
+    if(type==='cash') { // KAZANÇ SESİ
+        osc.frequency.setValueAtTime(800, now); osc.frequency.exponentialRampToValueAtTime(1600, now+0.3);
+        g.gain.setValueAtTime(0.15, now); g.gain.linearRampToValueAtTime(0, now+0.3);
         osc.start(); osc.stop(now+0.3); 
     }
-    if(type==='crash') { 
-        if(engineOsc) { engineOsc.stop(); engineOsc = null; }
+    if(type==='lose') { // KAYBETME SESİ
+        osc.frequency.setValueAtTime(200, now);
+        g.gain.setValueAtTime(0.2, now); g.gain.linearRampToValueAtTime(0, now+0.4);
+        osc.start(); osc.stop(now+0.4);
+    }
+    if(type==='flight') { // UÇUŞ SESİ (SÜREKLİ)
+        flightOsc = audioCtx.createOscillator();
+        const fGain = audioCtx.createGain();
+        flightOsc.type = 'sawtooth';
+        flightOsc.frequency.setValueAtTime(40, now);
+        flightOsc.connect(fGain); fGain.connect(audioCtx.destination);
+        fGain.gain.setValueAtTime(0.02, now);
+        flightOsc.start();
+    }
+    if(type==='crash') { // PATLAMA SESİ
+        if(flightOsc) { flightOsc.stop(); flightOsc = null; }
         osc.type = 'square'; osc.frequency.setValueAtTime(100, now);
         osc.frequency.linearRampToValueAtTime(30, now+0.5);
-        g.gain.setValueAtTime(0.3, now); g.gain.linearRampToValueAtTime(0, now+0.5);
+        g.gain.setValueAtTime(0.25, now); g.gain.linearRampToValueAtTime(0, now+0.5);
         osc.start(); osc.stop(now+0.5); 
     }
 }
@@ -193,14 +197,6 @@ let activeBet1 = 0, activeBet2 = 0, startTime = 0;
 const multEl = document.getElementById("multiplier");
 const balEl = document.getElementById("balance");
 const betTotalEl = document.getElementById("bet");
-
-// --- KASA AVANTAJLI ALGORİTMA ---
-function generateCrashPoint() {
-    const rand = Math.random();
-    // %3 Kasa avantajı (House Edge)
-    if (rand < 0.03) return 1.00; 
-    return Math.max(1.00, (0.97 / (1 - rand))).toFixed(2);
-}
 
 // --- UZAY SİMÜLASYONU ---
 const canvas = document.getElementById("graph");
@@ -230,10 +226,7 @@ function draw() {
         ctx.beginPath(); ctx.moveTo(60, canvas.height - 60);
         ctx.quadraticCurveTo(canvas.width/3, canvas.height - 60, px, py); ctx.stroke();
         ctx.setLineDash([]);
-        ctx.shadowBlur = 15; ctx.shadowColor = "#4fd1ff";
         ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(px, py, 5, 0, Math.PI*2); ctx.fill();
-        ctx.shadowBlur = 0;
-        playSfx('fly_loop');
     }
     requestAnimationFrame(draw);
 }
@@ -253,10 +246,17 @@ onAuthStateChanged(auth, user => {
     }
 });
 
+// GERÇEK KASA AVANTAJLI ALGORİTMA (%3 House Edge)
+function getCrashPoint() {
+    const random = Math.random();
+    if (random < 0.03) return 1.00; // %3 ihtimalle anında patlar
+    return (0.97 / (1 - random)).toFixed(2);
+}
+
 function updateMultiplier() {
     if(phase !== "flying") return;
     const elapsed = (Date.now() - startTime) / 1000;
-    multiplier = Math.pow(1.12, elapsed);
+    multiplier = Math.pow(1.11, elapsed);
     
     if(multiplier >= crashPoint) {
         doCrash();
@@ -280,8 +280,8 @@ function startCountdown() {
             clearInterval(timer);
             phase = "flying";
             startTime = Date.now();
-            crashPoint = generateCrashPoint();
-            playSfx('fly_start');
+            crashPoint = parseFloat(getCrashPoint());
+            playSfx('flight');
             updateMultiplier();
         }
         sec--;
@@ -291,6 +291,7 @@ function startCountdown() {
 function doCrash() {
     phase = "crashed";
     playSfx('crash');
+    if (activeBet1 > 0 || activeBet2 > 0) playSfx('lose');
     multEl.className = "multiplier big crashed";
     multEl.innerText = multiplier.toFixed(2) + "x\nPATLADI!";
     addHistory(multiplier);
@@ -301,9 +302,8 @@ function doCrash() {
 
 function addHistory(val) {
     const span = document.createElement("span");
-    const v = parseFloat(val);
-    span.innerText = v.toFixed(2) + "x";
-    span.style.background = v < 2 ? "#ff2a4d" : "#00b894";
+    span.innerText = parseFloat(val).toFixed(2) + "x";
+    span.style.background = val < 2 ? "#ff2a4d" : "#00b894";
     const h = document.getElementById("history");
     h.prepend(span);
     if(h.children.length > 20) h.lastChild.remove();
@@ -319,6 +319,7 @@ async function handleBet(box) {
     if(phase === "betting" && currentActive === 0 && balance >= amount && amount > 0) {
         await updateDoc(userRef, { balance: increment(-amount) });
         if(box === 1) activeBet1 = amount; else activeBet2 = amount;
+        playSfx('bet');
     } 
     else if(phase === "betting" && currentActive > 0) {
         await updateDoc(userRef, { balance: increment(currentActive) });
@@ -328,7 +329,7 @@ async function handleBet(box) {
         let win = Math.floor(currentActive * multiplier);
         await updateDoc(userRef, { balance: increment(win) });
         if(box === 1) activeBet1 = 0; else activeBet2 = 0;
-        playSfx('win');
+        playSfx('cash');
     }
     betTotalEl.innerText = activeBet1 + activeBet2;
     updateButtons();
@@ -356,8 +357,9 @@ function updateButtons() {
 
 document.getElementById("btn1").onclick = () => handleBet(1);
 document.getElementById("btn2").onclick = () => handleBet(2);
-// iOS ses aktivasyonu için
-document.body.addEventListener('touchstart', initAudio, {once: true});
+
+// iOS Ses Aktivasyonu İçin İlk Dokunuş
+document.addEventListener('touchstart', initAudio, { once: true });
 </script>
 </body>
 </html>
