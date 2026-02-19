@@ -3,91 +3,111 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-    <title>PixelArena SkyCrash PRO</title>
+    <title>SkyCrash PRO: Galaxy Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap" rel="stylesheet">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
-        body { background: #05070f; color: white; height: 100vh; overflow: hidden; }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: 'Segoe UI', sans-serif; }
+        body { background: #02040a; color: white; height: 100vh; overflow: hidden; }
 
-        /* ÜST BAR - KORUNAN TASARIM */
+        /* ÜST BAR (TASARIM KORUNDU) */
         .top-bar {
             position: fixed; top: 0; width: 100%; height: 60px;
             display: flex; align-items: center; justify-content: space-between;
-            padding: 0 12px; background: rgba(10, 15, 30, 0.95);
-            backdrop-filter: blur(15px); border-bottom: 1px solid #1e2642; z-index: 1000;
+            padding: 0 12px; background: rgba(10, 15, 30, 0.85);
+            backdrop-filter: blur(20px); border-bottom: 1px solid rgba(79, 209, 255, 0.2); z-index: 1000;
         }
-        .brand { font-size: 16px; font-weight: 900; background: linear-gradient(90deg, #4fd1ff, #fff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .right-menu { display: flex; gap: 6px; align-items: center; }
-        .nav-box { padding: 6px 10px; border-radius: 10px; font-weight: 700; font-size: 11px; min-width: 85px; text-align: center; }
-        .balance-box { background: #1a2248; border: 1px solid #4fd1ff44; color: #4fd1ff; }
-        .bet-box { background: linear-gradient(90deg, #ff8a00, #ff5f00); color: #000; }
-        .back-btn { background: #d63031; color: white; padding: 6px 12px; border-radius: 10px; font-weight: 800; font-size: 11px; border: none; cursor: pointer; }
+        .brand { font-family: 'Orbitron', sans-serif; font-size: 18px; font-weight: 900; background: linear-gradient(90deg, #4fd1ff, #fff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .right-menu { display: flex; gap: 8px; align-items: center; }
+        .nav-box { padding: 8px 12px; border-radius: 12px; font-weight: 700; font-size: 12px; min-width: 90px; text-align: center; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
+        .balance-box { background: rgba(79, 209, 255, 0.1); border: 1px solid #4fd1ff44; color: #4fd1ff; }
+        .bet-box { background: linear-gradient(135deg, #ff8a00, #e65100); color: #fff; }
+        .back-btn { background: #d63031; color: white; padding: 8px 15px; border-radius: 10px; font-weight: 800; font-size: 11px; border: none; cursor: pointer; transition: 0.3s; }
+        .back-btn:active { transform: scale(0.9); }
 
         /* GEÇMİŞ */
         .history {
-            position: fixed; top: 60px; width: 100%; height: 38px;
-            display: flex; align-items: center; gap: 6px; padding: 0 10px;
-            background: rgba(13, 19, 38, 0.8); overflow-x: auto; scrollbar-width: none; z-index: 900;
+            position: fixed; top: 60px; width: 100%; height: 40px;
+            display: flex; align-items: center; gap: 8px; padding: 0 15px;
+            background: rgba(0,0,0,0.4); overflow-x: auto; scrollbar-width: none; z-index: 900;
         }
-        .history span { padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 800; white-space: nowrap; }
+        .history span { padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 800; font-family: 'Orbitron'; animation: slideIn 0.3s ease; }
+        @keyframes slideIn { from { transform: translateX(-20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
         /* OYUN ALANI */
         .game-container { position: absolute; top: 0; left: 0; width: 100%; height: calc(100% - 240px); z-index: 1; }
-        canvas { width: 100%; height: 100%; display: block; }
+        canvas { width: 100%; height: 100%; }
 
-        /* MERKEZİ EKRAN */
+        /* MERKEZİ X EKRANI */
         .multiplier-display {
             position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%);
             text-align: center; pointer-events: none; z-index: 10; width: 100%;
         }
-        .x-value { font-size: 75px; font-weight: 900; color: #fff; text-shadow: 0 0 30px rgba(255, 255, 255, 0.2); }
-        .status-text { font-size: 18px; font-weight: 800; color: #4fd1ff; margin-bottom: 5px; letter-spacing: 1px; }
-        .crashed-text { color: #ff2a4d !important; animation: shake 0.3s infinite; }
+        .x-value { 
+            font-family: 'Orbitron', sans-serif; font-size: 80px; font-weight: 900; color: #fff; 
+            text-shadow: 0 0 20px rgba(79, 209, 255, 0.6), 0 0 40px rgba(79, 209, 255, 0.3);
+            letter-spacing: -2px; transition: transform 0.05s linear;
+        }
+        .status-text { font-family: 'Orbitron'; font-size: 14px; font-weight: 400; color: #4fd1ff; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 4px; opacity: 0.8; }
+        .crashed-text { color: #ff2a4d !important; text-shadow: 0 0 20px #ff2a4d; animation: shake 0.4s infinite; }
         
         @keyframes shake {
-            0% { transform: translate(1px, 1px); } 50% { transform: translate(-2px, -1px); } 100% { transform: translate(1px, 1px); }
+            0% { transform: translate(2px, 2px); } 25% { transform: translate(-2px, -2px); } 50% { transform: translate(-2px, 2px); } 75% { transform: translate(2px, -2px); } 100% { transform: translate(0,0); }
         }
 
-        /* ALT PANEL - TAŞMA DÜZENLENMİŞ */
+        /* ALT PANEL (PROFESYONEL VE TAŞMAZ) */
         .bottom-panel {
             position: fixed; bottom: 0; width: 100%; height: 240px;
-            background: #0a0f1e; border-top: 1px solid #1e2642;
-            display: flex; justify-content: center; align-items: center; gap: 10px; padding: 0 10px; z-index: 1000;
+            background: #080c18; border-top: 2px solid #161d36;
+            display: flex; justify-content: center; align-items: center; gap: 12px; padding: 15px; z-index: 1000;
         }
         .bet-card {
-            background: #161d36; flex: 1; max-width: 185px; height: 210px;
-            border-radius: 15px; padding: 12px; display: flex; flex-direction: column; gap: 8px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            background: #111827; flex: 1; max-width: 190px; height: 100%;
+            border-radius: 20px; padding: 12px; display: flex; flex-direction: column; gap: 10px;
+            border: 1px solid #1f2937; position: relative; overflow: hidden;
         }
         .bet-card input {
-            width: 100%; background: #050811; border: 1px solid #273c8f; border-radius: 8px;
-            color: white; padding: 10px; text-align: center; font-size: 16px; font-weight: 700; outline: none;
+            width: 100%; background: #030712; border: 2px solid #1f2937; border-radius: 12px;
+            color: #4fd1ff; padding: 12px; text-align: center; font-size: 18px; font-weight: 800; font-family: 'Orbitron'; outline: none; transition: 0.3s;
         }
-        .bet-card input:disabled { opacity: 0.4; }
+        .bet-card input:focus { border-color: #4fd1ff; box-shadow: 0 0 10px rgba(79, 209, 255, 0.2); }
         
-        .auto-row { display: flex; justify-content: space-between; align-items: center; background: #0d1326; padding: 6px 10px; border-radius: 8px; }
-        .auto-row span { font-size: 10px; font-weight: 800; color: #4fd1ff; }
+        .auto-row { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 10px; }
+        .auto-row span { font-size: 10px; font-weight: 800; color: #94a3b8; letter-spacing: 1px; }
 
-        .switch { position: relative; width: 34px; height: 18px; }
+        /* TOGGLE */
+        .switch { position: relative; width: 38px; height: 20px; }
         .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #273c8f; transition: .3s; border-radius: 18px; }
-        .slider:before { position: absolute; content: ""; height: 12px; width: 12px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #334155; transition: .4s; border-radius: 20px; }
+        .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
         input:checked + .slider { background-color: #00b894; }
-        input:checked + .slider:before { transform: translateX(16px); }
+        input:checked + .slider:before { transform: translateX(18px); }
 
+        /* BUTONLAR (ANİMASYONLU) */
         .main-btn {
-            width: 100%; flex-grow: 1; border: none; border-radius: 10px; color: white; font-weight: 800;
-            font-size: 14px; cursor: pointer; transition: 0.2s;
+            width: 100%; flex-grow: 1; border: none; border-radius: 14px; color: white; font-weight: 900;
+            font-size: 14px; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            text-transform: uppercase; font-family: 'Orbitron'; position: relative; overflow: hidden;
         }
-        .btn-bet { background: #5743d6; }
-        .btn-cancel { background: #d63031; }
-        .btn-cashout { background: #00b894; }
-        .main-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-bet { background: linear-gradient(180deg, #6366f1, #4338ca); box-shadow: 0 4px 0 #312e81; }
+        .btn-cancel { background: linear-gradient(180deg, #ef4444, #b91c1c); box-shadow: 0 4px 0 #7f1d1d; }
+        .btn-cashout { background: linear-gradient(180deg, #10b981, #047857); box-shadow: 0 4px 0 #064e3b; }
+        
+        .main-btn:active { transform: translateY(2px); box-shadow: none; }
+        .main-btn:disabled { opacity: 0.3; filter: grayscale(1); transform: none !important; }
+
+        /* MOBİL AYAR */
+        @media (max-width: 400px) {
+            .x-value { font-size: 60px; }
+            .bottom-panel { height: 220px; padding: 10px; gap: 8px; }
+            .bet-card { padding: 8px; }
+            .main-btn { font-size: 12px; }
+        }
     </style>
 </head>
 <body>
 
 <div class="top-bar">
-    <div class="brand">SkyCrash</div>
+    <div class="brand">SKYCRASH PRO</div>
     <div class="right-menu">
         <div class="nav-box balance-box">₺<span id="balance">0</span></div>
         <div class="nav-box bet-box">B: ₺<span id="betTotal">0</span></div>
@@ -100,7 +120,7 @@
 <div class="game-container">
     <canvas id="gameCanvas"></canvas>
     <div class="multiplier-display">
-        <div class="status-text" id="statusText">BAĞLANILIYOR...</div>
+        <div class="status-text" id="statusText">SİSTEM HAZIR</div>
         <div class="x-value" id="multiplier">1.00x</div>
     </div>
 </div>
@@ -109,7 +129,7 @@
     <div class="bet-card">
         <input type="number" id="betInput1" value="100">
         <div class="auto-row">
-            <span>OTO BAHİS</span>
+            <span>OTOMATİK</span>
             <label class="switch"><input type="checkbox" id="autoSwitch1"><span class="slider"></span></label>
         </div>
         <button id="btn1" class="main-btn btn-bet">BAHİS YAP</button>
@@ -118,7 +138,7 @@
     <div class="bet-card">
         <input type="number" id="betInput2" value="200">
         <div class="auto-row">
-            <span>OTO BAHİS</span>
+            <span>OTOMATİK</span>
             <label class="switch"><input type="checkbox" id="autoSwitch2"><span class="slider"></span></label>
         </div>
         <button id="btn2" class="main-btn btn-bet">BAHİS YAP</button>
@@ -143,89 +163,163 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // --- SES SİSTEMİ ---
+    // --- GELİŞMİŞ İOS UYUMLU SES SİSTEMİ ---
     let audioCtx = null;
-    const initAudio = () => {
-        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    let isAudioUnlocked = false;
+
+    const unlockAudio = () => {
+        if (isAudioUnlocked) return;
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        // Boş bir ses üretip oynat (iOS kilidini açar)
+        const buffer = audioCtx.createBuffer(1, 1, 22050);
+        const source = audioCtx.createBufferSource();
+        source.buffer = buffer;
+        source.connect(audioCtx.destination);
+        source.start(0);
         if (audioCtx.state === 'suspended') audioCtx.resume();
+        isAudioUnlocked = true;
+        console.log("Audio Unlocked for iOS");
     };
 
     function playSfx(type) {
-        initAudio();
+        if (!audioCtx) return;
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        
         const now = audioCtx.currentTime;
-        if(type==='countdown') {
-            const osc = audioCtx.createOscillator(); const g = audioCtx.createGain();
-            osc.connect(g); g.connect(audioCtx.destination);
-            osc.frequency.setValueAtTime(600, now); g.gain.setValueAtTime(0.05, now);
-            g.gain.exponentialRampToValueAtTime(0.01, now+0.1); osc.start(); osc.stop(now+0.1);
-        }
-        if(type==='bet') { 
-            const osc = audioCtx.createOscillator(); const g = audioCtx.createGain();
-            osc.connect(g); g.connect(audioCtx.destination);
-            osc.frequency.setValueAtTime(440, now); g.gain.setValueAtTime(0.1, now);
-            g.gain.exponentialRampToValueAtTime(0.01, now+0.1); osc.start(); osc.stop(now+0.1); 
-        }
-        if(type==='cash') {
-            const osc = audioCtx.createOscillator(); const g = audioCtx.createGain();
-            osc.connect(g); g.connect(audioCtx.destination);
-            osc.frequency.setValueAtTime(800, now); osc.frequency.exponentialRampToValueAtTime(1600, now+0.3);
-            g.gain.setValueAtTime(0.1, now); g.gain.linearRampToValueAtTime(0, now+0.3); osc.start(); osc.stop(now+0.3); 
-        }
-        if(type==='crash') {
-            const bufferSize = audioCtx.sampleRate * 0.5;
-            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-            const data = buffer.getChannelData(0);
-            for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-            const noise = audioCtx.createBufferSource(); noise.buffer = buffer;
-            const filter = audioCtx.createBiquadFilter(); filter.type = 'lowpass';
-            filter.frequency.setValueAtTime(400, now); filter.frequency.exponentialRampToValueAtTime(40, now + 0.5);
-            const g = audioCtx.createGain(); g.gain.setValueAtTime(0.4, now);
-            g.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
-            noise.connect(filter); filter.connect(g); g.connect(audioCtx.destination);
-            noise.start(); noise.stop(now + 0.5);
+        const g = audioCtx.createGain();
+        const o = audioCtx.createOscillator();
+        o.connect(g); g.connect(audioCtx.destination);
+
+        if(type === 'countdown') {
+            o.frequency.setValueAtTime(800, now);
+            g.gain.setValueAtTime(0.1, now);
+            g.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+            o.start(); o.stop(now + 0.1);
+        } else if(type === 'bet') {
+            o.frequency.setValueAtTime(400, now);
+            o.frequency.linearRampToValueAtTime(600, now + 0.1);
+            g.gain.setValueAtTime(0.1, now);
+            g.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+            o.start(); o.stop(now + 0.1);
+        } else if(type === 'cash') {
+            o.frequency.setValueAtTime(600, now);
+            o.frequency.exponentialRampToValueAtTime(1200, now + 0.2);
+            g.gain.setValueAtTime(0.1, now);
+            g.gain.linearRampToValueAtTime(0, now + 0.2);
+            o.start(); o.stop(now + 0.2);
+        } else if(type === 'crash') {
+            // Gürültü (Patlama) Sesi
+            const b = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.4, audioCtx.sampleRate);
+            const d = b.getChannelData(0);
+            for(let i=0; i<b.length; i++) d[i] = Math.random() * 2 - 1;
+            const s = audioCtx.createBufferSource(); s.buffer = b;
+            const f = audioCtx.createBiquadFilter(); f.type = 'lowpass';
+            f.frequency.setValueAtTime(500, now); f.frequency.exponentialRampToValueAtTime(50, now+0.4);
+            const gn = audioCtx.createGain(); gn.gain.setValueAtTime(0.3, now);
+            gn.gain.exponentialRampToValueAtTime(0.01, now+0.4);
+            s.connect(f); f.connect(gn); gn.connect(audioCtx.destination);
+            s.start(); s.stop(now + 0.4);
         }
     }
 
-    // --- MOTOR ---
+    // --- PROFESYONEL UZAY MOTORU ---
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
+    let width, height;
+    let stars = [];
+
+    function initStars() {
+        stars = [];
+        for(let i=0; i<150; i++) {
+            stars.push({
+                x: Math.random() * width,
+                y: Math.random() * height,
+                z: Math.random() * width,
+                size: Math.random() * 1.5
+            });
+        }
+    }
+
+    function resize() {
+        width = canvas.width = canvas.offsetWidth;
+        height = canvas.height = canvas.offsetHeight;
+        initStars();
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    function draw() {
+        // Derin Uzay Arka Planı
+        const grad = ctx.createRadialGradient(width/2, height/2, 0, width/2, height/2, width);
+        grad.addColorStop(0, '#0a1128');
+        grad.addColorStop(1, '#02040a');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, width, height);
+
+        // Dinamik Izgara (Grid)
+        ctx.strokeStyle = "rgba(79, 209, 255, 0.03)";
+        ctx.lineWidth = 1;
+        let spacing = 60;
+        let offset = (multiplier * 30) % spacing;
+        for(let x = width; x > -spacing; x -= spacing) {
+            ctx.beginPath(); ctx.moveTo(x - offset, 0); ctx.lineTo(x - offset, height); ctx.stroke();
+        }
+        for(let y = 0; y < height + spacing; y += spacing) {
+            ctx.beginPath(); ctx.moveTo(0, y + (offset/2)); ctx.lineTo(width, y + (offset/2)); ctx.stroke();
+        }
+
+        // Yıldızlar (Parallax Effect)
+        ctx.fillStyle = "white";
+        stars.forEach(s => {
+            let k = 128 / s.z;
+            let px = (s.x - width/2) * k + width/2;
+            let py = (s.y - height/2) * k + height/2;
+            let sSize = s.size * k;
+            
+            s.z -= (phase === "FLYING" ? multiplier * 0.5 : 0.2);
+            if(s.z <= 0) s.z = width;
+
+            ctx.globalAlpha = Math.min(k, 1);
+            ctx.beginPath();
+            ctx.arc(px, py, sSize, 0, Math.PI*2);
+            ctx.fill();
+        });
+        ctx.globalAlpha = 1;
+
+        // Uçuş Çizgisi
+        if(phase === "FLYING") {
+            ctx.shadowBlur = 20; ctx.shadowColor = "#4fd1ff";
+            ctx.strokeStyle = "#4fd1ff"; ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(0, height);
+            ctx.quadraticCurveTo(width * 0.4, height * 0.9, width * 0.8, height * 0.3);
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+        }
+
+        requestAnimationFrame(draw);
+    }
+    draw();
+
+    // --- OYUN MANTIĞI ---
+    let userRef = null, balance = 0, phase = "WAITING";
+    let multiplier = 1.00, crashPoint = 0, startTime = 0;
+    let activeBet1 = 0, activeBet2 = 0, auto1 = false, auto2 = false;
+
     const multEl = document.getElementById('multiplier');
     const statusEl = document.getElementById('statusText');
     const balEl = document.getElementById('balance');
     const betTotalEl = document.getElementById('betTotal');
 
-    let userRef = null, balance = 0, phase = "WAITING";
-    let multiplier = 1.00, crashPoint = 0, startTime = 0;
-    let activeBet1 = 0, activeBet2 = 0, auto1 = false, auto2 = false;
-
-    let width, height;
-    function resize() {
-        width = canvas.width = canvas.offsetWidth;
-        height = canvas.height = canvas.offsetHeight;
-    }
-    window.addEventListener('resize', resize); resize();
-
-    function draw() {
-        ctx.fillStyle = "#03050a"; ctx.fillRect(0,0,width,height);
-        // Grid ve yıldız çizimleri (Basitleştirilmiş PRO motoru)
-        ctx.strokeStyle = "rgba(79, 209, 255, 0.05)";
-        let step = 50;
-        let shift = (multiplier * 20) % step;
-        for(let x=width; x>0; x-=step) { ctx.beginPath(); ctx.moveTo(x-shift,0); ctx.lineTo(x-shift,height); ctx.stroke(); }
-        
-        if(phase === "FLYING") {
-            ctx.strokeStyle = "#4fd1ff"; ctx.lineWidth = 4;
-            ctx.beginPath(); ctx.moveTo(0, height);
-            ctx.quadraticCurveTo(width/2, height, width*0.8, height*0.3); ctx.stroke();
-        }
-        requestAnimationFrame(draw);
-    }
-    draw();
-
     onAuthStateChanged(auth, user => {
         if(user) {
             userRef = doc(db, "users", user.uid);
-            onSnapshot(userRef, snap => { if(snap.exists()) { balance = snap.data().balance || 0; balEl.innerText = balance.toLocaleString('tr-TR'); }});
+            onSnapshot(userRef, snap => {
+                if(snap.exists()) {
+                    balance = snap.data().balance || 0;
+                    balEl.innerText = balance.toLocaleString('tr-TR');
+                }
+            });
             startNewRound();
         }
     });
@@ -233,15 +327,17 @@
     function startNewRound() {
         phase = "COUNTDOWN"; multiplier = 1.00;
         multEl.classList.remove('crashed-text');
-        statusEl.innerText = "YENİ TUR";
+        statusEl.innerText = "HAZIRLANIN";
         document.getElementById('betInput1').disabled = false;
         document.getElementById('betInput2').disabled = false;
-        if(auto1) handleBet(1, true); if(auto2) handleBet(2, true);
         
+        if(auto1) handleBet(1, true);
+        if(auto2) handleBet(2, true);
+
         let count = 5;
         const timer = setInterval(() => {
             multEl.innerText = count + "s";
-            if(count > 0) playSfx('countdown');
+            playSfx('countdown');
             if(count <= 0) { clearInterval(timer); launch(); }
             count--;
         }, 1000);
@@ -249,35 +345,46 @@
     }
 
     function launch() {
-        phase = "FLYING"; statusEl.innerText = "";
+        phase = "FLYING"; statusEl.innerText = "YÜKSELİYOR";
         document.getElementById('betInput1').disabled = true;
         document.getElementById('betInput2').disabled = true;
         startTime = Date.now();
-        crashPoint = parseFloat((Math.random() < 0.03 ? 1.00 : (0.97 / (1 - Math.random()))).toFixed(2));
+        // Gerçekçi Crash Hesabı
+        crashPoint = parseFloat((Math.random() < 0.03 ? 1.00 : (0.98 / (1 - Math.random()))).toFixed(2));
         tick();
     }
 
     function tick() {
         if(phase !== "FLYING") return;
         const elapsed = (Date.now() - startTime) / 1000;
-        multiplier = Math.pow(1.08, elapsed + Math.pow(elapsed, 1.1) * 0.1);
-        if(multiplier >= crashPoint) { doCrash(); } 
-        else { multEl.innerText = multiplier.toFixed(2) + "x"; updateUI(); requestAnimationFrame(tick); }
+        
+        // YAVAŞ BAŞLAYAN İVME FORMÜLÜ
+        // İlk saniyelerde çok yavaş (1.01.. 1.05..), sonra hızlanır.
+        multiplier = 1 + (Math.pow(elapsed * 0.15, 1.5)) + (elapsed * 0.05);
+        
+        if(multiplier >= crashPoint) {
+            doCrash();
+        } else {
+            multEl.innerText = multiplier.toFixed(2) + "x";
+            multEl.style.transform = `translate(-50%, -50%) scale(${1 + (multiplier * 0.01)})`;
+            updateUI();
+            requestAnimationFrame(tick);
+        }
     }
 
     function doCrash() {
         phase = "CRASHED"; playSfx('crash');
         multEl.classList.add('crashed-text');
-        multEl.innerText = multiplier.toFixed(2) + "x";
-        statusEl.innerText = "UZAKLAŞ !!!";
+        statusEl.innerText = "PATLADI";
         addHistory(multiplier);
         activeBet1 = 0; activeBet2 = 0;
         updateUI();
-        setTimeout(startNewRound, 3000);
+        setTimeout(startNewRound, 4000);
     }
 
     async function handleBet(box, isAuto = false) {
-        initAudio(); if(!userRef) return;
+        unlockAudio(); // iOS için her dokunuşta kontrol et
+        if(!userRef) return;
         const input = document.getElementById('betInput'+box);
         const amount = Math.floor(parseInt(input.value)) || 0;
         let currentActive = (box === 1) ? activeBet1 : activeBet2;
@@ -304,12 +411,18 @@
         const u = (id, active) => {
             const b = document.getElementById(id);
             if(phase === "COUNTDOWN") {
-                b.disabled = false; b.innerText = active > 0 ? "İPTAL" : "BAHİS YAP";
+                b.disabled = false;
+                b.innerText = active > 0 ? "VAZGEÇ" : "BAHİS YAP";
                 b.className = active > 0 ? "main-btn btn-cancel" : "main-btn btn-bet";
             } else if(phase === "FLYING" && active > 0) {
-                b.disabled = false; b.innerText = `ÇEK ₺${Math.floor(active * multiplier)}`;
+                b.disabled = false;
+                b.innerText = `NAKİT ₺${Math.floor(active * multiplier)}`;
                 b.className = "main-btn btn-cashout";
-            } else { b.disabled = true; b.innerText = active > 0 ? "UÇUYOR" : "BEKLE"; b.className = "main-btn"; }
+            } else {
+                b.disabled = true;
+                b.innerText = active > 0 ? "BEKLE..." : "KAPALI";
+                b.className = "main-btn";
+            }
         };
         u('btn1', activeBet1); u('btn2', activeBet2);
         betTotalEl.innerText = (activeBet1 + activeBet2).toLocaleString('tr-TR');
@@ -318,16 +431,20 @@
     function addHistory(val) {
         const span = document.createElement('span');
         span.innerText = val.toFixed(2) + "x";
-        span.style.background = val < 2 ? "#ff2a4d" : "#00b894";
+        span.style.color = val < 2 ? "#ff4757" : (val < 10 ? "#4fd1ff" : "#ffa502");
+        span.style.border = `1px solid ${span.style.color}44`;
         const h = document.getElementById('history'); h.prepend(span);
         if(h.children.length > 20) h.lastChild.remove();
     }
+
+    // İlk Dokunuşta Sesi Aç
+    document.body.addEventListener('touchstart', unlockAudio, { once: true });
+    document.body.addEventListener('click', unlockAudio, { once: true });
 
     document.getElementById('btn1').onclick = () => handleBet(1);
     document.getElementById('btn2').onclick = () => handleBet(2);
     document.getElementById('autoSwitch1').onchange = (e) => auto1 = e.target.checked;
     document.getElementById('autoSwitch2').onchange = (e) => auto2 = e.target.checked;
-    document.addEventListener('touchstart', initAudio, { once: true });
 </script>
 </body>
 </html>
