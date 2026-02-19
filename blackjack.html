@@ -53,7 +53,6 @@
     .dealer-title { font-size: 18px; letter-spacing: 4px; font-weight: 800; color: #d4af37; margin-bottom: 8px; }
     .score-badge { background: rgba(0,0,0,0.6); color: #ffd700; padding: 4px 15px; border-radius: 20px; font-size: 14px; border: 1px solid rgba(255,215,0,0.3); display: inline-block; margin-bottom: 10px; }
 
-    /* --- 3D KART YAPISI (YAVAŞLATILDI) --- */
     .cards-wrapper { display: flex; justify-content: center; gap: 8px; min-height: 105px; padding: 0 10px; }
     
     .card-3d {
@@ -62,7 +61,6 @@
         transform-style: preserve-3d;
         transform: translate(350px, -250px) rotateZ(35deg) scale(0.4);
         opacity: 0;
-        /* Animasyon süresi 0.6s'den 1.0s'ye çıkarıldı */
         transition: transform 1.0s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.5s;
     }
 
@@ -72,7 +70,6 @@
     }
 
     .card-3d.flipped {
-        /* Kart açılma hızı da yavaşlatıldı */
         transform: translate(0, 0) rotateY(180deg);
         transition: transform 0.8s ease-in-out;
     }
@@ -175,18 +172,14 @@ let audioCtx = null, balance = 0, bet = 0, userRef = null;
 let gameState = "loading", betCountdown = null, actionTimer = null;
 let deck = [], player = [], dealer = [], dealerHidden = true;
 
-// --- iOS UYUMLU SES SENTEZLEYİCİ ---
 function initAudio() {
-    if (!audioCtx) {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    }
-    if (audioCtx.state === 'suspended') {
-        audioCtx.resume();
-    }
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
 }
 
+// --- PROFESYONEL KART VE OYUN SESLERİ ---
 function playSound(type) {
-    initAudio(); // Her ses çalımında bağlamı kontrol et (iOS için kritik)
+    initAudio();
     const now = audioCtx.currentTime;
 
     const playOsc = (freq, type, gainVal, startTime, stopTime, ramp=false) => {
@@ -201,26 +194,30 @@ function playSound(type) {
         o.start(startTime); o.stop(stopTime);
     };
 
-    if(type==='chip') playOsc(220, 'sine', 0.4, now, now + 0.1, 60);
-    
-    if(type==='card') {
-        const bufferSize = audioCtx.sampleRate * 0.15;
+    if(type === 'card') {
+        // KATMAN 1: Kartın desteden çıkış sürtünme sesi (Friction)
+        const bufferSize = audioCtx.sampleRate * 0.2;
         const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
         const data = buffer.getChannelData(0);
         for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+        
         const noise = audioCtx.createBufferSource();
         noise.buffer = buffer;
         const filter = audioCtx.createBiquadFilter();
-        filter.type = 'lowpass';
-        filter.frequency.setValueAtTime(1200, now);
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(1000, now);
+        filter.frequency.exponentialRampToValueAtTime(3000, now + 0.15);
         const g = audioCtx.createGain();
-        g.gain.setValueAtTime(0.08, now);
-        g.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+        g.gain.setValueAtTime(0.07, now);
+        g.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
         noise.connect(filter); filter.connect(g); g.connect(audioCtx.destination);
         noise.start();
-        playOsc(350, 'sine', 0.05, now + 0.1, now + 0.15);
+
+        // KATMAN 2: Kartın masaya inişindeki tok ses (Tap)
+        playOsc(180, 'sine', 0.05, now + 0.1, now + 0.2);
     }
 
+    if(type==='chip') playOsc(220, 'sine', 0.4, now, now + 0.1, 60);
     if(type==='win') [523, 659, 783, 1046].forEach((f, i) => playOsc(f, 'sine', 0.1, now + i*0.1, now + i*0.1 + 0.3));
     if(type==='lose') playOsc(130, 'sawtooth', 0.2, now, now + 0.5, 40);
     if(type==='bust') playOsc(70, 'square', 0.3, now, now + 0.4, 30);
@@ -241,7 +238,7 @@ onAuthStateChanged(auth, user => {
 window.addBet = (amount) => {
     if(gameState !== "betting" || balance < amount) return;
     if(bet + amount > 20000) return;
-    playSound('chip'); // iOS aktivasyonu
+    playSound('chip');
     bet += amount; balance -= amount;
     document.getElementById("balance").innerText = balance.toLocaleString('tr-TR');
     document.getElementById("bet").innerText = bet.toLocaleString('tr-TR');
@@ -284,7 +281,6 @@ async function startGame(){
     createDeck();
     await updateDoc(userRef, { balance: balance });
 
-    // Dağıtma hızı yavaşlatıldı (delay'ler artırıldı)
     await draw(player, "playerCards"); await delay(1000);
     await draw(dealer, "dealerCards"); await delay(1000);
     await draw(player, "playerCards"); await delay(1000);
@@ -318,7 +314,6 @@ async function draw(hand, divId, hidden=false){
     setTimeout(() => {
         cardCont.classList.add("show");
         if(!hidden) {
-            // Kart açılma gecikmesi animasyon hızıyla uyumlu hale getirildi
             setTimeout(() => cardCont.classList.add("flipped"), 600);
         }
     }, 50);
@@ -372,7 +367,7 @@ function startActionTimer(){
 }
 
 document.getElementById("hit").onclick = async () => {
-    initAudio(); // Buton etkileşimiyle sesi garantiye al
+    initAudio();
     clearInterval(actionTimer); 
     document.getElementById("controls").style.display = "none";
     await draw(player, "playerCards");
