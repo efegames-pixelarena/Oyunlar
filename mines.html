@@ -6,7 +6,7 @@
 <title>PixelArena Mines</title>
 
 <style>
-    /* SKYCRASH GENEL RESET */
+    /* SKYCRASH GENEL RESET - Gecikme Önleyici touch-action eklendi */
     *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
     html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;background:#03050a;color:white;}
 
@@ -35,13 +35,12 @@
     .balance-box{background:#1a2248; border: 1px solid #4fd1ff44; color: #4fd1ff;}
     .bet-box{background:linear-gradient(90deg,#ff8a00,#ff5f00); color:#000;}
 
-    /* EKLEME: GERİ BUTONU STİLİ */
     .back-btn {
         background: #e74c3c; color: white; text-decoration: none; padding: 6px 12px;
         border-radius: 10px; font-size: 11px; font-weight: 800; border-bottom: 2px solid #c0392b;
         transition: 0.1s; display: flex; align-items: center; justify-content: center; height: 32px;
     }
-    .back-btn:active { transform: translateY(2px); border-bottom: none; }
+    .back-btn:active { transform: scale(0.95); border-bottom: none; }
 
     /* OYUN ALANI DÜZENLEME */
     .container{
@@ -62,7 +61,7 @@
     .tile{
         background:#161d36; height:68px; border-radius:14px; 
         display:flex; align-items:center; justify-content:center; 
-        font-size:22px; cursor:pointer; transition:0.25s;
+        font-size:22px; cursor:pointer; transition: 0.1s; /* Gecikmeyi azaltmak için kısaltıldı */
         border: 1px solid #273c8f;
         box-shadow: 0 4px 10px rgba(0,0,0,0.3);
     }
@@ -82,7 +81,7 @@
 
     @keyframes shake{0%,100%{transform:translateX(0)} 25%{transform:translateX(-4px)} 75%{transform:translateX(4px)}}
 
-    /* ALT PANEL (SKYCRASH BETBOX STİLİ) */
+    /* ALT PANEL */
     .bet-panel{
         background:#0a0f1e; border-top: 1px solid #1e2642;
         padding:20px 15px; margin: 0 -15px -15px -15px;
@@ -98,7 +97,7 @@
     button{
         width:100%; padding:15px; border-radius:12px; border:none; 
         font-weight:900; cursor:pointer; font-size:15px; 
-        background:#5743d6; color:white; transition: 0.2s;
+        background:#5743d6; color:white; transition: 0.1s;
         box-shadow: 0 4px 15px rgba(0,0,0,0.4);
     }
 
@@ -121,7 +120,7 @@
 
 <div class="container">
     <div class="mines-header">
-        <div style="font-weight: 800; color: #4fd1ff; font-size: 14px;">MİNES</div>
+        <div style="font-weight: 800; color: #4fd1ff; font-size: 14px;">MINES PRO</div>
         <div style="color:#aaa; font-size: 12px; font-weight: 700;">MAYIN: <span id="mineDisplay" style="color:#ff2a4d;">1</span></div>
     </div>
 
@@ -178,15 +177,14 @@ async function unlockAudio() {
 
 function playSound(name) {
     if (!audioCtx || !sounds[name]) return;
-    if (audioCtx.state === 'suspended') audioCtx.resume();
     const source = audioCtx.createBufferSource();
     source.buffer = sounds[name];
     source.connect(audioCtx.destination);
     source.start(0);
 }
 
-document.addEventListener('touchstart', unlockAudio, { once: false });
-document.addEventListener('click', unlockAudio, { once: false });
+// Gecikme Önleyici: click yerine touchstart ile sesi hazırlıyoruz
+document.addEventListener('touchstart', unlockAudio, { passive: true });
 
 let mines = [], opened = 0, betAmount = 0, mineTotal = 1, multiplier = 1, gameActive = false;
 let tileElements = [];
@@ -212,7 +210,10 @@ function createGrid() {
     for(let i=0; i<25; i++){
         let tile = document.createElement("div");
         tile.classList.add("tile");
-        tile.addEventListener("click", () => reveal(i, tile));
+        tile.addEventListener("click", (e) => {
+            e.preventDefault();
+            reveal(i, tile);
+        });
         gridEl.appendChild(tile);
         tileElements.push(tile);
     }
@@ -226,8 +227,9 @@ function getMultiplier(nMines, nOpened) {
     return (1 / prob) * 0.97;
 }
 
-startBtn.addEventListener("click", async () => {
-    if (audioCtx) audioCtx.resume(); else await unlockAudio();
+startBtn.addEventListener("click", async (e) => {
+    e.preventDefault();
+    if (!audioCtx) await unlockAudio();
     if (!auth.currentUser) return;
     const userRef = doc(db, "users", auth.currentUser.uid);
 
@@ -247,8 +249,13 @@ startBtn.addEventListener("click", async () => {
     }
 
     betAmount = parseInt(betInput.value);
-    if(isNaN(betAmount) || betAmount < 250) {
-        alert("Minimum bahis 250₺.");
+    // GÜNCELLEME: Limit Kontrolü (100 - 10.000)
+    if(isNaN(betAmount) || betAmount < 100) {
+        alert("Minimum bahis 100₺.");
+        return;
+    }
+    if(betAmount > 10000) {
+        alert("Maksimum bahis 10.000₺.");
         return;
     }
 
@@ -290,7 +297,7 @@ function reveal(i, tile) {
         startBtn.innerText = "PATLADI!";
         startBtn.classList.remove("start-active");
         startBtn.classList.add("is-lose");
-        setTimeout(resetGame, 2000);
+        setTimeout(resetGame, 1500); // Gecikme süresi kısaltıldı
     } else {
         opened++;
         tile.classList.add("open");
