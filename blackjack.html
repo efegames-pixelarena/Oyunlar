@@ -137,8 +137,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-let audioCtx = null;
-let balance = 0, bet = 0, userRef = null;
+let audioCtx = null, balance = 0, bet = 0, userRef = null;
 let gameState = "loading", betCountdown = null, actionTimer = null;
 let deck = [], player = [], dealer = [], dealerHidden = true;
 
@@ -148,76 +147,95 @@ const messageEl = document.getElementById("message");
 const controlsEl = document.getElementById("controls");
 const chipsAreaEl = document.getElementById("chipsArea");
 
-// --- iOS UYUMLU PROFESYONEL SES SENTEZLEYİCİ ---
+// --- GELİŞMİŞ SES MOTORU (iOS & ANDROID UYUMLU) ---
 function playSound(type) {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     if (audioCtx.state === "suspended") audioCtx.resume();
     
     const now = audioCtx.currentTime;
-    
-    const createGain = (val, time, duration) => {
+
+    const createGain = (v, t, d) => {
         const g = audioCtx.createGain();
-        g.gain.setValueAtTime(val, time);
-        g.gain.exponentialRampToValueAtTime(0.0001, time + duration);
+        g.gain.setValueAtTime(v, t);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + d);
         return g;
     };
 
-    if (type === 'chip') { // Tok çip sesi
-        const osc = audioCtx.createOscillator();
-        const gain = createGain(0.3, now, 0.1);
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(400, now);
-        osc.frequency.exponentialRampToValueAtTime(100, now + 0.1);
-        osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.start(); osc.stop(now + 0.1);
-    } 
-    else if (type === 'card') { // Kart çekme/dağıtma (hışırtı efekti)
-        const bufferSize = audioCtx.sampleRate * 0.1;
-        const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    if (type === 'card') {
+        // 1. Sürtünme Sesi (Beyaz Gürültü)
+        const bufSize = audioCtx.sampleRate * 0.12;
+        const buffer = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
         const data = buffer.getChannelData(0);
-        for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+        for (let i = 0; i < bufSize; i++) data[i] = Math.random() * 2 - 1;
+        
         const noise = audioCtx.createBufferSource();
         noise.buffer = buffer;
         const filter = audioCtx.createBiquadFilter();
-        filter.type = 'bandpass';
-        filter.frequency.setValueAtTime(1000, now);
-        const gain = createGain(0.1, now, 0.1);
-        noise.connect(filter); filter.connect(gain); gain.connect(audioCtx.destination);
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(3000, now);
+        filter.frequency.exponentialRampToValueAtTime(1500, now + 0.1);
+        
+        const gNoise = createGain(0.08, now, 0.12);
+        noise.connect(filter); filter.connect(gNoise); gNoise.connect(audioCtx.destination);
         noise.start();
+
+        // 2. Hafif 'Tık' Sesi (Oscillator)
+        const osc = audioCtx.createOscillator();
+        const gOsc = createGain(0.05, now, 0.03);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(600, now);
+        osc.connect(gOsc); gOsc.connect(audioCtx.destination);
+        osc.start(); osc.stop(now + 0.03);
     }
-    else if (type === 'win') { // Başarı melodisi
-        [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
-            const osc = audioCtx.createOscillator();
-            const gain = createGain(0.1, now + (i * 0.1), 0.3);
-            osc.frequency.setValueAtTime(freq, now + (i * 0.1));
-            osc.connect(gain); gain.connect(audioCtx.destination);
-            osc.start(now + (i * 0.1)); osc.stop(now + (i * 0.1) + 0.3);
+    else if (type === 'chip') {
+        const osc = audioCtx.createOscillator();
+        const g = createGain(0.25, now, 0.08);
+        osc.frequency.setValueAtTime(150, now);
+        osc.frequency.exponentialRampToValueAtTime(40, now + 0.08);
+        osc.connect(g); g.connect(audioCtx.destination);
+        osc.start(); osc.stop(now + 0.08);
+    }
+    else if (type === 'win') {
+        [523.25, 659.25, 783.99, 1046.50].forEach((f, i) => {
+            const o = audioCtx.createOscillator();
+            const g = createGain(0.1, now + (i * 0.08), 0.4);
+            o.frequency.setValueAtTime(f, now + (i * 0.08));
+            o.connect(g); g.connect(audioCtx.destination);
+            o.start(now + (i * 0.08)); o.stop(now + (i * 0.08) + 0.4);
         });
     }
-    else if (type === 'lose') { // Kaybetme sesi
-        const osc = audioCtx.createOscillator();
-        const gain = createGain(0.2, now, 0.5);
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(150, now);
-        osc.frequency.linearRampToValueAtTime(50, now + 0.4);
-        osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.start(); osc.stop(now + 0.5);
+    else if (type === 'lose') {
+        const o = audioCtx.createOscillator();
+        const g = createGain(0.2, now, 0.6);
+        o.type = 'triangle';
+        o.frequency.setValueAtTime(200, now);
+        o.frequency.linearRampToValueAtTime(60, now + 0.5);
+        o.connect(g); g.connect(audioCtx.destination);
+        o.start(); o.stop(now + 0.6);
     }
-    else if (type === 'bust') { // Patlama (Bust) sesi
-        const osc = audioCtx.createOscillator();
-        const gain = createGain(0.4, now, 0.6);
-        osc.type = 'square';
-        osc.frequency.setValueAtTime(100, now);
-        osc.frequency.exponentialRampToValueAtTime(30, now + 0.5);
-        osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.start(); osc.stop(now + 0.6);
+    else if (type === 'bust') {
+        const o = audioCtx.createOscillator();
+        const g = createGain(0.3, now, 0.5);
+        o.type = 'sawtooth';
+        o.frequency.setValueAtTime(80, now);
+        o.frequency.exponentialRampToValueAtTime(30, now + 0.4);
+        o.connect(g); g.connect(audioCtx.destination);
+        o.start(); o.stop(now + 0.5);
     }
-    else if (type === 'count') { // Geri sayım tık sesi
-        const osc = audioCtx.createOscillator();
-        const gain = createGain(0.1, now, 0.05);
-        osc.frequency.setValueAtTime(800, now);
-        osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.start(); osc.stop(now + 0.05);
+    else if (type === 'count') {
+        const o = audioCtx.createOscillator();
+        const g = createGain(0.05, now, 0.05);
+        o.frequency.setValueAtTime(1000, now);
+        o.connect(g); g.connect(audioCtx.destination);
+        o.start(); o.stop(now + 0.05);
+    }
+    else if (type === 'clear') {
+        const o = audioCtx.createOscillator();
+        const g = createGain(0.15, now, 0.2);
+        o.frequency.setValueAtTime(400, now);
+        o.frequency.linearRampToValueAtTime(200, now + 0.2);
+        o.connect(g); g.connect(audioCtx.destination);
+        o.start(); o.stop(now + 0.2);
     }
 }
 
@@ -244,7 +262,7 @@ window.addBet = (amount) => {
 
 window.cancelBet = () => {
     if(gameState !== "betting" || bet === 0) return;
-    playSound('chip'); // İptal sesini de çip sesi yapalım
+    playSound('clear');
     balance += bet; bet = 0;
     balanceEl.innerText = balance.toLocaleString('tr-TR');
     betEl.innerText = 0;
@@ -278,7 +296,6 @@ async function startGame(){
     createDeck();
     await updateDoc(userRef, { balance: balance });
 
-    // Başlangıç kart dağıtımı (Profesyonel dağıtım sesi her kartta çalacak)
     await draw(player, "playerCards"); await delay(600);
     await draw(dealer, "dealerCards"); await delay(600);
     await draw(player, "playerCards"); await delay(600);
@@ -296,10 +313,10 @@ async function startGame(){
 
 function getSmartCard(isDealer) {
     let cheatChance = 0;
-    if (bet >= 10000) cheatChance = 0.85;
-    else if (bet >= 5000) cheatChance = 0.60;
-    else if (bet >= 1000) cheatChance = 0.30;
-    else cheatChance = 0;
+    if (bet >= 10000) cheatChance = 0.85;      
+    else if (bet >= 5000) cheatChance = 0.60;  
+    else if (bet >= 1000) cheatChance = 0.30;  
+    else cheatChance = 0;                      
 
     if (isDealer && Math.random() < cheatChance) {
         const dealerCurrent = total(dealer);
@@ -318,7 +335,7 @@ function getSmartCard(isDealer) {
 }
 
 async function draw(hand, divId, hidden=false){
-    playSound('card'); // Kart çekme/dağıtma sesi
+    playSound('card'); // Profesyonel Kart Sesi
     let card = getSmartCard(divId === "dealerCards");
     hand.push(card);
     let img = document.createElement("img");
@@ -393,10 +410,7 @@ document.getElementById("stand").onclick = stand;
 async function dealerTurn(){
     dealerHidden = false;
     const dc = document.getElementById("dealerCards").children;
-    if(dc[1]) {
-        dc[1].src = `https://deckofcardsapi.com/static/img/${cardVal(dealer[1].value)}${dealer[1].suit}.png`;
-        playSound('card'); // Kapalı kart açılınca da ses çal
-    }
+    if(dc[1]) dc[1].src = `https://deckofcardsapi.com/static/img/${cardVal(dealer[1].value)}${dealer[1].suit}.png`;
     updateScores();
     await delay(1000);
     if(total(player) <= 21){ 
@@ -410,22 +424,10 @@ async function dealerTurn(){
 
 async function endGame(){
     let p=total(player), d=total(dealer), m=0, txt="";
-    if(p>21) { 
-        txt="BUST! KAYBETTİN"; 
-        playSound('bust'); 
-    }
-    else if(d>21 || p>d) { 
-        txt="KAZANDIN!"; m=2; 
-        playSound('win'); 
-    }
-    else if(d>p) { 
-        txt="KAYBETTİN"; 
-        playSound('lose'); 
-    }
-    else { 
-        txt="BERABERE"; m=1; 
-        playSound('count'); // Berabere için nötr ses
-    }
+    if(p>21) { txt="BUST! KAYBETTİN"; playSound('bust'); }
+    else if(d>21 || p>d) { txt="KAZANDIN!"; m=2; playSound('win'); }
+    else if(d>p) { txt="KAYBETTİN"; playSound('lose'); }
+    else { txt="BERABERE"; m=1; }
     
     if(m>0) await updateDoc(userRef, { balance: increment(bet*m) });
     messageEl.innerText = txt;
