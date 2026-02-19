@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>PixelArena | Elite Gaming</title>
+<title>PixelArena | Ultra Edition</title>
 
 <style>
 /* --- ULTRA DESIGN SYSTEM --- */
@@ -13,17 +13,17 @@
     --accent: #ff8a00;
     --bg-dark: #05070a;
     --card-bg: #0d111a;
-    --glass: rgba(13, 17, 26, 0.8);
+    --glass: rgba(13, 17, 26, 0.85);
     --border: rgba(255, 255, 255, 0.08);
     --success: #10b981;
 }
 
-* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: 'Inter', -apple-system, sans-serif; }
-body { background: var(--bg-dark); color: #e2e8f0; overflow-x: hidden; letter-spacing: -0.3px; }
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; font-family: 'Inter', -apple-system, system-ui, sans-serif; }
+body { background: var(--bg-dark); color:#e2e8f0; overflow-x:hidden; }
 
-#snow { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; opacity: 0.4; }
+#snow { position:fixed; top:0; left:0; width:100%; height:100%; z-index:1; pointer-events:none; opacity: 0.4; }
 
-/* --- NAVIGATION & BRANDING --- */
+/* --- NAV BAR --- */
 .top-bar {
     position: fixed; top: 0; width: 100%; height: 70px;
     display: flex; align-items: center; justify-content: space-between;
@@ -35,97 +35,95 @@ body { background: var(--bg-dark); color: #e2e8f0; overflow-x: hidden; letter-sp
     font-size: 22px; font-weight: 900; letter-spacing: 1px;
     background: linear-gradient(135deg, #fff 30%, var(--primary));
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    text-transform: uppercase; cursor: pointer;
+    text-transform: uppercase;
 }
 
-/* --- ELITE DROPDOWN SYSTEM --- */
-.right-menu { display: flex; align-items: center; gap: 15px; }
+.right-menu { display: flex; align-items: center; gap: 12px; }
 
+/* --- PROFILE SYSTEM --- */
+.profile-wrapper { position: relative; display: none; }
 .avatar-trigger {
     width: 44px; height: 44px; border-radius: 14px;
     background: linear-gradient(135deg, #1e293b, #0f172a);
     border: 1px solid var(--border); display: flex; align-items: center;
     justify-content: center; font-weight: 800; color: var(--primary);
-    cursor: pointer; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer; transition: 0.3s;
 }
-.avatar-trigger:hover { transform: scale(1.05); border-color: var(--primary); box-shadow: 0 0 20px var(--primary-glow); }
+.avatar-trigger:hover { transform: scale(1.05); border-color: var(--primary); box-shadow: 0 0 15px var(--primary-glow); }
 
 .dropdown-menu {
-    position: absolute; top: 75px; right: 25px; width: 290px;
+    position: absolute; top: 60px; right: 0; width: 280px;
     background: #0f172a; border: 1px solid var(--border);
-    border-radius: 24px; overflow: hidden; display: none;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8); z-index: 3000;
+    border-radius: 24px; display: none; flex-direction: column;
+    overflow: hidden; box-shadow: 0 25px 50px rgba(0,0,0,0.8); z-index: 3000;
 }
-.dropdown-menu.active { display: block; animation: ultraFade 0.3s ease-out; }
+.dropdown-menu.active { display: flex; animation: ultraFade 0.3s ease-out; }
 
-@keyframes ultraFade { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes ultraFade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-.u-profile-header {
+.u-header {
     background: linear-gradient(to bottom right, rgba(0, 210, 255, 0.1), transparent);
-    padding: 25px 20px; border-bottom: 1px solid var(--border);
+    padding: 20px; border-bottom: 1px solid var(--border);
 }
-.u-name { font-size: 16px; font-weight: 800; color: #fff; display: block; margin-bottom: 4px; }
-.u-rank { font-size: 10px; font-weight: 900; color: var(--accent); background: rgba(255,138,0,0.1); padding: 3px 10px; border-radius: 20px; border: 1px solid rgba(255,138,0,0.2); }
+.u-header .name { font-size: 16px; font-weight: 800; color: #fff; display: block; }
+.u-header .rank { font-size: 10px; font-weight: 900; color: var(--accent); background: rgba(255,138,0,0.1); padding: 3px 10px; border-radius: 20px; display: inline-block; margin-top: 5px; }
 
-.u-balance-card {
-    margin: 15px; padding: 15px; background: rgba(255,255,255,0.03);
-    border-radius: 16px; display: flex; justify-content: space-between; align-items: center;
-}
-.u-balance-card span { font-size: 11px; color: #94a3b8; font-weight: 700; }
-.u-balance-card b { font-size: 18px; color: var(--success); font-family: 'Monaco', monospace; }
+.u-balance { padding: 15px 20px; background: rgba(255,255,255,0.02); display: flex; justify-content: space-between; align-items: center; }
+.u-balance span { font-size: 11px; color: #94a3b8; font-weight: 700; }
+.u-balance b { font-size: 18px; color: var(--success); font-family: monospace; }
 
-.menu-items { padding: 10px; }
-.m-link {
+.menu-links { padding: 10px; }
+.m-item {
     display: flex; align-items: center; gap: 12px; padding: 12px 15px;
-    border-radius: 12px; text-decoration: none; color: #94a3b8;
+    border-radius: 14px; text-decoration: none; color: #94a3b8;
     font-size: 14px; font-weight: 600; transition: 0.2s;
 }
-.m-link i { font-style: normal; font-size: 18px; filter: grayscale(1); transition: 0.2s; }
-.m-link:hover { background: rgba(255,255,255,0.05); color: #fff; transform: translateX(5px); }
-.m-link:hover i { filter: grayscale(0); }
-.m-logout { color: #f43f5e !important; border-top: 1px solid var(--border); margin-top: 5px; padding-top: 15px; }
+.m-item:hover { background: rgba(255,255,255,0.05); color: #fff; transform: translateX(5px); }
+.m-item.exit { color: #f43f5e; border-top: 1px solid var(--border); margin-top: 5px; }
 
-/* --- PREMIUM GAME CARDS --- */
-.hero-search { margin-top: 100px; padding: 0 25px; }
-.search-input-wrapper { max-width: 600px; margin: 0 auto; position: relative; }
-.search-input-wrapper input {
+/* --- HERO & GRID --- */
+.hero-search { margin-top: 100px; padding: 0 20px; }
+.search-container { max-width: 600px; margin: 0 auto; position: relative; }
+.search-container input {
     width: 100%; padding: 18px 25px 18px 60px; border-radius: 20px;
-    background: #111827; border: 1px solid var(--border); color: #fff;
-    font-size: 16px; outline: none; transition: 0.3s;
+    background: #111827; border: 1px solid var(--border); color: white; font-size: 16px; outline: none; transition: 0.3s;
 }
-.search-input-wrapper input:focus { border-color: var(--primary); box-shadow: 0 0 20px var(--primary-glow); }
-.search-input-wrapper::before { content: '🔍'; position: absolute; left: 22px; top: 18px; font-size: 20px; opacity: 0.5; }
+.search-container input:focus { border-color: var(--primary); box-shadow: 0 0 20px var(--primary-glow); }
+.search-container::before { content: '🔍'; position: absolute; left: 22px; top: 18px; font-size: 20px; opacity: 0.5; }
 
-.section-title { padding: 40px 25px 15px; font-size: 13px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 2px; display: flex; align-items: center; gap: 15px; }
-.section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.section-title { padding: 40px 25px 15px; font-size: 14px; font-weight: 800; text-transform: uppercase; color: #64748b; letter-spacing: 2px; display: flex; align-items: center; gap: 15px; }
+.section-title::after { content:''; flex:1; height:1px; background: var(--border); }
 
 .games-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px; padding: 0 25px; }
 
 .game-card {
-    background: var(--card-bg); border-radius: 30px; padding: 35px 20px; text-align: center;
+    background: var(--card-bg); border-radius: 28px; padding: 30px 20px; text-align: center;
     border: 1px solid var(--border); transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     position: relative; overflow: hidden; cursor: pointer;
 }
-.game-card:hover { transform: translateY(-12px); border-color: var(--primary); box-shadow: 0 20px 40px rgba(0,0,0,0.6); }
-.game-card:hover .g-icon { transform: scale(1.2) rotate(8deg); filter: drop-shadow(0 0 15px var(--primary-glow)); }
-
-.g-icon { font-size: 55px; margin-bottom: 20px; display: block; transition: 0.4s; }
-.g-title { font-size: 15px; font-weight: 800; color: #fff; display: block; margin-bottom: 10px; }
-.g-tag { font-size: 9px; font-weight: 900; padding: 4px 12px; border-radius: 10px; background: rgba(255,255,255,0.05); color: var(--primary); border: 1px solid var(--border); }
-
-.tag-free { color: #10b981; border-color: rgba(16, 185, 129, 0.2); }
-
-/* --- BUTTONS --- */
-.btn { padding: 10px 24px; border-radius: 14px; border: none; font-weight: 800; font-size: 12px; cursor: pointer; transition: 0.3s; }
-.btn-login { background: transparent; color: #fff; border: 1px solid var(--border); }
-.btn-reg { background: var(--primary); color: #000; box-shadow: 0 4px 15px var(--primary-glow); }
+.game-card:hover { transform: translateY(-10px); border-color: var(--primary); box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+.game-icon { font-size: 50px; margin-bottom: 15px; display: block; transition: 0.3s; }
+.game-card:hover .game-icon { transform: scale(1.1) rotate(5deg); filter: drop-shadow(0 0 10px var(--primary-glow)); }
+.game-card span { font-weight: 800; font-size: 15px; display: block; margin-bottom: 10px; color: #fff; }
+.badge { font-size: 10px; font-weight: 900; padding: 5px 12px; border-radius: 12px; background: rgba(0,210,255,0.1); color: var(--primary); }
+.badge-free { color: #00ff88; background: rgba(0,255,136,0.1); }
 
 /* --- MODALS --- */
 .custom-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); backdrop-filter: blur(15px); display: none; align-items: center; justify-content: center; z-index: 6000; }
 .modal-box { width: 90%; max-width: 400px; padding: 40px; border-radius: 35px; background: #0f172a; border: 1px solid var(--border); text-align: center; }
 
-/* FOOTER */
-.footer { margin-top: 100px; padding: 60px 20px; text-align: center; border-top: 1px solid var(--border); opacity: 0.6; }
+/* AUTH BUTTONS */
+.btn { padding: 10px 24px; border-radius: 14px; border: none; font-weight: 800; font-size: 12px; cursor: pointer; transition: 0.3s; }
+.login-btn { background: transparent; color: #fff; border: 1px solid var(--border); }
+.register-btn { background: var(--primary); color: #000; box-shadow: 0 4px 15px var(--primary-glow); }
+.auth-btn { width: 100%; padding: 16px; border-radius: 14px; border: none; background: var(--primary); color:#000; font-weight: 900; margin-top: 10px; cursor: pointer; }
+
+/* WHEEL STYLE */
+.wheel-container { position: relative; width: 260px; height: 260px; margin: 25px auto; }
+#wheelCanvas { width: 100%; height: 100%; border-radius: 50%; border: 8px solid var(--border); transition: transform 4s cubic-bezier(0.15, 0, 0.15, 1); }
+.wheel-pointer { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-top: 30px solid var(--accent); z-index: 10; }
+
+.footer { padding: 80px 20px 40px; text-align: center; border-top: 1px solid var(--border); margin-top: 100px; opacity: 0.6; }
 </style>
 </head>
 <body>
@@ -136,132 +134,284 @@ body { background: var(--bg-dark); color: #e2e8f0; overflow-x: hidden; letter-sp
     <div class="brand">PixelArena</div>
     
     <div class="right-menu">
-        <button class="btn btn-login" id="loginBtn">GİRİŞ YAP</button>
-        <button class="btn btn-reg" id="regBtn">KATIL</button>
+        <button class="btn login-btn" id="loginBtn">GİRİŞ YAP</button>
+        <button class="btn register-btn" id="regBtn">KATIL</button>
 
         <div class="profile-wrapper" id="profileWrapper">
             <div class="avatar-trigger" id="avatarTrigger">?</div>
-            
             <div class="dropdown-menu" id="userDropdown">
-                <div class="u-profile-header">
-                    <span class="u-name" id="dropName">YÜKLENİYOR...</span>
-                    <span class="u-rank">✨ VIP ELITE PLAYER</span>
+                <div class="u-header">
+                    <span class="name" id="dropName">YÜKLENİYOR...</span>
+                    <div class="rank">★ VIP ELITE</div>
                 </div>
                 
-                <div class="u-balance-card">
-                    <span>CÜZDAN</span>
-                    <b id="dropBalance">0.00 ₺</b>
+                <div class="u-balance">
+                    <span>BAKİYE</span>
+                    <b id="dropBalance">0 ₺</b>
                 </div>
                 
-                <div class="menu-items">
-                    <a href="panel.html" class="m-link"><i>👤</i> Profil Ayarları</a>
-                    <a href="javascript:void(0)" class="m-link" onclick="openWheel()"><i>🎡</i> Şanslı Çark</a>
-                    <a href="javascript:void(0)" class="m-link" onclick="openBonusModal()"><i>🎫</i> Bonus Kodlarım</a>
-                    <a href="https://instagram.com" class="m-link"><i>🚨</i> Canlı Destek</a>
-                    <a href="javascript:void(0)" class="m-link m-logout" id="logoutBtn"><i>👋</i> Güvenli Çıkış</a>
+                <div class="menu-links">
+                    <a href="panel.html" class="m-item"><i>👤</i> Hesap Ayarları</a>
+                    <a href="javascript:void(0)" class="m-item" onclick="openWheel()"><i>🎡</i> Şanslı Çark</a>
+                    <a href="javascript:void(0)" class="m-item" onclick="openBonusModal()"><i>🎁</i> Promosyon Kodu</a>
+                    <a href="https://instagram.com" target="_blank" class="m-item"><i>💬</i> Canlı Destek</a>
+                    <a href="javascript:void(0)" class="m-item exit" id="logoutBtn"><i>🛑</i> Güvenli Çıkış</a>
                 </div>
             </div>
         </div>
     </div>
 </nav>
 
+<div class="custom-modal" id="wheelModal">
+    <div class="modal-box">
+        <h3 style="color:var(--primary); margin-bottom:10px;">ŞANSLI ÇARK</h3>
+        <div class="wheel-container">
+            <div class="wheel-pointer"></div>
+            <canvas id="wheelCanvas" width="500" height="500"></canvas>
+        </div>
+        <button class="auth-btn" id="spinBtn">ÜCRETSİZ ÇEVİR</button>
+        <p id="wheelMsg" style="margin-top:15px; font-size:12px; color:#8892b0;">Kazanılan miktar cüzdanınıza eklenir.</p>
+        <p onclick="closeModal('wheelModal')" style="margin-top:20px; font-size:12px; cursor:pointer; opacity:0.4;">PENCEREYİ KAPAT</p>
+    </div>
+</div>
+
+<div class="custom-modal" id="bonusCodeModal">
+    <div class="modal-box">
+        <h3 style="color:var(--accent); margin-bottom:20px;">PROMOSYON KODU</h3>
+        <input type="text" id="bonusCodeInput" placeholder="KODU BURAYA YAZIN" style="width: 100%; padding: 15px; border-radius: 12px; background: #050811; border: 1px solid var(--border); color: white; outline: none; margin-bottom: 15px; text-align: center; text-transform: uppercase; font-weight: 800;">
+        <button class="auth-btn" id="redeemBtn" style="background:var(--accent)">KODU AKTİF ET</button>
+        <p onclick="closeModal('bonusCodeModal')" style="margin-top:20px; font-size:12px; cursor:pointer; opacity:0.4;">İPTAL</p>
+    </div>
+</div>
+
 <div class="hero-search">
-    <div class="search-input-wrapper">
-        <input type="text" id="searchInput" placeholder="Favori oyununu ara...">
+    <div class="search-container">
+        <input type="text" id="searchInput" placeholder="Favori oyununu keşfet...">
     </div>
 </div>
 
 <main id="games">
-    <div class="section-title">Rekabetçi Modlar</div>
+    <div class="section-title">Online Arena</div>
     <div class="games-grid">
         <div class="game-card" data-name="reflex duel" onclick="checkLogin('duel.html')">
-            <span class="g-icon">⚡</span>
-            <span class="g-title">Reflex Duel</span>
-            <span class="g-tag">PVP ARENA</span>
+            <div class="game-icon">⚡</div>
+            <span>Reflex Duel</span>
+            <div class="badge">RANKED PVP</div>
         </div>
     </div>
 
-    <div class="section-title">Premium Deneyim</div>
+    <div class="section-title">Premium Seçenekler</div>
     <div class="games-grid">
         <div class="game-card" data-name="skycrash" onclick="checkLogin('skycrash.html')">
-            <span class="g-icon">🚀</span>
-            <span class="g-title">SkyCrash</span>
-            <span class="g-tag">HIGH VOLATILITY</span>
+            <div class="game-icon">🚀</div>
+            <span>SkyCrash</span>
+            <div class="badge">HIGH VOLTAGE</div>
         </div>
         <div class="game-card" data-name="mines" onclick="checkLogin('mines.html')">
-            <span class="g-icon">💎</span>
-            <span class="g-title">Mines</span>
-            <span class="g-tag">INSTANT WIN</span>
+            <div class="game-icon">💎</div>
+            <span>Mines</span>
+            <div class="badge">INSTANT WIN</div>
         </div>
         <div class="game-card" data-name="blackjack" onclick="checkLogin('blackjack.html')">
-            <span class="g-icon">♠️</span>
-            <span class="g-title">BlackJack</span>
-            <span class="g-tag">PRO TABLE</span>
+            <div class="game-icon">♠️</div>
+            <span>BlackJack</span>
+            <div class="badge">PRO TABLE</div>
         </div>
         <div class="game-card" data-name="pişti" onclick="checkLogin('pisti.html')">
-            <span class="g-icon">🃏</span>
-            <span class="g-title">Pişti Online</span>
-            <span class="g-tag">CLASSIC CARD</span>
+            <div class="game-icon">🃏</div>
+            <span>Pişti Online</span>
+            <div class="badge">SOCIAL PLAY</div>
         </div>
     </div>
 
     <div class="section-title">Hızlı Eğlence</div>
     <div class="games-grid">
         <div class="game-card" data-name="pattern master" onclick="location.href='patternmaster.html'">
-            <span class="g-icon">🧩</span>
-            <span class="g-title">Pattern Master</span>
-            <span class="g-tag tag-free">FREE PLAY</span>
+            <div class="game-icon">🧩</div>
+            <span>Pattern Master</span>
+            <div class="badge badge-free">ÜCRETSİZ</div>
         </div>
         <div class="game-card" data-name="space war" onclick="location.href='spacepro.html'">
-            <span class="g-icon" style="filter: drop-shadow(0 0 10px #00ff88);">🛸</span>
-            <span class="g-title">Space Pro</span>
-            <span class="g-tag tag-free">FREE PLAY</span>
+            <div class="game-icon" style="filter: drop-shadow(0 0 10px #00ff88);">🛸</div>
+            <span>Space Pro</span>
+            <div class="badge badge-free">ÜCRETSİZ</div>
         </div>
         <div class="game-card" data-name="yılan" onclick="location.href='snakepro.html'">
-            <span class="g-icon">🐍</span>
-            <span class="g-title">Snake Pro</span>
-            <span class="g-tag tag-free">FREE PLAY</span>
+            <div class="game-icon">🐍</div>
+            <span>Snake Pro</span>
+            <div class="badge badge-free">ÜCRETSİZ</div>
         </div>
     </div>
 </main>
 
 <footer class="footer">
-    <div class="brand" style="font-size: 30px; opacity: 0.5;">PIXELARENA</div>
-    <p style="margin-top: 10px; font-size: 12px;">Next-Gen Gaming Experience &copy; 2026</p>
+    <div class="brand" style="font-size: 28px;">PIXELARENA</div>
+    <p style="margin-top:15px; font-size:12px;">© 2026 PixelArena Global Network. All Rights Reserved.</p>
 </footer>
 
+<div class="auth-overlay" id="authOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); backdrop-filter:blur(15px); display:none; align-items:center; justify-content:center; z-index:5000;">
+    <div class="modal-box">
+        <h2 id="authTitle" style="margin-bottom:25px;">Giriş Yap</h2>
+        <input type="email" id="authEmail" placeholder="E-posta" style="width:100%; padding:15px; margin-bottom:10px; border-radius:12px; background:#050811; border:1px solid var(--border); color:white; outline:none;">
+        <input type="password" id="authPassword" placeholder="Şifre" style="width:100%; padding:15px; margin-bottom:10px; border-radius:12px; background:#050811; border:1px solid var(--border); color:white; outline:none;">
+        <input type="text" id="authUsername" placeholder="Kullanıcı Adı" style="display:none; width:100%; padding:15px; margin-bottom:10px; border-radius:12px; background:#050811; border:1px solid var(--border); color:white; outline:none;">
+        <button class="auth-btn" id="authSubmit">SİSTEME GİR</button>
+        <p style="margin-top:15px; font-size:13px;">
+            <span id="switchText">Hesabın yok mu?</span> 
+            <b id="switchMode" style="color:var(--primary); cursor:pointer;">Kayıt Ol</b>
+        </p>
+        <p id="authBack" style="margin-top:20px; font-size:12px; cursor:pointer; opacity:0.5;">GERİ DÖN</p>
+    </div>
+</div>
+
 <script type="module">
-// Firebase entegrasyonu ve tüm modal logic'leri yukarıdaki UI elementleriyle tam uyumlu çalışır.
-// Menü açma/kapama, arama ve bakiye güncellemeleri korunmuştur.
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, onSnapshot, setDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-const avatar = document.getElementById('avatarTrigger');
-const dropdown = document.getElementById('userDropdown');
-
-avatar.onclick = (e) => {
-    e.stopPropagation();
-    dropdown.classList.toggle('active');
+const firebaseConfig = {
+    apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
+    authDomain:"emirhan-site.firebaseapp.com",
+    projectId:"emirhan-site",
+    storageBucket:"emirhan-site.firebasestorage.app",
+    messagingSenderId:"668871888390",
+    appId:"1:668871888390:web:76568bda84cb1641f7bd87"
 };
 
-window.onclick = () => dropdown.classList.remove('active');
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-// Kar Efekti Başlatma
-const canvas = document.getElementById("snow");
-const ctx = canvas.getContext("2d");
-let particles = [];
-function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-window.onresize = resize; resize();
-for(let i=0; i<100; i++) particles.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, r:Math.random()*2+1, d:Math.random()*0.5+0.3});
-function drawSnow() {
-    ctx.clearRect(0,0,canvas.width, canvas.height);
-    ctx.fillStyle = "rgba(255,255,255,0.3)";
-    ctx.beginPath();
-    particles.forEach(p => {
-        ctx.moveTo(p.x, p.y); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
-        p.y += p.d; if(p.y > canvas.height) p.y = -5;
-    });
-    ctx.fill(); requestAnimationFrame(drawSnow);
+// --- UI LOGIC ---
+const avatarTrigger = document.getElementById("avatarTrigger");
+const userDropdown = document.getElementById("userDropdown");
+const profileWrapper = document.getElementById("profileWrapper");
+const loginBtn = document.getElementById("loginBtn");
+const regBtn = document.getElementById("regBtn");
+const overlay = document.getElementById("authOverlay");
+
+avatarTrigger.onclick = (e) => { e.stopPropagation(); userDropdown.classList.toggle("active"); };
+window.onclick = () => userDropdown.classList.remove("active");
+
+window.openWheel = () => { document.getElementById("wheelModal").style.display = "flex"; userDropdown.classList.remove("active"); drawWheel(); };
+window.openBonusModal = () => { document.getElementById("bonusCodeModal").style.display = "flex"; userDropdown.classList.remove("active"); };
+window.closeModal = (id) => { document.getElementById(id).style.display = "none"; };
+
+// --- FIREBASE AUTH ---
+let isLogin = true;
+loginBtn.onclick = () => { overlay.style.display="flex"; isLogin=true; updateAuthUI(); };
+regBtn.onclick = () => { overlay.style.display="flex"; isLogin=false; updateAuthUI(); };
+document.getElementById("authBack").onclick = () => overlay.style.display="none";
+
+function updateAuthUI() {
+    document.getElementById("authTitle").innerText = isLogin ? "Giriş Yap" : "Kayıt Ol";
+    document.getElementById("authUsername").style.display = isLogin ? "none" : "block";
+    document.getElementById("switchMode").innerText = isLogin ? "Kayıt Ol" : "Giriş Yap";
 }
-drawSnow();
+
+document.getElementById("switchMode").onclick = () => { isLogin = !isLogin; updateAuthUI(); };
+
+document.getElementById("authSubmit").onclick = async () => {
+    const email = document.getElementById("authEmail").value;
+    const pass = document.getElementById("authPassword").value;
+    const userN = document.getElementById("authUsername").value;
+    try {
+        if(isLogin) { await signInWithEmailAndPassword(auth, email, pass); }
+        else { 
+            const res = await createUserWithEmailAndPassword(auth, email, pass);
+            await setDoc(doc(db, "users", res.user.uid), { username: userN, balance: 10000, createdAt: new Date() });
+        }
+        overlay.style.display = "none";
+    } catch(e) { alert("Hata: " + e.message); }
+};
+
+onAuthStateChanged(auth, user => {
+    if(user) {
+        loginBtn.style.display="none"; regBtn.style.display="none";
+        profileWrapper.style.display="block";
+        onSnapshot(doc(db, "users", user.uid), s => {
+            if(s.exists()) {
+                const data = s.data();
+                document.getElementById("dropBalance").innerText = data.balance.toLocaleString() + " ₺";
+                document.getElementById("dropName").innerText = data.username.toUpperCase();
+                avatarTrigger.innerText = data.username.charAt(0).toUpperCase();
+            }
+        });
+    } else {
+        loginBtn.style.display="block"; regBtn.style.display="block";
+        profileWrapper.style.display="none";
+    }
+});
+
+document.getElementById("logoutBtn").onclick = () => signOut(auth);
+
+// --- WHEEL SYSTEM ---
+const rewards = [
+    { label: "1.000₺", color: "#1e2642" },
+    { label: "2.500₺", color: "#00d2ff" },
+    { label: "5.000₺", color: "#ff8a00" },
+    { label: "10.000₺", color: "#ff5f00" }
+];
+
+function drawWheel() {
+    const canvas = document.getElementById("wheelCanvas");
+    const ctx = canvas.getContext("2d");
+    const arc = Math.PI / (rewards.length / 2);
+    ctx.clearRect(0,0,500,500);
+    rewards.forEach((reward, i) => {
+        const angle = i * arc;
+        ctx.fillStyle = reward.color;
+        ctx.beginPath(); ctx.moveTo(250, 250);
+        ctx.arc(250, 250, 240, angle, angle + arc); ctx.fill();
+        ctx.save(); ctx.fillStyle = "white";
+        ctx.translate(250 + Math.cos(angle + arc / 2) * 160, 250 + Math.sin(angle + arc / 2) * 160);
+        ctx.rotate(angle + arc / 2 + Math.PI / 2);
+        ctx.font = "bold 24px Arial";
+        ctx.fillText(reward.label, -ctx.measureText(reward.label).width / 2, 0);
+        ctx.restore();
+    });
+}
+
+let isSpinning = false;
+document.getElementById("spinBtn").onclick = async () => {
+    if(isSpinning || !auth.currentUser) return;
+    isSpinning = true;
+    const canvas = document.getElementById("wheelCanvas");
+    const rand = Math.floor(Math.random() * rewards.length);
+    const stopAngle = 3600 + (rand * (360/rewards.length));
+    canvas.style.transform = `rotate(${stopAngle}deg)`;
+    
+    setTimeout(async () => {
+        const winAmount = parseInt(rewards[rewards.length - 1 - rand].label.replace(".", "").replace("₺", ""));
+        await updateDoc(doc(db, "users", auth.currentUser.uid), { balance: increment(winAmount) });
+        document.getElementById("wheelMsg").innerHTML = `<b style="color:var(--success)">KAZANDIN: ${rewards[rewards.length - 1 - rand].label}</b>`;
+        isSpinning = false;
+    }, 4000);
+};
+
+// --- SEARCH ---
+document.getElementById("searchInput").oninput = (e) => {
+    const val = e.target.value.toLowerCase();
+    document.querySelectorAll(".game-card").forEach(card => {
+        card.style.display = card.dataset.name.includes(val) ? "block" : "none";
+    });
+};
+
+window.checkLogin = (url) => { if(!auth.currentUser) overlay.style.display="flex"; else location.href = url; };
+
+// --- SNOW ---
+const sc = document.getElementById("snow");
+const sctx = sc.getContext("2d");
+let p = [];
+function res() { sc.width = window.innerWidth; sc.height = window.innerHeight; }
+window.onresize = res; res();
+for(let i=0; i<80; i++) p.push({x:Math.random()*sc.width, y:Math.random()*sc.height, r:Math.random()*2+1, d:Math.random()*0.5+0.2});
+function drawS() {
+    sctx.clearRect(0,0,sc.width, sc.height); sctx.fillStyle = "rgba(255,255,255,0.4)"; sctx.beginPath();
+    p.forEach(i => { sctx.moveTo(i.x, i.y); sctx.arc(i.x, i.y, i.r, 0, Math.PI*2); i.y += i.d; if(i.y > sc.height) i.y = -5; });
+    sctx.fill(); requestAnimationFrame(drawS);
+}
+drawS();
 </script>
 </body>
 </html>
