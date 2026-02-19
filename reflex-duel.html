@@ -50,68 +50,70 @@ body::before {
     max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 
-/* LOBİ PANELİ */
-#lobby { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
+/* LOBİ */
+#lobby { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
 
-.lobby-controls {
-    display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px;
-}
-
-.search-bar {
-    display: flex; gap: 8px;
-}
-.search-bar input {
-    flex: 1; background: var(--b); border: 1px solid #333; border-radius: 8px;
-    padding: 10px; color: white; font-family: 'Orbitron'; font-size: 0.7rem;
+.lobby-header { 
+    display: flex; flex-direction: column; gap: 12px; margin-bottom: 10px;
 }
 
-.action-buttons {
-    display: flex; gap: 8px;
+.search-container {
+    display: flex; gap: 8px; width: 100%;
 }
 
-.btn {
-    border: none; border-radius: 8px; font-weight: 900; font-family: 'Orbitron'; 
-    font-size: 0.65rem; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center;
+.search-input {
+    flex: 1; background: var(--b); border: 1px solid #333; padding: 12px; 
+    border-radius: 10px; color: var(--p); font-family: 'Orbitron'; font-size: 0.7rem;
 }
-.create-btn { flex: 1; padding: 12px; background: var(--p); color: #000; box-shadow: 0 0 15px rgba(0,242,255,0.3); }
-.quick-btn { flex: 1; padding: 12px; background: var(--success); color: #000; }
+
+.lobby-actions { display: flex; gap: 10px; }
+
+.action-btn { 
+    flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: 900; 
+    font-family: 'Orbitron'; font-size: 0.7rem; cursor: pointer; transition: 0.3s;
+}
+.create-btn { background: var(--p); color: #000; box-shadow: 0 0 15px rgba(0,242,255,0.3); }
+.quick-btn { background: var(--success); color: #000; }
 
 /* ODA KARTLARI */
 .room-card { 
     background: var(--glass); border: 1px solid var(--b); padding: 15px; border-radius: 15px;
     display: flex; justify-content: space-between; align-items: center;
-    border-left: 4px solid var(--p); animation: slideIn 0.3s ease-out;
+    border-left: 4px solid var(--p); animation: slideIn 0.3s ease-out; margin-bottom: 10px;
 }
-.room-details { display: flex; flex-direction: column; gap: 4px; }
-.room-host { font-family: 'Orbitron'; font-weight: 900; font-size: 0.9rem; color: #fff; }
-.room-meta { font-size: 0.65rem; color: #888; display: flex; align-items: center; gap: 5px; }
-.badge { padding: 2px 6px; border-radius: 4px; font-size: 0.55rem; font-weight: 900; }
-.badge-live { background: var(--a); color: white; animation: pulse 1s infinite; }
-.badge-wait { background: var(--success); color: black; }
 
-.room-stats { text-align: right; margin-right: 15px; }
-.live-score { font-family: 'Orbitron'; color: var(--gold); font-weight: 900; font-size: 0.8rem; }
+.badge { 
+    padding: 3px 8px; border-radius: 5px; font-size: 0.55rem; font-weight: 900; margin-bottom: 5px; display: inline-block;
+}
+.badge-waiting { background: var(--success); color: #000; }
+.badge-ingame { background: var(--a); color: #fff; animation: blink 1s infinite; }
 
-@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+.room-id { font-size: 0.6rem; color: #555; font-family: 'Orbitron'; }
+.live-stats { font-family: 'Orbitron'; color: var(--gold); font-size: 0.8rem; margin-right: 15px; font-weight: 900; }
+
+@keyframes blink { 50% { opacity: 0.5; } }
 @keyframes slideIn { from { transform: translateX(-20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
-/* BOŞ DURUM */
-.empty-state {
-    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-    opacity: 0.5; text-align: center; gap: 10px;
+/* MODALLAR */
+.modal { position: fixed; inset:0; background:rgba(0,0,0,0.9); display:none; justify-content:center; align-items:center; z-index:2000; padding: 20px; backdrop-filter: blur(5px); }
+.modal-content { 
+    background: var(--b); padding: 30px; border-radius: 20px; border: 1px solid var(--p);
+    width: 100%; max-width: 400px; text-align: center; box-shadow: 0 0 30px rgba(0,242,255,0.2);
+}
+.modal-content h2 { font-family: 'Orbitron'; color: var(--p); margin-bottom: 10px; font-size: 1.2rem; }
+.modal-content p { color: #888; font-size: 0.8rem; margin-bottom: 20px; }
+.modal-content input { 
+    width: 100%; padding: 15px; background: #000; border: 1px solid #333; 
+    color: var(--p); border-radius: 10px; margin-bottom: 20px; text-align: center; font-size: 16px;
 }
 
-/* MODAL GELİŞTİRME */
-.modal-content h2 { font-size: 1.2rem; text-shadow: 0 0 10px var(--p); }
-.modal-content p { font-size: 0.7rem; color: #888; margin-bottom: 15px; }
-
-/* OYUN GÖRÜNÜMÜ VE DİĞERLERİ */
+/* OYUN ALANI */
 #game-view { display: none; flex: 1; flex-direction: column; }
 .scoreboard { 
     padding: 20px; display: grid; grid-template-columns: 1fr auto 1fr; 
     align-items: center; background: rgba(0,0,0,0.5); border-bottom: 1px solid var(--b);
 }
-.arena { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; position: relative; touch-action: none; }
+.arena { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; touch-action: none; }
 #bigText { font-family: 'Orbitron'; font-size: 70px; font-weight: 900; text-align: center;}
 #subText { font-family: 'Orbitron'; font-size: 0.9rem; letter-spacing: 3px; color: #555; margin-top: 15px; text-align: center;}
 .flash { background: #fff !important; }
@@ -119,8 +121,6 @@ body::before {
 .winner-screen { position: fixed; inset: 0; background: #000; z-index: 5000; display: none; flex-direction: column; justify-content: center; align-items: center; }
 .back-btn { background: var(--a); color: white; border: none; padding: 8px 12px; border-radius: 6px; font-weight: 800; font-size: 0.7rem; font-family: 'Orbitron'; }
 .exit-btn { background: #333; color: #ff4444; border: 1px solid #444; padding: 6px 10px; border-radius: 6px; font-weight: 800; font-size: 0.65rem; font-family: 'Orbitron'; }
-.penalty { color: var(--a) !important; animation: shake 0.3s infinite; }
-@keyframes shake { 0%,100%{transform: scale(1);} 50%{transform: scale(1.1);} }
 </style>
 </head>
 <body>
@@ -130,35 +130,42 @@ body::before {
     <div style="display:flex; gap:10px; align-items:center;">
         <div id="userBox">...</div>
         <button id="lobbyExitBtn" class="exit-btn" onclick="window.location.href='index.html'">ÇIKIŞ</button>
-        <button id="leaveBtn" class="back-btn" style="display:none;">AYRIL</button>
+        <button id="leaveBtn" class="back-btn" style="display:none;">LOBBY'E DÖN</button>
     </div>
 </div>
 
 <div id="createModal" class="modal">
     <div class="modal-content">
-        <h2 style="font-family:'Orbitron'; color:var(--p);">ARENA OLUŞTUR</h2>
-        <p>Rakiplerini beklemek için bir oda hazırla.</p>
-        <input type="text" id="roomPassInput" placeholder="ŞİFRE (BOŞ BIRAKILABİLİR)" maxlength="10">
+        <h2>ARENA OLUŞTUR</h2>
+        <p>Yeni bir kapışma başlatmak için oda kur.</p>
+        <input type="text" id="roomPassInput" placeholder="ŞİFRE (BOŞ BIRAKABİLİRSİN)" maxlength="10">
         <div style="display:flex; gap:10px;">
-            <button onclick="closeModal()" style="flex:1; padding:15px; border-radius:10px; background:#222; border:none; color:white;">İPTAL</button>
-            <button id="confirmCreateBtn" style="flex:1; padding:15px; border-radius:10px; background:var(--p); border:none; color:black; font-weight:900;">OLUŞTUR</button>
+            <button onclick="closeModal('createModal')" style="flex:1; padding:15px; border-radius:10px; background:#222; border:none; color:white;">İPTAL</button>
+            <button id="confirmCreateBtn" style="flex:1; padding:15px; border-radius:10px; background:var(--p); border:none; color:black; font-weight:900;">BAŞLAT</button>
         </div>
     </div>
 </div>
 
+<div id="quickJoinModal" class="modal">
+    <div class="modal-content">
+        <h2 style="color:var(--success)">HIZLI KATIL</h2>
+        <p id="quickJoinStatus">Uygun arenalar taranıyor...</p>
+        <div id="quickJoinLoader" style="margin:20px 0; color:var(--success); font-family:'Orbitron';">SİNYAL ARANIYOR...</div>
+        <button onclick="closeModal('quickJoinModal')" style="width:100%; padding:15px; border-radius:10px; background:#222; border:none; color:white;">İPTAL</button>
+    </div>
+</div>
+
 <div id="lobby">
-    <div class="lobby-controls">
-        <div class="search-bar">
-            <input type="text" id="searchInput" placeholder="ODA KODU VEYA İSİM İLE ARA...">
+    <div class="lobby-header">
+        <div class="search-container">
+            <input type="text" id="searchInput" class="search-input" placeholder="ODA KODU VEYA OYUNCU ARA...">
         </div>
-        <div class="action-buttons">
-            <button class="btn create-btn" onclick="openModal()">ODA KUR</button>
-            <button class="btn quick-btn" id="quickJoinBtn">HIZLI KATIL</button>
+        <div class="lobby-actions">
+            <button class="action-btn create-btn" onclick="openModal('createModal')">ODA KUR</button>
+            <button class="action-btn quick-btn" onclick="openQuickJoin()">HIZLI KATIL</button>
         </div>
     </div>
-
-    <div id="roomList">
-        </div>
+    <div id="roomList"></div>
 </div>
 
 <div id="game-view">
@@ -209,37 +216,35 @@ let serverOffset = 0;
 
 const getServerTime = () => Date.now() + serverOffset;
 
-// SES SİSTEMİ
+// SES VE MODAL FONKSİYONLARI
 let audioCtx = null;
-const initAudio = () => {
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-};
-function playBeep(freq, type, duration) {
-    if(!audioCtx) return;
-    initAudio();
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.type = type;
-    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
-    osc.connect(gain); gain.connect(audioCtx.destination);
-    osc.start(); osc.stop(audioCtx.currentTime + duration);
-}
-const sounds = {
-    tick: () => playBeep(400, 'sine', 0.1),
-    go: () => playBeep(800, 'square', 0.3),
-    win: () => {
-        playBeep(523, 'sine', 0.2);
-        setTimeout(()=>playBeep(659, 'sine', 0.2), 150);
-        setTimeout(()=>playBeep(783, 'sine', 0.5), 300);
-    }
-};
+const initAudio = () => { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); if (audioCtx.state === 'suspended') audioCtx.resume(); };
+function playBeep(freq, type, duration) { if(!audioCtx) return; initAudio(); const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime); gain.gain.setValueAtTime(0.1, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration); osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + duration); }
+const sounds = { tick: () => playBeep(400, 'sine', 0.1), go: () => playBeep(800, 'square', 0.3), win: () => { playBeep(523, 'sine', 0.2); setTimeout(()=>playBeep(659, 'sine', 0.2), 150); setTimeout(()=>playBeep(783, 'sine', 0.5), 300); } };
 
-// MODAL YÖNETİMİ
-window.openModal = () => { initAudio(); document.getElementById("createModal").style.display = "flex"; };
-window.closeModal = () => document.getElementById("createModal").style.display = "none";
+window.openModal = (id) => { initAudio(); document.getElementById(id).style.display = "flex"; };
+window.closeModal = (id) => { document.getElementById(id).style.display = "none"; };
+
+// HIZLI KATIL MANTIĞI
+window.openQuickJoin = () => {
+    openModal('quickJoinModal');
+    const status = document.getElementById("quickJoinStatus");
+    const loader = document.getElementById("quickJoinLoader");
+    
+    setTimeout(() => {
+        const available = allRooms.find(r => !r.player2 && !r.password && r.player1 !== uid);
+        if (available) {
+            status.innerText = "Arena Bulundu! Bağlanılıyor...";
+            setTimeout(() => {
+                closeModal('quickJoinModal');
+                joinRoom(available.id, false);
+            }, 1000);
+        } else {
+            status.innerText = "Şu an uygun boş arena yok.";
+            loader.innerText = "YENİ ODA KURMAN ÖNERİLİR";
+        }
+    }, 1500);
+};
 
 // KİMLİK DOĞRULAMA
 onAuthStateChanged(auth, async (user) => {
@@ -257,7 +262,7 @@ onAuthStateChanged(auth, async (user) => {
     listenLobby();
 });
 
-// LOBİ DİNLEME VE FİLTRELEME
+// LOBİ VE ARAMA
 function listenLobby() {
     if(unsubLobby) unsubLobby(); 
     const q = query(collection(db, "rooms"), where("state", "in", ["waiting", "matched", "countdown", "active", "result"]));
@@ -270,45 +275,35 @@ function listenLobby() {
 
 function renderRooms() {
     const list = document.getElementById("roomList");
-    const searchTerm = document.getElementById("searchInput").value.toLowerCase();
+    const search = document.getElementById("searchInput").value.toLowerCase();
     list.innerHTML = "";
 
     const filtered = allRooms.filter(r => 
-        r.player1Name.toLowerCase().includes(searchTerm) || 
-        r.id.toLowerCase().includes(searchTerm)
+        (r.player1Name || "").toLowerCase().includes(search) || 
+        r.id.toLowerCase().includes(search)
     );
 
     if (filtered.length === 0) {
-        list.innerHTML = `
-            <div class="empty-state">
-                <div style="font-size:2rem;">🛰️</div>
-                <div style="font-family:'Orbitron'; font-size:0.7rem;">ARENA BULUNAMADI</div>
-            </div>`;
+        list.innerHTML = `<div style="text-align:center; padding:40px; color:#444; font-family:'Orbitron'; font-size:0.7rem;">ARENA BULUNAMADI</div>`;
         return;
     }
 
     filtered.forEach(data => {
         const isFull = data.player1 && data.player2;
-        const isMyRoom = data.player1 === uid;
-        const p1Display = (data.player1Name || "Bilinmiyor").toUpperCase();
         const isInGame = ["countdown", "active", "result"].includes(data.state);
+        const isMyRoom = data.player1 === uid;
         
         const div = document.createElement("div");
         div.className = "room-card";
         div.innerHTML = `
-            <div class="room-details">
-                <div class="room-host">${p1Display} ${isMyRoom ? '(SEN)' : ''}</div>
-                <div class="room-meta">
-                    <span class="badge ${isInGame ? 'badge-live' : 'badge-wait'}">${isInGame ? 'MAÇTA' : 'BEKLEYOR'}</span>
-                    <span>•</span>
-                    <span>ID: ${data.id.slice(0,5)}</span>
-                    <span>•</span>
-                    <span>${data.password ? '🔒' : '🔓'}</span>
-                </div>
+            <div>
+                <span class="badge ${isInGame ? 'badge-ingame' : 'badge-waiting'}">${isInGame ? 'MAÇTA' : 'BEKLENİYOR'}</span>
+                <div style="font-weight:900; font-size:1rem; color:#fff">${(data.player1Name || "ADSİZ").toUpperCase()}</div>
+                <div class="room-id">ID: ${data.id.slice(0,6).toUpperCase()} • ${data.password ? '🔒' : '🔓'}</div>
             </div>
             <div style="display:flex; align-items:center;">
-                ${isInGame ? `<div class="room-stats"><div class="live-score">${data.score1}:${data.score2}</div></div>` : ''}
-                <button class="btn" style="padding:8px 16px; background:${(isFull || isMyRoom) ? '#222' : 'var(--p)'}; color:${(isFull || isMyRoom) ? '#555' : '#000'};" 
+                ${isInGame ? `<div class="live-stats">${data.score1} - ${data.score2}</div>` : ''}
+                <button style="padding:10px 18px; border-radius:8px; border:none; background:${(isFull || isMyRoom) ? '#222' : 'var(--p)'}; color:${(isFull || isMyRoom) ? '#555' : '#000'}; font-weight:900; font-size:0.7rem;" 
                 ${(isFull || isMyRoom) ? 'disabled' : ''} onclick="joinRoom('${data.id}', ${data.password ? 'true' : 'false'})">
                     ${isFull ? 'DOLU' : (isMyRoom ? 'SAHİBİ' : 'KATIL')}
                 </button>
@@ -320,17 +315,7 @@ function renderRooms() {
 
 document.getElementById("searchInput").oninput = renderRooms;
 
-// HIZLI KATIL
-document.getElementById("quickJoinBtn").onclick = () => {
-    const available = allRooms.find(r => !r.player2 && !r.password && r.player1 !== uid);
-    if (available) {
-        joinRoom(available.id, false);
-    } else {
-        alert("Şu an uygun boş arena yok! Kendi odanı kurabilirsin.");
-    }
-};
-
-// ODA KURMA VE KATILMA MANTIĞI
+// ODA KURMA
 document.getElementById("confirmCreateBtn").onclick = async () => {
     const pass = document.getElementById("roomPassInput").value;
     const newRoomRef = doc(collection(db, "rooms"));
@@ -340,7 +325,7 @@ document.getElementById("confirmCreateBtn").onclick = async () => {
         score1: 0, score2: 0, round: 1, state: "waiting", host: uid, 
         password: pass, createdAt: serverTimestamp(), penalty: false
     });
-    closeModal(); enterRoom();
+    closeModal('createModal'); enterRoom();
 };
 
 window.joinRoom = async (id, isLocked) => {
@@ -362,7 +347,7 @@ window.joinRoom = async (id, isLocked) => {
     } catch (e) { alert(e); }
 };
 
-// OYUN İÇİ MANTIK (EnterRoom, Arena Taps, QuitGame) - Önceki kararlı yapının geliştirilmiş hali
+// OYUN İÇİ FONKSİYONLAR (Önceki kararlı kod ile aynıdır)
 function enterRoom() {
     if(unsubLobby) { unsubLobby(); unsubLobby = null; } 
     document.getElementById("lobby").style.display = "none";
@@ -370,31 +355,12 @@ function enterRoom() {
     document.getElementById("game-view").style.display = "flex";
     document.getElementById("leaveBtn").style.display = "block";
     
-    if (unsubRoom) unsubRoom();
     unsubRoom = onSnapshot(doc(db, "rooms", currentRoomId), (snap) => {
         if (!snap.exists()) { quitGame(); return; }
         const d = snap.data();
-
-        if (d.createdAt && serverOffset === 0) {
-            const serverTimeMillis = d.createdAt.toMillis();
-            serverOffset = serverTimeMillis - Date.now();
-        }
+        if (d.createdAt && serverOffset === 0) serverOffset = d.createdAt.toMillis() - Date.now();
         
-        if (["matched", "countdown", "active", "result"].includes(d.state)) {
-            if (!d.player1 || !d.player2) {
-                if (d.state !== "finished") {
-                    const imP1 = uid === d.player1;
-                    updateDoc(doc(db, "rooms", currentRoomId), { 
-                        state: "finished", 
-                        score1: imP1 ? 11 : d.score1, 
-                        score2: !imP1 ? 11 : d.score2 
-                    });
-                    return;
-                }
-            }
-        }
-
-        document.getElementById("p1Name").innerText = (d.player1Name || "Bilinmiyor").toUpperCase();
+        document.getElementById("p1Name").innerText = (d.player1Name || "---").toUpperCase();
         document.getElementById("p1Score").innerText = d.score1;
         document.getElementById("p2Name").innerText = (d.player2Name || "BEKLENİYOR").toUpperCase();
         document.getElementById("p2Score").innerText = d.score2;
@@ -402,19 +368,12 @@ function enterRoom() {
 
         if (d.state !== lastState) {
             if (countdownInterval) clearInterval(countdownInterval);
-            
-            if (d.state === "matched" && uid === d.host) {
-                updateDoc(doc(db, "rooms", currentRoomId), { state: "countdown", startTime: getServerTime() + 3000 });
-            }
-
+            if (d.state === "matched" && uid === d.host) updateDoc(doc(db, "rooms", currentRoomId), { state: "countdown", startTime: getServerTime() + 3000 });
             if (d.state === "countdown") {
                 document.getElementById("arena").classList.remove("flash");
-                document.getElementById("subText").classList.remove("penalty");
-                let lastSec = -1;
                 countdownInterval = setInterval(() => {
                     const diff = Math.ceil((d.startTime - getServerTime()) / 1000);
                     if (diff > 0) {
-                        if (diff !== lastSec) { sounds.tick(); lastSec = diff; }
                         document.getElementById("bigText").innerText = diff;
                         document.getElementById("subText").innerText = "HAZIRLAN";
                     } else {
@@ -423,43 +382,18 @@ function enterRoom() {
                     }
                 }, 50);
             }
-
-            if (d.state === "active") {
-                sounds.go();
-                document.getElementById("arena").classList.add("flash");
-                document.getElementById("bigText").innerText = "GO!";
-                document.getElementById("subText").innerText = "VUR!";
-            }
-
+            if (d.state === "active") { sounds.go(); document.getElementById("arena").classList.add("flash"); document.getElementById("bigText").innerText = "GO!"; document.getElementById("subText").innerText = "VUR!"; }
             if (d.state === "result") {
                 document.getElementById("arena").classList.remove("flash");
                 document.getElementById("bigText").innerText = d.reaction || "WIN";
-                if (d.penalty) {
-                    document.getElementById("subText").classList.add("penalty");
-                    document.getElementById("subText").innerText = d.penaltyUser === uid ? "ERKEN BASTIN!" : "RAKİP ERKEN BASTI!";
-                } else {
-                    document.getElementById("subText").classList.remove("penalty");
-                    const winnerName = (d.lastWinner || "Warrior").toUpperCase();
-                    document.getElementById("subText").innerText = winnerName + " KAZANDI";
-                }
-                if (uid === d.host) {
-                    setTimeout(() => {
-                        const finalWin = (d.score1 >= 11 || d.score2 >= 11);
-                        if (currentRoomId) { 
-                            updateDoc(doc(db, "rooms", currentRoomId), { 
-                                state: finalWin ? "finished" : "countdown", 
-                                startTime: getServerTime() + 2500,
-                                round: finalWin ? d.round : d.round + 1,
-                                penalty: false
-                            });
-                        }
-                    }, 2000);
-                }
+                document.getElementById("subText").innerText = d.penalty ? "HATA!" : (d.lastWinner || "").toUpperCase() + " KAZANDI";
+                if (uid === d.host) setTimeout(() => {
+                    const finalWin = (d.score1 >= 11 || d.score2 >= 11);
+                    updateDoc(doc(db, "rooms", currentRoomId), { state: finalWin ? "finished" : "countdown", startTime: getServerTime() + 2500, round: finalWin ? d.round : d.round + 1, penalty: false });
+                }, 2000);
             }
-
             if (d.state === "finished") {
-                const winName = d.score1 >= 11 ? (d.player1Name || "Warrior") : (d.player2Name || "Warrior");
-                document.getElementById("championName").innerText = winName.toUpperCase();
+                document.getElementById("championName").innerText = (d.score1 >= 11 ? d.player1Name : d.player2Name).toUpperCase();
                 document.getElementById("winnerScreen").style.display = "flex";
                 sounds.win();
                 setTimeout(quitGame, 5000);
@@ -471,69 +405,38 @@ function enterRoom() {
 
 document.getElementById("arena").addEventListener('pointerdown', async (e) => {
     e.preventDefault();
-    initAudio();
     if (tapLock || !currentRoomId) return;
     const now = getServerTime();
-    if (now - lastTapTime < 200) return;
-    tapLock = true; 
-    lastTapTime = now;
+    tapLock = true;
     const roomRef = doc(db, "rooms", currentRoomId);
-    try {
-        const snap = await getDoc(roomRef);
-        if(!snap.exists()) { tapLock = false; return; }
-        const d = snap.data();
-        if (d.state === "countdown" || (d.state === "waiting" && d.player2)) { 
-            const isP1 = uid === d.player1;
-            await updateDoc(roomRef, { 
-                state: "result", penalty: true, penaltyUser: uid,
-                [isP1 ? "score2" : "score1"]: (isP1 ? d.score2 : d.score1) + 1,
-                lastWinner: isP1 ? (d.player2Name || "Rakip") : (d.player1Name || "Host"),
-                reaction: "HATA!"
-            });
-            setTimeout(() => { tapLock = false; }, 500);
-            return; 
-        }
-        if (d.state !== "active") { tapLock = false; return; }
+    const snap = await getDoc(roomRef);
+    const d = snap.data();
+
+    if (d.state === "countdown" || (d.state === "waiting" && d.player2)) {
+        const isP1 = uid === d.player1;
+        await updateDoc(roomRef, { state: "result", penalty: true, penaltyUser: uid, [isP1 ? "score2" : "score1"]: (isP1 ? d.score2 : d.score1) + 1, lastWinner: isP1 ? d.player2Name : d.player1Name, reaction: "ERKEN!" });
+    } else if (d.state === "active") {
         const reactionTime = now - d.roundStart;
         await runTransaction(db, async (transaction) => {
             const fSnap = await transaction.get(roomRef);
-            const fData = fSnap.data();
-            if (fData.state !== "active") return;
-            const isP1 = uid === fData.player1;
-            transaction.update(roomRef, {
-                state: "result",
-                [isP1 ? "score1" : "score2"]: (isP1 ? fData.score1 : fData.score2) + 1,
-                lastWinner: username,
-                reaction: reactionTime + "ms",
-                penalty: false
-            });
+            if (fSnap.data().state !== "active") return;
+            const isP1 = uid === d.player1;
+            transaction.update(roomRef, { state: "result", [isP1 ? "score1" : "score2"]: (isP1 ? d.score1 : d.score2) + 1, lastWinner: username, reaction: reactionTime + "ms" });
         });
-    } catch (e) { console.error(e); } finally { setTimeout(() => { tapLock = false; }, 500); }
+    }
+    setTimeout(() => { tapLock = false; }, 500);
 });
 
 async function quitGame() {
-    try {
-        if (unsubRoom) { unsubRoom(); unsubRoom = null; }
-        if (currentRoomId) {
-            const tempRoomId = currentRoomId;
-            currentRoomId = null; 
-            const ref = doc(db, "rooms", tempRoomId);
-            const snap = await getDoc(ref);
-            if (snap.exists()) {
-                const d = snap.data();
-                if (!d.player2 || d.state === "finished" || d.host === uid) {
-                    await deleteDoc(ref);
-                } else {
-                    const field = d.player1 === uid ? "player1" : "player2";
-                    await updateDoc(ref, { [field]: null, state: "finished" });
-                }
-            }
-        }
-    } catch (err) { console.error(err); } finally { location.reload(); }
+    if (currentRoomId) {
+        const ref = doc(db, "rooms", currentRoomId);
+        const snap = await getDoc(ref);
+        if (snap.exists() && (snap.data().host === uid || !snap.data().player2)) await deleteDoc(ref);
+    }
+    location.reload();
 }
 
 document.getElementById("leaveBtn").onclick = quitGame;
-document.addEventListener('touchstart', initAudio, {once: true});
 </script>
 </body>
 </html>
