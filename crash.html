@@ -176,7 +176,6 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// --- SES MOTORU ---
 let audioCtx = null;
 const initAudio = () => {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -219,7 +218,6 @@ function playSfx(type) {
     }
 }
 
-// --- DEĞİŞKENLER ---
 let userRef = null, balance = 0, phase = "betting", multiplier = 1, crashPoint = 0;
 let activeBet1 = 0, activeBet2 = 0, startTime = 0;
 let auto1 = false, auto2 = false, autoCash1 = false, autoCash2 = false;
@@ -228,7 +226,6 @@ const multEl = document.getElementById("multiplier");
 const balEl = document.getElementById("balance");
 const betTotalEl = document.getElementById("bet");
 
-// --- GRAFİK ---
 const canvas = document.getElementById("graph");
 const ctx = canvas.getContext("2d");
 function resize() { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; }
@@ -258,7 +255,6 @@ function draw() {
 }
 draw();
 
-// --- OYUN MANTIĞI ---
 onAuthStateChanged(auth, user => {
     if(user) {
         userRef = doc(db, "users", user.uid);
@@ -282,7 +278,6 @@ function updateMultiplier() {
     const elapsed = (Date.now() - startTime) / 1000;
     multiplier = Math.pow(1.11, elapsed);
     
-    // Auto Cashout Kontrolü
     if(autoCash1 && activeBet1 > 0) {
         let target = parseFloat(document.getElementById("autoCash1").value);
         if(multiplier >= target) handleBet(1);
@@ -322,7 +317,8 @@ async function startCountdown() {
 function doCrash() {
     phase = "crashed"; playSfx('crash');
     multEl.className = "multiplier big crashed";
-    multEl.innerText = multiplier.toFixed(2) + "x"; // Mavi "PATLADI" kaldırıldı
+    // Mavi "PATLADI" ve alt yazı kaldırıldı, sadece sarsılan kırmızı çarpan kaldı.
+    multEl.innerText = multiplier.toFixed(2) + "x"; 
     addHistory(multiplier);
     activeBet1 = 0; activeBet2 = 0;
     betTotalEl.innerText = "0";
@@ -358,7 +354,7 @@ async function handleBet(box, isAuto = false) {
         if(box === 1) activeBet1 = 0; else activeBet2 = 0;
         playSfx('cash');
     }
-    betTotalEl.innerText = activeBet1 + activeBet2;
+    betTotalEl.innerText = (activeBet1 + activeBet2).toString();
     updateButtons();
 }
 
