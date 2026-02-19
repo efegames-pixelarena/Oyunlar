@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>PixelArena Reflex Duel</title>
+<title>PixelArena Reflex Duel | Pro</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
 <style>
 :root { 
@@ -55,7 +55,7 @@ body::before {
 .search-bar input {
     flex: 1; background: var(--b); border: 1px solid #333; border-radius: 8px;
     padding: 12px; color: white; font-family: 'Orbitron'; font-size: 0.75rem;
-    outline: none; transition: 0.3s;
+    outline: none; transition: 0.3s; border: 1px solid transparent;
 }
 .search-bar input:focus { border-color: var(--p); }
 
@@ -64,7 +64,7 @@ body::before {
     border: none; border-radius: 8px; font-weight: 900; font-family: 'Orbitron'; 
     font-size: 0.65rem; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center;
 }
-.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(1); }
 .create-btn { flex: 1; padding: 15px; background: var(--p); color: #000; }
 .quick-btn { flex: 1; padding: 15px; background: var(--success); color: #000; }
 
@@ -79,7 +79,6 @@ body::before {
 .badge { padding: 3px 8px; border-radius: 4px; font-size: 0.55rem; font-weight: 900; text-transform: uppercase; }
 .badge-live { background: var(--a); color: white; animation: pulse 1s infinite; }
 .badge-wait { background: var(--success); color: black; }
-.live-score { font-family: 'Orbitron'; color: var(--gold); font-weight: 900; font-size: 0.8rem; }
 
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 @keyframes slideIn { from { transform: translateX(-20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
@@ -150,16 +149,16 @@ body::before {
 
 <div id="quickJoinModal" class="modal">
     <div class="modal-content">
-        <h2 style="font-family:'Orbitron'; color:var(--a); font-size:1.1rem;">DURUM</h2>
+        <h2 style="font-family:'Orbitron'; color:var(--a); font-size:1.1rem;">BİLGİ</h2>
         <p id="quickJoinMsg" style="font-size:0.75rem; color:#888; text-align:center;"></p>
-        <button onclick="closeModal('quickJoinModal')" style="width:100%; padding:12px; border-radius:8px; background:#222; border:none; color:white; font-family:'Orbitron'; font-size:0.7rem;">KAPAT</button>
+        <button onclick="closeModal('quickJoinModal')" style="width:100%; padding:12px; border-radius:8px; background:#222; border:none; color:white; font-family:'Orbitron'; font-size:0.7rem;">TAMAM</button>
     </div>
 </div>
 
 <div id="lobby">
     <div class="lobby-controls">
         <div class="search-bar">
-            <input type="text" id="searchInput" placeholder="ODA KODU VEYA İSİM İLE ARA...">
+            <input type="text" id="searchInput" placeholder="ARENA ARA...">
         </div>
         <div class="action-buttons">
             <button class="btn create-btn" id="createRoomBtn" onclick="openModal('createModal')">ODA KUR</button>
@@ -211,14 +210,13 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-let uid, username, currentRoomId = null, unsubRoom = null, unsubLobby = null, tapLock = false;
-let countdownInterval = null, lastState = "", allRooms = [];
-let serverOffset = 0;
-let pendingRoomId = null;
+let uid, username, currentRoomId = null, unsubRoom = null, unsubLobby = null;
+let roomData = null, tapLock = false, countdownInterval = null, lastState = "";
+let allRooms = [], serverOffset = 0, pendingRoomId = null;
 
-// Geliştirilmiş Zaman Senkronizasyonu
 const getServerTime = () => Date.now() + serverOffset;
 
+// SES SİSTEMİ
 let audioCtx = null;
 const initAudio = () => {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -226,7 +224,6 @@ const initAudio = () => {
 };
 
 function playBeep(freq, type, duration) {
-    initAudio();
     if(!audioCtx || audioCtx.state !== 'running') return;
     try {
         const osc = audioCtx.createOscillator();
@@ -272,8 +269,7 @@ function listenLobby() {
     if(unsubLobby) unsubLobby(); 
     const q = query(collection(db, "rooms"), where("state", "in", ["waiting", "matched", "countdown", "active", "result"]));
     unsubLobby = onSnapshot(q, (snap) => {
-        allRooms = [];
-        snap.forEach(d => allRooms.push({id: d.id, ...d.data()}));
+        allRooms = snap.docs.map(d => ({id: d.id, ...d.data()}));
         renderRooms();
     });
 }
@@ -285,7 +281,7 @@ function renderRooms() {
     const filtered = allRooms.filter(r => (r.player1Name || "").toLowerCase().includes(searchTerm) || r.id.toLowerCase().includes(searchTerm));
     
     if (filtered.length === 0) {
-        list.innerHTML = `<div style="text-align:center; padding:20px; color:#444; font-size:0.7rem;">ARENA BULUNAMADI</div>`;
+        list.innerHTML = `<div style="text-align:center; padding:40px; color:#444; font-size:0.8rem; font-family:'Orbitron';">ARENA BULUNAMADI</div>`;
         return;
     }
 
@@ -298,46 +294,58 @@ function renderRooms() {
             <div class="room-details">
                 <div class="room-host">${(data.player1Name || "???").toUpperCase()}</div>
                 <div class="room-meta">
-                    <span class="badge ${isInGame ? 'badge-live' : 'badge-wait'}">${isInGame ? 'CANLI' : 'BEKLEMEDE'}</span>
-                    <span>#${data.id.slice(0,4)}</span>
+                    <span class="badge ${isInGame ? 'badge-live' : 'badge-wait'}">${isInGame ? 'CANLI' : 'AÇIK'}</span>
+                    <span>#${data.id.slice(0,4).toUpperCase()}</span>
                 </div>
             </div>
             <button class="btn" style="padding:10px 18px; background:${isFull ? '#222' : 'var(--p)'}; color:${isFull ? '#555' : '#000'};" 
-            ${isFull ? 'disabled' : ''} onclick="joinRoom('${data.id}', ${data.password ? 'true' : 'false'})">GİRİŞ</button>
+            ${isFull ? 'disabled' : ''} onclick="joinRoom('${data.id}', ${data.password ? 'true' : 'false'})">
+                ${isFull ? 'DOLU' : 'GİR'}
+            </button>
         `;
         list.appendChild(div);
     });
 }
 
+document.getElementById("searchInput").oninput = renderRooms;
+
 document.getElementById("quickJoinBtn").onclick = async function() {
+    initAudio();
     if(this.disabled) return;
     this.disabled = true;
     const available = allRooms.find(r => !r.player2 && !r.password && r.player1 !== uid && r.state === "waiting");
     if (available) {
-        await joinRoom(available.id, false);
+        await executeJoin(available.id);
     } else {
-        document.getElementById("quickJoinMsg").innerText = "UYGUN ARENA YOK.";
+        document.getElementById("quickJoinMsg").innerText = "UYGUN BOŞ ARENA BULUNAMADI.";
         openModal("quickJoinModal");
     }
     this.disabled = false;
 };
 
 document.getElementById("confirmCreateBtn").onclick = async () => {
+    initAudio();
+    const btn = document.getElementById("confirmCreateBtn");
+    btn.disabled = true;
     const pass = document.getElementById("roomPassInput").value.trim();
     const newRoomRef = doc(collection(db, "rooms"));
     currentRoomId = newRoomRef.id;
-    await setDoc(newRoomRef, {
-        player1: uid, player1Name: username, player2: null, player2Name: null,
-        score1: 0, score2: 0, round: 1, state: "waiting", host: uid, 
-        password: pass, createdAt: serverTimestamp(), penalty: false
-    });
-    closeModal("createModal"); enterRoom();
+    try {
+        await setDoc(newRoomRef, {
+            player1: uid, player1Name: username, player2: null, player2Name: null,
+            score1: 0, score2: 0, round: 1, state: "waiting", host: uid, 
+            password: pass, createdAt: serverTimestamp(), penalty: false
+        });
+        closeModal("createModal"); 
+        enterRoom();
+    } catch(e) { btn.disabled = false; }
 };
 
 window.joinRoom = async (id, isLocked) => {
     initAudio();
     if (isLocked) {
         pendingRoomId = id;
+        document.getElementById("joinPassInput").value = "";
         openModal("passwordModal");
         return;
     }
@@ -350,7 +358,7 @@ document.getElementById("confirmJoinPassBtn").onclick = async () => {
     if (snap.exists() && snap.data().password === pass) {
         closeModal("passwordModal");
         await executeJoin(pendingRoomId);
-    } else { alert("HATALI!"); }
+    } else { alert("HATALI ŞİFRE!"); }
 };
 
 async function executeJoin(id) {
@@ -358,7 +366,8 @@ async function executeJoin(id) {
     try {
         await runTransaction(db, async (t) => {
             const snap = await t.get(roomRef);
-            if (snap.data().player2) throw "Dolu!";
+            if (!snap.exists()) throw "Oda silinmiş!";
+            if (snap.data().player2) throw "Arena dolmuş!";
             t.update(roomRef, { player2: uid, player2Name: username, state: "matched" });
             currentRoomId = id;
         });
@@ -367,7 +376,7 @@ async function executeJoin(id) {
 }
 
 function enterRoom() {
-    if(unsubLobby) { unsubLobby(); unsubLobby = null; } 
+    if(unsubLobby) unsubLobby(); 
     document.getElementById("lobby").style.display = "none";
     document.getElementById("game-view").style.display = "flex";
     document.getElementById("leaveBtn").style.display = "block";
@@ -376,17 +385,17 @@ function enterRoom() {
     unsubRoom = onSnapshot(doc(db, "rooms", currentRoomId), (snap) => {
         if (!snap.exists()) { quitGame(); return; }
         const d = snap.data();
+        roomData = d;
 
-        // 26 SANİYE HATASI DÜZELTMESİ (createdAt check)
-        if (d.createdAt && d.createdAt.toMillis && serverOffset === 0) {
-            const serverNow = d.createdAt.toMillis(); 
-            serverOffset = serverNow - Date.now();
+        // 26 SANİYE FİX: Sadece veri kesinleştiğinde (hasPendingWrites: false) offset hesapla
+        if (d.createdAt && d.createdAt.toMillis && serverOffset === 0 && !snap.metadata.hasPendingWrites) {
+            serverOffset = d.createdAt.toMillis() - Date.now();
         }
         
         document.getElementById("p1Name").innerText = (d.player1Name || "---").toUpperCase();
-        document.getElementById("p1Score").innerText = d.score1;
+        document.getElementById("p1Score").innerText = d.score1 || 0;
         document.getElementById("p2Name").innerText = (d.player2Name || "BEKLENİYOR").toUpperCase();
-        document.getElementById("p2Score").innerText = d.score2;
+        document.getElementById("p2Score").innerText = d.score2 || 0;
         document.getElementById("roundNum").innerText = `RD ${d.round}`;
 
         if (d.state !== lastState) {
@@ -398,6 +407,7 @@ function enterRoom() {
 
             if (d.state === "countdown") {
                 document.getElementById("arena").classList.remove("flash");
+                document.getElementById("subText").classList.remove("penalty");
                 countdownInterval = setInterval(() => {
                     const diff = Math.max(0, Math.ceil((d.startTime - getServerTime()) / 1000));
                     document.getElementById("bigText").innerText = diff > 0 ? diff : "GO!";
@@ -406,21 +416,30 @@ function enterRoom() {
                         clearInterval(countdownInterval);
                         if (uid === d.host) updateDoc(doc(db, "rooms", currentRoomId), { state: "active", roundStart: getServerTime() });
                     }
-                }, 100);
+                }, 50);
             }
 
             if (d.state === "active") {
                 sounds.go();
                 document.getElementById("arena").classList.add("flash");
                 document.getElementById("bigText").innerText = "GO!";
+                document.getElementById("subText").innerText = "ŞİMDİ VUR!";
             }
 
             if (d.state === "result") {
                 document.getElementById("arena").classList.remove("flash");
                 document.getElementById("bigText").innerText = d.reaction || "WIN";
-                document.getElementById("subText").innerText = d.penalty ? "ERKEN BASKI!" : (d.lastWinner || "").toUpperCase() + " KAZANDI";
+                if (d.penalty) {
+                    document.getElementById("subText").classList.add("penalty");
+                    document.getElementById("subText").innerText = d.penaltyUser === uid ? "ERKEN BASTIN!" : "RAKİP ERKEN BASTI!";
+                } else {
+                    document.getElementById("subText").classList.remove("penalty");
+                    document.getElementById("subText").innerText = (d.lastWinner || "PLAYER").toUpperCase() + " KAZANDI";
+                }
+                
                 if (uid === d.host) {
                     setTimeout(() => {
+                        if(!currentRoomId) return;
                         const isFinal = (d.score1 >= 11 || d.score2 >= 11);
                         updateDoc(doc(db, "rooms", currentRoomId), { 
                             state: isFinal ? "finished" : "countdown", 
@@ -434,50 +453,78 @@ function enterRoom() {
 
             if (d.state === "finished") {
                 document.getElementById("winnerScreen").style.display = "flex";
-                document.getElementById("championName").innerText = d.score1 >= 11 ? d.player1Name : d.player2Name;
+                document.getElementById("championName").innerText = (d.score1 >= 11 ? d.player1Name : d.player2Name).toUpperCase();
                 sounds.win();
-                setTimeout(quitGame, 4000);
+                setTimeout(quitGame, 5000);
             }
             lastState = d.state;
         }
-    });
+    }, (error) => { console.error("Oda hatası:", error); quitGame(); });
 }
 
 document.getElementById("arena").addEventListener('pointerdown', async (e) => {
     e.preventDefault();
     initAudio();
-    if (tapLock || !currentRoomId) return;
-    const now = getServerTime();
-    tapLock = true; 
-    const roomRef = doc(db, "rooms", currentRoomId);
-    const snap = await getDoc(roomRef);
-    const d = snap.data();
+    if (tapLock || !currentRoomId || !roomData) return;
     
-    if (d.state === "countdown") {
+    const now = getServerTime();
+    const d = roomData;
+    const roomRef = doc(db, "rooms", currentRoomId);
+    
+    // Gecikmesiz durum kontrolü
+    if (d.state === "countdown" || (d.state === "matched" && d.player2)) {
+        tapLock = true;
         const isP1 = uid === d.player1;
-        await updateDoc(roomRef, { state: "result", penalty: true, [isP1 ? "score2" : "score1"]: (isP1 ? d.score2 : d.score1) + 1, reaction: "HATA!" });
-    } else if (d.state === "active") {
-        const reaction = now - d.roundStart;
-        await runTransaction(db, async (t) => {
-            const s = await t.get(roomRef);
-            if (s.data().state !== "active") return;
-            const isP1 = uid === s.data().player1;
-            t.update(roomRef, { state: "result", [isP1 ? "score1" : "score2"]: (isP1 ? s.data().score1 : s.data().score2) + 1, lastWinner: username, reaction: reaction + "ms" });
+        await updateDoc(roomRef, { 
+            state: "result", 
+            penalty: true, 
+            penaltyUser: uid,
+            [isP1 ? "score2" : "score1"]: (isP1 ? (d.score2 || 0) + 1 : (d.score1 || 0) + 1),
+            lastWinner: isP1 ? d.player2Name : d.player1Name,
+            reaction: "HATA!"
         });
+        setTimeout(() => tapLock = false, 1000);
+    } 
+    else if (d.state === "active") {
+        tapLock = true;
+        const reaction = now - d.roundStart;
+        try {
+            await runTransaction(db, async (t) => {
+                const s = await t.get(roomRef);
+                if (s.data().state !== "active") return;
+                const isP1 = uid === s.data().player1;
+                t.update(roomRef, { 
+                    state: "result", 
+                    [isP1 ? "score1" : "score2"]: (isP1 ? (s.data().score1 || 0) + 1 : (s.data().score2 || 0) + 1), 
+                    lastWinner: username, 
+                    reaction: reaction + "ms" 
+                });
+            });
+        } catch(e) {}
+        setTimeout(() => tapLock = false, 1000);
     }
-    setTimeout(() => tapLock = false, 500);
 });
 
 async function quitGame() {
-    if (unsubRoom) unsubRoom(); unsubRoom = null;
+    if (unsubRoom) { unsubRoom(); unsubRoom = null; }
+    if (countdownInterval) clearInterval(countdownInterval);
+    
     if (currentRoomId) {
-        const ref = doc(db, "rooms", currentRoomId);
-        const snap = await getDoc(ref);
-        if (snap.exists()) {
-            const d = snap.data();
-            if (d.host === uid || !d.player2) await deleteDoc(ref);
-            else await updateDoc(ref, { [uid === d.player1 ? "player1" : "player2"]: null, state: "finished" });
-        }
+        const rId = currentRoomId;
+        currentRoomId = null;
+        try {
+            const ref = doc(db, "rooms", rId);
+            const snap = await getDoc(ref);
+            if (snap.exists()) {
+                const d = snap.data();
+                // Oda sahibi veya tek kişi varsa odayı sil, yoksa bitir
+                if (d.host === uid || !d.player2) {
+                    await deleteDoc(ref);
+                } else {
+                    await updateDoc(ref, { state: "finished" });
+                }
+            }
+        } catch(e) {}
     }
     location.reload();
 }
