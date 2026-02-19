@@ -16,7 +16,6 @@
         color:white; touch-action:manipulation; display: flex; flex-direction: column;
     }
 
-    /* --- ÜST BAR --- */
     .top-bar {
         position:fixed; top:0; width:100%; height:60px;
         display:flex; align-items:center; justify-content:space-between;
@@ -45,7 +44,6 @@
     }
     .back-btn:active { transform: scale(0.95); border-bottom: 0px; }
 
-    /* --- OYUN ALANI --- */
     .game-container { flex: 1; display: flex; flex-direction: column; justify-content: space-between; padding: 75px 0 20px 0; }
     .area { width: 100%; text-align: center; }
     .dealer-title { font-size: 18px; letter-spacing: 4px; font-weight: 800; color: #d4af37; margin-bottom: 8px; }
@@ -154,16 +152,23 @@ function playSound(type) {
     if (audioCtx.state === "suspended") audioCtx.resume();
     const now = audioCtx.currentTime;
     const playOsc = (freq, type, gainVal, startTime, stopTime, ramp=false) => {
-        const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
-        o.type = type; o.frequency.setValueAtTime(freq, startTime);
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = type;
+        o.frequency.setValueAtTime(freq, startTime);
         if(ramp) o.frequency.exponentialRampToValueAtTime(ramp, stopTime);
-        g.gain.setValueAtTime(gainVal, startTime); g.gain.linearRampToValueAtTime(0, stopTime);
-        o.connect(g); g.connect(audioCtx.destination); o.start(startTime); o.stop(stopTime);
+        g.gain.setValueAtTime(gainVal, startTime);
+        g.gain.linearRampToValueAtTime(0, stopTime);
+        o.connect(g); g.connect(audioCtx.destination);
+        o.start(startTime); o.stop(stopTime);
     };
     if(type==='chip') playOsc(150, 'sine', 0.3, now, now + 0.1, 40);
-    if(type==='card') playOsc(1000, 'triangle', 0.03, now, now + 0.05, 1500);
-    if(type==='win') [523, 659, 783].forEach((f, i) => playOsc(f, 'sine', 0.1, now + i*0.1, now + i*0.1 + 0.4));
+    if(type==='card') { playOsc(1000, 'triangle', 0.03, now, now + 0.05, 1500); playOsc(200, 'sine', 0.05, now + 0.03, now + 0.1); }
+    if(type==='clear') playOsc(400, 'sine', 0.1, now, now + 0.2, 200);
+    if(type==='count') playOsc(880, 'sine', 0.08, now, now + 0.05);
+    if(type==='win') [523.25, 659.25, 783.99].forEach((f, i) => playOsc(f, 'sine', 0.1, now + i*0.1, now + i*0.1 + 0.4));
     if(type==='lose') playOsc(110, 'square', 0.1, now, now + 0.4, 55);
+    if(type==='bust') playOsc(60, 'sawtooth', 0.2, now, now + 0.5);
 }
 
 onAuthStateChanged(auth, user => {
@@ -183,16 +188,19 @@ window.addBet = (amount) => {
     bet += amount; balance -= amount;
     balanceEl.innerText = balance.toLocaleString('tr-TR');
     betEl.innerText = bet.toLocaleString('tr-TR');
+    if(bet >= 20000) document.querySelectorAll('.chip').forEach(c => c.classList.add("disabled"));
     if(!betCountdown && bet >= 250) startBetCountdown();
 };
 
 window.cancelBet = () => {
     if(gameState !== "betting" || bet === 0) return;
+    playSound('clear');
     balance += bet; bet = 0;
     balanceEl.innerText = balance.toLocaleString('tr-TR');
     betEl.innerText = 0;
     if(betCountdown) { clearInterval(betCountdown); betCountdown = null; }
     messageEl.innerText = "BAHİS YAPIN";
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove("disabled"));
 };
 
 function startBetCountdown(){
@@ -200,40 +208,18 @@ function startBetCountdown(){
     messageEl.innerText = "BAŞLIYOR: " + s;
     betCountdown = setInterval(() => {
         s--;
-        if(s > 0) { messageEl.innerText = "BAŞLIYOR: " + s; }
-        else { clearInterval(betCountdown); betCountdown = null; startGame(); }
+        if(s > 0) { messageEl.innerText = "BAŞLIYOR: " + s; playSound('count'); }
+        else { 
+            clearInterval(betCountdown); 
+            betCountdown = null; 
+            messageEl.innerText = ""; // Yazıyı temizle
+            startGame(); 
+        }
     }, 1000);
 }
 
-// --- AKILLI KART ÇEKME (ZORLUK ALGORİTMASI) ---
-function getSmartCard(isDealer) {
-    if (bet < 1000 || !isDealer) return deck.pop(); // Normal veya Oyuncu ise rastgele
-
-    let threshold = 0;
-    if (bet >= 10000) threshold = 0.9; // Çok Aşırı Zor
-    else if (bet >= 5000) threshold = 0.6; // Zor
-    else if (bet >= 1000) threshold = 0.3; // İdeal
-
-    if (Math.random() < threshold) {
-        const dealerTotal = total(dealer);
-        const playerTotal = total(player);
-        
-        // Destedeki kartları simüle et
-        let bestIdx = -1;
-        for (let i = deck.length - 1; i >= 0; i--) {
-            let v = deck[i].value > 10 ? 10 : (deck[i].value === 1 ? 11 : deck[i].value);
-            // Krupiyeyi patlatmayan ama oyuncuyu geçen veya 21'e yaklaştıran kartı bul
-            if (dealerTotal + v <= 21 && (dealerTotal + v > playerTotal || dealerTotal + v >= 17)) {
-                bestIdx = i;
-                break;
-            }
-        }
-        if (bestIdx !== -1) return deck.splice(bestIdx, 1)[0];
-    }
-    return deck.pop();
-}
-
 async function startGame(){
+    if(bet < 250) { messageEl.innerText = "MİNİMUM 250₺!"; return; }
     gameState = "playing";
     chipsAreaEl.classList.add("disabled");
     document.getElementById("dealerCards").innerHTML = "";
@@ -247,8 +233,41 @@ async function startGame(){
     await draw(player, "playerCards"); await delay(600);
     await draw(dealer, "dealerCards", true);
 
-    if(total(player) === 21) { messageEl.innerText = "BLACKJACK!"; dealerTurn(); }
-    else { controlsEl.style.display = "flex"; startActionTimer(); }
+    if(total(player) === 21) { 
+        messageEl.innerText = "BLACKJACK!"; 
+        dealerTurn(); 
+    } else { 
+        messageEl.innerText = ""; // Kart dağıtımı bitince karar öncesi temizle
+        controlsEl.style.display = "flex"; 
+        startActionTimer(); 
+    }
+}
+
+// --- AKILLI ZORLUK MOTORU ---
+function getSmartCard(isDealer) {
+    // Bahis miktarına göre hile/zorluk oranı belirle
+    let cheatChance = 0;
+    if (bet >= 10000) cheatChance = 0.85;      // Çok Aşırı Zor
+    else if (bet >= 5000) cheatChance = 0.60;  // Zor
+    else if (bet >= 1000) cheatChance = 0.30;  // İdeal
+    else cheatChance = 0;                      // Normal (Tamamen Rastgele)
+
+    if (isDealer && Math.random() < cheatChance) {
+        const dealerCurrent = total(dealer);
+        const playerCurrent = total(player);
+        
+        // Destedeki en avantajlı kartı bul (Patlamayan ve oyuncuyu geçen)
+        let bestIdx = -1;
+        for (let i = 0; i < deck.length; i++) {
+            let v = deck[i].value > 10 ? 10 : (deck[i].value === 1 ? 11 : deck[i].value);
+            if (dealerCurrent + v <= 21 && (dealerCurrent + v > playerCurrent || dealerCurrent + v >= 17)) {
+                bestIdx = i;
+                break;
+            }
+        }
+        if (bestIdx !== -1) return deck.splice(bestIdx, 1)[0];
+    }
+    return deck.pop();
 }
 
 async function draw(hand, divId, hidden=false){
@@ -285,21 +304,43 @@ function updateScores(){
 }
 
 function startActionTimer(){
-    let s = 10; messageEl.innerText = "KARAR (" + s + ")";
+    let s = 10;
+    messageEl.innerText = "KARAR (" + s + ")";
     actionTimer = setInterval(() => {
-        s--; if(s>0) { messageEl.innerText = "KARAR (" + s + ")"; }
-        else { clearInterval(actionTimer); stand(); }
+        s--;
+        if(s > 0) { messageEl.innerText = "KARAR (" + s + ")"; playSound('count'); }
+        else { 
+            stopActionTimer(); 
+            stand(); 
+        }
     }, 1000);
 }
 
+function stopActionTimer() {
+    if (actionTimer) {
+        clearInterval(actionTimer);
+        actionTimer = null;
+        messageEl.innerText = ""; // Karar verilince yazıyı temizle
+    }
+}
+
 document.getElementById("hit").onclick = async () => {
-    clearInterval(actionTimer); controlsEl.style.display = "none";
+    stopActionTimer(); 
+    controlsEl.style.display = "none";
     await draw(player, "playerCards");
-    if(total(player) >= 21) dealerTurn();
-    else { controlsEl.style.display = "flex"; startActionTimer(); }
+    if(total(player) >= 21) {
+        dealerTurn();
+    } else { 
+        controlsEl.style.display = "flex"; 
+        startActionTimer(); 
+    }
 };
 
-const stand = () => { clearInterval(actionTimer); controlsEl.style.display="none"; dealerTurn(); };
+const stand = () => { 
+    stopActionTimer(); 
+    controlsEl.style.display="none"; 
+    dealerTurn(); 
+};
 document.getElementById("stand").onclick = stand;
 
 async function dealerTurn(){
@@ -308,13 +349,18 @@ async function dealerTurn(){
     if(dc[1]) dc[1].src = `https://deckofcardsapi.com/static/img/${cardVal(dealer[1].value)}${dealer[1].suit}.png`;
     updateScores();
     await delay(1000);
-    if(total(player) <= 21){ while(total(dealer) < 17){ await draw(dealer, "dealerCards"); await delay(1000); } }
+    if(total(player) <= 21){ 
+        while(total(dealer) < 17){ 
+            await draw(dealer, "dealerCards"); 
+            await delay(1000); 
+        } 
+    }
     endGame();
 }
 
 async function endGame(){
     let p=total(player), d=total(dealer), m=0, txt="";
-    if(p>21) { txt="BUST! KAYBETTİN"; playSound('lose'); }
+    if(p>21) { txt="BUST! KAYBETTİN"; playSound('bust'); }
     else if(d>21 || p>d) { txt="KAZANDIN!"; m=2; playSound('win'); }
     else if(d>p) { txt="KAYBETTİN"; playSound('lose'); }
     else { txt="BERABERE"; m=1; }
@@ -322,11 +368,16 @@ async function endGame(){
     if(m>0) await updateDoc(userRef, { balance: increment(bet*m) });
     messageEl.innerText = txt;
     await delay(3000);
+    
+    document.getElementById("dealerCards").innerHTML = "";
+    document.getElementById("playerCards").innerHTML = "";
+    document.getElementById("dealerScore").innerText = "0";
+    document.getElementById("playerScore").innerText = "0";
     bet = 0; betEl.innerText = 0;
     gameState = "betting";
     chipsAreaEl.classList.remove("disabled");
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove("disabled"));
     messageEl.innerText = "BAHİS YAPIN";
-    updateScores();
 }
 
 function delay(ms){ return new Promise(r => setTimeout(r, ms)); }
