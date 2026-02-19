@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>PixelArena BlackJack</title>
+<title>PixelArena BlackJack 3D Pro</title>
 
 <style>
     *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;}
@@ -46,40 +46,38 @@
     .game-container { 
         flex: 1; display: flex; flex-direction: column; justify-content: space-between; 
         padding: 75px 0 20px 0;
-        perspective: 1000px; /* 3D derinlik alanı */
+        perspective: 1200px;
     }
     
     .area { width: 100%; text-align: center; }
     .dealer-title { font-size: 18px; letter-spacing: 4px; font-weight: 800; color: #d4af37; margin-bottom: 8px; }
     .score-badge { background: rgba(0,0,0,0.6); color: #ffd700; padding: 4px 15px; border-radius: 20px; font-size: 14px; border: 1px solid rgba(255,215,0,0.3); display: inline-block; margin-bottom: 10px; }
 
-    /* --- 3D KART YAPISI --- */
     .cards-wrapper { display: flex; justify-content: center; gap: 8px; min-height: 105px; padding: 0 10px; }
     
     .card-3d {
         width: 70px; height: 100px;
         position: relative;
         transform-style: preserve-3d;
-        /* Başlangıç: Ekranın sağ dışı, havada ve dönmüş */
-        transform: translate(300px, -200px) rotateZ(30deg) rotateY(0deg) scale(0.5);
+        transform: translate(300px, -300px) rotateZ(45deg) scale(0.4);
         opacity: 0;
-        transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.3s;
+        transition: transform 0.65s cubic-bezier(0.175, 0.885, 0.32, 1.1), opacity 0.3s;
     }
 
     .card-3d.show {
-        transform: translate(0, 0) rotateZ(0deg) rotateY(0deg) scale(1);
+        transform: translate(0, 0) rotateZ(0deg) scale(1);
         opacity: 1;
     }
 
     .card-3d.flipped {
-        transform: translate(0, 0) rotateZ(0deg) rotateY(180deg) scale(1);
+        transform: translate(0, 0) rotateY(180deg);
     }
 
     .card-face {
         position: absolute; width: 100%; height: 100%;
         backface-visibility: hidden;
         border-radius: 8px;
-        box-shadow: 0 6px 15px rgba(0,0,0,0.6);
+        box-shadow: 0 6px 15px rgba(0,0,0,0.5);
     }
 
     .card-front { background: white; transform: rotateY(180deg); }
@@ -96,7 +94,7 @@
     .chip {
         width: 58px; height: 58px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
         font-weight: 900; font-size: 15px; border: 2px dashed rgba(255,255,255,0.4);
-        box-shadow: 0 5px 15px rgba(0,0,0,0.4); cursor: pointer; transition: transform 0.2s;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.4); cursor: pointer; transition: transform 0.1s;
     }
     .c250 { background: #fff; color: #000; }
     .c500 { background: #27ae60; color: #fff; }
@@ -106,7 +104,7 @@
     .cancel-btn {
         width: 58px; height: 58px; border-radius: 50%; background: #c0392b; color: white;
         display: flex; align-items: center; justify-content: center; font-weight: 800;
-        font-size: 11px; cursor: pointer; border: 2px solid #e74c3c; box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+        font-size: 11px; cursor: pointer; border: 2px solid #e74c3c;
     }
     .disabled { opacity: 0.3; pointer-events: none; filter: grayscale(1); }
 </style>
@@ -144,10 +142,10 @@
 
     <div class="chips-area" id="chipsArea">
         <div class="cancel-btn" id="cancelBet" onclick="cancelBet()">İPTAL</div>
-        <div class="chip c250" id="chip250" onclick="addBet(250)">250</div>
-        <div class="chip c500" id="chip500" onclick="addBet(500)">500</div>
-        <div class="chip c1k" id="chip1k" onclick="addBet(1000)">1K</div>
-        <div class="chip c2k" id="chip2k" onclick="addBet(2000)">2K</div>
+        <div class="chip c250" onclick="addBet(250)">250</div>
+        <div class="chip c500" onclick="addBet(500)">500</div>
+        <div class="chip c1k" onclick="addBet(1000)">1K</div>
+        <div class="chip c2k" onclick="addBet(2000)">2K</div>
     </div>
 </div>
 
@@ -173,16 +171,18 @@ let audioCtx = null, balance = 0, bet = 0, userRef = null;
 let gameState = "loading", betCountdown = null, actionTimer = null;
 let deck = [], player = [], dealer = [], dealerHidden = true;
 
-const balanceEl = document.getElementById("balance");
-const betEl = document.getElementById("bet");
-const messageEl = document.getElementById("message");
-const controlsEl = document.getElementById("controls");
-const chipsAreaEl = document.getElementById("chipsArea");
+// --- iOS UYUMLU SES SENTEZLEYİCİ ---
+function initAudio() {
+    if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioCtx.state === "suspended") {
+        audioCtx.resume();
+    }
+}
 
-// --- PROFESYONEL SES SENTEZLEYİCİ ---
 function playSound(type) {
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if (audioCtx.state === "suspended") audioCtx.resume();
+    initAudio();
     const now = audioCtx.currentTime;
 
     const playOsc = (freq, type, gainVal, startTime, stopTime, ramp=false) => {
@@ -197,11 +197,10 @@ function playSound(type) {
         o.start(startTime); o.stop(stopTime);
     };
 
-    if(type==='chip') playOsc(200, 'sine', 0.4, now, now + 0.1, 50);
+    if(type==='chip') playOsc(220, 'sine', 0.3, now, now + 0.1, 60);
     
     if(type==='card') {
-        // Kart fırlatma rüzgarı (Pink Noise simülasyonu)
-        const bufferSize = audioCtx.sampleRate * 0.15;
+        const bufferSize = audioCtx.sampleRate * 0.12;
         const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
         const data = buffer.getChannelData(0);
         for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
@@ -209,22 +208,21 @@ function playSound(type) {
         noise.buffer = buffer;
         const filter = audioCtx.createBiquadFilter();
         filter.type = 'lowpass';
-        filter.frequency.setValueAtTime(1500, now);
-        filter.frequency.exponentialRampToValueAtTime(400, now + 0.15);
+        filter.frequency.setValueAtTime(1200, now);
+        filter.frequency.exponentialRampToValueAtTime(300, now + 0.12);
         const g = audioCtx.createGain();
-        g.gain.setValueAtTime(0.1, now);
-        g.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+        g.gain.setValueAtTime(0.08, now);
+        g.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
         noise.connect(filter); filter.connect(g); g.connect(audioCtx.destination);
         noise.start();
-        // Kartın masaya vuruş sesi
-        playOsc(300, 'sine', 0.05, now + 0.1, now + 0.15);
+        playOsc(400, 'sine', 0.04, now + 0.05, now + 0.1);
     }
 
-    if(type==='win') [523, 659, 783, 1046].forEach((f, i) => playOsc(f, 'sine', 0.1, now + i*0.1, now + i*0.1 + 0.3));
-    if(type==='lose') playOsc(130, 'sawtooth', 0.2, now, now + 0.5, 40);
-    if(type==='bust') playOsc(70, 'square', 0.3, now, now + 0.4, 30);
-    if(type==='count') playOsc(800, 'sine', 0.1, now, now + 0.05);
-    if(type==='clear') playOsc(350, 'sine', 0.2, now, now + 0.15, 100);
+    if(type==='win') [523, 659, 783, 1046].forEach((f, i) => playOsc(f, 'sine', 0.1, now + i*0.08, now + i*0.08 + 0.25));
+    if(type==='lose') playOsc(130, 'sawtooth', 0.15, now, now + 0.4, 50);
+    if(type==='bust') playOsc(80, 'square', 0.2, now, now + 0.4, 40);
+    if(type==='count') playOsc(880, 'sine', 0.05, now, now + 0.05);
+    if(type==='clear') playOsc(440, 'sine', 0.1, now, now + 0.1, 110);
 }
 
 onAuthStateChanged(auth, user => {
@@ -232,19 +230,17 @@ onAuthStateChanged(auth, user => {
     userRef = doc(db, "users", user.uid);
     onSnapshot(userRef, snap => {
         balance = snap.data().balance || 0;
-        balanceEl.innerText = balance.toLocaleString('tr-TR');
+        document.getElementById("balance").innerText = balance.toLocaleString('tr-TR');
         if(gameState === "loading") gameState = "betting";
     });
 });
 
 window.addBet = (amount) => {
     if(gameState !== "betting" || balance < amount) return;
-    if(bet + amount > 20000) return;
-    playSound('chip');
+    playSound('chip'); // iOS aktivasyonu burada gerçekleşir
     bet += amount; balance -= amount;
-    balanceEl.innerText = balance.toLocaleString('tr-TR');
-    betEl.innerText = bet.toLocaleString('tr-TR');
-    if(bet >= 20000) document.querySelectorAll('.chip').forEach(c => c.classList.add("disabled"));
+    document.getElementById("bet").innerText = bet.toLocaleString('tr-TR');
+    document.getElementById("balance").innerText = balance.toLocaleString('tr-TR');
     if(!betCountdown && bet >= 250) startBetCountdown();
 };
 
@@ -252,32 +248,31 @@ window.cancelBet = () => {
     if(gameState !== "betting" || bet === 0) return;
     playSound('clear');
     balance += bet; bet = 0;
-    balanceEl.innerText = balance.toLocaleString('tr-TR');
-    betEl.innerText = 0;
+    document.getElementById("bet").innerText = 0;
+    document.getElementById("balance").innerText = balance.toLocaleString('tr-TR');
     if(betCountdown) { clearInterval(betCountdown); betCountdown = null; }
-    messageEl.innerText = "BAHİS YAPIN";
-    document.querySelectorAll('.chip').forEach(c => c.classList.remove("disabled"));
+    document.getElementById("message").innerText = "BAHİS YAPIN";
 };
 
 function startBetCountdown(){
     let s = 5;
-    messageEl.innerText = "BAŞLIYOR: " + s;
+    document.getElementById("message").innerText = "BAŞLIYOR: " + s;
     betCountdown = setInterval(() => {
         s--;
-        if(s > 0) { messageEl.innerText = "BAŞLIYOR: " + s; playSound('count'); }
-        else { 
+        if(s > 0) { 
+            document.getElementById("message").innerText = "BAŞLIYOR: " + s; 
+            playSound('count'); 
+        } else { 
             clearInterval(betCountdown); 
             betCountdown = null; 
-            messageEl.innerText = "";
             startGame(); 
         }
     }, 1000);
 }
 
 async function startGame(){
-    if(bet < 250) { messageEl.innerText = "MİNİMUM 250₺!"; return; }
     gameState = "playing";
-    chipsAreaEl.classList.add("disabled");
+    document.getElementById("chipsArea").classList.add("disabled");
     document.getElementById("dealerCards").innerHTML = "";
     document.getElementById("playerCards").innerHTML = "";
     player = []; dealer = []; dealerHidden = true;
@@ -290,37 +285,14 @@ async function startGame(){
     await draw(dealer, "dealerCards", true);
 
     if(total(player) === 21) { 
-        messageEl.innerText = "BLACKJACK!"; 
-        await delay(800);
+        document.getElementById("message").innerText = "BLACKJACK!"; 
+        await delay(1000);
         dealerTurn(true); 
     } else { 
-        messageEl.innerText = "";
-        controlsEl.style.display = "flex"; 
+        document.getElementById("message").innerText = "";
+        document.getElementById("controls").style.display = "flex"; 
         startActionTimer(); 
     }
-}
-
-function getSmartCard(isDealer) {
-    let cheatChance = 0;
-    if (bet >= 10000) cheatChance = 0.85;
-    else if (bet >= 5000) cheatChance = 0.60;
-    else if (bet >= 1000) cheatChance = 0.30;
-    else cheatChance = 0;
-
-    if (isDealer && Math.random() < cheatChance) {
-        const dealerCurrent = total(dealer);
-        const playerCurrent = total(player);
-        let bestIdx = -1;
-        for (let i = 0; i < deck.length; i++) {
-            let v = deck[i].value > 10 ? 10 : (deck[i].value === 1 ? 11 : deck[i].value);
-            if (dealerCurrent + v <= 21 && (dealerCurrent + v > playerCurrent || dealerCurrent + v >= 17)) {
-                bestIdx = i;
-                break;
-            }
-        }
-        if (bestIdx !== -1) return deck.splice(bestIdx, 1)[0];
-    }
-    return deck.pop();
 }
 
 async function draw(hand, divId, hidden=false){
@@ -328,7 +300,6 @@ async function draw(hand, divId, hidden=false){
     let card = getSmartCard(divId === "dealerCards");
     hand.push(card);
     
-    // 3D Kart Elementi Oluşturma
     const cardCont = document.createElement("div");
     cardCont.className = "card-3d";
     cardCont.innerHTML = `
@@ -338,11 +309,10 @@ async function draw(hand, divId, hidden=false){
     
     document.getElementById(divId).appendChild(cardCont);
     
-    // 3D Animasyonu Başlat
     setTimeout(() => {
         cardCont.classList.add("show");
         if(!hidden) {
-            setTimeout(() => cardCont.classList.add("flipped"), 300);
+            setTimeout(() => cardCont.classList.add("flipped"), 350);
         }
     }, 50);
     
@@ -370,54 +340,63 @@ function updateScores(){
     else document.getElementById("dealerScore").innerText = dealerHidden ? (dealer[0].value > 10 ? 10 : (dealer[0].value === 1 ? 11 : dealer[0].value)) : total(dealer);
 }
 
+function getSmartCard(isDealer) {
+    let chance = bet >= 5000 ? 0.6 : (bet >= 1000 ? 0.3 : 0);
+    if (isDealer && Math.random() < chance) {
+        let p = total(player);
+        let idx = deck.findIndex(c => {
+            let v = c.value > 10 ? 10 : (c.value === 1 ? 11 : c.value);
+            return total(dealer) + v <= 21 && total(dealer) + v > p;
+        });
+        if (idx !== -1) return deck.splice(idx, 1)[0];
+    }
+    return deck.pop();
+}
+
 function startActionTimer(){
     let s = 10;
-    messageEl.innerText = "KARAR (" + s + ")";
+    document.getElementById("message").innerText = "KARAR (" + s + ")";
     actionTimer = setInterval(() => {
         s--;
-        if(s > 0) { messageEl.innerText = "KARAR (" + s + ")"; playSound('count'); }
-        else { stopActionTimer(); stand(); }
+        if(s > 0) { 
+            document.getElementById("message").innerText = "KARAR (" + s + ")"; 
+            playSound('count'); 
+        } else { 
+            clearInterval(actionTimer); 
+            stand(); 
+        }
     }, 1000);
 }
 
-function stopActionTimer() {
-    if (actionTimer) {
-        clearInterval(actionTimer);
-        actionTimer = null;
-        messageEl.innerText = "";
-    }
-}
-
 document.getElementById("hit").onclick = async () => {
-    stopActionTimer(); 
-    controlsEl.style.display = "none";
+    clearInterval(actionTimer);
+    document.getElementById("controls").style.display = "none";
     await draw(player, "playerCards");
-    if(total(player) >= 21) {
-        dealerTurn();
-    } else { 
-        controlsEl.style.display = "flex"; 
-        startActionTimer(); 
+    if(total(player) >= 21) dealerTurn();
+    else {
+        document.getElementById("controls").style.display = "flex";
+        startActionTimer();
     }
 };
 
 const stand = () => { 
-    stopActionTimer(); 
-    controlsEl.style.display="none"; 
+    clearInterval(actionTimer);
+    document.getElementById("controls").style.display = "none";
     dealerTurn(); 
 };
 document.getElementById("stand").onclick = stand;
 
-async function dealerTurn(isBlackjack = false){
+async function dealerTurn(isBJ = false){
     dealerHidden = false;
     const cards = document.getElementById("dealerCards").querySelectorAll('.card-3d');
     if(cards[1]) {
         cards[1].classList.add("flipped");
-        playSound('card'); // Kart açılma sesi
+        playSound('card');
     }
     updateScores();
     await delay(1000);
 
-    if(!isBlackjack && total(player) <= 21){ 
+    if(!isBJ && total(player) <= 21){ 
         while(total(dealer) < 17){ 
             await draw(dealer, "dealerCards"); 
             await delay(1000); 
@@ -428,29 +407,27 @@ async function dealerTurn(isBlackjack = false){
 
 async function endGame(){
     let p=total(player), d=total(dealer), m=0, txt="";
-    
     if(p>21) { txt="PATLADIN!"; playSound('bust'); }
     else if(d>21 || p>d) { 
-        if(p === 21 && player.length === 2) { txt="BLACKJACK!"; m=2.5; }
-        else { txt="KAZANDIN!"; m=2; }
+        m = (p===21 && player.length===2) ? 2.5 : 2;
+        txt = m===2.5 ? "BLACKJACK!" : "KAZANDIN!";
         playSound('win'); 
     }
     else if(d>p) { txt="KAYBETTİN"; playSound('lose'); }
     else { txt="BERABERE"; m=1; playSound('clear'); }
     
     if(m>0) await updateDoc(userRef, { balance: increment(Math.floor(bet*m)) });
-    messageEl.innerText = txt;
+    document.getElementById("message").innerText = txt;
     await delay(3000);
     
     document.getElementById("dealerCards").innerHTML = "";
     document.getElementById("playerCards").innerHTML = "";
     document.getElementById("dealerScore").innerText = "0";
     document.getElementById("playerScore").innerText = "0";
-    bet = 0; betEl.innerText = 0;
+    bet = 0; document.getElementById("bet").innerText = 0;
     gameState = "betting";
-    chipsAreaEl.classList.remove("disabled");
-    document.querySelectorAll('.chip').forEach(c => c.classList.remove("disabled"));
-    messageEl.innerText = "BAHİS YAPIN";
+    document.getElementById("chipsArea").classList.remove("disabled");
+    document.getElementById("message").innerText = "BAHİS YAPIN";
 }
 
 function delay(ms){ return new Promise(r => setTimeout(r, ms)); }
