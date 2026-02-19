@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>PixelArena Reflex Duel | Pro</title>
+<title>PixelArena Reflex Duel | Ultimate</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
 <style>
 :root { 
@@ -387,9 +387,13 @@ function enterRoom() {
         const d = snap.data();
         roomData = d;
 
-        // 26 SANİYE FİX: Sadece veri kesinleştiğinde (hasPendingWrites: false) offset hesapla
-        if (d.createdAt && d.createdAt.toMillis && serverOffset === 0 && !snap.metadata.hasPendingWrites) {
-            serverOffset = d.createdAt.toMillis() - Date.now();
+        // KRİTİK FİX: Zaman senkronizasyonu her veri geldiğinde kontrol edilir
+        if (d.createdAt && d.createdAt.toMillis && !snap.metadata.hasPendingWrites) {
+            const diff = d.createdAt.toMillis() - Date.now();
+            // Eğer büyük bir sapma varsa offset'i güncelle
+            if (Math.abs(serverOffset - diff) > 1000 || serverOffset === 0) {
+                serverOffset = diff;
+            }
         }
         
         document.getElementById("p1Name").innerText = (d.player1Name || "---").toUpperCase();
@@ -401,8 +405,9 @@ function enterRoom() {
         if (d.state !== lastState) {
             if (countdownInterval) clearInterval(countdownInterval);
             
+            // 5 SANİYE FİX: Başlangıç süresi 5 saniye olarak güncellendi
             if (d.state === "matched" && uid === d.host) {
-                updateDoc(doc(db, "rooms", currentRoomId), { state: "countdown", startTime: getServerTime() + 3000 });
+                updateDoc(doc(db, "rooms", currentRoomId), { state: "countdown", startTime: getServerTime() + 5000 });
             }
 
             if (d.state === "countdown") {
@@ -443,7 +448,7 @@ function enterRoom() {
                         const isFinal = (d.score1 >= 11 || d.score2 >= 11);
                         updateDoc(doc(db, "rooms", currentRoomId), { 
                             state: isFinal ? "finished" : "countdown", 
-                            startTime: getServerTime() + 2500,
+                            startTime: getServerTime() + 4000, // Round arası 4 saniye
                             round: isFinal ? d.round : d.round + 1,
                             penalty: false
                         });
@@ -471,7 +476,6 @@ document.getElementById("arena").addEventListener('pointerdown', async (e) => {
     const d = roomData;
     const roomRef = doc(db, "rooms", currentRoomId);
     
-    // Gecikmesiz durum kontrolü
     if (d.state === "countdown" || (d.state === "matched" && d.player2)) {
         tapLock = true;
         const isP1 = uid === d.player1;
@@ -483,7 +487,7 @@ document.getElementById("arena").addEventListener('pointerdown', async (e) => {
             lastWinner: isP1 ? d.player2Name : d.player1Name,
             reaction: "HATA!"
         });
-        setTimeout(() => tapLock = false, 1000);
+        setTimeout(() => tapLock = false, 500); // Kilit süresi kısaltıldı
     } 
     else if (d.state === "active") {
         tapLock = true;
@@ -501,7 +505,7 @@ document.getElementById("arena").addEventListener('pointerdown', async (e) => {
                 });
             });
         } catch(e) {}
-        setTimeout(() => tapLock = false, 1000);
+        setTimeout(() => tapLock = false, 500);
     }
 });
 
@@ -517,7 +521,6 @@ async function quitGame() {
             const snap = await getDoc(ref);
             if (snap.exists()) {
                 const d = snap.data();
-                // Oda sahibi veya tek kişi varsa odayı sil, yoksa bitir
                 if (d.host === uid || !d.player2) {
                     await deleteDoc(ref);
                 } else {
