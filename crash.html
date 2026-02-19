@@ -9,7 +9,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: 'Segoe UI', sans-serif; }
         body { background: #02040a; color: white; height: 100vh; overflow: hidden; }
 
-        /* ÜST BAR (TASARIM KORUNDU) */
+        /* ÜST BAR */
         .top-bar {
             position: fixed; top: 0; width: 100%; height: 60px;
             display: flex; align-items: center; justify-content: space-between;
@@ -22,7 +22,6 @@
         .balance-box { background: rgba(79, 209, 255, 0.1); border: 1px solid #4fd1ff44; color: #4fd1ff; }
         .bet-box { background: linear-gradient(135deg, #ff8a00, #e65100); color: #fff; }
         .back-btn { background: #d63031; color: white; padding: 8px 15px; border-radius: 10px; font-weight: 800; font-size: 11px; border: none; cursor: pointer; transition: 0.3s; }
-        .back-btn:active { transform: scale(0.9); }
 
         /* GEÇMİŞ */
         .history {
@@ -30,8 +29,7 @@
             display: flex; align-items: center; gap: 8px; padding: 0 15px;
             background: rgba(0,0,0,0.4); overflow-x: auto; scrollbar-width: none; z-index: 900;
         }
-        .history span { padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 800; font-family: 'Orbitron'; animation: slideIn 0.3s ease; }
-        @keyframes slideIn { from { transform: translateX(-20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .history span { padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 800; font-family: 'Orbitron'; }
 
         /* OYUN ALANI */
         .game-container { position: absolute; top: 0; left: 0; width: 100%; height: calc(100% - 240px); z-index: 1; }
@@ -44,37 +42,34 @@
         }
         .x-value { 
             font-family: 'Orbitron', sans-serif; font-size: 80px; font-weight: 900; color: #fff; 
-            text-shadow: 0 0 20px rgba(79, 209, 255, 0.6), 0 0 40px rgba(79, 209, 255, 0.3);
-            letter-spacing: -2px; transition: transform 0.05s linear;
+            text-shadow: 0 0 25px rgba(79, 209, 255, 0.7);
         }
-        .status-text { font-family: 'Orbitron'; font-size: 14px; font-weight: 400; color: #4fd1ff; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 4px; opacity: 0.8; }
+        .status-text { font-family: 'Orbitron'; font-size: 14px; color: #4fd1ff; letter-spacing: 3px; margin-bottom: 5px; }
         .crashed-text { color: #ff2a4d !important; text-shadow: 0 0 20px #ff2a4d; animation: shake 0.4s infinite; }
         
         @keyframes shake {
-            0% { transform: translate(2px, 2px); } 25% { transform: translate(-2px, -2px); } 50% { transform: translate(-2px, 2px); } 75% { transform: translate(2px, -2px); } 100% { transform: translate(0,0); }
+            0% { transform: translate(1px, 1px); } 50% { transform: translate(-2px, -1px); } 100% { transform: translate(1px, 1px); }
         }
 
-        /* ALT PANEL (PROFESYONEL VE TAŞMAZ) */
+        /* ALT PANEL */
         .bottom-panel {
             position: fixed; bottom: 0; width: 100%; height: 240px;
             background: #080c18; border-top: 2px solid #161d36;
-            display: flex; justify-content: center; align-items: center; gap: 12px; padding: 15px; z-index: 1000;
+            display: flex; justify-content: center; align-items: center; gap: 10px; padding: 15px; z-index: 1000;
         }
         .bet-card {
             background: #111827; flex: 1; max-width: 190px; height: 100%;
             border-radius: 20px; padding: 12px; display: flex; flex-direction: column; gap: 10px;
-            border: 1px solid #1f2937; position: relative; overflow: hidden;
+            border: 1px solid #1f2937;
         }
         .bet-card input {
             width: 100%; background: #030712; border: 2px solid #1f2937; border-radius: 12px;
-            color: #4fd1ff; padding: 12px; text-align: center; font-size: 18px; font-weight: 800; font-family: 'Orbitron'; outline: none; transition: 0.3s;
+            color: #4fd1ff; padding: 12px; text-align: center; font-size: 18px; font-weight: 800; font-family: 'Orbitron'; outline: none;
         }
-        .bet-card input:focus { border-color: #4fd1ff; box-shadow: 0 0 10px rgba(79, 209, 255, 0.2); }
         
         .auto-row { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 10px; }
-        .auto-row span { font-size: 10px; font-weight: 800; color: #94a3b8; letter-spacing: 1px; }
+        .auto-row span { font-size: 10px; font-weight: 800; color: #94a3b8; }
 
-        /* TOGGLE */
         .switch { position: relative; width: 38px; height: 20px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #334155; transition: .4s; border-radius: 20px; }
@@ -82,26 +77,18 @@
         input:checked + .slider { background-color: #00b894; }
         input:checked + .slider:before { transform: translateX(18px); }
 
-        /* BUTONLAR (ANİMASYONLU) */
         .main-btn {
             width: 100%; flex-grow: 1; border: none; border-radius: 14px; color: white; font-weight: 900;
-            font-size: 14px; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            text-transform: uppercase; font-family: 'Orbitron'; position: relative; overflow: hidden;
+            font-size: 14px; cursor: pointer; transition: 0.2s;
+            text-transform: uppercase; font-family: 'Orbitron';
         }
         .btn-bet { background: linear-gradient(180deg, #6366f1, #4338ca); box-shadow: 0 4px 0 #312e81; }
         .btn-cancel { background: linear-gradient(180deg, #ef4444, #b91c1c); box-shadow: 0 4px 0 #7f1d1d; }
         .btn-cashout { background: linear-gradient(180deg, #10b981, #047857); box-shadow: 0 4px 0 #064e3b; }
-        
         .main-btn:active { transform: translateY(2px); box-shadow: none; }
-        .main-btn:disabled { opacity: 0.3; filter: grayscale(1); transform: none !important; }
+        .main-btn:disabled { opacity: 0.3; filter: grayscale(1); }
 
-        /* MOBİL AYAR */
-        @media (max-width: 400px) {
-            .x-value { font-size: 60px; }
-            .bottom-panel { height: 220px; padding: 10px; gap: 8px; }
-            .bet-card { padding: 8px; }
-            .main-btn { font-size: 12px; }
-        }
+        @media (max-width: 400px) { .x-value { font-size: 55px; } .bottom-panel { height: 210px; } }
     </style>
 </head>
 <body>
@@ -120,7 +107,7 @@
 <div class="game-container">
     <canvas id="gameCanvas"></canvas>
     <div class="multiplier-display">
-        <div class="status-text" id="statusText">SİSTEM HAZIR</div>
+        <div class="status-text" id="statusText">SİSTEM HAZIRLANIR...</div>
         <div class="x-value" id="multiplier">1.00x</div>
     </div>
 </div>
@@ -128,26 +115,19 @@
 <div class="bottom-panel">
     <div class="bet-card">
         <input type="number" id="betInput1" value="100">
-        <div class="auto-row">
-            <span>OTOMATİK</span>
-            <label class="switch"><input type="checkbox" id="autoSwitch1"><span class="slider"></span></label>
-        </div>
+        <div class="auto-row"><span>OTO</span><label class="switch"><input type="checkbox" id="autoSwitch1"><span class="slider"></span></label></div>
         <button id="btn1" class="main-btn btn-bet">BAHİS YAP</button>
     </div>
-
     <div class="bet-card">
         <input type="number" id="betInput2" value="200">
-        <div class="auto-row">
-            <span>OTOMATİK</span>
-            <label class="switch"><input type="checkbox" id="autoSwitch2"><span class="slider"></span></label>
-        </div>
+        <div class="auto-row"><span>OTO</span><label class="switch"><input type="checkbox" id="autoSwitch2"><span class="slider"></span></label></div>
         <button id="btn2" class="main-btn btn-bet">BAHİS YAP</button>
     </div>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
     import { getFirestore, doc, onSnapshot, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -163,180 +143,90 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // --- GELİŞMİŞ İOS UYUMLU SES SİSTEMİ ---
+    // --- SES SİSTEMİ (iOS UNLOCKED) ---
     let audioCtx = null;
-    let isAudioUnlocked = false;
-
     const unlockAudio = () => {
-        if (isAudioUnlocked) return;
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        // Boş bir ses üretip oynat (iOS kilidini açar)
-        const buffer = audioCtx.createBuffer(1, 1, 22050);
-        const source = audioCtx.createBufferSource();
-        source.buffer = buffer;
-        source.connect(audioCtx.destination);
-        source.start(0);
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         if (audioCtx.state === 'suspended') audioCtx.resume();
-        isAudioUnlocked = true;
-        console.log("Audio Unlocked for iOS");
     };
 
     function playSfx(type) {
-        if (!audioCtx) return;
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        
+        if(!audioCtx) return;
         const now = audioCtx.currentTime;
-        const g = audioCtx.createGain();
         const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
         o.connect(g); g.connect(audioCtx.destination);
-
-        if(type === 'countdown') {
-            o.frequency.setValueAtTime(800, now);
-            g.gain.setValueAtTime(0.1, now);
-            g.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
-            o.start(); o.stop(now + 0.1);
-        } else if(type === 'bet') {
-            o.frequency.setValueAtTime(400, now);
-            o.frequency.linearRampToValueAtTime(600, now + 0.1);
-            g.gain.setValueAtTime(0.1, now);
-            g.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
-            o.start(); o.stop(now + 0.1);
-        } else if(type === 'cash') {
-            o.frequency.setValueAtTime(600, now);
-            o.frequency.exponentialRampToValueAtTime(1200, now + 0.2);
-            g.gain.setValueAtTime(0.1, now);
-            g.gain.linearRampToValueAtTime(0, now + 0.2);
-            o.start(); o.stop(now + 0.2);
-        } else if(type === 'crash') {
-            // Gürültü (Patlama) Sesi
-            const b = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.4, audioCtx.sampleRate);
-            const d = b.getChannelData(0);
-            for(let i=0; i<b.length; i++) d[i] = Math.random() * 2 - 1;
-            const s = audioCtx.createBufferSource(); s.buffer = b;
-            const f = audioCtx.createBiquadFilter(); f.type = 'lowpass';
-            f.frequency.setValueAtTime(500, now); f.frequency.exponentialRampToValueAtTime(50, now+0.4);
-            const gn = audioCtx.createGain(); gn.gain.setValueAtTime(0.3, now);
-            gn.gain.exponentialRampToValueAtTime(0.01, now+0.4);
-            s.connect(f); f.connect(gn); gn.connect(audioCtx.destination);
-            s.start(); s.stop(now + 0.4);
+        if(type==='countdown') { o.frequency.setValueAtTime(600, now); g.gain.setValueAtTime(0.1, now); g.gain.exponentialRampToValueAtTime(0.01, now+0.1); o.start(); o.stop(now+0.1); }
+        if(type==='crash') { 
+            const b = audioCtx.createBuffer(1, audioCtx.sampleRate*0.3, audioCtx.sampleRate);
+            const d = b.getChannelData(0); for(let i=0; i<b.length; i++) d[i]=Math.random()*2-1;
+            const s = audioCtx.createBufferSource(); s.buffer=b; 
+            const f = audioCtx.createBiquadFilter(); f.type='lowpass'; f.frequency.setValueAtTime(400, now);
+            const gn = audioCtx.createGain(); gn.gain.setValueAtTime(0.3, now); gn.gain.exponentialRampToValueAtTime(0.01, now+0.3);
+            s.connect(f); f.connect(gn); gn.connect(audioCtx.destination); s.start(); s.stop(now+0.3);
         }
+        if(type==='bet') { o.frequency.setValueAtTime(400, now); g.gain.setValueAtTime(0.1, now); o.start(); o.stop(now+0.1); }
+        if(type==='cash') { o.frequency.setValueAtTime(800, now); o.frequency.exponentialRampToValueAtTime(1200, now+0.2); g.gain.setValueAtTime(0.1, now); o.start(); o.stop(now+0.2); }
     }
 
-    // --- PROFESYONEL UZAY MOTORU ---
+    // --- OYUN MOTORU & UZAY ---
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
-    let width, height;
-    let stars = [];
+    let width, height, stars = [];
+    let multiplier = 1.00, phase = "WAITING", balance = 0, userRef = null;
+    let activeBet1 = 0, activeBet2 = 0, auto1 = false, auto2 = false;
 
     function initStars() {
-        stars = [];
-        for(let i=0; i<150; i++) {
-            stars.push({
-                x: Math.random() * width,
-                y: Math.random() * height,
-                z: Math.random() * width,
-                size: Math.random() * 1.5
-            });
-        }
+        stars = []; for(let i=0; i<100; i++) stars.push({x: Math.random()*width, y: Math.random()*height, s: Math.random()*2});
     }
-
-    function resize() {
-        width = canvas.width = canvas.offsetWidth;
-        height = canvas.height = canvas.offsetHeight;
-        initStars();
-    }
-    window.addEventListener('resize', resize);
-    resize();
+    function resize() { width=canvas.width=canvas.offsetWidth; height=canvas.height=canvas.offsetHeight; initStars(); }
+    window.addEventListener('resize', resize); resize();
 
     function draw() {
-        // Derin Uzay Arka Planı
-        const grad = ctx.createRadialGradient(width/2, height/2, 0, width/2, height/2, width);
-        grad.addColorStop(0, '#0a1128');
-        grad.addColorStop(1, '#02040a');
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, width, height);
-
-        // Dinamik Izgara (Grid)
-        ctx.strokeStyle = "rgba(79, 209, 255, 0.03)";
-        ctx.lineWidth = 1;
-        let spacing = 60;
-        let offset = (multiplier * 30) % spacing;
-        for(let x = width; x > -spacing; x -= spacing) {
-            ctx.beginPath(); ctx.moveTo(x - offset, 0); ctx.lineTo(x - offset, height); ctx.stroke();
-        }
-        for(let y = 0; y < height + spacing; y += spacing) {
-            ctx.beginPath(); ctx.moveTo(0, y + (offset/2)); ctx.lineTo(width, y + (offset/2)); ctx.stroke();
-        }
-
-        // Yıldızlar (Parallax Effect)
+        ctx.fillStyle = "#02050e"; ctx.fillRect(0,0,width,height);
         ctx.fillStyle = "white";
         stars.forEach(s => {
-            let k = 128 / s.z;
-            let px = (s.x - width/2) * k + width/2;
-            let py = (s.y - height/2) * k + height/2;
-            let sSize = s.size * k;
-            
-            s.z -= (phase === "FLYING" ? multiplier * 0.5 : 0.2);
-            if(s.z <= 0) s.z = width;
-
-            ctx.globalAlpha = Math.min(k, 1);
-            ctx.beginPath();
-            ctx.arc(px, py, sSize, 0, Math.PI*2);
-            ctx.fill();
+            s.y += (phase === "FLYING" ? multiplier * 0.5 : 0.2);
+            if(s.y > height) s.y = 0;
+            ctx.beginPath(); ctx.arc(s.x, s.y, s.s, 0, Math.PI*2); ctx.fill();
         });
-        ctx.globalAlpha = 1;
-
-        // Uçuş Çizgisi
         if(phase === "FLYING") {
-            ctx.shadowBlur = 20; ctx.shadowColor = "#4fd1ff";
-            ctx.strokeStyle = "#4fd1ff"; ctx.lineWidth = 4;
-            ctx.beginPath();
-            ctx.moveTo(0, height);
-            ctx.quadraticCurveTo(width * 0.4, height * 0.9, width * 0.8, height * 0.3);
-            ctx.stroke();
-            ctx.shadowBlur = 0;
+            ctx.strokeStyle = "#4fd1ff"; ctx.lineWidth = 3; ctx.beginPath();
+            ctx.moveTo(0, height); ctx.quadraticCurveTo(width*0.5, height*0.9, width*0.8, height*0.3); ctx.stroke();
         }
-
         requestAnimationFrame(draw);
     }
     draw();
 
-    // --- OYUN MANTIĞI ---
-    let userRef = null, balance = 0, phase = "WAITING";
-    let multiplier = 1.00, crashPoint = 0, startTime = 0;
-    let activeBet1 = 0, activeBet2 = 0, auto1 = false, auto2 = false;
-
-    const multEl = document.getElementById('multiplier');
-    const statusEl = document.getElementById('statusText');
-    const balEl = document.getElementById('balance');
-    const betTotalEl = document.getElementById('betTotal');
-
+    // --- FIREBASE & BAŞLATMA ---
     onAuthStateChanged(auth, user => {
         if(user) {
             userRef = doc(db, "users", user.uid);
             onSnapshot(userRef, snap => {
                 if(snap.exists()) {
                     balance = snap.data().balance || 0;
-                    balEl.innerText = balance.toLocaleString('tr-TR');
+                    document.getElementById('balance').innerText = balance.toLocaleString('tr-TR');
+                    if(phase === "WAITING") startNewRound();
                 }
             });
-            startNewRound();
+        } else {
+            signInAnonymously(auth); // Otomatik giriş
+            setTimeout(() => { if(phase === "WAITING") startNewRound(); }, 3000); // Fallback
         }
     });
 
     function startNewRound() {
+        if(phase === "COUNTDOWN" || phase === "FLYING") return;
         phase = "COUNTDOWN"; multiplier = 1.00;
-        multEl.classList.remove('crashed-text');
-        statusEl.innerText = "HAZIRLANIN";
+        document.getElementById('multiplier').classList.remove('crashed-text');
+        document.getElementById('statusText').innerText = "HAZIRLANIN";
         document.getElementById('betInput1').disabled = false;
         document.getElementById('betInput2').disabled = false;
-        
-        if(auto1) handleBet(1, true);
-        if(auto2) handleBet(2, true);
+        if(auto1) handleBet(1, true); if(auto2) handleBet(2, true);
 
         let count = 5;
         const timer = setInterval(() => {
-            multEl.innerText = count + "s";
+            document.getElementById('multiplier').innerText = count + "s";
             playSfx('countdown');
             if(count <= 0) { clearInterval(timer); launch(); }
             count--;
@@ -345,62 +235,53 @@
     }
 
     function launch() {
-        phase = "FLYING"; statusEl.innerText = "YÜKSELİYOR";
+        phase = "FLYING"; document.getElementById('statusText').innerText = "UÇUŞTA";
         document.getElementById('betInput1').disabled = true;
         document.getElementById('betInput2').disabled = true;
-        startTime = Date.now();
-        // Gerçekçi Crash Hesabı
-        crashPoint = parseFloat((Math.random() < 0.03 ? 1.00 : (0.98 / (1 - Math.random()))).toFixed(2));
+        let startTime = Date.now();
+        let crashPoint = parseFloat((Math.random() < 0.03 ? 1.00 : (0.97 / (1 - Math.random()))).toFixed(2));
+        
+        const tick = () => {
+            if(phase !== "FLYING") return;
+            const elapsed = (Date.now() - startTime) / 1000;
+            // YAVAŞ BAŞLAYAN İVME
+            multiplier = 1 + (Math.pow(elapsed * 0.2, 1.4));
+            
+            if(multiplier >= crashPoint) {
+                phase = "CRASHED";
+                playSfx('crash');
+                document.getElementById('multiplier').innerText = multiplier.toFixed(2) + "x";
+                document.getElementById('multiplier').classList.add('crashed-text');
+                document.getElementById('statusText').innerText = "PATLADI";
+                addHistory(multiplier);
+                activeBet1 = 0; activeBet2 = 0;
+                updateUI();
+                setTimeout(startNewRound, 4000);
+            } else {
+                document.getElementById('multiplier').innerText = multiplier.toFixed(2) + "x";
+                updateUI();
+                requestAnimationFrame(tick);
+            }
+        };
         tick();
     }
 
-    function tick() {
-        if(phase !== "FLYING") return;
-        const elapsed = (Date.now() - startTime) / 1000;
-        
-        // YAVAŞ BAŞLAYAN İVME FORMÜLÜ
-        // İlk saniyelerde çok yavaş (1.01.. 1.05..), sonra hızlanır.
-        multiplier = 1 + (Math.pow(elapsed * 0.15, 1.5)) + (elapsed * 0.05);
-        
-        if(multiplier >= crashPoint) {
-            doCrash();
-        } else {
-            multEl.innerText = multiplier.toFixed(2) + "x";
-            multEl.style.transform = `translate(-50%, -50%) scale(${1 + (multiplier * 0.01)})`;
-            updateUI();
-            requestAnimationFrame(tick);
-        }
-    }
-
-    function doCrash() {
-        phase = "CRASHED"; playSfx('crash');
-        multEl.classList.add('crashed-text');
-        statusEl.innerText = "PATLADI";
-        addHistory(multiplier);
-        activeBet1 = 0; activeBet2 = 0;
-        updateUI();
-        setTimeout(startNewRound, 4000);
-    }
-
     async function handleBet(box, isAuto = false) {
-        unlockAudio(); // iOS için her dokunuşta kontrol et
-        if(!userRef) return;
+        unlockAudio();
         const input = document.getElementById('betInput'+box);
         const amount = Math.floor(parseInt(input.value)) || 0;
         let currentActive = (box === 1) ? activeBet1 : activeBet2;
 
         if(phase === "COUNTDOWN" && currentActive === 0 && balance >= amount && amount > 0) {
-            await updateDoc(userRef, { balance: increment(-amount) });
+            if(userRef) await updateDoc(userRef, { balance: increment(-amount) });
+            else balance -= amount;
             if(box === 1) activeBet1 = amount; else activeBet2 = amount;
             if(!isAuto) playSfx('bet');
         } 
-        else if(phase === "COUNTDOWN" && currentActive > 0 && !isAuto) {
-            await updateDoc(userRef, { balance: increment(currentActive) });
-            if(box === 1) activeBet1 = 0; else activeBet2 = 0;
-        }
         else if(phase === "FLYING" && currentActive > 0) {
             const win = Math.floor(currentActive * multiplier);
-            await updateDoc(userRef, { balance: increment(win) });
+            if(userRef) await updateDoc(userRef, { balance: increment(win) });
+            else balance += win;
             if(box === 1) activeBet1 = 0; else activeBet2 = 0;
             playSfx('cash');
         }
@@ -411,40 +292,30 @@
         const u = (id, active) => {
             const b = document.getElementById(id);
             if(phase === "COUNTDOWN") {
-                b.disabled = false;
-                b.innerText = active > 0 ? "VAZGEÇ" : "BAHİS YAP";
+                b.disabled = false; b.innerText = active > 0 ? "İPTAL" : "BAHİS YAP";
                 b.className = active > 0 ? "main-btn btn-cancel" : "main-btn btn-bet";
             } else if(phase === "FLYING" && active > 0) {
-                b.disabled = false;
-                b.innerText = `NAKİT ₺${Math.floor(active * multiplier)}`;
+                b.disabled = false; b.innerText = `ÇEK ₺${Math.floor(active * multiplier)}`;
                 b.className = "main-btn btn-cashout";
-            } else {
-                b.disabled = true;
-                b.innerText = active > 0 ? "BEKLE..." : "KAPALI";
-                b.className = "main-btn";
-            }
+            } else { b.disabled = true; b.innerText = active > 0 ? "UÇUYOR" : "BEKLE"; b.className = "main-btn"; }
         };
         u('btn1', activeBet1); u('btn2', activeBet2);
-        betTotalEl.innerText = (activeBet1 + activeBet2).toLocaleString('tr-TR');
+        document.getElementById('betTotal').innerText = (activeBet1 + activeBet2).toLocaleString('tr-TR');
     }
 
     function addHistory(val) {
         const span = document.createElement('span');
         span.innerText = val.toFixed(2) + "x";
-        span.style.color = val < 2 ? "#ff4757" : (val < 10 ? "#4fd1ff" : "#ffa502");
-        span.style.border = `1px solid ${span.style.color}44`;
+        span.style.color = val < 2 ? "#ff4757" : "#00b894";
         const h = document.getElementById('history'); h.prepend(span);
-        if(h.children.length > 20) h.lastChild.remove();
+        if(h.children.length > 15) h.lastChild.remove();
     }
-
-    // İlk Dokunuşta Sesi Aç
-    document.body.addEventListener('touchstart', unlockAudio, { once: true });
-    document.body.addEventListener('click', unlockAudio, { once: true });
 
     document.getElementById('btn1').onclick = () => handleBet(1);
     document.getElementById('btn2').onclick = () => handleBet(2);
     document.getElementById('autoSwitch1').onchange = (e) => auto1 = e.target.checked;
     document.getElementById('autoSwitch2').onchange = (e) => auto2 = e.target.checked;
+    document.body.addEventListener('touchstart', unlockAudio, { once: true });
 </script>
 </body>
 </html>
