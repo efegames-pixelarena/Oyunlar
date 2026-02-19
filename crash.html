@@ -30,9 +30,8 @@
     .back-btn {
         background: #e74c3c; color: white; text-decoration: none; padding: 0 12px;
         border-radius: 10px; font-size: 11px; font-weight: 800; border-bottom: 2px solid #c0392b;
-        height: 32px; display: flex; align-items: center; justify-content: center; transition: 0.1s;
+        height: 32px; display: flex; align-items: center; justify-content: center;
     }
-    .back-btn:active { transform: scale(0.95); border-bottom: none; margin-top: 2px; }
 
     .history{
         position:absolute;top:60px;width:100%;height:38px;
@@ -171,10 +170,7 @@ function playSfx(type) {
     }
 
     if(type === 'flight_loop') {
-        if(flightOsc) {
-            // Çarpan arttıkça motor sesini incelt (pitch up)
-            flightOsc.frequency.setTargetAtTime(40 + (multiplier * 20), now, 0.1);
-        }
+        if(flightOsc) flightOsc.frequency.setTargetAtTime(40 + (multiplier * 15), now, 0.1);
     }
 
     if(type === 'cash') {
@@ -191,7 +187,6 @@ function playSfx(type) {
         if(flightOsc) { flightOsc.stop(); flightOsc = null; }
         const osc = audioCtx.createOscillator();
         const g = audioCtx.createGain();
-        const noise = audioCtx.createOscillator(); // Patlama efekti için kalın ses
         osc.type = 'sawtooth';
         osc.connect(g); g.connect(audioCtx.destination);
         osc.frequency.setValueAtTime(120, now);
@@ -209,7 +204,7 @@ const multEl = document.getElementById("multiplier");
 const balEl = document.getElementById("balance");
 const betTotalEl = document.getElementById("bet");
 
-// --- GRAFİK SİSTEMİ ---
+// --- UZAY SİMÜLASYONU ---
 const canvas = document.getElementById("graph");
 const ctx = canvas.getContext("2d");
 function resize() { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; }
@@ -242,7 +237,7 @@ function draw() {
 }
 draw();
 
-// --- OYUN AKIŞI ---
+// --- OYUN MANTIĞI & KASA AVANTAJI ---
 onAuthStateChanged(auth, user => {
     if(user) {
         userRef = doc(db, "users", user.uid);
@@ -250,6 +245,19 @@ onAuthStateChanged(auth, user => {
         startCountdown();
     }
 });
+
+function generateCrashPoint() {
+    // KASA AVANTAJI: Gerçek crash algoritması (House Edge: %3)
+    // Formül: Multiplier = 0.97 / (1 - X) where X is a random number [0,1)
+    const houseEdge = 0.97;
+    const x = Math.random();
+    const result = houseEdge / (1 - x);
+    
+    // %1 ihtimalle anında patlama (1.00x)
+    if (Math.random() < 0.01) return 1.00;
+    
+    return Math.max(1.01, result);
+}
 
 function startCountdown() {
     phase = "betting"; multiplier = 1; let sec = 5;
@@ -259,7 +267,7 @@ function startCountdown() {
         if(sec > 0) playSfx('countdown');
         if(sec <= 0) {
             clearInterval(timer); phase = "flying"; startTime = Date.now();
-            crashPoint = 1.01 + (Math.random() * (Math.random() < 0.1 ? 1.5 : 10));
+            crashPoint = generateCrashPoint();
             playSfx('flight_start'); updateMultiplier();
         }
         sec--;
@@ -300,6 +308,7 @@ async function handleBet(box) {
     if(phase === "betting" && currentActive === 0 && balance >= amount && amount > 0) {
         await updateDoc(userRef, { balance: increment(-amount) });
         if(box === 1) activeBet1 = amount; else activeBet2 = amount;
+        playSfx('bet');
     } 
     else if(phase === "betting" && currentActive > 0) {
         await updateDoc(userRef, { balance: increment(currentActive) });
@@ -329,7 +338,6 @@ function updateButtons() {
 
 document.getElementById("btn1").onclick = () => handleBet(1);
 document.getElementById("btn2").onclick = () => handleBet(2);
-// iOS için ekranın herhangi bir yerine ilk dokunuşta sesi aktifleştir
 document.body.addEventListener('touchstart', initAudio, { once: true });
 </script>
 </body>
