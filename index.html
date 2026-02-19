@@ -11,7 +11,7 @@
     --primary: #4fd1ff;
     --accent: #ff8a00;
     --bg-dark: #03050a;
-    --glass: rgba(10, 15, 30, 0.95);
+    --glass: rgba(10, 15, 30, 0.9);
     --border: #1e2642;
     --card-gradient: linear-gradient(145deg, #0f172a, #020617);
     --dropdown-bg: #0a0f1e;
@@ -22,94 +22,119 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
 
 #snow { position:fixed; top:0; left:0; width:100%; height:100%; z-index:1; pointer-events:none; opacity: 0.6; }
 
-/* --- TOP BAR --- */
+/* --- SKYCRASH STYLE TOP BAR (CENTERED LOGO) --- */
 .top-bar {
-    position: fixed; top: 0; width: 100%; height: 65px;
+    position: fixed; top: 0; width: 100%; height: 60px;
     display: flex; align-items: center; justify-content: space-between;
     padding: 0 15px; background: var(--glass);
     backdrop-filter: blur(15px); border-bottom: 1px solid var(--border); z-index: 2000;
 }
 
-.brand-section { display: flex; align-items: center; gap: 15px; }
-.brand {
-    font-size: 18px; font-weight: 900; letter-spacing: 1px;
-    background: linear-gradient(90deg, var(--primary), #fff);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    animation: shine 4s linear infinite;
+/* Sol Alan */
+.brand-section { display: flex; align-items: center; z-index: 2001; }
+
+/* MERKEZ LOGO TASARIMI */
+.center-logo {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    pointer-events: none;
+    text-align: center;
 }
-@keyframes shine { to { background-position: 200% center; } }
+.brand {
+    font-size: 20px; font-weight: 900; letter-spacing: 2px;
+    background: linear-gradient(90deg, #fff, var(--primary), #fff, var(--accent), #fff);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: flow 4s linear infinite;
+    text-transform: uppercase;
+    filter: drop-shadow(0 0 8px rgba(79, 209, 255, 0.3));
+}
+@keyframes flow { to { background-position: 200% center; } }
 
-.right-menu { display: flex; gap: 12px; align-items: center; position: relative; }
+/* Sağ Alan */
+.right-menu { display: flex; gap: 8px; align-items: center; z-index: 2001; }
 
-/* --- PROFILE IMAGE & DROPDOWN TRIGGER --- */
-.profile-wrapper { position: relative; display: none; } /* JS ile açılacak */
+.nav-box { 
+    padding: 7px 12px; border-radius: 12px; font-weight: 800; font-size: 12px; 
+    text-align: center; display: flex; align-items: center; justify-content: center;
+    white-space: nowrap;
+}
+.balance-box { background: #1a2248; border: 1px solid rgba(79, 209, 255, 0.2); color: var(--primary); display: none; }
 
-.avatar-trigger {
-    width: 40px; height: 40px; border-radius: 50%;
+/* --- PROFILE & DROPDOWN --- */
+.user-profile-wrapper { position: relative; display: none; }
+.avatar {
+    width: 36px; height: 36px; border-radius: 50%;
     background: var(--primary); display: flex; align-items: center;
     justify-content: center; font-weight: 900; color: #000; font-size: 16px;
-    cursor: pointer; border: 2px solid var(--border);
-    transition: 0.3s; box-shadow: 0 0 15px rgba(79, 209, 255, 0.3);
+    box-shadow: 0 0 12px rgba(79, 209, 255, 0.4);
+    border: 2px solid rgba(255,255,255,0.1); cursor: pointer; transition: 0.3s;
 }
-.avatar-trigger:hover { transform: scale(1.05); border-color: var(--primary); }
+.avatar:hover { transform: scale(1.05); border-color: var(--primary); }
 
-/* --- DROPDOWN MENU (Görseldeki Stil) --- */
 .dropdown-menu {
-    position: absolute; top: 55px; right: 0; width: 260px;
+    position: absolute; top: 50px; right: 0; width: 220px;
     background: var(--dropdown-bg); border: 1px solid var(--border);
-    border-radius: 18px; padding: 20px; display: none;
+    border-radius: 15px; padding: 15px; display: none;
     flex-direction: column; z-index: 3000;
-    box-shadow: 0 15px 40px rgba(0,0,0,0.8);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.8);
 }
-.dropdown-menu.active { display: flex; animation: slideIn 0.3s ease-out; }
+.dropdown-menu.active { display: flex; animation: slideIn 0.2s ease-out; }
+@keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
-@keyframes slideIn {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
+.dropdown-menu a, .dropdown-menu div.logout-btn-ui {
+    padding: 12px; color: #ccd6f6; text-decoration: none; font-size: 13px;
+    font-weight: 700; border-radius: 10px; transition: 0.2s; cursor: pointer;
+    display: flex; align-items: center; gap: 10px;
 }
-
-.u-info-header { margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
-.u-info-header .name { display: block; font-size: 16px; font-weight: 800; color: white; }
-.u-info-header .status { font-size: 11px; color: var(--primary); font-weight: 700; text-transform: uppercase; }
-
-.u-stats { margin-bottom: 15px; }
-.stat-item { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 5px; color: #8892b0; }
-.stat-item b { color: white; }
-
-.menu-links { display: flex; flex-direction: column; gap: 5px; }
-.menu-btn {
-    display: flex; align-items: center; gap: 12px; padding: 12px;
-    border-radius: 10px; text-decoration: none; color: #ccd6f6;
-    font-size: 13px; font-weight: 700; transition: 0.2s; background: rgba(255,255,255,0.03);
-}
-.menu-btn:hover { background: rgba(79, 209, 255, 0.1); color: var(--primary); }
-.logout-link { color: #ff4d4d !important; margin-top: 10px; border: 1px solid rgba(255,77,77,0.2); }
+.dropdown-menu a:hover { background: rgba(79, 209, 255, 0.1); color: var(--primary); }
 
 /* AUTH BUTTONS */
 .btn {
-    padding: 10px 20px; border-radius: 12px; border: none; cursor: pointer;
-    font-weight: 800; font-size: 13px; transition: 0.3s;
+    padding: 8px 16px; border-radius: 10px; border: none; cursor: pointer;
+    font-weight: 800; font-size: 12px; transition: 0.3s; flex-shrink: 0;
 }
-.login-btn { background: #1a2248; color: white; border: 1px solid var(--border); }
+.login-btn { background: #1e2642; color: white; border: 1px solid rgba(255,255,255,0.1); }
 .register-btn { background: linear-gradient(90deg, #ff8a00, #ff5f00); color: #000; }
 
-/* HERO & GAMES */
-.hero-search { margin-top: 95px; padding: 0 20px; text-align: center; }
+/* --- SEARCH & GAMES --- */
+.hero-search { margin-top: 85px; padding: 0 20px; text-align: center; }
 .search-container { max-width: 600px; margin: 0 auto; position: relative; }
 .search-container input {
     width: 100%; padding: 16px 20px 16px 50px; border-radius: 20px;
-    background: #0f172a; border: 1px solid var(--border); color: white; font-size: 16px; outline: none;
+    background: #0f172a; border: 1px solid var(--border); color: white;
+    font-size: 16px; outline: none; transition: 0.3s;
 }
+.search-container::before { content: '🔍'; position: absolute; left: 20px; top: 16px; opacity: 0.5; }
+
 .section-title { padding: 30px 20px 15px; font-size: 18px; font-weight: 900; color: #8892b0; display: flex; align-items: center; gap: 10px; }
 .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 .games-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 0 20px; }
 @media(min-width: 900px) { .games-grid { grid-template-columns: repeat(4, 1fr); } }
 
 .game-card {
-    background: var(--card-gradient); border-radius: 24px; padding: 25px; text-align: center; 
-    border: 1px solid var(--border); transition: 0.3s; cursor: pointer;
+    background: var(--card-gradient); border-radius: 24px; padding: 25px;
+    text-align: center; border: 1px solid var(--border); transition: 0.4s; cursor: pointer;
 }
-.game-card:hover { transform: translateY(-5px); border-color: var(--primary); }
+.game-card:hover { transform: translateY(-8px); border-color: var(--primary); }
+.badge { font-size: 10px; font-weight: 900; padding: 4px 10px; border-radius: 8px; background: rgba(0,0,0,0.3); color: var(--primary); }
+
+/* --- SIDE MENU --- */
+.side-menu {
+    position: fixed; top: 0; left: -280px; width: 280px; height: 100%;
+    background: #050811; padding: 30px 20px; transition: 0.4s; z-index: 3000; border-right: 1px solid var(--border);
+}
+.side-menu.active { left: 0; }
+.menu-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; z-index: 2500; backdrop-filter: blur(4px); }
+.menu-overlay.active { display: block; }
+
+/* --- AUTH MODAL --- */
+.auth-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); backdrop-filter: blur(15px); display: none; align-items: center; justify-content: center; z-index: 5000; }
+.auth-card { width: 90%; max-width: 380px; padding: 35px; border-radius: 25px; background: #0f172a; border: 1px solid var(--border); }
+.auth-card input { width: 100%; padding: 15px; margin-bottom: 12px; border-radius: 12px; background: #050811; border: 1px solid var(--border); color: white; outline: none; }
+.auth-btn { width: 100%; padding: 16px; border-radius: 12px; border: none; background: linear-gradient(90deg, #ff8a00, #ff5f00); font-weight: 900; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -119,37 +144,44 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
 <div class="top-bar">
     <div class="brand-section">
         <div id="menuBtn" style="cursor:pointer; font-size:24px;">☰</div>
+    </div>
+
+    <div class="center-logo">
         <div class="brand">PixelArena</div>
     </div>
 
     <div class="right-menu">
-        <button class="btn login-btn" id="loginBtn">GİRİŞ</button>
-        <button class="btn register-btn" id="regBtn">KATIL</button>
+        <div class="nav-box balance-box" id="balanceBox">
+            ₺<span id="userBalance">0</span>
+        </div>
 
-        <div class="profile-wrapper" id="profileWrapper">
-            <div class="avatar-trigger" id="avatarTrigger">?</div>
-            
+        <div class="user-profile-wrapper" id="profileWrapper">
+            <div class="avatar" id="avatarInitial">?</div>
             <div class="dropdown-menu" id="userDropdown">
-                <div class="u-info-header">
-                    <span class="name" id="dropName">Yükleniyor...</span>
-                    <span class="status">VİP ÜYE - LEVEL 1</span>
+                <div style="padding:10px; border-bottom:1px solid #1e2642; margin-bottom:5px;">
+                    <span id="dropName" style="font-weight:900; display:block; font-size:14px;">KULLANICI</span>
+                    <span style="font-size:10px; color:var(--primary);">VİP ÜYE - LVL 1</span>
                 </div>
-                
-                <div class="u-stats">
-                    <div class="stat-item">Mevcut Bakiye: <b id="dropBalance">0 ₺</b></div>
-                    <div class="stat-item">Hesap Durumu: <b style="color:#00ff88">AKTİF</b></div>
-                </div>
-
-                <div class="menu-links">
-                    <a href="panel.html" class="menu-btn">👤 Hesabım</a>
-                    <a href="#" class="menu-btn">💰 Para Yatır</a>
-                    <a href="#" class="menu-btn">🎁 Bonuslarım</a>
-                    <a href="#" class="menu-btn" id="logoutBtn">🔴 Çıkış Yap</a>
-                </div>
+                <a href="panel.html">👤 Hesabım</a>
+                <a href="#">💰 Para Yatır</a>
+                <a href="#" style="color:#ff4d4d;" id="logoutBtn">🔴 Çıkış Yap</a>
             </div>
         </div>
+
+        <button class="btn login-btn">GİRİŞ</button>
+        <button class="btn register-btn">KATIL</button>
     </div>
 </div>
+
+<div id="sideMenu" class="side-menu">
+    <div style="font-size: 20px; font-weight: 900; margin-bottom: 30px; display: flex; justify-content: space-between;">
+        MENU <span id="closeMenu" style="cursor:pointer">✕</span>
+    </div>
+    <a href="index.html" style="display:block; padding:15px; color:white; text-decoration:none;">🏠 Ana Sayfa</a>
+    <a href="panel.html" style="display:block; padding:15px; color:white; text-decoration:none;">💎 Bonus / Çark</a>
+    <a href="https://www.instagram.com/pixel_arena_games" target="_blank" style="display:block; padding:15px; color:white; text-decoration:none;">🚔 Destek</a>
+</div>
+<div id="menuOverlay" class="menu-overlay"></div>
 
 <div class="hero-search">
     <div class="search-container">
@@ -158,18 +190,35 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
 </div>
 
 <main id="games">
-    <div class="section-title">Oyunlar</div>
+    <div class="section-title">Popüler Oyunlar</div>
     <div class="games-grid">
-        <div class="game-card" onclick="checkLogin('mines.html')">
-            <div style="font-size:40px">💣</div>
-            <span>Mines</span>
+        <div class="game-card" data-name="skycrash" onclick="checkLogin('skycrash.html')">
+            <div style="font-size:45px; margin-bottom:10px;">✈️</div>
+            <span>SkyCrash</span><br>
+            <div class="badge">PREMIUM</div>
         </div>
-        <div class="game-card" onclick="checkLogin('skycrash.html')">
-            <div style="font-size:40px">✈️</div>
-            <span>SkyCrash</span>
+        <div class="game-card" data-name="mines" onclick="checkLogin('mines.html')">
+            <div style="font-size:45px; margin-bottom:10px;">💣</div>
+            <span>Mines</span><br>
+            <div class="badge">PREMIUM</div>
         </div>
     </div>
 </main>
+
+<div class="auth-overlay" id="authOverlay">
+    <div class="auth-card">
+        <h2 id="authTitle" style="text-align:center; margin-bottom:25px;">Giriş Yap</h2>
+        <input type="email" id="authEmail" placeholder="E-posta">
+        <input type="password" id="authPassword" placeholder="Şifre">
+        <input type="text" id="authUsername" placeholder="Kullanıcı Adı" style="display:none;">
+        <button class="auth-btn" id="authSubmit">DEVAM ET</button>
+        <p style="text-align:center; margin-top:15px; font-size:13px;">
+            <span id="switchText">Hesabın yok mu?</span> 
+            <b id="switchMode" style="color:var(--accent); cursor:pointer;">Kayıt Ol</b>
+        </p>
+        <p id="authBack" style="text-align:center; margin-top:20px; font-size:12px; cursor:pointer; opacity:0.6;">VAZGEÇ</p>
+    </div>
+</div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -189,53 +238,81 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// --- UI ELEMENTS ---
-const avatarTrigger = document.getElementById("avatarTrigger");
-const userDropdown = document.getElementById("userDropdown");
-const profileWrapper = document.getElementById("profileWrapper");
-const loginBtn = document.getElementById("loginBtn");
-const regBtn = document.getElementById("regBtn");
+// --- UI INTERACTIONS ---
+const avatar = document.getElementById("avatarInitial");
+const dropdown = document.getElementById("userDropdown");
+if(avatar) {
+    avatar.onclick = (e) => { e.stopPropagation(); dropdown.classList.toggle("active"); };
+}
+window.onclick = () => dropdown.classList.remove("active");
 
-// Profil Dropdown Aç/Kapat
-avatarTrigger.onclick = (e) => {
-    e.stopPropagation();
-    userDropdown.classList.toggle("active");
+// --- SIDE MENU ---
+const sideMenu = document.getElementById("sideMenu");
+const menuOverlay = document.getElementById("menuOverlay");
+document.getElementById("menuBtn").onclick = () => { sideMenu.classList.add("active"); menuOverlay.classList.add("active"); };
+document.getElementById("closeMenu").onclick = () => { sideMenu.classList.remove("active"); menuOverlay.classList.remove("active"); };
+menuOverlay.onclick = () => { sideMenu.classList.remove("active"); menuOverlay.classList.remove("active"); };
+
+// --- AUTH LOGIC ---
+const overlay = document.getElementById("authOverlay");
+const loginBtn = document.querySelector(".login-btn");
+const regBtn = document.querySelector(".register-btn");
+const balanceBox = document.getElementById("balanceBox");
+const profileWrapper = document.getElementById("profileWrapper");
+
+let isLogin = true;
+loginBtn.onclick = () => { overlay.style.display="flex"; isLogin=true; updateAuthUI(); };
+regBtn.onclick = () => { overlay.style.display="flex"; isLogin=false; updateAuthUI(); };
+document.getElementById("authBack").onclick = () => overlay.style.display="none";
+
+function updateAuthUI() {
+    document.getElementById("authTitle").innerText = isLogin ? "Giriş Yap" : "Kayıt Ol";
+    document.getElementById("authUsername").style.display = isLogin ? "none" : "block";
+    document.getElementById("switchMode").innerText = isLogin ? "Kayıt Ol" : "Giriş Yap";
+}
+document.getElementById("switchMode").onclick = () => { isLogin = !isLogin; updateAuthUI(); };
+
+document.getElementById("authSubmit").onclick = async () => {
+    const email = document.getElementById("authEmail").value;
+    const pass = document.getElementById("authPassword").value;
+    const userN = document.getElementById("authUsername").value;
+    try {
+        if(isLogin) { await signInWithEmailAndPassword(auth, email, pass); }
+        else { 
+            const res = await createUserWithEmailAndPassword(auth, email, pass);
+            await setDoc(doc(db, "users", res.user.uid), { username: userN, balance: 10000, createdAt: new Date() });
+        }
+        overlay.style.display = "none";
+    } catch(e) { alert(e.message); }
 };
 
-// Dışarı tıklayınca kapat
-window.onclick = () => userDropdown.classList.remove("active");
-
-// --- AUTH STATE ---
 onAuthStateChanged(auth, user => {
     if(user) {
-        loginBtn.style.display = "none";
-        regBtn.style.display = "none";
-        profileWrapper.style.display = "block";
-
+        loginBtn.style.display="none"; regBtn.style.display="none";
+        balanceBox.style.display="flex"; profileWrapper.style.display="block";
         onSnapshot(doc(db, "users", user.uid), s => {
             if(s.exists()) {
                 const data = s.data();
+                document.getElementById("userBalance").innerText = data.balance.toLocaleString();
                 document.getElementById("dropName").innerText = data.username.toUpperCase();
-                document.getElementById("dropBalance").innerText = "₺ " + data.balance.toLocaleString();
-                avatarTrigger.innerText = data.username.charAt(0).toUpperCase();
+                avatar.innerText = data.username.charAt(0).toUpperCase();
             }
         });
     } else {
-        loginBtn.style.display = "block";
-        regBtn.style.display = "block";
-        profileWrapper.style.display = "none";
+        loginBtn.style.display="block"; regBtn.style.display="block";
+        balanceBox.style.display="none"; profileWrapper.style.display="none";
     }
 });
 
 document.getElementById("logoutBtn").onclick = () => signOut(auth);
 
-// --- SNOW EFFECT ---
+// --- SNOW ---
 const canvas = document.getElementById("snow");
 const ctx = canvas.getContext("2d");
 let particles = [];
 function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
 window.onresize = resize; resize();
-for(let i=0; i<100; i++) particles.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, r:Math.random()*2+1, d:Math.random()*0.5+0.3});
+for(let i=0; i<80; i++) particles.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, r:Math.random()*2+1, d:Math.random()*0.5+0.2});
 function drawSnow() {
     ctx.clearRect(0,0,canvas.width, canvas.height);
     ctx.fillStyle = "rgba(255,255,255,0.4)";
@@ -247,6 +324,8 @@ function drawSnow() {
     ctx.fill(); requestAnimationFrame(drawSnow);
 }
 drawSnow();
+
+window.checkLogin = (url) => { if(!auth.currentUser) overlay.style.display="flex"; else location.href = url; };
 </script>
 </body>
 </html>
