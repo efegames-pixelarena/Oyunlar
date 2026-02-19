@@ -179,7 +179,7 @@ function initAudio() {
     if (audioCtx.state === 'suspended') audioCtx.resume();
 }
 
-// --- PROFESYONEL SES MOTORU ---
+// --- PROFESYONEL SES MOTORU (GÜNCELLENDİ) ---
 function playSound(type) {
     initAudio();
     const now = audioCtx.currentTime;
@@ -197,23 +197,40 @@ function playSound(type) {
     };
 
     if(type === 'card') {
-        // Gerçekçi Kart Sesi: Sürtünme + Masaya Vuruş
-        const bufferSize = audioCtx.sampleRate * 0.25;
-        const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-        const data = buffer.getChannelData(0);
-        for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+        // GERÇEKÇİ KART SESİ: 2 KATMANLI SENTEZ
+        // Katman 1: Kartın kağıda sürtünme sesi (Friction)
+        const frictionBuffer = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.15, audioCtx.sampleRate);
+        const frictionData = frictionBuffer.getChannelData(0);
+        for (let i = 0; i < frictionBuffer.length; i++) frictionData[i] = Math.random() * 2 - 1;
+        
         const noise = audioCtx.createBufferSource();
-        noise.buffer = buffer;
-        const filter = audioCtx.createBiquadFilter();
-        filter.type = 'bandpass';
-        filter.frequency.setValueAtTime(1200, now);
-        filter.frequency.exponentialRampToValueAtTime(400, now + 0.2);
-        const g = audioCtx.createGain();
-        g.gain.setValueAtTime(0.08, now);
-        g.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
-        noise.connect(filter); filter.connect(g); g.connect(audioCtx.destination);
+        noise.buffer = frictionBuffer;
+        const frictionFilter = audioCtx.createBiquadFilter();
+        frictionFilter.type = 'lowpass';
+        frictionFilter.frequency.setValueAtTime(1500, now);
+        frictionFilter.frequency.exponentialRampToValueAtTime(600, now + 0.1);
+        
+        const frictionGain = audioCtx.createGain();
+        frictionGain.gain.setValueAtTime(0.04, now);
+        frictionGain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+        
+        noise.connect(frictionFilter);
+        frictionFilter.connect(frictionGain);
+        frictionGain.connect(audioCtx.destination);
         noise.start();
-        playOsc(200, 'sine', 0.06, now + 0.1, now + 0.2);
+
+        // Katman 2: Kartın masaya dokunma vuruşu (Tap)
+        const tapOsc = audioCtx.createOscillator();
+        const tapGain = audioCtx.createGain();
+        tapOsc.type = 'sine';
+        tapOsc.frequency.setValueAtTime(220, now + 0.08); // Kartın masaya iniş anı
+        tapGain.gain.setValueAtTime(0, now);
+        tapGain.gain.linearRampToValueAtTime(0.05, now + 0.08);
+        tapGain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+        tapOsc.connect(tapGain);
+        tapGain.connect(audioCtx.destination);
+        tapOsc.start(now);
+        tapOsc.stop(now + 0.2);
     }
 
     if(type==='chip') playOsc(240, 'sine', 0.3, now, now + 0.08, 80);
@@ -267,7 +284,7 @@ function startBetCountdown(){
         } else { 
             clearInterval(betCountdown); 
             betCountdown = null; 
-            messageEl.innerText = ""; // Yazı burada temizlenir
+            messageEl.innerText = ""; 
             startGame(); 
         }
     }, 1000);
@@ -365,7 +382,7 @@ function startActionTimer(){
         } else { 
             clearInterval(actionTimer); 
             actionTimer = null;
-            messageEl.innerText = ""; // Yazı burada temizlenir
+            messageEl.innerText = ""; 
             stand(); 
         }
     }, 1000);
