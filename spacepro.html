@@ -28,13 +28,23 @@
         .btn { width: 85px; height: 85px; background: rgba(255, 255, 255, 0.03); border: 2px solid rgba(0, 255, 136, 0.2); border-radius: 24px; display: flex; align-items: center; justify-content: center; color: var(--neon); font-size: 32px; backdrop-filter: blur(5px); transition: all 0.1s; cursor: pointer; }
         .btn:active { background: rgba(0, 255, 136, 0.1); transform: scale(0.95); }
         
-        #restartBtn { position: absolute; top: 60%; left: 50%; transform: translate(-50%, -50%); display: none; padding: 15px 40px; background: var(--neon); color: black; border: none; border-radius: 12px; font-family: 'Orbitron'; font-weight: 900; cursor: pointer; z-index: 100; }
-        .game-over-screen { position: absolute; inset: 0; background: rgba(0,0,0,0.85); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 90; }
+        /* Yenilenmiş Game Over Ekranı Stili */
+        .game-over-screen { 
+            position: absolute; inset: 0; background: rgba(0,0,0,0.9); 
+            display: none; flex-direction: column; align-items: center; 
+            justify-content: center; z-index: 95; 
+        }
+        #restartBtn { 
+            display: block; padding: 15px 40px; background: var(--neon); 
+            color: black; border: none; border-radius: 12px; 
+            font-family: 'Orbitron'; font-weight: 900; cursor: pointer;
+            margin-top: 20px; box-shadow: 0 0 15px var(--neon);
+        }
     </style>
 </head>
 <body onclick="audio.init()">
 
-<div class="back-nav"><a href="index.html" class="btn-back">⇠ GERİ</a></div>
+<div class="back-nav"><a href="index.html" class="btn-back">GERİ</a></div>
 
 <div id="game-container">
     <div class="ui-overlay">
@@ -43,9 +53,9 @@
     </div>
     <div class="game-over-screen" id="gameOver">
         <h1 style="color: var(--neon); font-size: 32px; margin-bottom: 10px;">MISSION FAILED</h1>
-        <p style="color: white; opacity: 0.6; font-size: 14px;" id="finalScore">SCORE: 0</p>
+        <p style="color: white; opacity: 0.8; font-size: 18px;" id="finalScore">FINAL SCORE: 0</p>
+        <button id="restartBtn">REDEPLOY</button>
     </div>
-    <button id="restartBtn">REDEPLOY</button>
     <canvas id="game"></canvas>
 </div>
 
@@ -90,7 +100,6 @@
             stars: Array.from({length: 80}, () => ({ x: Math.random()*W, y: Math.random()*H, s: Math.random()*2, v: Math.random()*2 + 0.5 }))
         };
         document.getElementById("gameOver").style.display = "none";
-        restartBtn.style.display = "none";
         updateUI();
     }
 
@@ -100,8 +109,8 @@
     }
 
     function addRocket() {
-        if(entities.rockets.length >= 5) return;
-        const offsets = [0, -40, 40, -80, 80];
+        if(entities.rockets.length >= 4) return; // Maks roket 4 yapıldı
+        const offsets = [0, -40, 40, -80]; 
         entities.rockets.push({ off: offsets[entities.rockets.length] });
         audio.play(500, 'triangle', 0.1, 200);
     }
@@ -139,18 +148,15 @@
 
         if(state.frame % Math.max(15, 45 - Math.floor(state.score/15)) === 0) entities.enemies.push({ x: Math.random()*(W-40), y: -40, v: 2 + (state.score*0.04) });
         
-        // Boss Spawn
         if(state.score > 0 && state.score % 50 === 0 && !entities.boss) {
             entities.boss = { x: W/2-40, y: -100, hp: 40, max: 40 };
         }
 
-        // Mermiler
         for(let mi = entities.mermiler.length - 1; mi >= 0; mi--) {
             let m = entities.mermiler[mi];
             m.y -= 10;
             if(m.y < -20) { entities.mermiler.splice(mi, 1); continue; }
             
-            // Powerup'ları vurma
             entities.powerups.forEach((p, pi) => {
                 if(checkHit(m, p, 4, 15, 30, 30)) {
                     if(p.t === 'W') addRocket(); else state.lives = Math.min(5, state.lives + 1);
@@ -161,7 +167,6 @@
             });
         }
 
-        // Düşmanlar
         entities.enemies.forEach((e, i) => {
             e.y += e.v;
             if(e.y > H) { state.lives--; entities.enemies.splice(i, 1); audio.play(100, 'sawtooth', 0.1, 200); }
@@ -176,13 +181,11 @@
             });
         });
 
-        // Powerup Üretimi
         if(state.frame % 800 === 0) {
-            const type = (entities.rockets.length < 5) ? (Math.random() > 0.4 ? 'W' : 'L') : 'L';
+            const type = (entities.rockets.length < 4) ? (Math.random() > 0.4 ? 'W' : 'L') : 'L';
             entities.powerups.push({ x: Math.random()*(W-40), y: -40, t: type });
         }
 
-        // Powerup Toplama (Çarpışma)
         entities.powerups.forEach((p, i) => {
             p.y += 2;
             if(checkHit({x: state.baseX + minOff, y: 430}, p, (maxOff - minOff) + 40, 50, 30, 30)) {
@@ -192,7 +195,6 @@
             }
         });
 
-        // BOSS MANTIĞI VE KALP SPAM
         if(entities.boss) {
             let b = entities.boss;
             b.y = Math.min(60, b.y + 1);
@@ -206,8 +208,7 @@
                     audio.play(200, 'sawtooth', 0.02, 50);
                     
                     if(b.hp <= 0) {
-                        // Boss Öldü: Kalp Spam Başlat
-                        for(let k=0; k<5; k++) {
+                        for(let k=0; k<4; k++) { // Boss ölünce 4 kalp yapıldı
                             entities.powerups.push({ 
                                 x: b.x + Math.random()*60, 
                                 y: b.y + Math.random()*40, 
@@ -218,7 +219,7 @@
                         state.score += 20;
                         entities.boss = null; 
                         updateUI();
-                        audio.play(80, 'square', 0.2, 500); // Patlama sesi
+                        audio.play(80, 'square', 0.2, 500);
                         break; 
                     }
                 }
@@ -232,7 +233,6 @@
             if(state.score > state.highScore) localStorage.setItem("proSpaceScore", state.score);
             document.getElementById("gameOver").style.display = "flex";
             document.getElementById("finalScore").innerText = `FINAL SCORE: ${state.score}`;
-            restartBtn.style.display = "block";
         }
     }
 
