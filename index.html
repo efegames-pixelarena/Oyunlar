@@ -22,7 +22,7 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
 
 #snow { position:fixed; top:0; left:0; width:100%; height:100%; z-index:1; pointer-events:none; opacity: 0.6; }
 
-/* --- TOP BAR FIXED DESIGN --- */
+/* --- TOP BAR DESIGN --- */
 .top-bar {
     position: fixed; top: 0; width: 100%; height: 60px;
     display: flex; align-items: center; justify-content: space-between;
@@ -30,9 +30,9 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
     backdrop-filter: blur(15px); border-bottom: 1px solid var(--border); z-index: 2000;
 }
 
-/* Sabit genişlikli alanlar logonun kaymasını engeller */
+/* Sol boşluk ve Sağ menü genişlikleri eşitlenerek logo tam ortalanır */
 .left-placeholder, .right-menu {
-    min-width: 120px;
+    min-width: 130px; 
     display: flex;
     align-items: center;
 }
@@ -51,9 +51,7 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
 }
 @keyframes shine { to { background-position: 200% center; } }
 
-.balance-box { display: none !important; }
-
-/* --- PROFILE & AVATAR --- */
+/* --- PROFILE & DROPDOWN --- */
 .profile-wrapper { position: relative; display: none; }
 .avatar-trigger {
     width: 38px; height: 38px; border-radius: 50%;
@@ -63,11 +61,10 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
     transition: 0.3s; box-shadow: 0 0 10px rgba(79, 209, 255, 0.2);
 }
 
-/* --- DROPDOWN MENU --- */
 .dropdown-menu {
-    position: absolute; top: 52px; right: 0; width: 250px;
+    position: absolute; top: 52px; right: 0; width: 220px;
     background: var(--dropdown-bg); border: 1px solid var(--border);
-    border-radius: 15px; padding: 15px; display: none;
+    border-radius: 15px; padding: 12px; display: none;
     flex-direction: column; z-index: 3000;
     box-shadow: 0 10px 30px rgba(0,0,0,0.8);
 }
@@ -75,11 +72,11 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
 
 @keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
-.u-info-header { margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
-.u-info-header .name { display: block; font-size: 14px; font-weight: 800; color: white; }
+.u-info-header { margin-bottom: 10px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+.u-info-header .name { display: block; font-size: 13px; font-weight: 800; color: white; }
 .u-info-header .status { font-size: 10px; color: var(--primary); font-weight: 700; }
 
-.u-stats { margin-bottom: 12px; }
+.u-stats { margin-bottom: 10px; }
 .stat-item { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; color: #8892b0; }
 .stat-item b { color: white; }
 
@@ -90,7 +87,6 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
     font-size: 12px; font-weight: 700; transition: 0.2s; background: rgba(255,255,255,0.02);
 }
 .menu-btn-item:hover { background: rgba(79, 209, 255, 0.1); color: var(--primary); }
-.side-trigger-item { border: 1px dashed var(--primary); color: var(--primary); }
 .logout-item { color: #ff4d4d !important; margin-top: 5px; border: 1px solid rgba(255,77,77,0.1); }
 
 /* AUTH BUTTONS */
@@ -101,7 +97,7 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
 .login-btn { background: #1e2642; color: white; border: 1px solid rgba(255,255,255,0.1); }
 .register-btn { background: linear-gradient(90deg, #ff8a00, #ff5f00); color: #000; }
 
-/* --- SEARCH & GAMES --- */
+/* --- HERO & SEARCH --- */
 .hero-search { margin-top: 85px; padding: 0 20px; text-align: center; }
 .search-container { max-width: 600px; margin: 0 auto; position: relative; }
 .search-container input {
@@ -111,6 +107,7 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
 .search-container input:focus { border-color: var(--primary); }
 .search-container::before { content: '🔍'; position: absolute; left: 20px; top: 16px; opacity: 0.5; }
 
+/* --- GAMES GRID --- */
 .section-title { padding: 30px 20px 15px; font-size: 18px; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; color: #8892b0; display: flex; align-items: center; gap: 10px; }
 .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 .games-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 0 20px; }
@@ -125,15 +122,6 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
 .game-card span { font-weight: 800; font-size: 14px; display: block; margin-bottom: 8px; }
 .badge { font-size: 10px; font-weight: 900; padding: 4px 10px; border-radius: 8px; display: inline-block; background: rgba(0,0,0,0.3); border: 1px solid rgba(79, 209, 255, 0.2); color: var(--primary); }
 .badge-free { color: #00ff88; border-color: rgba(0,255,136,0.2); }
-
-/* --- SIDE MENU --- */
-.side-menu { position: fixed; top: 0; left: -280px; width: 280px; height: 100%; background: #050811; padding: 30px 20px; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); z-index: 4000; border-right: 1px solid var(--border); }
-.side-menu.active { left: 0; }
-.menu-header { font-size: 20px; font-weight: 900; margin-bottom: 30px; display: flex; justify-content: space-between; }
-.side-menu a { display: flex; align-items: center; gap: 15px; padding: 15px; color: #ccd6f6; text-decoration: none; font-weight: 700; border-radius: 12px; margin-bottom: 8px; transition: 0.3s; }
-.side-menu a:hover { background: #1a2248; color: var(--primary); }
-.menu-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; z-index: 3500; backdrop-filter: blur(4px); }
-.menu-overlay.active { display: block; }
 
 /* --- FOOTER --- */
 .footer { background: #010204; padding: 60px 20px 40px; border-top: 1px solid var(--border); text-align: center; }
@@ -153,16 +141,11 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
 <canvas id="snow"></canvas>
 
 <div class="top-bar">
-    <div class="left-placeholder">
-        </div>
+    <div class="left-placeholder"></div>
 
     <div class="brand">PixelArena</div>
     
     <div class="right-menu">
-        <div class="nav-box balance-box" id="balanceBox">
-            ₺<span id="userBalance">0</span>
-        </div>
-
         <button class="btn login-btn" id="loginBtn">GİRİŞ</button>
         <button class="btn register-btn" id="regBtn">KATIL</button>
 
@@ -178,24 +161,17 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
                     <div class="stat-item">Durum: <b style="color:#00ff88">AKTİF</b></div>
                 </div>
                 <div class="menu-links">
-                    <a href="#" class="menu-btn-item">👤 Hesabım</a>
-                    <a href="#" class="menu-btn-item">💎Bonus/Çark</a>
-                    <a href="https://www.instagram.com/pixel_arena_games" class="menu-btn-item">🚔 Destek</a>
-                    <a href="#" class="menu-btn-item logout-item" id="logoutBtn">🔴 Çıkış Yap</a>
+                    <a href="index.html" class="menu-btn-item">🏠 Ana Sayfa</a>
+                    <a href="panel.html" class="menu-btn-item">👤 Hesabım</a>
+                    <a href="panel.html" class="menu-btn-item">💎 Bonus / Çark</a>
+                    <a href="#" class="menu-btn-item">💰 Para Yatır</a>
+                    <a href="https://www.instagram.com/pixel_arena_games" target="_blank" class="menu-btn-item">🚔 Destek</a>
+                    <a href="javascript:void(0)" class="menu-btn-item logout-item" id="logoutBtn">🔴 Çıkış Yap</a>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
-<div id="sideMenu" class="side-menu">
-    <div class="menu-header">MENU <span id="closeMenu" style="cursor:pointer">✕</span></div>
-    <a href="index.html">🏠 Ana Sayfa</a>
-    <a href="panel.html">💎 Bonus / Çark</a>
-    <a href="#games">🕹️ Oyunlar</a>
-    <a href="https://www.instagram.com/pixel_arena_games" target="_blank">🚔 Destek</a>
-</div>
-<div id="menuOverlay" class="menu-overlay"></div>
 
 <div class="hero-search">
     <div class="search-container">
@@ -305,24 +281,14 @@ const userDropdown = document.getElementById("userDropdown");
 const profileWrapper = document.getElementById("profileWrapper");
 const loginBtn = document.getElementById("loginBtn");
 const regBtn = document.getElementById("regBtn");
-const balanceBox = document.getElementById("balanceBox");
 const overlay = document.getElementById("authOverlay");
-const sideMenu = document.getElementById("sideMenu");
-const menuOverlay = document.getElementById("menuOverlay");
 
-// Avatar & Dropdown Logic
+// Dropdown Aç/Kapat
 avatarTrigger.onclick = (e) => { 
     e.stopPropagation(); 
     userDropdown.classList.toggle("active"); 
 };
 window.onclick = () => userDropdown.classList.remove("active");
-
-// Menüyü Avatar içinden açma
-document.getElementById("openSideFromAvatar").onclick = () => {
-    userDropdown.classList.remove("active");
-    sideMenu.classList.add("active");
-    menuOverlay.classList.add("active");
-};
 
 // --- AUTH LOGIC ---
 let isLogin = true;
@@ -356,12 +322,10 @@ document.getElementById("authSubmit").onclick = async () => {
 onAuthStateChanged(auth, user => {
     if(user) {
         loginBtn.style.display="none"; regBtn.style.display="none";
-        balanceBox.style.display="none"; 
         profileWrapper.style.display="block";
         onSnapshot(doc(db, "users", user.uid), s => {
             if(s.exists()) {
                 const data = s.data();
-                document.getElementById("userBalance").innerText = data.balance.toLocaleString();
                 document.getElementById("dropBalance").innerText = data.balance.toLocaleString() + " ₺";
                 document.getElementById("dropName").innerText = data.username.toUpperCase();
                 avatarTrigger.innerText = data.username.charAt(0).toUpperCase();
@@ -369,7 +333,7 @@ onAuthStateChanged(auth, user => {
         });
     } else {
         loginBtn.style.display="block"; regBtn.style.display="block";
-        balanceBox.style.display="none"; profileWrapper.style.display="none";
+        profileWrapper.style.display="none";
     }
 });
 
@@ -394,10 +358,7 @@ function drawSnow() {
 }
 drawSnow();
 
-// --- SIDE MENU LOGIC ---
-document.getElementById("closeMenu").onclick = () => { sideMenu.classList.remove("active"); menuOverlay.classList.remove("active"); };
-menuOverlay.onclick = () => { sideMenu.classList.remove("active"); menuOverlay.classList.remove("active"); };
-
+// --- SEARCH LOGIC ---
 document.getElementById("searchInput").oninput = (e) => {
     const val = e.target.value.toLowerCase();
     document.querySelectorAll(".game-card").forEach(card => {
