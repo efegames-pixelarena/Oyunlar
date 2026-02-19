@@ -104,8 +104,9 @@ body::before {
 .modal-content p { color: #888; font-size: 0.8rem; margin-bottom: 20px; }
 .modal-content input { 
     width: 100%; padding: 15px; background: #000; border: 1px solid #333; 
-    color: var(--p); border-radius: 10px; margin-bottom: 20px; text-align: center; font-size: 16px;
+    color: var(--p); border-radius: 10px; margin-bottom: 20px; text-align: center; font-size: 16px; outline: none;
 }
+.modal-content input:focus { border-color: var(--p); box-shadow: 0 0 10px rgba(0,242,255,0.2); }
 
 /* OYUN ALANI */
 #game-view { display: none; flex: 1; flex-direction: column; }
@@ -142,6 +143,18 @@ body::before {
         <div style="display:flex; gap:10px;">
             <button onclick="closeModal('createModal')" style="flex:1; padding:15px; border-radius:10px; background:#222; border:none; color:white;">İPTAL</button>
             <button id="confirmCreateBtn" style="flex:1; padding:15px; border-radius:10px; background:var(--p); border:none; color:black; font-weight:900;">BAŞLAT</button>
+        </div>
+    </div>
+</div>
+
+<div id="passwordModal" class="modal">
+    <div class="modal-content">
+        <h2 style="color:var(--gold)">KİLİTLİ ARENA</h2>
+        <p>Bu arenaya girmek için şifre gereklidir.</p>
+        <input type="password" id="joinPassInput" placeholder="ŞİFREYİ GİRİN" maxlength="10">
+        <div style="display:flex; gap:10px;">
+            <button onclick="closeModal('passwordModal')" style="flex:1; padding:15px; border-radius:10px; background:#222; border:none; color:white;">İPTAL</button>
+            <button id="confirmPassBtn" style="flex:1; padding:15px; border-radius:10px; background:var(--gold); border:none; color:black; font-weight:900;">DOĞRULA</button>
         </div>
     </div>
 </div>
@@ -328,26 +341,49 @@ document.getElementById("confirmCreateBtn").onclick = async () => {
     closeModal('createModal'); enterRoom();
 };
 
+// ODAYA KATILMA VE ŞİFRE KONTROLÜ
+let pendingRoomId = null;
+
 window.joinRoom = async (id, isLocked) => {
     initAudio();
+    if (isLocked) {
+        pendingRoomId = id;
+        document.getElementById("joinPassInput").value = "";
+        openModal('passwordModal');
+        return;
+    }
+    processJoin(id);
+};
+
+document.getElementById("confirmPassBtn").onclick = async () => {
+    const enteredPass = document.getElementById("joinPassInput").value;
+    const roomRef = doc(db, "rooms", pendingRoomId);
+    const snap = await getDoc(roomRef);
+    
+    if (snap.exists() && snap.data().password === enteredPass) {
+        const id = pendingRoomId;
+        closeModal('passwordModal');
+        processJoin(id);
+    } else {
+        alert("Hatalı Şifre!");
+    }
+};
+
+async function processJoin(id) {
     const roomRef = doc(db, "rooms", id);
     try {
         await runTransaction(db, async (transaction) => {
             const snap = await transaction.get(roomRef);
             const data = snap.data();
             if (data.player2) throw "Arena Dolu!";
-            if (isLocked) {
-                const pass = prompt("ARENA ŞİFRESİ:");
-                if (data.password !== pass) throw "Şifre Hatalı!";
-            }
             transaction.update(roomRef, { player2: uid, player2Name: username, state: "matched" });
             currentRoomId = id;
         });
         enterRoom();
     } catch (e) { alert(e); }
-};
+}
 
-// OYUN İÇİ FONKSİYONLAR (Önceki kararlı kod ile aynıdır)
+// OYUN İÇİ FONKSİYONLAR
 function enterRoom() {
     if(unsubLobby) { unsubLobby(); unsubLobby = null; } 
     document.getElementById("lobby").style.display = "none";
@@ -389,7 +425,7 @@ function enterRoom() {
                 document.getElementById("subText").innerText = d.penalty ? "HATA!" : (d.lastWinner || "").toUpperCase() + " KAZANDI";
                 if (uid === d.host) setTimeout(() => {
                     const finalWin = (d.score1 >= 11 || d.score2 >= 11);
-                    updateDoc(doc(db, "rooms", currentRoomId), { state: finalWin ? "finished" : "countdown", startTime: getServerTime() + 2500, round: finalWin ? d.round : d.round + 1, penalty: false });
+                    if(currentRoomId) updateDoc(doc(db, "rooms", currentRoomId), { state: finalWin ? "finished" : "countdown", startTime: getServerTime() + 2500, round: finalWin ? d.round : d.round + 1, penalty: false });
                 }, 2000);
             }
             if (d.state === "finished") {
@@ -410,11 +446,12 @@ document.getElementById("arena").addEventListener('pointerdown', async (e) => {
     tapLock = true;
     const roomRef = doc(db, "rooms", currentRoomId);
     const snap = await getDoc(roomRef);
+    if(!snap.exists()) return;
     const d = snap.data();
 
     if (d.state === "countdown" || (d.state === "waiting" && d.player2)) {
         const isP1 = uid === d.player1;
-        await updateDoc(roomRef, { state: "result", penalty: true, penaltyUser: uid, [isP1 ? "score2" : "score1"]: (isP1 ? d.score2 : d.score1) + 1, lastWinner: isP1 ? d.player2Name : d.player1Name, reaction: "ERKEN!" });
+        await updateDoc(roomRef, { state: "result", penalty: true, penaltyUser: uid, [isP1 ? "score2" : "score1"]: (isP1 ? d.score2 : d.score1) + 1, lastWinner: isP1 ? (d.player2Name || "Rakip") : (d.player1Name || "Host"), reaction: "ERKEN!" });
     } else if (d.state === "active") {
         const reactionTime = now - d.roundStart;
         await runTransaction(db, async (transaction) => {
