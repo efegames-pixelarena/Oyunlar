@@ -14,7 +14,8 @@
     --glass: rgba(10, 15, 30, 0.9);
     --border: #1e2642;
     --card-gradient: linear-gradient(145deg, #0f172a, #020617);
-    --dropdown-bg: #0a0f1e;
+    --dropdown-bg: #0d121f;
+    --success: #00ff88;
 }
 
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;}
@@ -36,7 +37,7 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
     align-items: center;
 }
 
-.right-menu { justify-content: flex-end; gap: 8px; position: relative; z-index: 2001; }
+.right-menu { justify-content: flex-end; gap: 10px; position: relative; z-index: 2001; }
 
 .brand {
     position: absolute;
@@ -50,43 +51,73 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
 }
 @keyframes shine { to { background-position: 200% center; } }
 
-/* --- PROFILE & DROPDOWN --- */
+/* --- NEW PROFESSIONAL DROPDOWN --- */
 .profile-wrapper { position: relative; display: none; }
 .avatar-trigger {
-    width: 38px; height: 38px; border-radius: 50%;
-    background: var(--primary); display: flex; align-items: center;
-    justify-content: center; font-weight: 900; color: #000; font-size: 15px;
-    cursor: pointer; border: 2px solid var(--border);
-    transition: 0.3s; box-shadow: 0 0 10px rgba(79, 209, 255, 0.2);
+    width: 40px; height: 40px; border-radius: 12px;
+    background: linear-gradient(135deg, var(--primary), #2d5fff); 
+    display: flex; align-items: center;
+    justify-content: center; font-weight: 900; color: #000; font-size: 16px;
+    cursor: pointer; border: 2px solid rgba(255,255,255,0.1);
+    transition: 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
 }
+.avatar-trigger:hover { transform: scale(1.05); border-color: var(--primary); }
 
 .dropdown-menu {
-    position: absolute; top: 52px; right: 0; width: 220px;
+    position: absolute; top: 55px; right: 0; width: 260px;
     background: var(--dropdown-bg); border: 1px solid var(--border);
-    border-radius: 15px; padding: 12px; display: none;
-    flex-direction: column; z-index: 3000;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+    border-radius: 20px; padding: 0; display: none;
+    flex-direction: column; z-index: 3000; overflow: hidden;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.9);
 }
-.dropdown-menu.active { display: flex; animation: slideIn 0.2s ease-out; }
+.dropdown-menu.active { display: flex; animation: dropAnim 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28); }
 
-@keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes dropAnim { from { opacity: 0; transform: translateY(15px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
-.u-info-header { margin-bottom: 10px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
-.u-info-header .name { display: block; font-size: 13px; font-weight: 800; color: white; }
-.u-info-header .status { font-size: 10px; color: var(--primary); font-weight: 700; }
+/* Dropdown Header */
+.u-header-premium {
+    background: linear-gradient(to bottom, rgba(79, 209, 255, 0.1), transparent);
+    padding: 20px; border-bottom: 1px solid var(--border);
+}
+.u-header-premium .name { 
+    display: block; font-size: 15px; font-weight: 800; color: #fff; 
+    letter-spacing: 0.5px; margin-bottom: 4px; 
+}
+.u-header-premium .rank-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: rgba(255, 138, 0, 0.15); color: var(--accent);
+    padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 900;
+    border: 1px solid rgba(255, 138, 0, 0.3); text-transform: uppercase;
+}
 
-.u-stats { margin-bottom: 10px; }
-.stat-item { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; color: #8892b0; }
-.stat-item b { color: white; }
+/* Dropdown Stats */
+.u-stats-grid {
+    display: grid; grid-template-columns: 1fr; gap: 1px;
+    background: var(--border); border-bottom: 1px solid var(--border);
+}
+.u-stat-box {
+    background: var(--dropdown-bg); padding: 15px 20px;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.u-stat-box span { font-size: 11px; color: #8892b0; font-weight: 600; text-transform: uppercase; }
+.u-stat-box b { font-size: 16px; color: var(--success); font-family: 'Courier New', monospace; }
 
-.menu-links { display: flex; flex-direction: column; gap: 4px; }
+/* Dropdown Links */
+.menu-links { padding: 10px; display: flex; flex-direction: column; gap: 5px; }
 .menu-btn-item {
-    display: flex; align-items: center; gap: 10px; padding: 10px;
-    border-radius: 8px; text-decoration: none; color: #ccd6f6;
-    font-size: 12px; font-weight: 700; transition: 0.2s; background: rgba(255,255,255,0.02);
+    display: flex; align-items: center; gap: 12px; padding: 12px 15px;
+    border-radius: 12px; text-decoration: none; color: #ccd6f6;
+    font-size: 13px; font-weight: 700; transition: 0.2s ease;
 }
-.menu-btn-item:hover { background: rgba(79, 209, 255, 0.1); color: var(--primary); }
-.logout-item { color: #ff4d4d !important; margin-top: 5px; border: 1px solid rgba(255,77,77,0.1); }
+.menu-btn-item i-icon { 
+    width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,0.05); border-radius: 8px; font-size: 14px;
+}
+.menu-btn-item:hover { background: rgba(79, 209, 255, 0.1); color: var(--primary); transform: translateX(5px); }
+.menu-btn-item:hover i-icon { background: var(--primary); color: #000; }
+
+.logout-item { color: #ff4d4d !important; margin-top: 5px; }
+.logout-item:hover { background: rgba(255,77,77,0.1) !important; }
 
 /* --- CUSTOM MODALS --- */
 .custom-modal {
@@ -116,11 +147,11 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
 
 /* AUTH BUTTONS */
 .btn {
-    padding: 8px 16px; border-radius: 10px; border: none; cursor: pointer;
+    padding: 8px 18px; border-radius: 10px; border: none; cursor: pointer;
     font-weight: 800; font-size: 12px; transition: 0.3s; white-space: nowrap;
 }
 .login-btn { background: #1e2642; color: white; border: 1px solid rgba(255,255,255,0.1); }
-.register-btn { background: linear-gradient(90deg, #ff8a00, #ff5f00); color: #000; }
+.register-btn { background: linear-gradient(90deg, #ff8a00, #ff5f00); color: #000; box-shadow: 0 4px 15px rgba(255, 138, 0, 0.3); }
 
 /* --- HERO & SEARCH --- */
 .hero-search { margin-top: 85px; padding: 0 20px; text-align: center; }
@@ -171,26 +202,41 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
     <div class="brand">PixelArena</div>
     
     <div class="right-menu">
-        <button class="btn login-btn" id="loginBtn">GİRİŞ</button>
-        <button class="btn register-btn" id="regBtn">KATIL</button>
+        <button class="btn login-btn" id="loginBtn">GİRİŞ YAP</button>
+        <button class="btn register-btn" id="regBtn">KAYIT OL</button>
 
         <div class="profile-wrapper" id="profileWrapper">
-            <div class="avatar-trigger" id="avatarTrigger">?</div>
+            <div class="avatar-trigger" id="avatarTrigger">P</div>
             <div class="dropdown-menu" id="userDropdown">
-                <div class="u-info-header">
-                    <span class="name" id="dropName">Yükleniyor...</span>
-                    <span class="status">VİP ÜYE - LEVEL 1</span>
+                <div class="u-header-premium">
+                    <span class="name" id="dropName">YÜKLENİYOR...</span>
+                    <div class="rank-badge">★ VIP LEVEL 1</div>
                 </div>
-                <div class="u-stats">
-                    <div class="stat-item">Bakiye: <b id="dropBalance">0 ₺</b></div>
-                    <div class="stat-item">Durum: <b style="color:#00ff88">AKTİF</b></div>
+                
+                <div class="u-stats-grid">
+                    <div class="u-stat-box">
+                        <span>CÜZDAN</span>
+                        <b id="dropBalance">0 ₺</b>
+                    </div>
                 </div>
+                
                 <div class="menu-links">
-                    <a href="panel.html" class="menu-btn-item">👤 Hesabım</a>
-                    <a href="javascript:void(0)" class="menu-btn-item" onclick="openWheel()">💎 Çark Çevir</a>
-                    <a href="javascript:void(0)" class="menu-btn-item" onclick="openBonusModal()">🎁 Bonus Kod</a>
-                    <a href="https://www.instagram.com/pixel_arena_games" target="_blank" class="menu-btn-item">🚔 Destek</a>
-                    <a href="javascript:void(0)" class="menu-btn-item logout-item" id="logoutBtn">🔴 Çıkış Yap</a>
+                    <a href="panel.html" class="menu-btn-item">
+                        <i-icon>👤</i-icon> Profil Yönetimi
+                    </a>
+                    <a href="javascript:void(0)" class="menu-btn-item" onclick="openWheel()">
+                        <i-icon>💎</i-icon> Şanslı Çark
+                    </a>
+                    <a href="javascript:void(0)" class="menu-btn-item" onclick="openBonusModal()">
+                        <i-icon>🎁</i-icon> Bonus Kod Gir
+                    </a>
+                    <a href="https://www.instagram.com/pixel_arena_games" target="_blank" class="menu-btn-item">
+                        <i-icon>🚔</i-icon> Canlı Destek
+                    </a>
+                    <div style="height:1px; background:var(--border); margin:5px 0;"></div>
+                    <a href="javascript:void(0)" class="menu-btn-item logout-item" id="logoutBtn">
+                        <i-icon>🔴</i-icon> Güvenli Çıkış
+                    </a>
                 </div>
             </div>
         </div>
@@ -373,17 +419,16 @@ document.getElementById("spinBtn").onclick = async () => {
     const canvas = document.getElementById("wheelCanvas");
     const msg = document.getElementById("wheelMsg");
     
-    // Probability Calculator
     const rand = Math.random() * 100;
     let selectedIdx = 0;
-    if(rand <= 10) selectedIdx = 3; // 10k
-    else if(rand <= 30) selectedIdx = 2; // 5k
-    else if(rand <= 60) selectedIdx = 1; // 2.5k
-    else selectedIdx = 0; // 1k
+    if(rand <= 10) selectedIdx = 3; 
+    else if(rand <= 30) selectedIdx = 2;
+    else if(rand <= 60) selectedIdx = 1;
+    else selectedIdx = 0;
 
     const arcSize = 360 / rewards.length;
     const stopAngle = 360 - (selectedIdx * arcSize) - (arcSize / 2);
-    const totalRotation = 1440 + stopAngle; // 4 full turns + target
+    const totalRotation = 1440 + stopAngle;
 
     canvas.style.transform = `rotate(${totalRotation}deg)`;
     msg.innerText = "Şansın dönüyor...";
@@ -393,7 +438,6 @@ document.getElementById("spinBtn").onclick = async () => {
         await updateDoc(doc(db, "users", auth.currentUser.uid), { balance: increment(winAmount) });
         msg.innerHTML = `<b style="color:var(--primary)">TEBRİKLER! ${rewards[selectedIdx].label} KAZANDIN!</b>`;
         isSpinning = false;
-        // Reset rotation for next time
         setTimeout(() => {
             canvas.style.transition = "none";
             canvas.style.transform = `rotate(${stopAngle}deg)`;
@@ -413,7 +457,6 @@ document.getElementById("redeemBtn").onclick = () => {
     }
 };
 
-// Dropdown Aç/Kapat
 avatarTrigger.onclick = (e) => { 
     e.stopPropagation(); 
     userDropdown.classList.toggle("active"); 
