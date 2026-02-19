@@ -50,6 +50,8 @@
     .multiplier{font-weight:900; line-height: 1.1;}
     .multiplier.big{font-size:65px; color:#fff; text-shadow: 0 0 30px rgba(255,255,255,0.2);}
     .multiplier.small{font-size:22px; color:#4fd1ff;}
+    
+    /* Kırmızı Patlama Yazısı ve Uzaklaş Metni */
     .multiplier.crashed{color:#ff2a4d !important; animation: shake 0.3s infinite; text-shadow: 0 0 20px rgba(255, 42, 77, 0.5);}
     .multiplier.crashed::after {
         content: "UZAKLAŞ !!!";
@@ -290,14 +292,14 @@ function updateMultiplier() {
     const elapsed = (Date.now() - startTime) / 1000;
     multiplier = Math.pow(1.11, elapsed);
     
-    // Auto Cashout - Küsuratsız Yuvarlama Garantili
+    // OTO ÇEKME DÜZELTMESİ: multiplier o an hedefi geçtiyse, direkt hedef rakamı gönderiyoruz.
     if(autoCash1 && activeBet1 > 0) {
         let target = parseFloat(document.getElementById("autoCash1").value);
-        if(multiplier >= target) handleBet(1, false, target); // Hedef X baz alınır
+        if(multiplier >= target) handleBet(1, false, target); // multiplier yerine target gönderilir
     }
     if(autoCash2 && activeBet2 > 0) {
         let target = parseFloat(document.getElementById("autoCash2").value);
-        if(multiplier >= target) handleBet(2, false, target); // Hedef X baz alınır
+        if(multiplier >= target) handleBet(2, false, target); // multiplier yerine target gönderilir
     }
 
     if(multiplier >= crashPoint) { doCrash(); } 
@@ -345,7 +347,8 @@ function addHistory(val) {
     if(h.children.length > 20) h.lastChild.remove();
 }
 
-async function handleBet(box, isAutoBet = false, forcedX = null) {
+// handleBet fonksiyonuna forcedX (zorunlu çarpan) parametresi eklendi
+async function handleBet(box, isAutoAction = false, forcedX = null) {
     initAudio(); if(!userRef) return;
     let input = document.getElementById("betInput"+box);
     let amount = Math.floor(parseInt(input.value)) || 0;
@@ -354,17 +357,17 @@ async function handleBet(box, isAutoBet = false, forcedX = null) {
     if(phase === "betting" && currentActive === 0 && balance >= amount && amount > 0) {
         await updateDoc(userRef, { balance: increment(-amount) });
         if(box === 1) activeBet1 = amount; else activeBet2 = amount;
-        if(!isAutoBet) playSfx('bet');
+        if(!isAutoAction) playSfx('bet');
     } 
-    else if(phase === "betting" && currentActive > 0 && !isAutoBet) {
+    else if(phase === "betting" && currentActive > 0 && !isAutoAction) {
         await updateDoc(userRef, { balance: increment(currentActive) });
         if(box === 1) activeBet1 = 0; else activeBet2 = 0;
     }
     else if(phase === "flying" && currentActive > 0) {
-        // Çekim yapılacak çarpan: Eğer Oto Çek ise hedef X, manuel ise o anki canlı X
-        let targetX = forcedX !== null ? forcedX : multiplier;
-        // KÜSURATSIZ EKLEME: 1.53 -> 1.50 mantığı için Math.floor
-        let win = Math.floor(currentActive * targetX);
+        // HESAPLAMA DÜZELTMESİ: Eğer oto çekimse forcedX kullanılır, manuelse multiplier kullanılır.
+        let finalMultiplier = forcedX !== null ? forcedX : multiplier;
+        let win = Math.floor(currentActive * finalMultiplier);
+        
         await updateDoc(userRef, { balance: increment(win) });
         if(box === 1) activeBet1 = 0; else activeBet2 = 0;
         playSfx('cash');
