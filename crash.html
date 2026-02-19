@@ -22,14 +22,15 @@
     }
 
     .right-menu{display:flex;gap:6px;align-items:center;}
-    .nav-box{padding:6px 10px; border-radius:10px; font-weight:700; font-size:11px; min-width:85px; text-align:center; display:flex; align-items:center; justify-content:center;}
+    .nav-box{padding:6px 10px; border-radius:10px; font-weight:700; font-size:11px; min-width:85px; text-align:center;}
     .balance-box{background:#1a2248; border: 1px solid #4fd1ff44; color: #4fd1ff;}
     .bet-box{background:linear-gradient(90deg,#ff8a00,#ff5f00); color:#000;}
     
+    /* KIRMIZI GERİ BUTONU */
     .back-btn{
-        background:#d63031; color:white; padding:6px 12px; border-radius:10px; 
-        font-weight:800; font-size:11px; text-decoration:none; display:flex; align-items:center;
-        border-bottom: 2px solid #a01a1a;
+        background:#d63031; color:white; padding:7px 12px; border-radius:10px; 
+        font-weight:800; font-size:11px; text-decoration:none; text-align:center;
+        border: 1px solid rgba(255,255,255,0.2);
     }
 
     .history{
@@ -92,7 +93,7 @@
     <div class="right-menu">
         <div class="nav-box balance-box">₺<span id="balance">0</span></div>
         <div class="nav-box bet-box">B: ₺<span id="bet">0</span></div>
-        <a href="javascript:void(0)" onclick="location.href='index.html'" class="back-btn">GERİ</a>
+        <a href="javascript:history.back()" class="back-btn">GERİ</a>
     </div>
 </div>
 
@@ -134,89 +135,54 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// --- GERÇEK AVIATOR SES SENTEZLEYİCİSİ (iOS UYUMLU) ---
+// --- GELİŞTİRİLMİŞ İOS SES MOTORU ---
 let audioCtx = null;
 let engineOsc = null;
 let engineGain = null;
-let lfo = null;
 
 const initAudio = () => {
-    if (!audioCtx) {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    }
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     if (audioCtx.state === 'suspended') audioCtx.resume();
 };
 
 function playSfx(type) {
     initAudio();
     const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    osc.connect(g); g.connect(audioCtx.destination);
 
-    if(type === 'countdown') {
-        const osc = audioCtx.createOscillator();
-        const g = audioCtx.createGain();
-        osc.connect(g); g.connect(audioCtx.destination);
+    if(type==='countdown') {
         osc.frequency.setValueAtTime(600, now);
-        g.gain.setValueAtTime(0.08, now);
+        g.gain.setValueAtTime(0.1, now);
         g.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
         osc.start(); osc.stop(now + 0.1);
     }
-
-    if(type === 'fly_start') {
-        // Gerçek motor simülasyonu için 2 katmanlı ses
+    if(type==='fly_start') {
         engineOsc = audioCtx.createOscillator();
         engineGain = audioCtx.createGain();
-        lfo = audioCtx.createOscillator();
-        const lfoGain = audioCtx.createGain();
-
         engineOsc.type = 'sawtooth';
-        lfo.frequency.setValueAtTime(30, now); // Titreşim efekti
-        lfoGain.gain.setValueAtTime(10, now);
-        
-        lfo.connect(lfoGain);
-        lfoGain.connect(engineOsc.frequency);
         engineOsc.connect(engineGain);
         engineGain.connect(audioCtx.destination);
-
-        engineOsc.frequency.setValueAtTime(45, now);
+        engineOsc.frequency.setValueAtTime(50, now);
         engineGain.gain.setValueAtTime(0, now);
-        engineGain.gain.linearRampToValueAtTime(0.06, now + 0.5);
-        
+        engineGain.gain.linearRampToValueAtTime(0.05, now + 0.5);
         engineOsc.start();
-        lfo.start();
     }
-
-    if(type === 'fly_loop' && engineOsc) {
-        // Çarpan yükseldikçe motor sesi incelir ve hızlanır
-        const targetFreq = 45 + (multiplier * 12);
-        engineOsc.frequency.setTargetAtTime(targetFreq, now, 0.2);
+    if(type==='fly_loop' && engineOsc) {
+        engineOsc.frequency.setTargetAtTime(50 + (multiplier * 15), now, 0.1);
     }
-
-    if(type === 'win') {
-        const osc = audioCtx.createOscillator();
-        const g = audioCtx.createGain();
-        osc.connect(g); g.connect(audioCtx.destination);
-        osc.frequency.setValueAtTime(880, now);
-        osc.frequency.exponentialRampToValueAtTime(1760, now + 0.3);
-        g.gain.setValueAtTime(0.15, now);
-        g.gain.linearRampToValueAtTime(0, now + 0.4);
-        osc.start(); osc.stop(now + 0.4);
+    if(type==='win') { 
+        osc.frequency.setValueAtTime(800, now); osc.frequency.exponentialRampToValueAtTime(1500, now+0.2);
+        g.gain.setValueAtTime(0.2, now); g.gain.linearRampToValueAtTime(0, now+0.3);
+        osc.start(); osc.stop(now+0.3); 
     }
-
-    if(type === 'crash') {
-        if(engineOsc) { 
-            engineGain.gain.setTargetAtTime(0, now, 0.1);
-            engineOsc.stop(now + 0.2); engineOsc = null; 
-            lfo.stop();
-        }
-        const osc = audioCtx.createOscillator();
-        const g = audioCtx.createGain();
-        osc.type = 'triangle';
-        osc.connect(g); g.connect(audioCtx.destination);
-        osc.frequency.setValueAtTime(150, now);
-        osc.frequency.linearRampToValueAtTime(40, now + 0.6);
-        g.gain.setValueAtTime(0.3, now);
-        g.gain.linearRampToValueAtTime(0, now + 0.6);
-        osc.start(); osc.stop(now + 0.6);
+    if(type==='crash') { 
+        if(engineOsc) { engineOsc.stop(); engineOsc = null; }
+        osc.type = 'square'; osc.frequency.setValueAtTime(100, now);
+        osc.frequency.linearRampToValueAtTime(30, now+0.5);
+        g.gain.setValueAtTime(0.3, now); g.gain.linearRampToValueAtTime(0, now+0.5);
+        osc.start(); osc.stop(now+0.5); 
     }
 }
 
@@ -228,13 +194,21 @@ const multEl = document.getElementById("multiplier");
 const balEl = document.getElementById("balance");
 const betTotalEl = document.getElementById("bet");
 
-// --- GRAFİK ---
+// --- KASA AVANTAJLI ALGORİTMA ---
+function generateCrashPoint() {
+    const rand = Math.random();
+    // %3 Kasa avantajı (House Edge)
+    if (rand < 0.03) return 1.00; 
+    return Math.max(1.00, (0.97 / (1 - rand))).toFixed(2);
+}
+
+// --- UZAY SİMÜLASYONU ---
 const canvas = document.getElementById("graph");
 const ctx = canvas.getContext("2d");
 function resize() { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; }
 window.addEventListener("resize", resize); resize();
 
-let stars = Array.from({length: 80}, () => ({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, s: Math.random()*2 }));
+let stars = Array.from({length: 100}, () => ({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, s: Math.random()*2 + 0.5 }));
 
 function draw() {
     ctx.fillStyle = "#03050a";
@@ -256,21 +230,16 @@ function draw() {
         ctx.beginPath(); ctx.moveTo(60, canvas.height - 60);
         ctx.quadraticCurveTo(canvas.width/3, canvas.height - 60, px, py); ctx.stroke();
         ctx.setLineDash([]);
+        ctx.shadowBlur = 15; ctx.shadowColor = "#4fd1ff";
         ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(px, py, 5, 0, Math.PI*2); ctx.fill();
+        ctx.shadowBlur = 0;
         playSfx('fly_loop');
     }
     requestAnimationFrame(draw);
 }
 draw();
 
-// --- KASA AVANTAJLI ALGORİTMA (%3) ---
-function generateCrashPoint() {
-    const random = Math.random();
-    if (random < 0.03) return 1.00; 
-    let point = 0.97 / (1 - random);
-    return Math.max(1.01, Math.floor(point * 100) / 100);
-}
-
+// --- OYUN MANTIĞI ---
 onAuthStateChanged(auth, user => {
     if(user) {
         userRef = doc(db, "users", user.uid);
@@ -287,7 +256,7 @@ onAuthStateChanged(auth, user => {
 function updateMultiplier() {
     if(phase !== "flying") return;
     const elapsed = (Date.now() - startTime) / 1000;
-    multiplier = Math.pow(1.11, elapsed);
+    multiplier = Math.pow(1.12, elapsed);
     
     if(multiplier >= crashPoint) {
         doCrash();
@@ -332,8 +301,9 @@ function doCrash() {
 
 function addHistory(val) {
     const span = document.createElement("span");
-    span.innerText = val.toFixed(2) + "x";
-    span.style.background = val < 2 ? "#ff2a4d" : "#00b894";
+    const v = parseFloat(val);
+    span.innerText = v.toFixed(2) + "x";
+    span.style.background = v < 2 ? "#ff2a4d" : "#00b894";
     const h = document.getElementById("history");
     h.prepend(span);
     if(h.children.length > 20) h.lastChild.remove();
@@ -360,7 +330,7 @@ async function handleBet(box) {
         if(box === 1) activeBet1 = 0; else activeBet2 = 0;
         playSfx('win');
     }
-    betTotalEl.innerText = (activeBet1 + activeBet2).toString();
+    betTotalEl.innerText = activeBet1 + activeBet2;
     updateButtons();
 }
 
@@ -373,7 +343,7 @@ function updateButtons() {
             b.className = active > 0 ? "cancel" : "";
         } else if (phase === "flying" && active > 0) {
             b.disabled = false;
-            b.innerText = `ÇEK ₺${Math.floor(active * multiplier)}`;
+            b.innerText = `ÇEK (₺${Math.floor(active * multiplier)})`;
             b.className = "cashout";
         } else {
             b.disabled = true;
@@ -386,9 +356,8 @@ function updateButtons() {
 
 document.getElementById("btn1").onclick = () => handleBet(1);
 document.getElementById("btn2").onclick = () => handleBet(2);
-// İlk tıklamada iOS ses kilidini açar
-document.addEventListener('touchstart', initAudio, { once: true });
-document.addEventListener('mousedown', initAudio, { once: true });
+// iOS ses aktivasyonu için
+document.body.addEventListener('touchstart', initAudio, {once: true});
 </script>
 </body>
 </html>
