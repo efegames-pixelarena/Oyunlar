@@ -10,15 +10,24 @@
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
         body { background: var(--bg); height: 100vh; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Orbitron', sans-serif; }
         
-        /* Geri Tuşu Tasarımı */
-        .back-nav { position: absolute; top: 15px; left: 15px; z-index: 1000; pointer-events: auto; }
-        .btn-back { padding: 8px 15px; background: rgba(0, 255, 136, 0.1); border: 1px solid var(--neon); color: var(--neon); text-decoration: none; font-size: 10px; border-radius: 8px; font-weight: 900; box-shadow: 0 0 10px rgba(0, 255, 136, 0.2); }
+        /* Geri Tuşu - UI'dan bağımsızlaştırıldı */
+        .back-nav { position: absolute; top: 15px; left: 15px; z-index: 1000; }
+        .btn-back { padding: 10px 18px; background: rgba(0, 255, 136, 0.1); border: 1px solid var(--neon); color: var(--neon); text-decoration: none; font-size: 10px; border-radius: 10px; font-weight: 900; box-shadow: 0 0 15px rgba(0, 255, 136, 0.2); backdrop-filter: blur(5px); }
 
         #game-container { position: relative; border: 2px solid rgba(0, 255, 136, 0.3); border-radius: 20px; overflow: hidden; box-shadow: 0 0 50px rgba(0, 255, 136, 0.1); }
         canvas { background: radial-gradient(circle at center, #0a0a1a 0%, #020205 100%); display: block; }
         
-        .ui-overlay { position: absolute; top: 0; left: 0; width: 100%; padding: 15px 15px 15px 85px; display: flex; justify-content: space-between; pointer-events: none; background: linear-gradient(to bottom, rgba(0,0,0,0.5), transparent); }
-        .stat-box { color: var(--neon); text-shadow: 0 0 10px var(--neon); font-size: 11px; font-weight: 700; }
+        /* UI Overlay - Kayma Sorunu Giderildi */
+        .ui-overlay { 
+            position: absolute; top: 0; left: 0; width: 100%; 
+            padding: 15px 20px; display: flex; justify-content: space-between; 
+            pointer-events: none; z-index: 80;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.6), transparent); 
+        }
+        .stat-box { 
+            color: var(--neon); text-shadow: 0 0 10px var(--neon); 
+            font-size: 11px; font-weight: 700; letter-spacing: 1px;
+        }
         
         .controls { width: 100%; max-width: 440px; display: flex; justify-content: space-between; padding: 20px 40px; margin-top: 10px; }
         .btn { width: 85px; height: 85px; background: rgba(255, 255, 255, 0.03); border: 2px solid rgba(0, 255, 136, 0.2); border-radius: 24px; display: flex; align-items: center; justify-content: center; color: var(--neon); font-size: 32px; backdrop-filter: blur(5px); transition: all 0.1s; cursor: pointer; }
@@ -103,7 +112,6 @@
         }
     }
 
-    // Gelişmiş Hitbox Sistemi
     function checkHit(obj1, obj2, w1, h1, w2, h2) {
         return obj1.x < obj2.x + w2 && obj1.x + w1 > obj2.x && obj1.y < obj2.y + h2 && obj1.y + h1 > obj2.y;
     }
@@ -116,7 +124,6 @@
         if(state.moveLeft) state.baseX = Math.max(10, state.baseX - 7);
         if(state.moveRight) state.baseX = Math.min(W-50, state.baseX + 7);
 
-        // Ateşleme Hızı
         if(state.frame % 12 === 0) {
             entities.rockets.forEach(r => { entities.mermiler.push({ x: state.baseX + r.off + 18, y: 430 }); });
             audio.play(150, 'sine', 0.03, 50);
@@ -131,12 +138,9 @@
             entities.boss = { x: W/2-40, y: -100, hp: 40, max: 40 };
         }
 
-        // Mermi Hareketi ve Powerup'ları Vurma Özelliği
         entities.mermiler.forEach((m, mi) => {
             m.y -= 10; 
             if(m.y < -20) entities.mermiler.splice(mi, 1);
-
-            // Powerup vurulursa
             entities.powerups.forEach((p, pi) => {
                 if(checkHit(m, p, 4, 15, 25, 25)) {
                     createExplosion(p.x+12, p.y+12, p.t === 'W' ? "#00f2ff" : "#ff0055");
@@ -147,14 +151,11 @@
             });
         });
 
-        // Düşmanlar
         entities.enemies.forEach((e, i) => {
             e.y += e.v;
             if(e.y > H) { state.lives--; entities.enemies.splice(i, 1); audio.play(100, 'sawtooth', 0.1, 200); }
-
             for(let mi = entities.mermiler.length-1; mi >= 0; mi--) {
                 let m = entities.mermiler[mi];
-                // Düşman Hitbox'ı mermiler için optimize edildi (35x35 düşman için 8px pay eklendi)
                 if(checkHit(m, e, 4, 20, 32, 32)) { 
                     createExplosion(e.x+17, e.y+17, "#00ff88");
                     entities.enemies.splice(i, 1);
@@ -167,7 +168,6 @@
             }
         });
 
-        // Boss
         if(entities.boss) {
             let b = entities.boss;
             b.y = Math.min(60, b.y + 1);
@@ -188,7 +188,6 @@
             }
         }
 
-        // Powerup Üretimi ve Toplama
         if(state.frame % 900 === 0) entities.powerups.push({ x: Math.random()*(W-30), y: -30, t: Math.random() > 0.5 ? 'W' : 'L' });
         entities.powerups.forEach((p, i) => {
             p.y += 2;
@@ -247,7 +246,12 @@
         }
 
         entities.powerups.forEach(p => { ctx.font = "28px Arial"; ctx.fillText(p.t === 'W' ? "⚡" : "❤️", p.x, p.y); });
-        for(let i=0; i<state.lives; i++) { ctx.font = "18px Arial"; ctx.fillText("❤️", 15 + i*22, 100); }
+        
+        // Can Göstergesi - Skor Panelinin Altına Hizalandı
+        for(let i=0; i<state.lives; i++) { 
+            ctx.font = "18px Arial"; 
+            ctx.fillText("❤️", 20 + i*25, 60); 
+        }
     }
 
     function loop() { update(); draw(); requestAnimationFrame(loop); }
