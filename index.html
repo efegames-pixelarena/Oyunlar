@@ -6,9 +6,9 @@
 <title>PixelArena | Professional Gaming</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=Montserrat:wght@900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
 <style>
-/* --- MODERNIZE & RESET --- */
 :root {
     --primary: #4fd1ff;
     --primary-glow: rgba(79, 209, 255, 0.4);
@@ -25,128 +25,99 @@
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;font-family: 'Inter', sans-serif;}
 body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.5;}
 
-#snow { position:fixed; top:0; left:0; width:100%; height:100%; z-index:1; pointer-events:none; opacity: 0.5; }
+#snow { position:fixed; top:0; left:0; width:100%; height:100%; z-index:1; pointer-events:none; opacity: 0.7; }
 
 /* --- NAVIGATION --- */
 .top-bar {
-    position: fixed; top: 0; width: 100%; height: 70px;
+    position: fixed; top: 0; width: 100%; height: 75px;
     display: flex; align-items: center; justify-content: space-between;
-    padding: 0 20px; background: var(--glass);
-    backdrop-filter: blur(15px); border-bottom: 1px solid var(--border); z-index: 2000;
+    padding: 0 30px; background: var(--glass);
+    backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); z-index: 2000;
 }
 
-.brand-section { display: flex; align-items: center; gap: 15px; }
 .brand {
-    font-family: 'Montserrat', sans-serif; font-size: 22px; font-weight: 900; 
+    font-family: 'Montserrat', sans-serif; font-size: 24px; font-weight: 900; 
     letter-spacing: 1px; background: linear-gradient(90deg, var(--primary), #fff);
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    animation: shine 4s linear infinite;
+    animation: shine 4s linear infinite; cursor: pointer;
 }
 
 @keyframes shine { to { background-position: 200% center; } }
 
-.right-menu { display: flex; gap: 10px; align-items: center; }
+.right-menu { display: flex; gap: 12px; align-items: center; }
 
 /* USER PILL & DROPDOWN */
-.user-pill { display: none; align-items: center; gap: 12px; background: rgba(255,255,255,0.03); padding: 5px 5px 5px 15px; border-radius: 14px; border: 1px solid var(--border); cursor: pointer; position: relative; }
+.user-pill { display: none; align-items: center; gap: 12px; background: rgba(255,255,255,0.03); padding: 6px 6px 6px 16px; border-radius: 16px; border: 1px solid var(--border); cursor: pointer; position: relative; transition: 0.3s; }
+.user-pill:hover { background: rgba(255,255,255,0.06); }
 .balance-info { text-align: right; }
 .balance-info span { display: block; font-size: 9px; font-weight: 800; color: var(--text-dim); text-transform: uppercase; }
-.balance-info b { font-size: 14px; color: var(--success); font-family: 'Inter', monospace; }
-.avatar { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, var(--primary), #0066ff); display: flex; align-items: center; justify-content: center; font-weight: 900; color: #fff; }
+.balance-info b { font-size: 15px; color: var(--success); font-family: 'Inter', monospace; }
+.avatar { width: 38px; height: 38px; border-radius: 12px; background: linear-gradient(135deg, var(--primary), #0066ff); display: flex; align-items: center; justify-content: center; font-weight: 900; color: #fff; box-shadow: 0 0 15px var(--primary-glow); }
 
 .dropdown {
-    position: absolute; top: 60px; right: 0; width: 220px;
+    position: absolute; top: 70px; right: 0; width: 240px;
     background: #0d1117; border: 1px solid var(--border);
-    border-radius: 18px; display: none; flex-direction: column; overflow: hidden;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.8); z-index: 3000;
+    border-radius: 20px; display: none; flex-direction: column; overflow: hidden;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.9); z-index: 3000; padding: 8px;
 }
-.dropdown.active { display: flex; animation: slideUp 0.3s ease-out; }
-@keyframes slideUp { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
+.dropdown.active { display: flex; animation: slideUp 0.3s cubic-bezier(0.17, 0.88, 0.32, 1.28); }
 
-.drop-item { padding: 14px 18px; display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--text-dim); font-weight: 600; font-size: 13px; transition: 0.2s; }
-.drop-item:hover { background: rgba(255,255,255,0.03); color: #fff; }
+.drop-item { padding: 12px 16px; display: flex; align-items: center; gap: 14px; text-decoration: none; color: var(--text-dim); font-weight: 600; font-size: 13px; transition: 0.2s; border-radius: 12px; }
+.drop-item i { font-size: 16px; width: 20px; text-align: center; color: var(--primary); }
+.drop-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
 
-/* AUTH BUTTONS */
-.btn { padding: 10px 18px; border-radius: 12px; border: none; cursor: pointer; font-weight: 800; font-size: 12px; transition: 0.3s; }
-.login-btn { background: #1e2642; color: white; border: 1px solid rgba(255,255,255,0.1); }
-.register-btn { background: var(--primary); color: #000; box-shadow: 0 4px 15px var(--primary-glow); }
-
-/* --- SEARCH & HERO --- */
-.hero-search { margin-top: 100px; padding: 0 20px; text-align: center; }
-.search-container { max-width: 600px; margin: 0 auto; position: relative; }
-.search-container input {
-    width: 100%; padding: 18px 25px 18px 55px; border-radius: 20px;
-    background: #0f172a; border: 1px solid var(--border); color: white;
-    font-size: 16px; outline: none; transition: 0.3s;
+/* MODALS SYSTEM */
+.app-modal {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.9); backdrop-filter: blur(15px);
+    display: none; align-items: center; justify-content: center; z-index: 6000;
 }
-.search-container input:focus { border-color: var(--primary); box-shadow: 0 0 15px var(--primary-glow); }
-.search-container::before { content: '🔍'; position: absolute; left: 22px; top: 18px; opacity: 0.5; }
-
-/* --- ELITE GAME CARDS --- */
-.section-title {
-    padding: 40px 10% 15px; font-size: 14px; font-weight: 900;
-    text-transform: uppercase; letter-spacing: 3px; color: var(--text-dim);
-    display: flex; align-items: center; gap: 15px;
+.modal-content {
+    width: 90%; max-width: 420px; padding: 40px; border-radius: 30px;
+    background: #0f172a; border: 1px solid var(--border); text-align: center;
+    position: relative; animation: modalZoom 0.3s ease;
 }
-.section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+@keyframes modalZoom { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
-.games-grid {
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); 
-    gap: 20px; padding: 0 10%;
+.modal-content input {
+    width: 100%; padding: 16px; margin: 20px 0 10px; border-radius: 15px;
+    background: #050811; border: 1px solid var(--border); color: white; outline: none; text-align: center; font-size: 16px;
 }
+
+/* GAME CARDS PROFESSIONAL */
+.section-title { padding: 40px 10% 20px; font-size: 14px; font-weight: 900; text-transform: uppercase; letter-spacing: 4px; color: var(--text-dim); display: flex; align-items: center; gap: 20px; }
+.section-title::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, var(--border), transparent); }
+
+.games-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 25px; padding: 0 10%; }
 
 .game-card {
-    background: var(--card-bg); border-radius: 24px; padding: 35px 25px;
+    background: linear-gradient(145deg, #161d2f, #0a0f1c); border-radius: 28px; padding: 45px 30px;
     text-align: center; border: 1px solid var(--border); position: relative;
-    transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); overflow: hidden;
-    cursor: pointer; z-index: 10;
+    transition: 0.5s cubic-bezier(0.2, 1, 0.3, 1); cursor: pointer; overflow: hidden;
 }
-.game-card:hover { transform: translateY(-10px); border-color: var(--primary); box-shadow: 0 15px 35px rgba(0,0,0,0.6); }
+.game-card::before {
+    content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: radial-gradient(circle at top right, rgba(79, 209, 255, 0.1), transparent);
+    opacity: 0; transition: 0.5s;
+}
+.game-card:hover { transform: translateY(-12px); border-color: var(--primary); box-shadow: 0 20px 50px rgba(0,0,0,0.5), 0 0 20px rgba(79, 209, 255, 0.1); }
+.game-card:hover::before { opacity: 1; }
 
-.game-icon { font-size: 50px; margin-bottom: 20px; display: block; filter: drop-shadow(0 0 10px rgba(0,0,0,0.5)); transition: 0.3s; }
-.game-card:hover .game-icon { transform: scale(1.1); filter: drop-shadow(0 0 12px var(--primary-glow)); }
-.game-card span { font-weight: 800; font-size: 16px; display: block; margin-bottom: 8px; color: #fff; }
-.badge {
-    font-size: 10px; font-weight: 900; padding: 5px 12px; border-radius: 8px;
-    display: inline-block; background: rgba(79, 209, 255, 0.1); color: var(--primary);
-    text-transform: uppercase;
-}
-.badge-free { color: var(--success); background: rgba(0, 255, 163, 0.1); }
+.game-icon { font-size: 55px; margin-bottom: 25px; display: block; transition: 0.4s; z-index: 2; position: relative; }
+.game-card:hover .game-icon { transform: scale(1.15) rotate(5deg); }
+.game-card h3 { font-size: 18px; font-weight: 800; margin-bottom: 10px; letter-spacing: 0.5px; }
+.game-card p { font-size: 11px; color: var(--text-dim); margin-bottom: 20px; text-transform: uppercase; font-weight: 700; letter-spacing: 1px; }
 
-/* --- FOOTER & SOCIAL --- */
-.footer { background: #010204; padding: 60px 20px; border-top: 1px solid var(--border); text-align: center; margin-top: 50px; }
-.social-icons { display: flex; justify-content: center; gap: 15px; margin: 25px 0; }
-.social-btn {
-    width: 45px; height: 45px; background: #0f172a; border-radius: 12px;
-    display: flex; align-items: center; justify-content: center; transition: 0.3s;
-    border: 1px solid var(--border);
-}
-.social-btn:hover { background: var(--primary); transform: translateY(-5px); border-color: var(--primary); }
-.social-btn img { width: 20px; filter: invert(1); }
+/* WHEEL DESIGN */
+.wheel-container { position: relative; width: 200px; height: 200px; margin: 20px auto; border: 5px solid var(--border); border-radius: 50%; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #050811; }
+.wheel-btn { width: 100%; padding: 15px; border-radius: 12px; background: var(--accent); color: #000; border: none; font-weight: 900; cursor: pointer; margin-top: 15px; }
 
-/* --- AUTH MODAL --- */
-.auth-overlay {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.92); backdrop-filter: blur(15px);
-    display: none; align-items: center; justify-content: center; z-index: 5000;
-}
-.auth-card {
-    width: 90%; max-width: 400px; padding: 40px; border-radius: 28px;
-    background: #0f172a; border: 1px solid var(--border); text-align: center;
-}
-.auth-card input {
-    width: 100%; padding: 15px; margin-bottom: 12px; border-radius: 12px;
-    background: #050811; border: 1px solid var(--border); color: white; outline: none;
-}
-.auth-btn {
-    width: 100%; padding: 16px; border-radius: 12px; border: none;
-    background: var(--primary); color: #000; font-weight: 900; cursor: pointer;
-}
+/* BUTTONS */
+.btn { padding: 12px 24px; border-radius: 14px; border: none; cursor: pointer; font-weight: 800; font-size: 12px; transition: 0.3s; }
+.login-btn { background: #1e2642; color: white; }
+.register-btn { background: var(--primary); color: #000; box-shadow: 0 4px 15px var(--primary-glow); }
 
-@media(max-width: 768px) {
-    .games-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 0 15px; }
-    .section-title { padding: 30px 15px 15px; }
-}
+@media(max-width: 768px) { .games-grid { grid-template-columns: 1fr 1fr; gap: 15px; padding: 0 15px; } }
 </style>
 </head>
 <body>
@@ -154,10 +125,7 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
 <canvas id="snow"></canvas>
 
 <div class="top-bar">
-    <div class="brand-section">
-        <div id="menuBtn" style="cursor:pointer; font-size:24px; color: var(--primary);">☰</div>
-        <div class="brand">PixelArena</div>
-    </div>
+    <div class="brand">PixelArena</div>
     <div class="right-menu">
         <button class="btn login-btn" id="loginBtn">GİRİŞ</button>
         <button class="btn register-btn" id="regBtn">KATIL</button>
@@ -169,27 +137,30 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
             </div>
             <div class="avatar" id="avatarTrigger">?</div>
             <div class="dropdown" id="userDropdown">
-                <a href="panel.html" class="drop-item">👤 Profil Ayarları</a>
-                <a href="panel.html" class="drop-item">🎡 Günlük Çark</a>
-                <a href="javascript:void(0)" class="drop-item" id="logoutBtn" style="color:#ff4d4d;">🛑 Güvenli Çıkış</a>
+                <a href="javascript:void(0)" class="drop-item" onclick="openModal('profileModal')"><i class="fa-solid fa-user-gear"></i> Profil Ayarları</a>
+                <a href="javascript:void(0)" class="drop-item" onclick="openModal('wheelModal')"><i class="fa-solid fa-circle-notch"></i> Günlük Çark</a>
+                <a href="javascript:void(0)" class="drop-item" onclick="openModal('bonusModal')"><i class="fa-solid fa-ticket"></i> Bonus Kodu Gir</a>
+                <a href="javascript:void(0)" class="drop-item" id="logoutBtn" style="color:#ff4d4d;"><i class="fa-solid fa-right-from-bracket" style="color:#ff4d4d;"></i> Güvenli Çıkış</a>
             </div>
         </div>
     </div>
 </div>
 
-<div class="hero-search">
-    <div class="search-container">
-        <input type="text" id="searchInput" placeholder="Oyunlarda ara...">
+<div class="hero-search" style="margin-top: 120px; text-align: center;">
+    <div class="search-container" style="max-width: 500px; margin: auto; position: relative;">
+        <input type="text" id="searchInput" placeholder="Favori oyununu bul..." style="width: 100%; padding: 18px 60px; border-radius: 20px; background: var(--card-bg); border: 1px solid var(--border); color: white; outline: none;">
+        <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 25px; top: 20px; color: var(--text-dim);"></i>
     </div>
 </div>
 
 <main id="games">
-    <div class="section-title">Multiplayer</div>
+    <div class="section-title">Online Arena</div>
     <div class="games-grid">
         <div class="game-card" data-name="reflex duel" onclick="checkLogin('duel.html')">
             <div class="game-icon">⚡</div>
-            <span>Reflex Duel</span>
-            <div class="badge">ONLINE PVP</div>
+            <h3>Reflex Duel</h3>
+            <p>PVP Multiplayer</p>
+            <div class="badge">AKTİF</div>
         </div>
     </div>
 
@@ -197,77 +168,79 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
     <div class="games-grid">
         <div class="game-card" data-name="skycrash" onclick="checkLogin('skycrash.html')">
             <div class="game-icon">🚀</div>
-            <span>SkyCrash</span>
-            <div class="badge">Yüksek Kazanç</div>
+            <h3>SkyCrash</h3>
+            <p>Havacılık Riski</p>
+            <div class="badge">POPÜLER</div>
         </div>
         <div class="game-card" data-name="mines" onclick="checkLogin('mines.html')">
             <div class="game-icon">💣</div>
-            <span>Mines</span>
-            <div class="badge">Strateji</div>
+            <h3>Mines</h3>
+            <p>Mayın Tarlası</p>
+            <div class="badge">STRATEJİ</div>
         </div>
         <div class="game-card" data-name="blackjack" onclick="checkLogin('blackjack.html')">
             <div class="game-icon">🃏</div>
-            <span>BlackJack</span>
-            <div class="badge">Casino</div>
-        </div>
-        <div class="game-card" data-name="pişti" onclick="checkLogin('pisti.html')">
-            <div class="game-icon">🎴</div>
-            <span>Pişti Online</span>
-            <div class="badge">Klasik</div>
-        </div>
-    </div>
-
-    <div class="section-title">Free Play</div>
-    <div class="games-grid">
-        <div class="game-card" data-name="pattern master" onclick="location.href='patternmaster.html'">
-            <div class="game-icon">🥇</div>
-            <span>Pattern Master</span>
-            <div class="badge badge-free">Ücretsiz</div>
-        </div>
-        
-        <div class="game-card" data-name="space war" onclick="location.href='spacepro.html'">
-            <div class="game-icon">🛸</div>
-            <span>Space Pro</span>
-            <div class="badge badge-free">Ücretsiz</div>
-        </div>
-
-        <div class="game-card" data-name="yılan" onclick="location.href='snakepro.html'">
-            <div class="game-icon">🐍</div>
-            <span>Snake Pro</span>
-            <div class="badge badge-free">Ücretsiz</div>
+            <h3>BlackJack</h3>
+            <p>Elite Masalar</p>
+            <div class="badge">CASINO</div>
         </div>
     </div>
 </main>
 
 <footer class="footer">
-    <div class="brand" style="font-size:28px;">PIXELARENA</div>
+    <div class="brand" style="font-size: 30px; margin-bottom: 20px;">PIXELARENA</div>
     <div class="social-icons">
         <a href="#" class="social-btn"><img src="https://cdn-icons-png.flaticon.com/512/5968/5968804.png"></a>
         <a href="#" class="social-btn"><img src="https://cdn-icons-png.flaticon.com/512/3955/3955024.png"></a>
         <a href="#" class="social-btn"><img src="https://cdn-icons-png.flaticon.com/512/3670/3670157.png"></a>
     </div>
-    <p style="color:#444; font-size:12px; margin-top: 20px;">© 2026 PixelArena Global. All Rights Reserved.</p>
+    <p style="color: var(--text-dim); font-size: 11px;">© 2026 PixelArena Global. Elite Gaming Services.</p>
 </footer>
 
-<div class="auth-overlay" id="authOverlay">
-    <div class="auth-card">
-        <h2 id="authTitle" style="margin-bottom:25px;">Giriş Yap</h2>
-        <input type="email" id="authEmail" placeholder="E-posta">
-        <input type="password" id="authPassword" placeholder="Şifre">
-        <input type="text" id="authUsername" placeholder="Kullanıcı Adı" style="display:none;">
-        <button class="auth-btn" id="authSubmit">DEVAM ET</button>
-        <p style="margin-top:20px; font-size:13px;">
-            <span id="switchText">Hesabın yok mu?</span> 
-            <b id="switchMode" style="color:var(--primary); cursor:pointer;">Kayıt Ol</b>
-        </p>
-        <p id="authBack" style="margin-top:25px; font-size:11px; cursor:pointer; opacity:0.4;">VAZGEÇ</p>
+<div class="app-modal" id="bonusModal">
+    <div class="modal-content">
+        <i class="fa-solid fa-gift" style="font-size: 40px; color: var(--accent);"></i>
+        <h2 style="margin-top:15px;">Bonus Kodu</h2>
+        <p style="color:var(--text-dim); font-size: 13px;">Promosyon kodunuzu girerek bakiyenizi artırın.</p>
+        <input type="text" id="bonusInput" placeholder="KODU BURAYA YAZIN">
+        <button class="wheel-btn" onclick="redeemBonus()">KODU KULLAN</button>
+        <p onclick="closeModal('bonusModal')" style="margin-top:20px; cursor:pointer; font-size:12px; opacity:0.5;">İPTAL</p>
+    </div>
+</div>
+
+<div class="app-modal" id="wheelModal">
+    <div class="modal-content">
+        <h2 id="wheelTimerTitle">Günlük Şans Çarkı</h2>
+        <div class="wheel-container">
+            <i class="fa-solid fa-clover" style="font-size: 50px; color: var(--success);"></i>
+        </div>
+        <div id="wheelStatus">
+            <button class="wheel-btn" id="spinBtn" onclick="spinWheel()">ŞİMDİ ÇEVİR</button>
+        </div>
+        <p id="nextSpinText" style="margin-top:15px; font-size:13px; color: var(--text-dim);"></p>
+        <p onclick="closeModal('wheelModal')" style="margin-top:20px; cursor:pointer; font-size:12px; opacity:0.5;">KAPAT</p>
+    </div>
+</div>
+
+<div class="app-modal" id="profileModal">
+    <div class="modal-content">
+        <div class="avatar" style="width: 80px; height: 80px; font-size: 30px; margin: 0 auto 20px;">?</div>
+        <h2 id="profName">Kullanıcı</h2>
+        <p style="color:var(--text-dim); font-size: 13px; margin-bottom: 20px;">Avatar rengini ve ayarlarını değiştir.</p>
+        <div style="display: flex; gap: 10px; justify-content: center;">
+            <div style="width:30px; height:30px; border-radius:5px; background: #4fd1ff; cursor:pointer;"></div>
+            <div style="width:30px; height:30px; border-radius:5px; background: #ff8a00; cursor:pointer;"></div>
+            <div style="width:30px; height:30px; border-radius:5px; background: #00ffa3; cursor:pointer;"></div>
+        </div>
+        <button class="wheel-btn" style="background: #1e2642; color: white; margin-top: 20px;">KAYDET</button>
+        <p onclick="closeModal('profileModal')" style="margin-top:20px; cursor:pointer; font-size:12px; opacity:0.5;">KAPAT</p>
     </div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, doc, onSnapshot, setDoc, updateDoc, getDoc, increment } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
@@ -282,49 +255,101 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// --- UI LOGIC ---
-const overlay = document.getElementById("authOverlay");
+// --- GLOBAL MODAL FUNCTIONS ---
+window.openModal = (id) => { 
+    document.getElementById(id).style.display = "flex"; 
+    if(id === 'wheelModal') checkWheelStatus();
+};
+window.closeModal = (id) => { document.getElementById(id).style.display = "none"; };
+
+// --- WHEEL LOGIC ---
+async function checkWheelStatus() {
+    const user = auth.currentUser;
+    if(!user) return;
+    const userRef = doc(db, "users", user.uid);
+    const snap = await getDoc(userRef);
+    const lastSpin = snap.data().lastSpin?.toDate();
+    const now = new Date();
+    
+    if (lastSpin && (now - lastSpin < 24 * 60 * 60 * 1000)) {
+        const remaining = 24 * 60 * 60 * 1000 - (now - lastSpin);
+        startTimer(remaining);
+        document.getElementById("spinBtn").disabled = true;
+        document.getElementById("spinBtn").style.opacity = "0.5";
+    } else {
+        document.getElementById("nextSpinText").innerText = "Çark çevirmeye hazır!";
+        document.getElementById("spinBtn").disabled = false;
+        document.getElementById("spinBtn").style.opacity = "1";
+    }
+}
+
+window.spinWheel = async () => {
+    const user = auth.currentUser;
+    const win = Math.floor(Math.random() * 500) + 50; // 50-550 arası ödül
+    await updateDoc(doc(db, "users", user.uid), {
+        balance: increment(win),
+        lastSpin: new Date()
+    });
+    alert(`Tebrikler! Çarktan ${win} ₺ kazandınız!`);
+    checkWheelStatus();
+};
+
+function startTimer(duration) {
+    const display = document.getElementById("nextSpinText");
+    let timer = duration / 1000;
+    const interval = setInterval(() => {
+        let hours = Math.floor(timer / 3600);
+        let minutes = Math.floor((timer % 3600) / 60);
+        let seconds = Math.floor(timer % 60);
+        display.innerText = `Sıradaki hak: ${hours}sa ${minutes}dk ${seconds}sn`;
+        if (--timer < 0) {
+            clearInterval(interval);
+            checkWheelStatus();
+        }
+    }, 1000);
+}
+
+// --- SNOW EFFECT (INTENSE) ---
+const canvas = document.getElementById("snow");
+const ctx = canvas.getContext("2d");
+let particles = [];
+function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+window.onresize = resize; resize();
+
+for(let i=0; i<180; i++) particles.push({
+    x: Math.random()*canvas.width, 
+    y: Math.random()*canvas.height, 
+    r: Math.random()*3+1, 
+    d: Math.random()*1.5+0.8 // Hız artırıldı
+});
+
+function drawSnow() {
+    ctx.clearRect(0,0,canvas.width, canvas.height);
+    ctx.fillStyle = "rgba(255,255,255,0.6)";
+    ctx.beginPath();
+    particles.forEach(p => {
+        ctx.moveTo(p.x, p.y);
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+        p.y += p.d;
+        p.x += Math.sin(p.y/30) * 0.5; // Hafif rüzgar
+        if(p.y > canvas.height) p.y = -5;
+    });
+    ctx.fill();
+    requestAnimationFrame(drawSnow);
+}
+drawSnow();
+
+// --- AUTH & DROPDOWN ---
+const userPill = document.getElementById("userPill");
 const loginBtn = document.getElementById("loginBtn");
 const regBtn = document.getElementById("regBtn");
-const logoutBtn = document.getElementById("logoutBtn");
-const userPill = document.getElementById("userPill");
 const userDropdown = document.getElementById("userDropdown");
-let isLogin = true;
 
-// Avatar Dropdown Toggle
 document.getElementById("avatarTrigger").onclick = (e) => {
     e.stopPropagation();
     userDropdown.classList.toggle("active");
 };
 window.onclick = () => userDropdown.classList.remove("active");
-
-loginBtn.onclick = () => { overlay.style.display="flex"; isLogin=true; updateAuthUI(); };
-regBtn.onclick = () => { overlay.style.display="flex"; isLogin=false; updateAuthUI(); };
-document.getElementById("authBack").onclick = () => overlay.style.display="none";
-
-function updateAuthUI() {
-    document.getElementById("authTitle").innerText = isLogin ? "Giriş Yap" : "Kayıt Ol";
-    document.getElementById("authUsername").style.display = isLogin ? "none" : "block";
-    document.getElementById("switchText").innerText = isLogin ? "Hesabın yok mu?" : "Zaten üye misin?";
-    document.getElementById("switchMode").innerText = isLogin ? "Kayıt Ol" : "Giriş Yap";
-}
-
-document.getElementById("switchMode").onclick = () => { isLogin = !isLogin; updateAuthUI(); };
-
-document.getElementById("authSubmit").onclick = async () => {
-    const email = document.getElementById("authEmail").value;
-    const pass = document.getElementById("authPassword").value;
-    const userN = document.getElementById("authUsername").value;
-    try {
-        if(isLogin) {
-            await signInWithEmailAndPassword(auth, email, pass);
-        } else {
-            const res = await createUserWithEmailAndPassword(auth, email, pass);
-            await setDoc(doc(db, "users", res.user.uid), { username: userN, balance: 10000, createdAt: new Date() });
-        }
-        overlay.style.display = "none";
-    } catch(e) { alert("Hata: " + e.message); }
-};
 
 onAuthStateChanged(auth, user => {
     if(user) {
@@ -333,7 +358,10 @@ onAuthStateChanged(auth, user => {
         onSnapshot(doc(db, "users", user.uid), s => {
             if(s.exists()) {
                 document.getElementById("userBalance").innerText = s.data().balance.toLocaleString() + " ₺";
-                document.getElementById("avatarTrigger").innerText = s.data().username.charAt(0).toUpperCase();
+                const initial = s.data().username.charAt(0).toUpperCase();
+                document.getElementById("avatarTrigger").innerText = initial;
+                document.querySelectorAll(".avatar").forEach(a => a.innerText = initial);
+                document.getElementById("profName").innerText = s.data().username;
             }
         });
     } else {
@@ -342,38 +370,7 @@ onAuthStateChanged(auth, user => {
     }
 });
 
-logoutBtn.onclick = () => signOut(auth);
-
-// --- SEARCH & SNOW ---
-document.getElementById("searchInput").oninput = (e) => {
-    const val = e.target.value.toLowerCase();
-    document.querySelectorAll(".game-card").forEach(card => {
-        card.style.display = card.dataset.name.includes(val) ? "block" : "none";
-    });
-};
-
-const canvas = document.getElementById("snow");
-const ctx = canvas.getContext("2d");
-let particles = [];
-function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-window.onresize = resize; resize();
-for(let i=0; i<80; i++) particles.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, r:Math.random()*2+1, d:Math.random()*0.5+0.2});
-function drawSnow() {
-    ctx.clearRect(0,0,canvas.width, canvas.height);
-    ctx.fillStyle = "rgba(255,255,255,0.4)";
-    ctx.beginPath();
-    particles.forEach(p => {
-        ctx.moveTo(p.x, p.y); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
-        p.y += p.d; if(p.y > canvas.height) p.y = -5;
-    });
-    ctx.fill(); requestAnimationFrame(drawSnow);
-}
-drawSnow();
-
-window.checkLogin = (url) => {
-    if(!auth.currentUser) { overlay.style.display="flex"; }
-    else { location.href = url; }
-};
+document.getElementById("logoutBtn").onclick = () => signOut(auth);
 </script>
 </body>
 </html>
