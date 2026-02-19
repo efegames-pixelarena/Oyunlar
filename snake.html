@@ -2,8 +2,8 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>PixelArena | Snake Pro Elite</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>PixelArena | Snake Pro</title>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 
 <style>
@@ -17,7 +17,14 @@
     --nokia-screen: #9bbc0f;
 }
 
-* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline: none; }
+/* Çift tıklama ve seçmeyi tamamen engelle */
+* { 
+    margin:0; padding:0; box-sizing:border-box; 
+    -webkit-tap-highlight-color:transparent; 
+    outline: none; 
+    user-select: none;
+    touch-action: manipulation; 
+}
 
 body {
     background: var(--bg-dark);
@@ -30,7 +37,6 @@ body {
     flex-direction: column;
 }
 
-/* --- PROFESYONEL ÜST BAR --- */
 .top-bar {
     width: 100%;
     height: 60px;
@@ -52,10 +58,7 @@ body {
     border-radius: 8px;
     background: #1e2642;
     border: 1px solid rgba(255,255,255,0.1);
-    transition: 0.3s;
 }
-
-.back-btn:hover { background: var(--primary); color: #000; }
 
 .brand {
     font-size: 14px;
@@ -66,7 +69,6 @@ body {
     -webkit-text-fill-color: transparent;
 }
 
-/* --- OYUN ALANI --- */
 .main-container {
     flex: 1;
     display: flex;
@@ -109,7 +111,6 @@ canvas {
     image-rendering: pixelated;
 }
 
-/* --- KONTROLLER --- */
 .controls {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -129,7 +130,6 @@ canvas {
     border: none;
     box-shadow: 0 5px 0 #111;
     cursor: pointer;
-    user-select: none;
 }
 
 .btn:active {
@@ -143,7 +143,6 @@ canvas {
 .btn-down { grid-column: 2; }
 .btn-right { grid-column: 3; }
 
-/* --- OVERLAYS --- */
 .overlay {
     position: absolute;
     inset: 0;
@@ -154,12 +153,10 @@ canvas {
     align-items: center;
     z-index: 10;
     text-align: center;
-    cursor: pointer;
 }
 
 .blink { animation: blinker 1s linear infinite; }
 @keyframes blinker { 50% { opacity: 0; } }
-
 </style>
 </head>
 <body>
@@ -167,7 +164,7 @@ canvas {
 <div class="top-bar">
     <a href="index.html" class="back-btn">⇠ GERİ</a>
     <div class="brand">PIXELARENA</div>
-    <div style="width:50px;"></div> 
+    <div style="width:50px;"></div>
 </div>
 
 <div class="main-container">
@@ -209,26 +206,23 @@ const size = 300;
 
 let snake, direction, nextDirection, food, score, started = false;
 let currentSpeed, lastMoveTime, gameInterval;
-
-// --- iOS UYUMLU SES MOTORU ---
 let audioCtx;
+
+// --- iOS SES SİSTEMİ (GARANTİLİ) ---
 function initAudio() {
     if (!audioCtx) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        // iOS sessiz mod kilidini açmak için boş buffer
-        const buffer = audioCtx.createBuffer(1, 1, 22050);
-        const source = audioCtx.createBufferSource();
-        source.buffer = buffer;
-        source.connect(audioCtx.destination);
-        source.start(0);
+    }
+    if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
     }
 }
 
-function playSound(freq, type, dur, vol = 0.1) {
+function playTone(freq, type, dur, vol = 0.1) {
     if (!audioCtx) return;
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
-    osc.type = type; // square, triangle, sine
+    osc.type = type;
     osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
     gain.gain.setValueAtTime(vol, audioCtx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + dur);
@@ -238,24 +232,24 @@ function playSound(freq, type, dur, vol = 0.1) {
     osc.stop(audioCtx.currentTime + dur);
 }
 
-// High Score
 const getHigh = () => localStorage.getItem("snake_pro_best") || 0;
 document.getElementById("high").innerText = getHigh();
 
 function spawnFood() {
-    // Nadir meyve şansı (%15 şansla elma)
-    const isSpecial = Math.random() < 0.15;
+    const isSpecial = Math.random() < 0.15; // %15 şansla kırmızı elma
     food = {
         x: Math.floor(Math.random() * (size/box)) * box,
         y: Math.floor(Math.random() * (size/box)) * box,
         type: isSpecial ? '🍎' : '🍏',
-        points: isSpecial ? 3 : 1
+        value: isSpecial ? 3 : 1
     };
     if(snake.some(s => s.x === food.x && s.y === food.y)) spawnFood();
 }
 
 function startGame() {
-    initAudio();
+    initAudio(); // iOS ses motorunu tetikle
+    playTone(500, 'sine', 0.1); 
+    
     snake = [{x: 10*box, y: 10*box}, {x: 9*box, y: 10*box}, {x: 8*box, y: 10*box}];
     direction = "RIGHT";
     nextDirection = "RIGHT";
@@ -268,7 +262,6 @@ function startGame() {
     document.getElementById("startup").style.display = "none";
     document.getElementById("gameover").style.display = "none";
     
-    playSound(400, 'sine', 0.1); // Başlatma sesi
     started = true;
     if(gameInterval) cancelAnimationFrame(gameInterval);
     gameInterval = requestAnimationFrame(gameLoop);
@@ -276,7 +269,6 @@ function startGame() {
 
 function gameLoop(time) {
     if (!started) return;
-
     if (time - lastMoveTime > currentSpeed) {
         update();
         lastMoveTime = time;
@@ -294,39 +286,35 @@ function update() {
     if (direction === "LEFT") head.x -= box;
     if (direction === "RIGHT") head.x += box;
 
-    // Duvar çarpması
-    if (head.x < 0 || head.y < 0 || head.x >= size || head.y >= size) return endGame();
-    
-    // Kendine çarpma
-    if (snake.some(s => s.x === head.x && s.y === head.y)) return endGame();
+    if (head.x < 0 || head.y < 0 || head.x >= size || head.y >= size || 
+        snake.some(s => s.x === head.x && s.y === head.y)) {
+        return endGame();
+    }
 
     if (head.x === food.x && head.y === food.y) {
-        score += food.points;
+        score += food.value;
         document.getElementById("score").innerText = score;
-        
-        // Yeme sesi (Kırmızı elma daha tiz çalar)
-        playSound(food.points === 3 ? 800 : 500, 'triangle', 0.1);
-        
+        // Yem yeme sesi (🍎 tiz, 🍏 normal)
+        playTone(food.value === 3 ? 900 : 600, 'triangle', 0.1);
         spawnFood();
         if(currentSpeed > 60) currentSpeed -= 2;
     } else {
         snake.pop();
     }
-
     snake.unshift(head);
 }
 
 function draw() {
     ctx.fillStyle = "#9bbc0f";
     ctx.fillRect(0, 0, size, size);
-
-    // Yiyecek çizimi
+    
+    // Emoji Yiyecek
     ctx.font = "12px Arial";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(food.type, food.x + box/2, food.y + box/2);
 
-    // Yılan çizimi
+    // Yılan
     snake.forEach((s, i) => {
         ctx.fillStyle = "#0f380f";
         ctx.fillRect(s.x + 1, s.y + 1, box - 2, box - 2);
@@ -335,44 +323,48 @@ function draw() {
 
 function endGame() {
     started = false;
-    playSound(150, 'square', 0.5, 0.2); // Kaybetme sesi (Bas ve uzun)
+    playTone(150, 'square', 0.5, 0.2); // Kaybetme sesi
     if (score > getHigh()) localStorage.setItem("snake_pro_best", score);
     document.getElementById("high").innerText = getHigh();
     document.getElementById("finalScore").innerText = "SKORUN: " + score;
     document.getElementById("gameover").style.display = "flex";
 }
 
-// Kontroller
-function move(dir) {
-    initAudio(); // iOS etkileşim onayı
-    playSound(300, 'sine', 0.05, 0.05); // Hafif buton sesi
+function handleMove(dir) {
+    initAudio(); // Her butonda ses iznini tazele
+    playTone(300, 'sine', 0.05, 0.05); // Buton sesi
     if (dir === "UP" && direction !== "DOWN") nextDirection = "UP";
     if (dir === "DOWN" && direction !== "UP") nextDirection = "DOWN";
     if (dir === "LEFT" && direction !== "RIGHT") nextDirection = "LEFT";
     if (dir === "RIGHT" && direction !== "LEFT") nextDirection = "RIGHT";
 }
 
-// Klavye
-document.addEventListener("keydown", e => {
-    if (e.key === "ArrowUp") move("UP");
-    if (e.key === "ArrowDown") move("DOWN");
-    if (e.key === "ArrowLeft") move("LEFT");
-    if (e.key === "ArrowRight") move("RIGHT");
-});
-
-// Butonlar
+// Butonlar - iOS Çift tık ve gecikme engellendi
 const btns = ["UP", "DOWN", "LEFT", "RIGHT"];
 btns.forEach(id => {
     const el = document.getElementById("btn-" + id);
-    el.addEventListener("pointerdown", (e) => {
-        e.preventDefault();
-        move(id);
-    });
+    el.addEventListener("touchstart", (e) => {
+        e.preventDefault(); // Çift tık ve zoom engeller
+        handleMove(id);
+    }, { passive: false });
 });
 
-// Başlatma
-document.getElementById("startup").addEventListener("click", startGame);
-document.getElementById("gameover").addEventListener("click", startGame);
+document.addEventListener("keydown", e => {
+    if (e.key === "ArrowUp") handleMove("UP");
+    if (e.key === "ArrowDown") handleMove("DOWN");
+    if (e.key === "ArrowLeft") handleMove("LEFT");
+    if (e.key === "ArrowRight") handleMove("RIGHT");
+});
+
+document.getElementById("startup").addEventListener("touchstart", (e) => {
+    e.preventDefault();
+    startGame();
+}, { passive: false });
+
+document.getElementById("gameover").addEventListener("touchstart", (e) => {
+    e.preventDefault();
+    startGame();
+}, { passive: false });
 
 </script>
 </body>
