@@ -47,10 +47,19 @@
         position:absolute; top:45%; left:50%; transform:translate(-50%,-50%);
         pointer-events:none; text-align:center; z-index:10;
     }
-    .multiplier{font-weight:900; line-height: 1;}
+    .multiplier{font-weight:900; line-height: 1.1;}
     .multiplier.big{font-size:65px; color:#fff; text-shadow: 0 0 30px rgba(79,209,255,0.8);}
     .multiplier.small{font-size:22px; color:#4fd1ff;}
     .multiplier.crashed{color:#ff2a4d !important; animation: shake 0.3s infinite;}
+    /* Yeni Uzaklaş Yazısı Stili */
+    .multiplier.crashed::after {
+        content: "UZAKLAŞ !!!";
+        display: block;
+        font-size: 24px;
+        margin-top: 10px;
+        color: #ff2a4d;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    }
 
     @keyframes shake {
         0% { transform: translate(1px, 1px); }
@@ -322,7 +331,8 @@ async function startCountdown() {
 function doCrash() {
     phase = "crashed"; playSfx('crash');
     multEl.className = "multiplier big crashed";
-    multEl.innerText = multiplier.toFixed(2) + "x"; // Mavi "PATLADI" kaldırıldı
+    // Sadece patladığı X görünecek, CSS sayesinde altında UZAKLAŞ !!! çıkacak
+    multEl.innerText = multiplier.toFixed(2) + "x"; 
     addHistory(multiplier);
     activeBet1 = 0; activeBet2 = 0;
     betTotalEl.innerText = "0";
@@ -353,12 +363,13 @@ async function handleBet(box, isAuto = false) {
         if(box === 1) activeBet1 = 0; else activeBet2 = 0;
     }
     else if(phase === "flying" && currentActive > 0) {
+        // Küsuratsız ekleme: Math.floor ile 1.53 -> 1.50 mantığı (en yakın tam sayıya yuvarlar)
         let win = Math.floor(currentActive * multiplier);
         await updateDoc(userRef, { balance: increment(win) });
         if(box === 1) activeBet1 = 0; else activeBet2 = 0;
         playSfx('cash');
     }
-    betTotalEl.innerText = activeBet1 + activeBet2;
+    betTotalEl.innerText = (activeBet1 + activeBet2).toString();
     updateButtons();
 }
 
