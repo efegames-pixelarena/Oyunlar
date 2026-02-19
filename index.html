@@ -22,7 +22,7 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
 
 #snow { position:fixed; top:0; left:0; width:100%; height:100%; z-index:1; pointer-events:none; opacity: 0.6; }
 
-/* --- SKYCRASH STYLE TOP BAR --- */
+/* --- CENTERED BRAND TOP BAR --- */
 .top-bar {
     position: fixed; top: 0; width: 100%; height: 60px;
     display: flex; align-items: center; justify-content: space-between;
@@ -30,24 +30,21 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
     backdrop-filter: blur(15px); border-bottom: 1px solid var(--border); z-index: 2000;
 }
 
-.brand-section { display: flex; align-items: center; gap: 15px; }
+/* Logo Ortalaması İçin Flex Yapısı */
+.brand-section { flex: 1; display: flex; align-items: center; }
+.right-menu { flex: 1; display: flex; gap: 8px; align-items: center; justify-content: flex-end; position: relative; }
+
 .brand {
+    position: absolute; left: 50%; transform: translateX(-50%);
     font-size: 18px; font-weight: 900; letter-spacing: 1px;
     background: linear-gradient(90deg, var(--primary), #fff);
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     animation: shine 4s linear infinite;
+    pointer-events: none; /* Arkadaki elemanları engellememesi için */
 }
 @keyframes shine { to { background-position: 200% center; } }
 
-.right-menu { display: flex; gap: 8px; align-items: center; position: relative; }
-
-/* --- PROFILE & BALANCE --- */
-.nav-box { 
-    padding: 7px 12px; border-radius: 12px; font-weight: 800; font-size: 12px; 
-    text-align: center; display: flex; align-items: center; justify-content: center;
-}
-.balance-box { background: #1a2248; border: 1px solid rgba(79, 209, 255, 0.2); color: var(--primary); display: none; margin-right: 5px;}
-
+/* --- PROFILE --- */
 .profile-wrapper { position: relative; display: none; }
 .avatar-trigger {
     width: 38px; height: 38px; border-radius: 50%;
@@ -117,14 +114,12 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
 .game-icon { font-size: 45px; margin-bottom: 15px; display: block; filter: drop-shadow(0 0 10px rgba(0,0,0,0.5)); }
 .game-card span { font-weight: 800; font-size: 14px; display: block; margin-bottom: 8px; }
 .badge { font-size: 10px; font-weight: 900; padding: 4px 10px; border-radius: 8px; display: inline-block; background: rgba(0,0,0,0.3); border: 1px solid rgba(79, 209, 255, 0.2); color: var(--primary); }
-.badge-free { color: #00ff88; border-color: rgba(0,255,136,0.2); }
 
 /* --- SIDE MENU --- */
 .side-menu { position: fixed; top: 0; left: -280px; width: 280px; height: 100%; background: #050811; padding: 30px 20px; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); z-index: 3000; border-right: 1px solid var(--border); }
 .side-menu.active { left: 0; }
 .menu-header { font-size: 20px; font-weight: 900; margin-bottom: 30px; display: flex; justify-content: space-between; }
 .side-menu a { display: flex; align-items: center; gap: 15px; padding: 15px; color: #ccd6f6; text-decoration: none; font-weight: 700; border-radius: 12px; margin-bottom: 8px; transition: 0.3s; }
-.side-menu a:hover { background: #1a2248; color: var(--primary); }
 .menu-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; z-index: 2500; backdrop-filter: blur(4px); }
 .menu-overlay.active { display: block; }
 
@@ -147,14 +142,11 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
 <div class="top-bar">
     <div class="brand-section">
         <div id="menuBtn" style="cursor:pointer; font-size:24px;">☰</div>
-        <div class="brand">PixelArena</div>
     </div>
+
+    <div class="brand">PixelArena</div>
     
     <div class="right-menu">
-        <div class="nav-box balance-box" id="balanceBox">
-            ₺<span id="userBalance">0</span>
-        </div>
-
         <button class="btn login-btn" id="loginBtn">GİRİŞ</button>
         <button class="btn register-btn" id="regBtn">KATIL</button>
 
@@ -166,8 +158,8 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
                     <span class="status">VİP ÜYE - LEVEL 1</span>
                 </div>
                 <div class="u-stats">
-                    <div class="stat-item">Bakiye: <b id="dropBalance">0 ₺</b></div>
-                    <div class="stat-item">Durum: <b style="color:#00ff88">AKTİF</b></div>
+                    <div class="stat-item">Mevcut Bakiye: <b id="dropBalance">0 ₺</b></div>
+                    <div class="stat-item">Hesap Durumu: <b style="color:#00ff88">AKTİF</b></div>
                 </div>
                 <div class="menu-links">
                     <a href="panel.html" class="menu-btn-item">👤 Hesabım</a>
@@ -196,16 +188,7 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
 </div>
 
 <main id="games">
-    <div class="section-title">Multiplayer</div>
-    <div class="games-grid">
-        <div class="game-card" data-name="reflex duel" onclick="checkLogin('duel.html')">
-            <div class="game-icon">⚡</div>
-            <span>Reflex Duel</span>
-            <div class="badge">ONLINE PVP</div>
-        </div>
-    </div>
-
-    <div class="section-title">Premium Games</div>
+    <div class="section-title">Oyunlar</div>
     <div class="games-grid">
         <div class="game-card" data-name="skycrash" onclick="checkLogin('skycrash.html')">
             <div class="game-icon">✈️</div>
@@ -217,40 +200,11 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
             <span>Mines</span>
             <div class="badge">Giriş Gerekir</div>
         </div>
-        <div class="game-card" data-name="blackjack" onclick="checkLogin('blackjack.html')">
-            <div class="game-icon">🃏</div>
-            <span>BlackJack</span>
-            <div class="badge">Giriş Gerekir</div>
-        </div>
-        <div class="game-card" data-name="pişti" onclick="checkLogin('pisti.html')">
-            <div class="game-icon">🎴</div>
-            <span>Pişti</span>
-            <div class="badge">Giriş Gerekir</div>
-        </div>
-    </div>
-
-    <div class="section-title">Free Play</div>
-    <div class="games-grid">
-        <div class="game-card" data-name="pattern master" onclick="location.href='patternmaster.html'">
-            <div class="game-icon">🥇</div>
-            <span>Pattern Master</span>
-            <div class="badge badge-free">Giriş Gerekmez</div>
-        </div>
-        <div class="game-card" data-name="space war" onclick="location.href='spacepro.html'">
-            <div class="game-icon" style="filter: drop-shadow(0 0 8px #00ff88);">🚀</div>
-            <span>Space Pro</span>
-            <div class="badge badge-free">Giriş Gerekmez</div>
-        </div>
-        <div class="game-card" data-name="yılan" onclick="location.href='snakepro.html'">
-            <div class="game-icon">🐍</div>
-            <span>Snake Pro</span>
-            <div class="badge badge-free">Giriş Gerekmez</div>
-        </div>
     </div>
 </main>
 
 <footer class="footer">
-    <div class="brand" style="font-size:24px;">PIXELARENA</div>
+    <div class="brand" style="position:relative; left:0; transform:none; font-size:24px; display:inline-block;">PIXELARENA</div>
     <div class="social-icons">
         <a href="#" class="social-btn"><img src="https://cdn-icons-png.flaticon.com/512/2111/2111463.png"></a>
         <a href="#" class="social-btn"><img src="https://cdn-icons-png.flaticon.com/512/733/733579.png"></a>
@@ -297,14 +251,9 @@ const userDropdown = document.getElementById("userDropdown");
 const profileWrapper = document.getElementById("profileWrapper");
 const loginBtn = document.getElementById("loginBtn");
 const regBtn = document.getElementById("regBtn");
-const balanceBox = document.getElementById("balanceBox");
 const overlay = document.getElementById("authOverlay");
 
-// Dropdown Logic
-avatarTrigger.onclick = (e) => {
-    e.stopPropagation();
-    userDropdown.classList.toggle("active");
-};
+avatarTrigger.onclick = (e) => { e.stopPropagation(); userDropdown.classList.toggle("active"); };
 window.onclick = () => userDropdown.classList.remove("active");
 
 // --- AUTH LOGIC ---
@@ -339,11 +288,10 @@ document.getElementById("authSubmit").onclick = async () => {
 onAuthStateChanged(auth, user => {
     if(user) {
         loginBtn.style.display="none"; regBtn.style.display="none";
-        balanceBox.style.display="flex"; profileWrapper.style.display="block";
+        profileWrapper.style.display="block";
         onSnapshot(doc(db, "users", user.uid), s => {
             if(s.exists()) {
                 const data = s.data();
-                document.getElementById("userBalance").innerText = data.balance.toLocaleString();
                 document.getElementById("dropBalance").innerText = data.balance.toLocaleString() + " ₺";
                 document.getElementById("dropName").innerText = data.username.toUpperCase();
                 avatarTrigger.innerText = data.username.charAt(0).toUpperCase();
@@ -351,32 +299,13 @@ onAuthStateChanged(auth, user => {
         });
     } else {
         loginBtn.style.display="block"; regBtn.style.display="block";
-        balanceBox.style.display="none"; profileWrapper.style.display="none";
+        profileWrapper.style.display="none";
     }
 });
 
 document.getElementById("logoutBtn").onclick = () => signOut(auth);
 
-// --- SNOW EFFECT ---
-const canvas = document.getElementById("snow");
-const ctx = canvas.getContext("2d");
-let particles = [];
-function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-window.onresize = resize; resize();
-for(let i=0; i<100; i++) particles.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, r:Math.random()*2+1, d:Math.random()*0.5+0.3});
-function drawSnow() {
-    ctx.clearRect(0,0,canvas.width, canvas.height);
-    ctx.fillStyle = "rgba(255,255,255,0.5)";
-    ctx.beginPath();
-    particles.forEach(p => {
-        ctx.moveTo(p.x, p.y); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
-        p.y += p.d; if(p.y > canvas.height) p.y = -5;
-    });
-    ctx.fill(); requestAnimationFrame(drawSnow);
-}
-drawSnow();
-
-// --- UI INTERACTIONS ---
+// --- SIDE MENU & SEARCH ---
 const sideMenu = document.getElementById("sideMenu");
 const menuOverlay = document.getElementById("menuOverlay");
 document.getElementById("menuBtn").onclick = () => { sideMenu.classList.add("active"); menuOverlay.classList.add("active"); };
@@ -394,6 +323,25 @@ window.checkLogin = (url) => {
     if(!auth.currentUser) { overlay.style.display="flex"; }
     else { location.href = url; }
 };
+
+// Snow effect logic remains...
+const canvas = document.getElementById("snow");
+const ctx = canvas.getContext("2d");
+let particles = [];
+function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+window.onresize = resize; resize();
+for(let i=0; i<100; i++) particles.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, r:Math.random()*2+1, d:Math.random()*0.5+0.3});
+function drawSnow() {
+    ctx.clearRect(0,0,canvas.width, canvas.height);
+    ctx.fillStyle = "rgba(255,255,255,0.5)";
+    ctx.beginPath();
+    particles.forEach(p => {
+        ctx.moveTo(p.x, p.y); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+        p.y += p.d; if(p.y > canvas.height) p.y = -5;
+    });
+    ctx.fill(); requestAnimationFrame(drawSnow);
+}
+drawSnow();
 </script>
 </body>
 </html>
