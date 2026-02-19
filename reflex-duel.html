@@ -66,7 +66,7 @@ body::before {
 }
 .modal-content input { 
     width: 100%; padding: 15px; background: #000; border: 1px solid #333; 
-    color: var(--p); border-radius: 10px; margin-bottom: 20px; text-align: center; font-size: 16px; /* iOS zoom fix */
+    color: var(--p); border-radius: 10px; margin-bottom: 20px; text-align: center; font-size: 16px;
 }
 
 #game-view { display: none; flex: 1; flex-direction: column; }
@@ -171,6 +171,16 @@ const auth = getAuth(app);
 
 let uid, username, currentRoomId = null, unsubRoom = null, tapLock = false;
 let countdownInterval = null, lastTapTime = 0, lastState = "";
+let serverOffset = 0;
+
+// Server Time Senkronizasyonu
+const syncTime = async () => {
+    const offsetRef = doc(db, ".info/serverTimeOffset");
+    onSnapshot(offsetRef, (snap) => {
+        if (snap.exists()) serverOffset = snap.data().offset || 0;
+    });
+};
+const getServerTime = () => Date.now() + serverOffset;
 
 // iOS Audio Context Fix
 let audioCtx = null;
@@ -205,10 +215,10 @@ const sounds = {
 window.openModal = () => { initAudio(); document.getElementById("createModal").style.display = "flex"; };
 window.closeModal = () => document.getElementById("createModal").style.display = "none";
 
-// Auth & Login
 onAuthStateChanged(auth, async (user) => {
     if (!user) { signInAnonymously(auth); return; }
     uid = user.uid;
+    syncTime();
     const userRef = doc(db, "users", uid);
     const snap = await getDoc(userRef);
     if(!snap.exists()) {
@@ -259,14 +269,28 @@ document.getElementById("confirmCreateBtn").onclick = async () => {
 
 window.joinRoom = async (id, isLocked) => {
     initAudio();
-    if (isLocked) {
-        const pass = prompt("ARENA ŞİFRESİ:");
-        const snap = await getDoc(doc(db, "rooms", id));
-        if (snap.data().password !== pass) { alert("ŞİFRE HATALI!"); return; }
-    }
-    currentRoomId = id;
-    await updateDoc(doc(db, "rooms", id), { player2: uid, player2Name: username, state: "matched" });
-    enterRoom();
+    const roomRef = doc(db, "rooms", id);
+    
+    try {
+        await runTransaction(db, async (transaction) => {
+            const snap = await transaction.get(roomRef);
+            const data = snap.data();
+            if (data.player2) throw "Arena Dolu!";
+            
+            if (isLocked) {
+                const pass = prompt("ARENA ŞİFRESİ:");
+                if (data.password !== pass) throw "Şifre Hatalı!";
+            }
+            
+            transaction.update(roomRef, { 
+                player2: uid, 
+                player2Name: username, 
+                state: "matched" 
+            });
+            currentRoomId = id;
+        });
+        enterRoom();
+    } catch (e) { alert(e); }
 };
 
 function enterRoom() {
@@ -279,19 +303,24 @@ function enterRoom() {
         if (!snap.exists()) { quitGame(); return; }
         const d = snap.data();
         
-        // UI Güncelleme
-        document.getElementById("p1Name").innerText = (d.player1Name || "---").toUpperCase();
+        // UI Güncelleme - Güvenli İsimler
+        document.getElementById("p1Name").innerText = (d.player1Name || "Bilinmiyor").toUpperCase();
         document.getElementById("p1Score").innerText = d.score1;
         document.getElementById("p2Name").innerText = (d.player2Name || "BEKLENİYOR").toUpperCase();
         document.getElementById("p2Score").innerText = d.score2;
         document.getElementById("roundNum").innerText = `RD ${d.round}`;
 
-        // State Kontrolü (Tekil tetikleme için)
+        // Rakip ayrılma kontrolü
+        if ((d.state === "countdown" || d.state === "active") && (!d.player1 || !d.player2)) {
+            updateDoc(doc(db, "rooms", currentRoomId), { state: "finished" });
+            return;
+        }
+
         if (d.state !== lastState) {
             if (countdownInterval) clearInterval(countdownInterval);
             
             if (d.state === "matched" && uid === d.host) {
-                updateDoc(doc(db, "rooms", currentRoomId), { state: "countdown", startTime: Date.now() + 3000 });
+                updateDoc(doc(db, "rooms", currentRoomId), { state: "countdown", startTime: getServerTime() + 3000 });
             }
 
             if (d.state === "countdown") {
@@ -299,16 +328,16 @@ function enterRoom() {
                 document.getElementById("subText").classList.remove("penalty");
                 let lastSec = -1;
                 countdownInterval = setInterval(() => {
-                    const diff = Math.ceil((d.startTime - Date.now()) / 1000);
+                    const diff = Math.ceil((d.startTime - getServerTime()) / 1000);
                     if (diff > 0) {
                         if (diff !== lastSec) { sounds.tick(); lastSec = diff; }
                         document.getElementById("bigText").innerText = diff;
                         document.getElementById("subText").innerText = "HAZIRLAN";
                     } else {
                         clearInterval(countdownInterval);
-                        if (uid === d.host) updateDoc(doc(db, "rooms", currentRoomId), { state: "active", roundStart: Date.now() });
+                        if (uid === d.host) updateDoc(doc(db, "rooms", currentRoomId), { state: "active", roundStart: getServerTime() });
                     }
-                }, 100);
+                }, 50); // Daha akıcı kontrol
             }
 
             if (d.state === "active") {
@@ -326,14 +355,15 @@ function enterRoom() {
                     document.getElementById("subText").innerText = d.penaltyUser === uid ? "ERKEN BASTIN!" : "RAKİP ERKEN BASTI!";
                 } else {
                     document.getElementById("subText").classList.remove("penalty");
-                    document.getElementById("subText").innerText = (d.lastWinner || "PLAYER").toUpperCase() + " KAZANDI";
+                    const winnerName = (d.lastWinner || "Warrior").toUpperCase();
+                    document.getElementById("subText").innerText = winnerName + " KAZANDI";
                 }
                 if (uid === d.host) {
                     setTimeout(() => {
                         const finalWin = (d.score1 >= 11 || d.score2 >= 11);
                         updateDoc(doc(db, "rooms", currentRoomId), { 
                             state: finalWin ? "finished" : "countdown", 
-                            startTime: Date.now() + 2500,
+                            startTime: getServerTime() + 2500,
                             round: finalWin ? d.round : d.round + 1,
                             penalty: false
                         });
@@ -342,8 +372,8 @@ function enterRoom() {
             }
 
             if (d.state === "finished") {
-                const winName = d.score1 >= 11 ? d.player1Name : d.player2Name;
-                document.getElementById("championName").innerText = (winName || "WARRIOR").toUpperCase();
+                const winName = d.score1 >= 11 ? (d.player1Name || "Warrior") : (d.player2Name || "Warrior");
+                document.getElementById("championName").innerText = winName.toUpperCase();
                 document.getElementById("winnerScreen").style.display = "flex";
                 sounds.win();
                 setTimeout(quitGame, 5000);
@@ -357,7 +387,7 @@ document.getElementById("arena").addEventListener('pointerdown', async (e) => {
     e.preventDefault();
     initAudio();
     if (tapLock || !currentRoomId) return;
-    const now = Date.now();
+    const now = getServerTime();
     if (now - lastTapTime < 200) return;
     lastTapTime = now;
 
@@ -366,7 +396,6 @@ document.getElementById("arena").addEventListener('pointerdown', async (e) => {
     if(!snap.exists()) return;
     const d = snap.data();
 
-    // Hatalı/Erken Basış
     if (d.state === "countdown" || (d.state === "waiting" && d.player2)) { 
         tapLock = true;
         const isP1 = uid === d.player1;
@@ -383,7 +412,7 @@ document.getElementById("arena").addEventListener('pointerdown', async (e) => {
     if (d.state !== "active") return;
 
     tapLock = true;
-    const reactionTime = now - d.roundStart; // Veritabanındaki roundStart'tan hesapla
+    const reactionTime = now - d.roundStart;
 
     try {
         await runTransaction(db, async (transaction) => {
@@ -399,17 +428,18 @@ document.getElementById("arena").addEventListener('pointerdown', async (e) => {
                 penalty: false
             });
         });
-    } catch (e) { console.error("Tap error:", e); }
+    } catch (e) {}
     setTimeout(() => { tapLock = false; }, 1000);
 });
 
 async function quitGame() {
+    if (unsubRoom) { unsubRoom(); unsubRoom = null; }
     if (currentRoomId) {
         const ref = doc(db, "rooms", currentRoomId);
         const snap = await getDoc(ref);
         if (snap.exists()) {
             const d = snap.data();
-            if (!d.player2 || d.state === "finished") await deleteDoc(ref);
+            if (!d.player2 || d.state === "finished" || d.host === uid) await deleteDoc(ref);
             else {
                 const f = d.player1 === uid ? "player1" : "player2";
                 await updateDoc(ref, { [f]: null, state: "finished" });
@@ -421,7 +451,6 @@ async function quitGame() {
 
 document.getElementById("leaveBtn").onclick = quitGame;
 document.addEventListener('touchstart', initAudio, {once: true});
-document.addEventListener('gesturestart', (e) => e.preventDefault());
 </script>
 </body>
 </html>
