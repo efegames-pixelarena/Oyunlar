@@ -26,7 +26,6 @@
     .balance-box{background:#1a2248; border: 1px solid #4fd1ff44; color: #4fd1ff;}
     .bet-box{background:linear-gradient(90deg,#ff8a00,#ff5f00); color:#000;}
     
-    /* KIRMIZI GERİ BUTONU */
     .back-btn{
         background:#d63031; color:white; padding:6px 12px; border-radius:10px; 
         font-weight:800; font-size:11px; text-decoration:none; display:flex; align-items:center;
@@ -135,13 +134,16 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// --- GELİŞTİRİLMİŞ İOS SES MOTORU (AVIATOR STYLE) ---
+// --- GERÇEK AVIATOR SES SENTEZLEYİCİSİ (iOS UYUMLU) ---
 let audioCtx = null;
-let flightOsc = null;
-let flightGain = null;
+let engineOsc = null;
+let engineGain = null;
+let lfo = null;
 
 const initAudio = () => {
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
     if (audioCtx.state === 'suspended') audioCtx.resume();
 };
 
@@ -153,50 +155,68 @@ function playSfx(type) {
         const osc = audioCtx.createOscillator();
         const g = audioCtx.createGain();
         osc.connect(g); g.connect(audioCtx.destination);
-        osc.frequency.setValueAtTime(500, now);
-        g.gain.setValueAtTime(0.1, now);
+        osc.frequency.setValueAtTime(600, now);
+        g.gain.setValueAtTime(0.08, now);
         g.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
         osc.start(); osc.stop(now + 0.1);
     }
 
-    if(type === 'flight_start') {
-        flightOsc = audioCtx.createOscillator();
-        flightGain = audioCtx.createGain();
-        flightOsc.type = 'sawtooth';
-        flightOsc.connect(flightGain);
-        flightGain.connect(audioCtx.destination);
-        flightOsc.frequency.setValueAtTime(40, now);
-        flightGain.gain.setValueAtTime(0.01, now);
-        flightOsc.start();
+    if(type === 'fly_start') {
+        // Gerçek motor simülasyonu için 2 katmanlı ses
+        engineOsc = audioCtx.createOscillator();
+        engineGain = audioCtx.createGain();
+        lfo = audioCtx.createOscillator();
+        const lfoGain = audioCtx.createGain();
+
+        engineOsc.type = 'sawtooth';
+        lfo.frequency.setValueAtTime(30, now); // Titreşim efekti
+        lfoGain.gain.setValueAtTime(10, now);
+        
+        lfo.connect(lfoGain);
+        lfoGain.connect(engineOsc.frequency);
+        engineOsc.connect(engineGain);
+        engineGain.connect(audioCtx.destination);
+
+        engineOsc.frequency.setValueAtTime(45, now);
+        engineGain.gain.setValueAtTime(0, now);
+        engineGain.gain.linearRampToValueAtTime(0.06, now + 0.5);
+        
+        engineOsc.start();
+        lfo.start();
     }
 
-    if(type === 'flight_loop' && flightOsc) {
-        flightOsc.frequency.setTargetAtTime(40 + (multiplier * 15), now, 0.1);
-        flightGain.gain.setTargetAtTime(Math.min(0.08, 0.02 + multiplier * 0.01), now, 0.1);
+    if(type === 'fly_loop' && engineOsc) {
+        // Çarpan yükseldikçe motor sesi incelir ve hızlanır
+        const targetFreq = 45 + (multiplier * 12);
+        engineOsc.frequency.setTargetAtTime(targetFreq, now, 0.2);
     }
 
     if(type === 'win') {
         const osc = audioCtx.createOscillator();
         const g = audioCtx.createGain();
         osc.connect(g); g.connect(audioCtx.destination);
-        osc.frequency.setValueAtTime(800, now);
-        osc.frequency.exponentialRampToValueAtTime(1600, now + 0.3);
-        g.gain.setValueAtTime(0.2, now);
+        osc.frequency.setValueAtTime(880, now);
+        osc.frequency.exponentialRampToValueAtTime(1760, now + 0.3);
+        g.gain.setValueAtTime(0.15, now);
         g.gain.linearRampToValueAtTime(0, now + 0.4);
         osc.start(); osc.stop(now + 0.4);
     }
 
     if(type === 'crash') {
-        if(flightOsc) { flightOsc.stop(); flightOsc = null; }
+        if(engineOsc) { 
+            engineGain.gain.setTargetAtTime(0, now, 0.1);
+            engineOsc.stop(now + 0.2); engineOsc = null; 
+            lfo.stop();
+        }
         const osc = audioCtx.createOscillator();
         const g = audioCtx.createGain();
-        osc.type = 'square';
+        osc.type = 'triangle';
         osc.connect(g); g.connect(audioCtx.destination);
-        osc.frequency.setValueAtTime(100, now);
-        osc.frequency.linearRampToValueAtTime(30, now + 0.5);
-        g.gain.setValueAtTime(0.2, now);
-        g.gain.linearRampToValueAtTime(0, now + 0.5);
-        osc.start(); osc.stop(now + 0.5);
+        osc.frequency.setValueAtTime(150, now);
+        osc.frequency.linearRampToValueAtTime(40, now + 0.6);
+        g.gain.setValueAtTime(0.3, now);
+        g.gain.linearRampToValueAtTime(0, now + 0.6);
+        osc.start(); osc.stop(now + 0.6);
     }
 }
 
@@ -208,7 +228,7 @@ const multEl = document.getElementById("multiplier");
 const balEl = document.getElementById("balance");
 const betTotalEl = document.getElementById("bet");
 
-// --- UZAY SİMÜLASYONU ---
+// --- GRAFİK ---
 const canvas = document.getElementById("graph");
 const ctx = canvas.getContext("2d");
 function resize() { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; }
@@ -237,18 +257,16 @@ function draw() {
         ctx.quadraticCurveTo(canvas.width/3, canvas.height - 60, px, py); ctx.stroke();
         ctx.setLineDash([]);
         ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(px, py, 5, 0, Math.PI*2); ctx.fill();
-        playSfx('flight_loop');
+        playSfx('fly_loop');
     }
     requestAnimationFrame(draw);
 }
 draw();
 
-// --- KASA AVANTAJLI ALGORİTMA ---
+// --- KASA AVANTAJLI ALGORİTMA (%3) ---
 function generateCrashPoint() {
-    // Gerçek Casino Algoritması (House Edge %3)
-    // Formula: 0.97 / (1 - random)
     const random = Math.random();
-    if (random < 0.03) return 1.00; // %3 ihtimalle direkt 1.00x'de patlar (Kasa kârı)
+    if (random < 0.03) return 1.00; 
     let point = 0.97 / (1 - random);
     return Math.max(1.01, Math.floor(point * 100) / 100);
 }
@@ -294,7 +312,7 @@ function startCountdown() {
             phase = "flying";
             startTime = Date.now();
             crashPoint = generateCrashPoint();
-            playSfx('flight_start');
+            playSfx('fly_start');
             updateMultiplier();
         }
         sec--;
@@ -368,7 +386,9 @@ function updateButtons() {
 
 document.getElementById("btn1").onclick = () => handleBet(1);
 document.getElementById("btn2").onclick = () => handleBet(2);
-document.body.addEventListener('click', initAudio, { once: true });
+// İlk tıklamada iOS ses kilidini açar
+document.addEventListener('touchstart', initAudio, { once: true });
+document.addEventListener('mousedown', initAudio, { once: true });
 </script>
 </body>
 </html>
