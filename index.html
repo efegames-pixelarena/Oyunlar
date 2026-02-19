@@ -19,7 +19,7 @@
     --success: #00ffaa;
 }
 
-* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; }
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; font-family: 'Inter', -apple-system, system-ui, sans-serif; }
 
 body { 
     background: var(--bg-deep); 
@@ -50,7 +50,7 @@ body {
 
 .right-menu { display: flex; align-items: center; gap: 15px; }
 
-/* --- PROFILE & DROPDOWN PREMIUM --- */
+/* --- PROFILE & DROPDOWN --- */
 .profile-wrapper { position: relative; display: none; }
 .avatar-trigger {
     width: 48px; height: 48px; border-radius: 50%;
@@ -78,7 +78,7 @@ body {
 
 .u-balance { padding: 20px 25px; background: rgba(255,255,255,0.02); display: flex; flex-direction: column; gap: 5px; }
 .u-balance span { font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
-.u-balance b { font-size: 22px; color: var(--success); letter-spacing: 1px; }
+.u-balance b { font-size: 22px; color: var(--success); letter-spacing: 1px; font-family: 'Courier New', Courier, monospace; }
 
 .menu-links { padding: 10px; }
 .m-item {
@@ -89,7 +89,7 @@ body {
 .m-item:hover { background: var(--glass-bright); color: #fff; transform: translateX(8px); }
 .m-item i { font-style: normal; font-size: 18px; }
 
-/* --- HERO & SEARCH PREMIUM --- */
+/* --- HERO & SEARCH --- */
 .hero-search { margin-top: 130px; padding: 0 20px; }
 .search-container { max-width: 700px; margin: 0 auto; position: relative; }
 .search-container input {
@@ -97,11 +97,12 @@ body {
     background: rgba(15, 23, 42, 0.6); border: 1px solid var(--glass-bright); color: white; 
     font-size: 16px; outline: none; transition: 0.5s; backdrop-filter: blur(10px);
 }
-.search-container input:focus { border-color: var(--primary); box-shadow: 0 0 30px var(--primary-glow); width: 105%; transform: translateX(-2.5%); }
-.search-container::before { content: '⚡'; position: absolute; left: 30px; top: 22px; font-size: 20px; }
+.search-container input:focus { border-color: var(--primary); box-shadow: 0 0 30px var(--primary-glow); }
+.search-container::before { content: '⚡'; position: absolute; left: 30px; top: 22px; font-size: 20px; opacity: 0.8; }
 
 /* --- GRID & CARDS PREMIUM --- */
-.section-title { padding: 50px 40px 20px; font-size: 12px; font-weight: 900; text-transform: uppercase; color: #475569; letter-spacing: 4px; }
+.section-title { padding: 50px 40px 20px; font-size: 12px; font-weight: 900; text-transform: uppercase; color: #475569; letter-spacing: 4px; display: flex; align-items: center; gap: 15px; }
+.section-title::after { content: ''; height: 1px; flex: 1; background: linear-gradient(to right, var(--border-gold), transparent); }
 
 .games-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 30px; padding: 0 40px; }
 
@@ -111,13 +112,7 @@ body {
     position: relative; overflow: hidden; cursor: pointer;
     backdrop-filter: blur(5px);
 }
-.game-card::before {
-    content: ''; position: absolute; top:0; left:0; width: 100%; height: 100%;
-    background: linear-gradient(45deg, transparent, rgba(255,255,255,0.05), transparent);
-    transform: translateX(-100%); transition: 0.6s;
-}
-.game-card:hover { transform: translateY(-15px) scale(1.02); border-color: var(--border-gold); background: rgba(255,255,255,0.05); }
-.game-card:hover::before { transform: translateX(100%); }
+.game-card:hover { transform: translateY(-15px); border-color: var(--border-gold); background: rgba(255,255,255,0.05); box-shadow: 0 20px 40px rgba(0,0,0,0.6); }
 
 .game-icon { font-size: 60px; margin-bottom: 20px; display: block; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.5)); transition: 0.5s; }
 .game-card:hover .game-icon { transform: scale(1.2) rotate(8deg); }
@@ -139,9 +134,9 @@ body {
 #wheelCanvas { width: 100%; height: 100%; border-radius: 50%; transition: transform 5s cubic-bezier(0.15, 0, 0.15, 1); }
 .wheel-pointer { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 20px solid transparent; border-right: 20px solid transparent; border-top: 40px solid var(--accent); z-index: 10; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.5)); }
 
-/* --- MODALS PREMIUM --- */
+/* --- MODALS --- */
 .custom-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); backdrop-filter: blur(20px); display: none; align-items: center; justify-content: center; z-index: 6000; }
-.modal-box { width: 90%; max-width: 450px; padding: 50px; border-radius: 40px; background: #0a0c12; border: 1px solid var(--border-gold); text-align: center; position: relative; }
+.modal-box { width: 90%; max-width: 450px; padding: 50px; border-radius: 40px; background: #0a0c12; border: 1px solid var(--border-gold); text-align: center; }
 
 .footer { padding: 100px 20px 60px; text-align: center; opacity: 0.4; font-size: 12px; letter-spacing: 2px; }
 </style>
@@ -158,10 +153,10 @@ body {
         <button class="btn register-btn" id="regBtn">JOIN ELITE</button>
 
         <div class="profile-wrapper" id="profileWrapper">
-            <div class="avatar-trigger" id="avatarTrigger">M</div>
+            <div class="avatar-trigger" id="avatarTrigger">?</div>
             <div class="dropdown-menu" id="userDropdown">
                 <div class="u-header">
-                    <span class="name" id="dropName">YÜKLENİYOR...</span>
+                    <span class="name" id="dropName">...</span>
                     <div class="rank">PREMIUM MEMBER</div>
                 </div>
                 
@@ -171,11 +166,11 @@ body {
                 </div>
                 
                 <div class="menu-links">
-                    <a href="panel.html" class="m-item"><i>💎</i> ACCOUNT SETTINGS</a>
+                    <a href="panel.html" class="m-item"><i>👤</i> ACCOUNT PANEL</a>
                     <a href="javascript:void(0)" class="m-item" onclick="openWheel()"><i>🎡</i> LUCKY SPIN</a>
                     <a href="javascript:void(0)" class="m-item" onclick="openBonusModal()"><i>🎫</i> PROMO CODE</a>
-                    <a href="https://instagram.com" target="_blank" class="m-item"><i>🎧</i> 24/7 SUPPORT</a>
-                    <a href="javascript:void(0)" class="m-item" id="logoutBtn" style="color:#f43f5e; margin-top:10px; border-top:1px solid rgba(255,255,255,0.05); padding-top:20px;"><i>🔒</i> SECURE LOGOUT</a>
+                    <a href="https://instagram.com" target="_blank" class="m-item"><i>💬</i> LIVE SUPPORT</a>
+                    <a href="javascript:void(0)" class="m-item" id="logoutBtn" style="color:#f43f5e; margin-top:10px; border-top:1px solid var(--glass-bright); padding-top:20px;"><i>🛑</i> LOGOUT</a>
                 </div>
             </div>
         </div>
@@ -199,8 +194,8 @@ body {
 <div class="custom-modal" id="bonusCodeModal">
     <div class="modal-box">
         <h2 style="color:var(--accent); margin-bottom:20px;">PROMO CODE</h2>
-        <input type="text" id="bonusCodeInput" placeholder="ENTER YOUR CODE" style="width: 100%; padding: 20px; border-radius: 50px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-gold); color: white; outline: none; margin-bottom: 20px; text-align: center; font-size:18px; letter-spacing:5px;">
-        <button class="auth-btn" id="redeemBtn">ACTIVATE CODE</button>
+        <input type="text" id="bonusCodeInput" placeholder="ENTER YOUR CODE" style="width: 100%; padding: 20px; border-radius: 50px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-gold); color: white; outline: none; margin-bottom: 20px; text-align: center; font-size:18px; letter-spacing:5px; font-weight: 800;">
+        <button class="auth-btn" id="redeemBtn" style="background:var(--accent); color:#000;">ACTIVATE CODE</button>
         <p onclick="closeModal('bonusCodeModal')" style="margin-top:25px; font-size:11px; cursor:pointer; opacity:0.4;">CANCEL</p>
     </div>
 </div>
@@ -215,7 +210,7 @@ body {
     <div class="section-title">Exclusive Arena</div>
     <div class="games-grid">
         <div class="game-card" data-name="reflex duel" onclick="checkLogin('duel.html')">
-            <div class="game-icon">⚔️</div>
+            <div class="game-icon">⚡</div>
             <span>Reflex Duel</span>
             <div class="badge">ULTRA PVP</div>
         </div>
@@ -231,8 +226,13 @@ body {
         </div>
     </div>
 
-    <div class="section-title">Casual Games</div>
+    <div class="section-title">Classic Selection</div>
     <div class="games-grid">
+        <div class="game-card" data-name="blackjack" onclick="checkLogin('blackjack.html')">
+            <div class="game-icon">♠️</div>
+            <span>BlackJack</span>
+            <div class="badge">HIGH STAKES</div>
+        </div>
         <div class="game-card" data-name="pattern master" onclick="location.href='patternmaster.html'">
             <div class="game-icon">🧩</div>
             <span>Pattern Master</span>
@@ -248,7 +248,7 @@ body {
 
 <footer class="footer">
     <div class="brand" style="font-size: 16px; opacity: 0.5;">PIXELARENA ELITE NETWORK</div>
-    <p style="margin-top:20px;">ESTABLISHED 2026. THE FUTURE OF GAMING.</p>
+    <p style="margin-top:20px;">© 2026 THE FUTURE OF GAMING. ALL RIGHTS RESERVED.</p>
 </footer>
 
 <div class="auth-overlay" id="authOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(2,4,8,0.98); display:none; align-items:center; justify-content:center; z-index:5000; backdrop-filter:blur(10px);">
@@ -299,7 +299,7 @@ window.openWheel = () => { document.getElementById("wheelModal").style.display =
 window.openBonusModal = () => { document.getElementById("bonusCodeModal").style.display = "flex"; userDropdown.classList.remove("active"); };
 window.closeModal = (id) => { document.getElementById(id).style.display = "none"; };
 
-// --- AUTH LOGIC ---
+// --- FIREBASE AUTH ---
 let isLogin = true;
 loginBtn.onclick = () => { overlay.style.display="flex"; isLogin=true; updateAuthUI(); };
 regBtn.onclick = () => { overlay.style.display="flex"; isLogin=false; updateAuthUI(); };
@@ -369,7 +369,7 @@ function drawWheel() {
         ctx.save(); ctx.fillStyle = "white";
         ctx.translate(250 + Math.cos(angle + arc / 2) * 160, 250 + Math.sin(angle + arc / 2) * 160);
         ctx.rotate(angle + arc / 2 + Math.PI / 2);
-        ctx.font = "900 20px Inter";
+        ctx.font = "bold 20px Inter";
         ctx.fillText(reward.label, -ctx.measureText(reward.label).width / 2, 0);
         ctx.restore();
     });
@@ -385,7 +385,6 @@ document.getElementById("spinBtn").onclick = async () => {
     canvas.style.transform = `rotate(${stopAngle}deg)`;
     
     setTimeout(async () => {
-        const winIdx = rewards.length - 1 - Math.floor((stopAngle % 360) / (360 / rewards.length));
         const winAmount = parseInt(rewards[rand].label.replace(".", "").replace("₺", ""));
         await updateDoc(doc(db, "users", auth.currentUser.uid), { balance: increment(winAmount) });
         document.getElementById("wheelMsg").innerHTML = `CONGRATULATIONS! YOU WON ${rewards[rand].label}`;
@@ -403,7 +402,7 @@ document.getElementById("searchInput").oninput = (e) => {
 
 window.checkLogin = (url) => { if(!auth.currentUser) overlay.style.display="flex"; else location.href = url; };
 
-// --- LUXURY SNOW ---
+// --- LUXURY SPARKLE ---
 const sc = document.getElementById("snow");
 const sctx = sc.getContext("2d");
 let p = [];
