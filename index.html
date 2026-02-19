@@ -11,7 +11,7 @@
     --primary: #4fd1ff;
     --accent: #ff8a00;
     --bg-dark: #03050a;
-    --glass: rgba(10, 15, 30, 0.9);
+    --glass: rgba(10, 15, 30, 0.95);
     --border: #1e2642;
     --card-gradient: linear-gradient(145deg, #0f172a, #020617);
     --dropdown-bg: #0a0f1e;
@@ -22,53 +22,54 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
 
 #snow { position:fixed; top:0; left:0; width:100%; height:100%; z-index:1; pointer-events:none; opacity: 0.6; }
 
-/* --- SKYCRASH STYLE TOP BAR (PROFESSIONAL & CENTERED) --- */
+/* --- TOP BAR REDESIGN (ENHANCED) --- */
 .top-bar {
-    position: fixed; top: 0; width: 100%; height: 60px;
+    position: fixed; top: 0; width: 100%; height: 65px;
     display: flex; align-items: center; justify-content: space-between;
     padding: 0 15px; background: var(--glass);
-    backdrop-filter: blur(15px); border-bottom: 1px solid var(--border); z-index: 2000;
+    backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); z-index: 2000;
 }
 
 .brand-section { display: flex; align-items: center; z-index: 2001; }
 
-/* MERKEZİ LOGO VE ANİMASYON */
+/* MERKEZ LOGO (ANIMASYONLU) */
 .center-logo {
     position: absolute; left: 50%; transform: translateX(-50%);
-    pointer-events: none; text-align: center;
+    text-align: center; pointer-events: none;
 }
 .brand {
-    font-size: 19px; font-weight: 900; letter-spacing: 2px;
+    font-size: 22px; font-weight: 900; letter-spacing: 2px;
     background: linear-gradient(90deg, #fff, var(--primary), #fff, var(--accent), #fff);
     background-size: 200% auto;
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    animation: flow 4s linear infinite;
+    animation: flow 5s linear infinite;
     text-transform: uppercase;
-    filter: drop-shadow(0 0 8px rgba(79, 209, 255, 0.3));
+    filter: drop-shadow(0 0 10px rgba(79, 209, 255, 0.3));
 }
 @keyframes flow { to { background-position: 200% center; } }
 
-/* SAĞ MENÜ VE DROPDOWN */
-.right-menu { display: flex; gap: 8px; align-items: center; z-index: 2001; }
+/* SAĞ MENÜ ALANI */
+.right-menu { display: flex; gap: 10px; align-items: center; z-index: 2001; }
 
 .nav-box { 
     padding: 7px 12px; border-radius: 12px; font-weight: 800; font-size: 12px; 
     text-align: center; display: flex; align-items: center; justify-content: center;
 }
-.balance-box { background: #1a2248; border: 1px solid rgba(79, 209, 255, 0.2); color: var(--primary); display: none; }
+.balance-box { background: rgba(79, 209, 255, 0.1); border: 1px solid rgba(79, 209, 255, 0.2); color: var(--primary); display: none; }
 
+/* PROFIL VE DROPDOWN */
 .profile-wrapper { position: relative; display: none; }
 .avatar-trigger {
-    width: 36px; height: 36px; border-radius: 50%;
+    width: 38px; height: 38px; border-radius: 50%;
     background: var(--primary); display: flex; align-items: center;
-    justify-content: center; font-weight: 900; color: #000; font-size: 15px;
+    justify-content: center; font-weight: 900; color: #000; font-size: 16px;
     cursor: pointer; border: 2px solid rgba(255,255,255,0.1);
-    box-shadow: 0 0 10px rgba(79, 209, 255, 0.3); transition: 0.3s;
+    box-shadow: 0 0 15px rgba(79, 209, 255, 0.2); transition: 0.3s;
 }
 .avatar-trigger:hover { transform: scale(1.05); }
 
 .dropdown-menu {
-    position: absolute; top: 50px; right: 0; width: 220px;
+    position: absolute; top: 55px; right: 0; width: 240px;
     background: var(--dropdown-bg); border: 1px solid var(--border);
     border-radius: 15px; padding: 15px; display: none;
     flex-direction: column; z-index: 3000;
@@ -89,11 +90,11 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
     padding: 8px 16px; border-radius: 10px; border: none; cursor: pointer;
     font-weight: 800; font-size: 12px; transition: 0.3s; flex-shrink: 0;
 }
-.login-btn { background: #1e2642; color: white; border: 1px solid rgba(255,255,255,0.1); }
+.login-btn { background: #1a2248; color: white; border: 1px solid var(--border); }
 .register-btn { background: linear-gradient(90deg, #ff8a00, #ff5f00); color: #000; }
 
-/* --- SEARCH SECTION --- */
-.hero-search { margin-top: 85px; padding: 0 20px; text-align: center; }
+/* --- DİĞER BÖLÜMLER --- */
+.hero-search { margin-top: 100px; padding: 0 20px; text-align: center; }
 .search-container { max-width: 600px; margin: 0 auto; position: relative; }
 .search-container input {
     width: 100%; padding: 16px 20px 16px 50px; border-radius: 20px;
@@ -103,14 +104,13 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
 .search-container input:focus { border-color: var(--primary); box-shadow: 0 0 15px rgba(79, 209, 255, 0.2); }
 .search-container::before { content: '🔍'; position: absolute; left: 20px; top: 16px; opacity: 0.5; }
 
-/* --- GAME CARDS --- */
 .section-title { padding: 30px 20px 15px; font-size: 18px; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; color: #8892b0; display: flex; align-items: center; gap: 10px; }
 .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 .games-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 0 20px; }
 @media(min-width: 900px) { .games-grid { grid-template-columns: repeat(4, 1fr); } }
 
 .game-card { background: var(--card-gradient); border-radius: 24px; padding: 25px; text-align: center; border: 1px solid var(--border); position: relative; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); overflow: hidden; cursor: pointer; z-index: 10; }
-.game-card:hover { transform: translateY(-8px); border-color: var(--primary); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+.game-card:hover { transform: translateY(-8px); border-color: var(--primary); }
 .game-icon { font-size: 45px; margin-bottom: 15px; display: block; filter: drop-shadow(0 0 10px rgba(0,0,0,0.5)); }
 .game-card span { font-weight: 800; font-size: 14px; display: block; margin-bottom: 8px; }
 .badge { font-size: 10px; font-weight: 900; padding: 4px 10px; border-radius: 8px; display: inline-block; background: rgba(0,0,0,0.3); border: 1px solid rgba(79, 209, 255, 0.2); color: var(--primary); }
@@ -156,21 +156,21 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
             ₺<span id="userBalance">0</span>
         </div>
 
+        <button class="btn login-btn" id="mainLoginBtn">GİRİŞ</button>
+        <button class="btn register-btn" id="mainRegBtn">KATIL</button>
+
         <div class="profile-wrapper" id="profileWrapper">
             <div class="avatar-trigger" id="avatarTrigger">?</div>
             <div class="dropdown-menu" id="userDropdown">
                 <div style="padding:10px; border-bottom:1px solid #1e2642; margin-bottom:5px;">
                     <span id="dropName" style="font-weight:900; display:block; font-size:14px;">...</span>
-                    <span style="font-size:10px; color:var(--primary);">LVL 1 - AKTİF</span>
+                    <span style="font-size:10px; color:var(--primary);">LEVEL 1 ROOKIE</span>
                 </div>
-                <a href="panel.html" class="menu-item">👤 Profilim</a>
+                <a href="panel.html" class="menu-item">👤 Hesabım</a>
                 <a href="#" class="menu-item">💰 Para Yatır</a>
                 <a href="#" class="menu-item" style="color:#ff4d4d;" id="logoutBtnDropdown">🔴 Çıkış Yap</a>
             </div>
         </div>
-
-        <button class="btn login-btn" id="mainLoginBtn">GİRİŞ</button>
-        <button class="btn register-btn" id="mainRegBtn">KATIL</button>
     </div>
 </div>
 
@@ -285,11 +285,15 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// --- DROPDOWN CONTROL ---
+// --- UI / DROPDOWN LOGIC ---
 const avatarTrigger = document.getElementById("avatarTrigger");
 const userDropdown = document.getElementById("userDropdown");
+
 if(avatarTrigger){
-    avatarTrigger.onclick = (e) => { e.stopPropagation(); userDropdown.classList.toggle("active"); };
+    avatarTrigger.onclick = (e) => {
+        e.stopPropagation();
+        userDropdown.classList.toggle("active");
+    };
 }
 window.onclick = () => userDropdown.classList.remove("active");
 
@@ -334,7 +338,7 @@ onAuthStateChanged(auth, user => {
             if(s.exists()){
                 const d = s.data();
                 document.getElementById("userBalance").innerText = d.balance.toLocaleString();
-                document.getElementById("dropName").innerText = d.username.toUpperCase();
+                document.getElementById("dropName").innerText = d.username;
                 avatarTrigger.innerText = d.username.charAt(0).toUpperCase();
             }
         });
@@ -355,7 +359,7 @@ window.onresize = resize; resize();
 for(let i=0; i<100; i++) particles.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, r:Math.random()*2+1, d:Math.random()*0.5+0.3});
 function drawSnow() {
     ctx.clearRect(0,0,canvas.width, canvas.height);
-    ctx.fillStyle = "rgba(255,255,255,0.5)";
+    ctx.fillStyle = "rgba(255,255,255,0.4)";
     ctx.beginPath();
     particles.forEach(p => {
         ctx.moveTo(p.x, p.y); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
@@ -365,7 +369,7 @@ function drawSnow() {
 }
 drawSnow();
 
-// --- UI INTERACTIONS ---
+// --- UI INTERACTIONS (MENU & SEARCH) ---
 const sideMenu = document.getElementById("sideMenu");
 const menuOverlay = document.getElementById("menuOverlay");
 document.getElementById("menuBtn").onclick = () => { sideMenu.classList.add("active"); menuOverlay.classList.add("active"); };
@@ -375,7 +379,8 @@ menuOverlay.onclick = () => { sideMenu.classList.remove("active"); menuOverlay.c
 document.getElementById("searchInput").oninput = (e) => {
     const val = e.target.value.toLowerCase();
     document.querySelectorAll(".game-card").forEach(card => {
-        card.style.display = card.dataset.name.includes(val) ? "block" : "none";
+        const name = card.dataset.name || "";
+        card.style.display = name.includes(val) ? "block" : "none";
     });
 };
 
