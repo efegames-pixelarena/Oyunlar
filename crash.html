@@ -48,10 +48,8 @@
         pointer-events:none; text-align:center; z-index:10;
     }
     .multiplier{font-weight:900; line-height: 1.1;}
-    /* Mavi Yazıyı Kaldırmak İçin Renk Beyaz Yapıldı */
     .multiplier.big{font-size:65px; color:#fff; text-shadow: 0 0 30px rgba(255,255,255,0.2);}
     .multiplier.small{font-size:22px; color:#4fd1ff;}
-    /* Kırmızı Patlama Yazısı */
     .multiplier.crashed{color:#ff2a4d !important; animation: shake 0.3s infinite; text-shadow: 0 0 20px rgba(255, 42, 77, 0.5);}
     .multiplier.crashed::after {
         content: "UZAKLAŞ !!!";
@@ -292,14 +290,14 @@ function updateMultiplier() {
     const elapsed = (Date.now() - startTime) / 1000;
     multiplier = Math.pow(1.11, elapsed);
     
-    // Auto Cashout Kontrolü - Küsuratsız yuvarlama garantisiyle
+    // Auto Cashout - Küsuratsız Yuvarlama Garantili
     if(autoCash1 && activeBet1 > 0) {
         let target = parseFloat(document.getElementById("autoCash1").value);
-        if(multiplier >= target) handleBet(1);
+        if(multiplier >= target) handleBet(1, false, target); // Hedef X baz alınır
     }
     if(autoCash2 && activeBet2 > 0) {
         let target = parseFloat(document.getElementById("autoCash2").value);
-        if(multiplier >= target) handleBet(2);
+        if(multiplier >= target) handleBet(2, false, target); // Hedef X baz alınır
     }
 
     if(multiplier >= crashPoint) { doCrash(); } 
@@ -332,7 +330,6 @@ async function startCountdown() {
 function doCrash() {
     phase = "crashed"; playSfx('crash');
     multEl.className = "multiplier big crashed";
-    // Sadece Çarpan Kalacak, Altında CSS ile Uzaklaş Çıkacak
     multEl.innerText = multiplier.toFixed(2) + "x"; 
     addHistory(multiplier);
     activeBet1 = 0; activeBet2 = 0;
@@ -348,7 +345,7 @@ function addHistory(val) {
     if(h.children.length > 20) h.lastChild.remove();
 }
 
-async function handleBet(box, isAuto = false) {
+async function handleBet(box, isAutoBet = false, forcedX = null) {
     initAudio(); if(!userRef) return;
     let input = document.getElementById("betInput"+box);
     let amount = Math.floor(parseInt(input.value)) || 0;
@@ -357,15 +354,17 @@ async function handleBet(box, isAuto = false) {
     if(phase === "betting" && currentActive === 0 && balance >= amount && amount > 0) {
         await updateDoc(userRef, { balance: increment(-amount) });
         if(box === 1) activeBet1 = amount; else activeBet2 = amount;
-        if(!isAuto) playSfx('bet');
+        if(!isAutoBet) playSfx('bet');
     } 
-    else if(phase === "betting" && currentActive > 0 && !isAuto) {
+    else if(phase === "betting" && currentActive > 0 && !isAutoBet) {
         await updateDoc(userRef, { balance: increment(currentActive) });
         if(box === 1) activeBet1 = 0; else activeBet2 = 0;
     }
     else if(phase === "flying" && currentActive > 0) {
-        // MATEMATİK YUVARLAMASI: Küsuratları tamamen atar (1.53 -> 1.50 mantığı gibi tam sayıya iner)
-        let win = Math.floor(currentActive * multiplier);
+        // Çekim yapılacak çarpan: Eğer Oto Çek ise hedef X, manuel ise o anki canlı X
+        let targetX = forcedX !== null ? forcedX : multiplier;
+        // KÜSURATSIZ EKLEME: 1.53 -> 1.50 mantığı için Math.floor
+        let win = Math.floor(currentActive * targetX);
         await updateDoc(userRef, { balance: increment(win) });
         if(box === 1) activeBet1 = 0; else activeBet2 = 0;
         playSfx('cash');
@@ -381,7 +380,6 @@ function updateButtons() {
             b.disabled = false; b.innerText = active > 0 ? "İPTAL" : "BAHİS YAP";
             b.className = active > 0 ? "cancel" : "";
         } else if (phase === "flying" && active > 0) {
-            // Butondaki canlı tutar gösterimi de küsuratsız yapıldı
             b.disabled = false; b.innerText = `ÇEK (₺${Math.floor(active * multiplier)})`;
             b.className = "cashout";
         } else { b.disabled = true; b.innerText = "BEKLENİYOR"; b.className = ""; }
