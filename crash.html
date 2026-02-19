@@ -33,7 +33,7 @@
     }
 
     .history{
-        position:absolute;top:60px;width:100%;height:38px;
+        position:fixed;top:60px;width:100%;height:38px;
         display:flex;align-items:center;gap:6px;
         padding:0 10px;overflow-x:auto;background:rgba(13, 19, 38, 0.8);
         scrollbar-width: none; z-index: 50;
@@ -43,14 +43,14 @@
     .main{position:absolute;top:0;bottom:240px;width:100%;overflow:hidden;}
     canvas{width:100%; height:100%; display: block;}
 
+    /* Çarpan ve Geri Sayım İçin Ortalanmış Sabit Alan */
     .multiplier-overlay{
-        position:absolute; top:45%; left:50%; transform:translate(-50%,-50%);
-        pointer-events:none; text-align:center; z-index:10;
+        position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+        pointer-events:none; text-align:center; z-index:10; width: 100%;
     }
-    .multiplier{font-weight:900; line-height: 1.1;}
-    .multiplier.big{font-size:65px; color:#fff; text-shadow: 0 0 30px rgba(255,255,255,0.2);}
-    .multiplier.small{font-size:22px; color:#4fd1ff;}
+    .multiplier{font-weight:900; line-height: 1; font-size:75px; color:#fff; text-shadow: 0 0 30px rgba(255,255,255,0.3);}
     
+    /* Patlama Durumu */
     .multiplier.crashed{color:#ff2a4d !important; animation: shake 0.3s infinite; text-shadow: 0 0 20px rgba(255, 42, 77, 0.5);}
     .multiplier.crashed::after {
         content: "UZAKLAŞ !!!";
@@ -83,6 +83,8 @@
         padding:10px; border:1px solid #273c8f; border-radius:8px;
         text-align:center; font-weight:bold; font-size:16px; background:#050811; color:white; outline:none;
     }
+    /* Pasif giriş alanı stili */
+    .betBox input:disabled { opacity: 0.5; border-color: #111; }
 
     .ui-row {
         display: flex; align-items: center; justify-content: space-between;
@@ -131,12 +133,12 @@
 <div class="main">
     <canvas id="graph"></canvas>
     <div class="multiplier-overlay">
-        <div class="multiplier small" id="multiplier">BAĞLANILIYOR...</div>
+        <div class="multiplier" id="multiplier">0.0</div>
     </div>
 </div>
 
 <div class="bottom">
-    <div class="betBox">
+    <div class="betBox" id="box1">
         <input type="number" id="betInput1" value="100">
         <div class="ui-row">
             <span>OTOMATİK BAHİS</span>
@@ -145,7 +147,7 @@
         <button id="btn1">BAHİS YAP</button>
     </div>
 
-    <div class="betBox">
+    <div class="betBox" id="box2">
         <input type="number" id="betInput2" value="200">
         <div class="ui-row">
             <span>OTOMATİK BAHİS</span>
@@ -277,7 +279,7 @@ function updateMultiplier() {
     
     if(multiplier >= crashPoint) { doCrash(); } 
     else {
-        multEl.className = "multiplier big";
+        multEl.className = "multiplier";
         multEl.innerText = multiplier.toFixed(2) + "x";
         updateButtons();
         requestAnimationFrame(updateMultiplier);
@@ -286,16 +288,26 @@ function updateMultiplier() {
 
 async function startCountdown() {
     phase = "betting"; multiplier = 1; let sec = 5;
-    multEl.className = "multiplier small";
+    multEl.className = "multiplier";
+    // Inputları aç
+    document.getElementById("betInput1").disabled = false;
+    document.getElementById("betInput2").disabled = false;
+    
     if(auto1) handleBet(1, true);
     if(auto2) handleBet(2, true);
     updateButtons();
+    
     let timer = setInterval(() => {
-        multEl.innerText = `UÇUŞA ${sec} SN`;
+        multEl.innerText = sec + "s"; // Sadece süre gösteriliyor
         if(sec > 0) playSfx('countdown');
         if(sec <= 0) {
-            clearInterval(timer); phase = "flying";
-            startTime = Date.now(); crashPoint = parseFloat(getCrashPoint());
+            clearInterval(timer); 
+            phase = "flying";
+            // Oyun başladığında inputları kilitle
+            document.getElementById("betInput1").disabled = true;
+            document.getElementById("betInput2").disabled = true;
+            startTime = Date.now(); 
+            crashPoint = parseFloat(getCrashPoint());
             updateMultiplier();
         }
         sec--;
@@ -304,7 +316,7 @@ async function startCountdown() {
 
 function doCrash() {
     phase = "crashed"; playSfx('crash');
-    multEl.className = "multiplier big crashed";
+    multEl.className = "multiplier crashed";
     multEl.innerText = multiplier.toFixed(2) + "x"; 
     addHistory(multiplier);
     activeBet1 = 0; activeBet2 = 0;
@@ -336,7 +348,6 @@ async function handleBet(box, isAutoAction = false) {
         if(box === 1) activeBet1 = 0; else activeBet2 = 0;
     }
     else if(phase === "flying" && currentActive > 0) {
-        // MANUEL ÇEKİM: Küsuratsız ekleme için Math.floor
         let win = Math.floor(currentActive * multiplier);
         await updateDoc(userRef, { balance: increment(win) });
         if(box === 1) activeBet1 = 0; else activeBet2 = 0;
@@ -355,7 +366,11 @@ function updateButtons() {
         } else if (phase === "flying" && active > 0) {
             b.disabled = false; b.innerText = `ÇEK (₺${Math.floor(active * multiplier)})`;
             b.className = "cashout";
-        } else { b.disabled = true; b.innerText = "BEKLENİYOR"; b.className = ""; }
+        } else { 
+            b.disabled = true; 
+            b.innerText = "BEKLENİYOR"; 
+            b.className = ""; 
+        }
     };
     u("btn1", activeBet1); u("btn2", activeBet2);
 }
