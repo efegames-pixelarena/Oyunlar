@@ -102,7 +102,7 @@ body::before {
     align-items: center; background: rgba(0,0,0,0.5); border-bottom: 1px solid var(--b);
 }
 .arena { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; position: relative; touch-action: none; }
-#bigText { font-family: 'Orbitron'; font-size: 70px; font-weight: 900; text-align: center;}
+#bigText { font-family: 'Orbitron'; font-size: 60px; font-weight: 900; text-align: center; transition: 0.1s; }
 #subText { font-family: 'Orbitron'; font-size: 0.9rem; letter-spacing: 3px; color: #555; margin-top: 15px; text-align: center;}
 .flash { background: #fff !important; }
 .flash #bigText, .flash #subText { color: #000 !important; }
@@ -238,6 +238,8 @@ function playBeep(freq, type, duration) {
 
 const sounds = {
     tick: () => playBeep(400, 'sine', 0.1),
+    ready: () => playBeep(300, 'sine', 0.15),
+    wait: () => playBeep(350, 'sine', 0.15),
     go: () => playBeep(800, 'square', 0.2),
     win: () => {
         playBeep(523, 'sine', 0.2);
@@ -390,12 +392,12 @@ function enterRoom() {
         const d = snap.data();
         roomData = d;
 
-        // SERVER TIME OFFSET HESAPLAMA (Senkronizasyon için en kritik nokta)
-        if (d.createdAt && d.createdAt.toMillis && !offsetCalculated) {
-             const fireTime = d.createdAt.toMillis();
-             const localTime = Date.now();
-             serverOffset = fireTime - localTime;
-             offsetCalculated = true;
+        if (d.createdAt && d.createdAt.toMillis && !snap.metadata.hasPendingWrites) {
+            const diff = d.createdAt.toMillis() - (Date.now() - (performance.now() % 1));
+            if (!offsetCalculated || Math.abs(serverOffset - diff) > 2000) {
+                serverOffset = diff;
+                offsetCalculated = true;
+            }
         }
         
         document.getElementById("p1Name").innerText = (d.player1Name || "---").toUpperCase();
@@ -407,39 +409,47 @@ function enterRoom() {
         if (d.state !== lastState) {
             if (countdownInterval) clearInterval(countdownInterval);
             
-            // ODA KURUCU SÜREYİ BELİRLER
+            // MAÇ BAŞLANGICI
             if (d.state === "matched" && uid === d.host) {
                 updateDoc(doc(db, "rooms", currentRoomId), { 
                     state: "countdown", 
-                    startTime: getServerTime() + 3100 // Tam 3 saniye + 100ms ağ gecikmesi payı
+                    startTime: getServerTime() + 2500 // 2.5 sn sonra başlar
                 });
             }
 
-            // KÖKTEN ÇÖZÜLEN GERİ SAYIM MANTIĞI
+            // HAZIR - BEKLE SİSTEMİ
             if (d.state === "countdown") {
                 document.getElementById("arena").classList.remove("flash");
                 document.getElementById("subText").classList.remove("penalty");
-                let lastTickValue = -1;
+                let stage = 0; // 0: HAZIR, 1: BEKLE
                 
                 countdownInterval = setInterval(() => {
                     const now = getServerTime();
-                    // Firebase'deki sabit zamandan şimdiki zamanı çıkarıyoruz
                     const diffMs = d.startTime - now;
-                    const diffSec = Math.ceil(diffMs / 1000);
                     
-                    if (diffSec > 0 && diffSec <= 3) {
-                        document.getElementById("bigText").innerText = diffSec;
-                        document.getElementById("subText").innerText = "HAZIRLAN";
-                        if (diffSec !== lastTickValue) {
-                            sounds.tick();
-                            lastTickValue = diffSec;
+                    // 2.5sn ile 1.2sn arası: HAZIR
+                    if (diffMs > 1200) {
+                        if (stage !== 1) {
+                            document.getElementById("bigText").innerText = "HAZIR";
+                            document.getElementById("subText").innerText = "ODAKLAN";
+                            document.getElementById("bigText").style.color = "var(--p)";
+                            sounds.ready();
+                            stage = 1;
+                        }
+                    } 
+                    // 1.2sn ile 0 arası: BEKLE
+                    else if (diffMs > 0) {
+                        if (stage !== 2) {
+                            document.getElementById("bigText").innerText = "BEKLE";
+                            document.getElementById("subText").innerText = "SAKIN BASMA!";
+                            document.getElementById("bigText").style.color = "var(--gold)";
+                            sounds.wait();
+                            stage = 2;
                         }
                     }
 
-                    // Süre bittiğinde GO!
                     if (diffMs <= 0) {
                         clearInterval(countdownInterval);
-                        document.getElementById("bigText").innerText = "GO!";
                         if (uid === d.host) {
                             updateDoc(doc(db, "rooms", currentRoomId), { 
                                 state: "active", 
@@ -447,18 +457,20 @@ function enterRoom() {
                             });
                         }
                     }
-                }, 16); // 60 FPS hassasiyetinde kontrol
+                }, 50);
             }
 
             if (d.state === "active") {
                 sounds.go();
                 document.getElementById("arena").classList.add("flash");
                 document.getElementById("bigText").innerText = "GO!";
+                document.getElementById("bigText").style.color = "black";
                 document.getElementById("subText").innerText = "ŞİMDİ VUR!";
             }
 
             if (d.state === "result") {
                 document.getElementById("arena").classList.remove("flash");
+                document.getElementById("bigText").style.color = "white";
                 document.getElementById("bigText").innerText = d.reaction || "WIN";
                 if (d.penalty) {
                     document.getElementById("subText").classList.add("penalty");
@@ -468,17 +480,16 @@ function enterRoom() {
                     document.getElementById("subText").innerText = (d.lastWinner || "PLAYER").toUpperCase() + " KAZANDI";
                 }
                 
-                // HOST: Raund geçiş süresini yönetir
                 if (uid === d.host) {
                     setTimeout(() => {
                         if(!currentRoomId) return;
                         const isFinal = (d.score1 >= 11 || d.score2 >= 11);
-                        if(isFinal) {
-                             updateDoc(doc(db, "rooms", currentRoomId), { state: "finished" });
+                        if (isFinal) {
+                            updateDoc(doc(db, "rooms", currentRoomId), { state: "finished" });
                         } else {
-                             updateDoc(doc(db, "rooms", currentRoomId), { 
+                            updateDoc(doc(db, "rooms", currentRoomId), { 
                                 state: "countdown", 
-                                startTime: getServerTime() + 3100, // Her raund başı 3 saniye fix
+                                startTime: getServerTime() + 2500,
                                 round: d.round + 1,
                                 penalty: false
                             });
