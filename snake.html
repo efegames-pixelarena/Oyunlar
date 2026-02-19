@@ -3,16 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>PixelArena | Snake 3310</title>
+<title>PixelArena | Snake Pro</title>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 
 <style>
-/* --- PIXELARENA CORE STYLES --- */
 :root {
     --primary: #4fd1ff;
-    --accent: #ff8a00;
     --bg-dark: #03050a;
-    --glass: rgba(10, 15, 30, 0.9);
     --border: #1e2642;
     --nokia-dark: #0f380f;
     --nokia-med: #2f4f2f;
@@ -21,220 +18,198 @@
 }
 
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-body { 
-    background: var(--bg-dark); 
-    color: white; 
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto; 
-    overflow-x: hidden;
-    min-height: 100vh;
-}
 
-/* --- TOP BAR (SHARED) --- */
-.top-bar {
-    position: fixed; top: 0; width: 100%; height: 60px;
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 0 15px; background: var(--glass);
-    backdrop-filter: blur(15px); border-bottom: 1px solid var(--border); z-index: 2000;
-}
-.brand-section { display: flex; align-items: center; gap: 15px; }
-.brand {
-    font-size: 18px; font-weight: 900; letter-spacing: 1px;
-    background: linear-gradient(90deg, var(--primary), #fff);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-}
-.right-menu { display: flex; gap: 8px; align-items: center; }
-.nav-box { 
-    padding: 7px 12px; border-radius: 12px; font-weight: 800; font-size: 12px; 
-    background: #1a2248; border: 1px solid rgba(79, 209, 255, 0.2); color: var(--primary);
-}
-.btn { padding: 8px 16px; border-radius: 10px; border: none; font-weight: 800; font-size: 12px; cursor: pointer; }
-.logout-btn { background: #ff2a4d; color: white; display: none; }
-
-/* --- SNAKE GAME SPECIFIC --- */
-.game-wrapper {
-    margin-top: 80px;
+body {
+    background: var(--bg-dark);
+    background-image: 
+        radial-gradient(circle at 50% 50%, #1a2248 0%, #03050a 100%);
+    height: 100vh;
+    overflow: hidden;
+    font-family: 'Press Start 2P', monospace;
     display: flex;
     flex-direction: column;
+}
+
+/* --- PROFESYONEL ÜST BAR --- */
+.top-bar {
+    width: 100%;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(10, 15, 30, 0.9);
+    backdrop-filter: blur(15px);
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    z-index: 10;
+}
+
+.brand {
+    font-size: 18px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    background: linear-gradient(90deg, var(--primary), #fff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* --- OYUN ALANI --- */
+.main-container {
+    flex: 1;
+    display: flex;
+    justify-content: center;
     align-items: center;
     padding: 20px;
-    font-family: 'Press Start 2P', monospace;
 }
 
 .console {
     width: 100%;
-    max-width: 360px;
-    background: var(--nokia-light);
-    border: 10px solid var(--nokia-med);
-    border-radius: 20px;
-    padding: 15px;
-    box-shadow: 0 0 30px rgba(0,0,0,0.5);
+    max-width: 380px;
+    background: #2a2f3a;
+    padding: 25px;
+    border-radius: 40px;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.8), inset 0 2px 5px rgba(255,255,255,0.1);
+    border: 1px solid #444;
+    position: relative;
 }
 
 .score-panel {
-    width: 100%;
-    font-size: 8px;
-    color: var(--nokia-dark);
     display: flex;
     justify-content: space-between;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
+    color: var(--nokia-dark);
+    background: var(--nokia-light);
+    padding: 10px;
+    border-radius: 5px 5px 0 0;
+    font-size: 9px;
+    border-bottom: 2px solid var(--nokia-dark);
 }
 
 .screen-container {
     position: relative;
-    border: 4px solid var(--nokia-dark);
     background: var(--nokia-screen);
-    width: 100%;
+    border: 10px solid #111;
+    border-radius: 5px;
+    box-shadow: inset 0 0 40px rgba(0,0,0,0.2);
+    overflow: hidden;
 }
 
 canvas {
+    display: block;
     width: 100%;
     height: auto;
-    display: block;
     image-rendering: pixelated;
 }
 
+/* --- KONTROLLER --- */
 .controls {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    grid-gap: 8px;
-    margin-top: 20px;
+    grid-gap: 15px;
+    margin-top: 30px;
+    padding: 0 10px;
 }
 
-.control-btn {
-    background: var(--nokia-med);
-    color: white;
-    height: 55px;
+.btn {
+    aspect-ratio: 1/1;
+    background: #1e222a;
+    border-radius: 50%;
     display: flex;
     justify-content: center;
     align-items: center;
-    border-radius: 10px;
-    font-size: 18px;
-    box-shadow: 0 4px 0 var(--nokia-dark);
+    color: #888;
+    font-size: 20px;
+    border: none;
+    box-shadow: 0 6px 0 #111, 0 10px 15px rgba(0,0,0,0.5);
     cursor: pointer;
+    transition: all 0.1s;
 }
 
-.control-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--nokia-dark); }
-
-.startup-overlay {
-    position: fixed; inset: 0; background: var(--nokia-light);
-    display: flex; flex-direction: column; justify-content: center; align-items: center;
-    z-index: 3000; color: var(--nokia-dark); cursor: pointer;
+.btn:active {
+    transform: translateY(4px);
+    box-shadow: 0 2px 0 #111;
+    color: var(--primary);
 }
 
-.gameover-layer {
-    position: absolute; inset: 0; background: rgba(155, 188, 15, 0.95);
-    display: none; flex-direction: column; justify-content: center; align-items: center;
-    text-align: center; color: var(--nokia-dark); font-size: 12px;
+.btn-up { grid-column: 2; }
+.btn-left { grid-column: 1; }
+.btn-down { grid-column: 2; }
+.btn-right { grid-column: 3; }
+
+/* --- EKRAN KATMANLARI --- */
+.overlay {
+    position: absolute;
+    inset: 0;
+    background: var(--nokia-screen);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 5;
+    text-align: center;
 }
 
-/* --- SIDE MENU --- */
-.side-menu {
-    position: fixed; top: 0; left: -280px; width: 280px; height: 100%;
-    background: #050811; padding: 30px 20px; transition: 0.4s;
-    z-index: 4000; border-right: 1px solid var(--border);
-}
-.side-menu.active { left: 0; }
-.side-menu a { display: block; padding: 15px; color: #ccd6f6; text-decoration: none; font-weight: 700; }
+#gameover { display: none; background: rgba(155, 188, 15, 0.9); }
+
+.blink { animation: blinker 1s linear infinite; }
+@keyframes blinker { 50% { opacity: 0; } }
 
 </style>
 </head>
 <body>
 
 <div class="top-bar">
-    <div class="brand-section">
-        <div id="menuBtn" style="cursor:pointer; font-size:24px;">☰</div>
-        <div class="brand">PixelArena</div>
-    </div>
-    <div class="right-menu">
-        <div class="nav-box" id="balanceBox" style="display:none;">
-            ₺<span id="userBalance">0</span>
-        </div>
-        <button class="btn logout-btn" id="logoutBtn">ÇIKIŞ</button>
-    </div>
+    <div class="brand">PIXELARENA</div>
 </div>
 
-<div id="sideMenu" class="side-menu">
-    <div style="font-size: 20px; font-weight: 900; margin-bottom: 30px;">MENU <span id="closeMenu" style="float:right; cursor:pointer">✕</span></div>
-    <a href="index.html">🏠 Ana Sayfa</a>
-    <a href="panel.html">💎 Bonus</a>
-    <a href="index.html#games">🕹️ Oyunlar</a>
-</div>
-
-<div class="startup-overlay" id="startup">
-    <h1 style="font-size: 24px;">NOKIA</h1>
-    <p style="font-size: 8px; margin-top: 10px;">Connecting People</p>
-    <p style="margin-top: 50px; font-size: 10px; animation: blink 1s infinite;">OYNAMAK İÇİN DOKUN</p>
-</div>
-
-<div class="game-wrapper">
+<div class="main-container">
     <div class="console">
         <div class="score-panel">
-            <div>SKOR: <span id="score">0</span></div>
-            <div>EN YÜKSEK: <span id="high">0</span></div>
+            <span>SCORE:<span id="score">0</span></span>
+            <span>BEST:<span id="high">0</span></span>
         </div>
 
         <div class="screen-container">
             <canvas id="game" width="300" height="300"></canvas>
-            <div class="gameover-layer" id="gameover">
-                <p>GAME OVER</p>
-                <p style="font-size: 8px; margin-top: 15px;">TEKRAR DENE</p>
+            
+            <div id="startup" class="overlay">
+                <div style="font-size:18px; color:var(--nokia-dark); margin-bottom:20px;">SNAKE PRO</div>
+                <div class="blink" style="font-size:8px; color:var(--nokia-dark);">START TO PLAY</div>
+            </div>
+
+            <div id="gameover" class="overlay">
+                <div style="font-size:14px; color:var(--nokia-dark);">GAME OVER</div>
+                <div id="finalScore" style="font-size:10px; color:var(--nokia-dark); margin: 15px 0;"></div>
+                <div class="blink" style="font-size:7px; color:var(--nokia-dark);">TAP TO RESTART</div>
             </div>
         </div>
 
         <div class="controls">
-            <div style="visibility:hidden"></div>
-            <div class="control-btn" id="btn-UP">↑</div>
-            <div style="visibility:hidden"></div>
-            <div class="control-btn" id="btn-LEFT">←</div>
-            <div class="control-btn" id="btn-DOWN">↓</div>
-            <div class="control-btn" id="btn-RIGHT">→</div>
+            <button class="btn btn-up" id="btn-UP">↑</button>
+            <button class="btn btn-left" id="btn-LEFT">←</button>
+            <button class="btn btn-down" id="btn-DOWN">↓</button>
+            <button class="btn btn-right" id="btn-RIGHT">→</button>
         </div>
     </div>
 </div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-const firebaseConfig = {
-    apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
-    authDomain:"emirhan-site.firebaseapp.com",
-    projectId:"emirhan-site",
-    storageBucket:"emirhan-site.firebasestorage.app",
-    messagingSenderId:"668871888390",
-    appId:"1:668871888390:web:76568bda84cb1641f7bd87"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-// --- AUTH & BALANCE SYNC ---
-onAuthStateChanged(auth, user => {
-    if(user) {
-        document.getElementById("balanceBox").style.display = "block";
-        document.getElementById("logoutBtn").style.display = "block";
-        onSnapshot(doc(db, "users", user.uid), s => {
-            if(s.exists()) document.getElementById("userBalance").innerText = s.data().balance.toLocaleString();
-        });
-    } else {
-        // Giriş yapmamışsa ana sayfaya yönlendirilebilir veya butonlar gizlenebilir
-    }
-});
-
-document.getElementById("logoutBtn").onclick = () => signOut(auth).then(() => location.href='index.html');
-
-// --- SNAKE GAME ENGINE ---
+<script>
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 const box = 15;
 const size = 300;
 
-let snake, direction, food, score, started = false;
-let currentSpeed, lastMoveTime, nextDirection, audioCtx;
+let snake, direction, nextDirection, food, score, started = false;
+let currentSpeed, lastMoveTime, audioCtx;
 
-function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+// High Score Yükle
+const getHigh = () => localStorage.getItem("snake_pro_best") || 0;
+document.getElementById("high").innerText = getHigh();
+
+function initAudio() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+}
+
 function beep(freq, dur) {
     if (!audioCtx) return;
     const osc = audioCtx.createOscillator();
@@ -246,27 +221,26 @@ function beep(freq, dur) {
     osc.start(); osc.stop(audioCtx.currentTime + dur/1000);
 }
 
-const highScore = () => localStorage.getItem("snakeHighPro") || 0;
-document.getElementById("high").innerText = highScore();
-
-document.getElementById("startup").onclick = function() {
-    initAudio();
-    this.style.display = "none";
-    startGame();
-};
-
 function startGame() {
-    snake = [{ x: 10 * box, y: 10 * box }, { x: 9 * box, y: 10 * box }];
+    initAudio();
+    snake = [{x: 10*box, y: 10*box}, {x: 9*box, y: 10*box}];
     direction = "RIGHT";
     nextDirection = "RIGHT";
-    food = { x: 5 * box, y: 5 * box, special: false };
     score = 0;
-    currentSpeed = 180;
-    lastMoveTime = 0;
+    currentSpeed = 150;
+    spawnFood();
     started = true;
     document.getElementById("score").innerText = "0";
+    document.getElementById("startup").style.display = "none";
     document.getElementById("gameover").style.display = "none";
     requestAnimationFrame(gameLoop);
+}
+
+function spawnFood() {
+    food = {
+        x: Math.floor(Math.random() * (size/box)) * box,
+        y: Math.floor(Math.random() * (size/box)) * box
+    };
 }
 
 function gameLoop(time) {
@@ -282,43 +256,63 @@ function gameLoop(time) {
 function update() {
     direction = nextDirection;
     let head = { x: snake[0].x, y: snake[0].y };
+
     if (direction === "UP") head.y -= box;
     if (direction === "DOWN") head.y += box;
     if (direction === "LEFT") head.x -= box;
     if (direction === "RIGHT") head.x += box;
 
-    if (head.x < 0 || head.y < 0 || head.x >= size || head.y >= size || snake.some(s => s.x === head.x && s.y === head.y)) {
-        gameOver(); return;
+    // Çarpışma Kontrolü
+    if (head.x < 0 || head.y < 0 || head.x >= size || head.y >= size || 
+        snake.some(s => s.x === head.x && s.y === head.y)) {
+        endGame();
+        return;
     }
 
+    // Yemek Yeme
     if (head.x === food.x && head.y === food.y) {
         score++;
-        beep(400, 50);
-        food = { x: Math.floor(Math.random()*20)*box, y: Math.floor(Math.random()*20)*box };
-        currentSpeed = Math.max(70, 180 - (score * 2));
-    } else { snake.pop(); }
+        beep(600, 50);
+        document.getElementById("score").innerText = score;
+        spawnFood();
+        currentSpeed = Math.max(60, 150 - (score * 2)); // Hızlanma
+    } else {
+        snake.pop();
+    }
+
     snake.unshift(head);
-    document.getElementById("score").innerText = score;
 }
 
 function draw() {
     ctx.fillStyle = "#9bbc0f";
     ctx.fillRect(0, 0, size, size);
+
+    // Yılan
+    snake.forEach((s, i) => {
+        ctx.fillStyle = "#0f380f";
+        ctx.fillRect(s.x + 1, s.y + 1, box - 2, box - 2);
+        if(i === 0) { // Gözler
+            ctx.fillStyle = "#9bbc0f";
+            ctx.fillRect(s.x + 3, s.y + 3, 2, 2);
+            ctx.fillRect(s.x + 10, s.y + 3, 2, 2);
+        }
+    });
+
+    // Yemek
     ctx.fillStyle = "#0f380f";
-    snake.forEach(s => ctx.fillRect(s.x + 1, s.y + 1, box - 2, box - 2));
     ctx.fillRect(food.x + 4, food.y + 4, box - 8, box - 8);
 }
 
-function gameOver() {
+function endGame() {
     started = false;
     beep(150, 400);
-    if (score > highScore()) localStorage.setItem("snakeHighPro", score);
+    if (score > getHigh()) localStorage.setItem("snake_pro_best", score);
+    document.getElementById("high").innerText = getHigh();
+    document.getElementById("finalScore").innerText = "SCORE: " + score;
     document.getElementById("gameover").style.display = "flex";
 }
 
-document.getElementById("gameover").onclick = startGame;
-
-// Controls
+// Kontrolcü Dinleyicileri
 const handleInput = (d) => {
     if (d === "UP" && direction !== "DOWN") nextDirection = "UP";
     if (d === "DOWN" && direction !== "UP") nextDirection = "DOWN";
@@ -326,14 +320,23 @@ const handleInput = (d) => {
     if (d === "RIGHT" && direction !== "LEFT") nextDirection = "RIGHT";
 };
 
-["UP", "DOWN", "LEFT", "RIGHT"].forEach(d => {
-    document.getElementById("btn-"+d).onpointerdown = (e) => { e.preventDefault(); handleInput(d); };
+document.querySelectorAll('.btn').forEach(btn => {
+    btn.onpointerdown = (e) => {
+        e.preventDefault();
+        handleInput(btn.id.split('-')[1]);
+    };
 });
 
-// Menu Logic
-const sideMenu = document.getElementById("sideMenu");
-document.getElementById("menuBtn").onclick = () => sideMenu.classList.add("active");
-document.getElementById("closeMenu").onclick = () => sideMenu.classList.remove("active");
+document.addEventListener("keydown", e => {
+    if (e.key === "ArrowUp") handleInput("UP");
+    if (e.key === "ArrowDown") handleInput("DOWN");
+    if (e.key === "ArrowLeft") handleInput("LEFT");
+    if (e.key === "ArrowRight") handleInput("RIGHT");
+});
+
+document.getElementById("startup").onclick = startGame;
+document.getElementById("gameover").onclick = startGame;
+
 </script>
 </body>
 </html>
