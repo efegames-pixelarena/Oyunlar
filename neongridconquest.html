@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Neon Conquest | Ultimate Edition</title>
+    <title>Neon Conquest | Pro Edition</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@500;800&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -19,15 +19,15 @@
             background-image: radial-gradient(circle at 50% 50%, #0a1020 0%, #020408 100%);
         }
 
-        /* --- PROFESYONEL ÜST BAR --- */
+        /* --- ÜST PANEL --- */
         .header {
             height: 70px; padding: 0 20px; display: flex; align-items: center; justify-content: space-between;
             background: rgba(0,0,0,0.5); border-bottom: 1px solid var(--border); backdrop-filter: blur(10px); z-index: 100;
         }
         .logo { font-family: 'Orbitron'; font-weight: 900; font-size: 1.1rem; letter-spacing: 2px; color: #fff; }
-        .user-badge { font-size: 0.7rem; color: var(--p1); border: 1px solid var(--p1); padding: 5px 12px; border-radius: 4px; text-transform: uppercase; }
+        .user-badge { font-size: 0.7rem; color: var(--p1); border: 1px solid var(--p1); padding: 5px 12px; border-radius: 4px; text-transform: uppercase; letter-spacing: 1px; }
 
-        /* --- GELİŞMİŞ LOBİ --- */
+        /* --- LOBİ --- */
         #lobby { flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 20px; animation: fadeIn 0.5s ease; }
         .search-box { background: var(--glass); border: 1px solid var(--border); padding: 15px; border-radius: 20px; display: flex; align-items: center; }
         .search-box input { flex: 1; background: transparent; border: none; color: var(--p1); font-size: 1rem; outline: none; font-weight: 800; }
@@ -40,7 +40,7 @@
         }
         .btn-join { background: var(--p1); color: #000; border: none; padding: 10px 20px; border-radius: 10px; font-family: 'Orbitron'; font-weight: 900; cursor: pointer; }
 
-        /* --- OYUN TASARIMI --- */
+        /* --- OYUN ALANI --- */
         #game-view { display: none; flex: 1; flex-direction: column; }
         .game-hud { display: grid; grid-template-columns: 1fr auto 1fr; padding: 20px; align-items: center; background: rgba(0,0,0,0.3); }
         .p-info { display: flex; flex-direction: column; }
@@ -54,7 +54,7 @@
         .cell.p1 { background: var(--p1); box-shadow: 0 0 15px var(--p1); border: none; }
         .cell.p2 { background: var(--p2); box-shadow: 0 0 15px var(--p2); border: none; }
 
-        /* --- MODAL POPUP --- */
+        /* --- SONUÇ MODAL --- */
         #resultModal {
             position: fixed; inset: 0; background: rgba(2, 4, 8, 0.95);
             display: none; flex-direction: column; align-items: center; justify-content: center;
@@ -65,10 +65,10 @@
             border-radius: 30px; text-align: center; box-shadow: 0 0 50px rgba(0, 255, 65, 0.2);
             max-width: 320px; width: 90%;
         }
-        .winner-name { font-family: 'Orbitron'; font-size: 1.5rem; margin: 15px 0; color: #fff; }
+        .winner-name { font-family: 'Orbitron'; font-size: 1.2rem; margin: 15px 0; color: #fff; }
         .final-score { font-size: 2rem; font-weight: 900; margin-bottom: 25px; color: var(--p1); }
 
-        /* --- BUTTONS --- */
+        /* --- ETKİLEŞİM --- */
         .btn-exit { background: rgba(255,0,0,0.1); color: #ff4444; border: 1px solid #ff4444; padding: 8px 15px; border-radius: 8px; font-weight: 800; font-size: 0.7rem; cursor: pointer; }
         .floating-create { position: fixed; bottom: 30px; align-self: center; background: var(--p1); color: #000; padding: 18px 40px; border-radius: 50px; font-family: 'Orbitron'; font-weight: 900; border: none; box-shadow: 0 10px 30px var(--p1-shadow); cursor: pointer; }
 
@@ -78,7 +78,7 @@
 <body>
 
     <div class="header">
-        <div class="user-badge" id="meName">...</div>
+        <div class="user-badge" id="meName">YÜKLENİYOR...</div>
         <div class="logo">NEON CONQUEST</div>
         <button class="btn-exit" id="gameLeave">AYRIL</button>
     </div>
@@ -94,12 +94,12 @@
     <div id="game-view">
         <div class="game-hud">
             <div class="p-info">
-                <span id="n1" style="color:var(--p1); font-size:0.7rem;">PLAYER 1</span>
+                <span id="n1" style="color:var(--p1); font-size:0.7rem;">-</span>
                 <span class="score" id="s1" style="color:var(--p1)">0</span>
             </div>
             <div id="timer-box">60</div>
             <div class="p-info r">
-                <span id="n2" style="color:var(--p2); font-size:0.7rem;">PLAYER 2</span>
+                <span id="n2" style="color:var(--p2); font-size:0.7rem;">-</span>
                 <span class="score" id="s2" style="color:var(--p2)">0</span>
             </div>
         </div>
@@ -110,7 +110,7 @@
 
     <div id="resultModal">
         <div class="modal-card">
-            <div id="modalIcon" style="font-size: 4rem;">🏆</div>
+            <div id="modalIcon" style="font-size: 3rem;">🏆</div>
             <div class="winner-name" id="winnerLabel">ZAFER!</div>
             <div class="final-score" id="scoreLabel">0 - 0</div>
             <button class="btn-join" style="width: 100%;" onclick="location.reload()">LOBİYE DÖN</button>
@@ -137,10 +137,21 @@
 
     let uid, username, currentRoomId, myRole, timerInterval = null, isFinished = false;
 
+    // --- Kullanıcı Bilgilerini Çekme ---
     onAuthStateChanged(auth, async (user) => {
         if (!user) { signInAnonymously(auth); return; }
         uid = user.uid;
-        username = "AGENT_" + Math.floor(1000 + Math.random() * 9000);
+        
+        // Firestore'dan gerçek ismi çek
+        const userRef = doc(db, "users", uid);
+        const userSnap = await getDoc(userRef);
+        
+        if (userSnap.exists()) {
+            username = userSnap.data().username;
+        } else {
+            username = "GUEST_" + uid.slice(0, 4);
+        }
+        
         document.getElementById('meName').innerText = username;
         listenLobby();
     });
@@ -230,7 +241,7 @@
         document.getElementById('s2').innerText = s2;
 
         const isFull = Object.keys(data.cells || {}).length === 36;
-        if((data.timer <= 0 || isFull) && !isFinished) endGame(s1, s2);
+        if((data.timer <= 0 || isFull) && !isFinished) endGame(s1, s2, data.p1Name, data.p2Name);
     }
 
     function startTimer(id, start) {
@@ -242,11 +253,11 @@
         }, 1000);
     }
 
-    async function endGame(s1, s2) {
+    async function endGame(s1, s2, name1, name2) {
         isFinished = true;
         if(timerInterval) clearInterval(timerInterval);
         
-        const winner = s1 > s2 ? "PLAYER 1" : (s2 > s1 ? "PLAYER 2" : "BERABERE");
+        const winner = s1 > s2 ? name1 : (s2 > s1 ? name2 : "BERABERE");
         const modal = document.getElementById('resultModal');
         document.getElementById('winnerLabel').innerText = winner + " KAZANDI!";
         document.getElementById('scoreLabel').innerText = `${s1} - ${s2}`;
