@@ -2,198 +2,240 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Neon Grid Conquest | PixelArena</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@700;900&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>PixelArena Duel | Online Reflex</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --bg: #03050a;
-            --p1-color: #ff4d4d; /* Kırmızı - Senin İstediğin */
-            --p2-color: #4fd1ff; /* Mavi */
-            --border: rgba(255, 255, 255, 0.1);
-        }
-        body {
-            background: var(--bg);
-            color: white;
-            font-family: 'Inter', sans-serif;
-            margin: 0;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+        :root { 
+            --p: #00f2ff; /* Mavi Neon */
+            --a: #ff4d4d; /* Kırmızı (İstediğin gibi) */
+            --bg: #05070a; 
+            --b: #161b22; 
+            --gold: #ffcc00; 
+            --success: #00ff88;
         }
 
-        /* Üst Panel */
-        .stats-bar {
-            width: 100%;
-            padding: 20px;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            background: rgba(255,255,255,0.02);
-            border-bottom: 1px solid var(--border);
+        * { margin:0; padding:0; box-sizing:border-box; font-family: 'Rajdhani', sans-serif; user-select: none; }
+        body { background: var(--bg); color: white; height: 100vh; overflow: hidden; width: 100%; position: fixed; }
+
+        /* Arkaplan Grid Efekti */
+        body::before {
+            content: ""; position: absolute; inset: 0;
+            background-image: linear-gradient(rgba(0, 242, 255, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 242, 255, 0.03) 1px, transparent 1px);
+            background-size: 30px 30px; z-index: -1;
         }
 
-        .score-box { text-align: center; }
-        .score-box span { display: block; font-size: 12px; color: #94a3b8; text-transform: uppercase; }
-        .score-box b { font-size: 32px; }
-        #score1 { color: var(--p1-color); text-shadow: 0 0 15px var(--p1-color); }
-        #score2 { color: var(--p2-color); text-shadow: 0 0 15px var(--p2-color); }
-
-        .timer-circle {
-            width: 60px; height: 60px;
-            border: 3px solid var(--p1-color);
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 24px; font-weight: 900;
+        /* Top Bar */
+        .top-bar { 
+            height: 65px; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); 
+            border-bottom: 2px solid var(--p); display: flex; align-items: center; 
+            justify-content: space-between; padding: 0 15px; z-index: 1000;
         }
+        .brand { font-family: 'Orbitron'; font-weight: 900; color: var(--p); text-shadow: 0 0 10px var(--p); }
 
-        /* Oyun Alanı */
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(6, 1fr);
-            gap: 10px;
-            width: 90vw;
-            max-width: 400px;
-            margin-top: 30px;
+        /* Lobi Tasarımı */
+        #lobby { flex: 1; padding: 15px; overflow-y: auto; height: calc(100vh - 65px); }
+        .lobby-controls { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+        .search-bar input {
+            width: 100%; background: var(--b); border: 1px solid #333; border-radius: 8px;
+            padding: 12px; color: white; outline: none; border-bottom: 2px solid var(--p);
         }
+        .action-buttons { display: flex; gap: 8px; }
+        .btn { flex: 1; padding: 15px; border: none; border-radius: 8px; font-weight: 900; font-family: 'Orbitron'; cursor: pointer; text-transform: uppercase; }
+        .create-btn { background: var(--p); color: #000; }
+        .quick-btn { background: var(--success); color: #000; }
 
-        .cell {
-            aspect-ratio: 1/1;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            cursor: pointer;
-            transition: 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        /* Oda Kartları */
+        .room-card { 
+            background: rgba(255,255,255,0.03); border: 1px solid var(--b); padding: 15px; 
+            border-radius: 12px; display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 10px; border-left: 4px solid var(--p);
         }
+        .badge-live { background: var(--a); padding: 2px 6px; border-radius: 4px; font-size: 10px; animation: flash 1s infinite; }
+        @keyframes flash { 50% { opacity: 0.5; } }
 
-        .cell.p1 { background: var(--p1-color); box-shadow: 0 0 20px var(--p1-color); border: none; transform: scale(0.95); }
-        .cell.p2 { background: var(--p2-color); box-shadow: 0 0 20px var(--p2-color); border: none; transform: scale(0.95); }
+        /* Oyun Ekranı */
+        #game-view { display: none; height: 100vh; flex-direction: column; }
+        .arena { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; }
+        #bigText { font-family: 'Orbitron'; font-size: 70px; font-weight: 900; text-shadow: 0 0 20px rgba(255,255,255,0.2); }
+        .flash { background: white !important; color: black !important; }
 
-        .controls { margin-top: 40px; }
-        .btn-quit {
-            padding: 12px 30px;
-            background: transparent;
-            border: 1px solid white;
-            color: white;
-            border-radius: 50px;
-            cursor: pointer;
-            font-weight: 700;
-            text-transform: uppercase;
-        }
+        /* Modallar */
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 2000; }
+        .modal-content { background: var(--b); padding: 25px; border-radius: 20px; border: 1px solid var(--p); width: 90%; max-width: 350px; text-align: center; }
+        .modal-content input { width: 100%; padding: 12px; margin: 15px 0; background: #000; border: 1px solid #333; color: var(--p); text-align: center; }
     </style>
 </head>
 <body>
 
-    <div class="stats-bar">
-        <div class="score-box">
-            <span>SİZ</span>
-            <b id="score1">0</b>
-        </div>
-        <div class="timer-circle" id="timer">30</div>
-        <div class="score-box">
-            <span>RAKİP</span>
-            <b id="score2">0</b>
+<div id="lobby">
+    <div class="top-bar" style="position: static; background: transparent; border: none; padding: 0;">
+        <div class="brand">REFLEX DUEL</div>
+        <button onclick="window.location.href='index.html'" style="background:none; border:1px solid #444; color:white; padding:5px 10px; border-radius:5px;">GERİ</button>
+    </div>
+    
+    <div class="lobby-controls">
+        <input type="text" id="searchInput" class="search-bar" placeholder="ARENA ARA...">
+        <div class="action-buttons">
+            <button class="btn create-btn" id="createRoomBtn" onclick="openModal('createModal')">ODA KUR</button>
+            <button class="btn quick-btn" id="quickJoinBtn">HIZLI KATIL</button>
         </div>
     </div>
+    <div id="roomList"></div>
+</div>
 
-    <div class="grid" id="gameGrid"></div>
-
-    <div class="controls">
-        <button class="btn-quit" onclick="location.href='index.html'">Ayrıl</button>
+<div id="game-view">
+    <div class="top-bar">
+        <div id="p1Name">OYUNCU 1</div>
+        <div id="scoreArea" style="font-family:'Orbitron'; font-weight:900;"><span id="p1Score">0</span> - <span id="p2Score">0</span></div>
+        <div id="p2Name">OYUNCU 2</div>
     </div>
+    <div class="arena" id="arena">
+        <div id="bigText">HAZIR</div>
+        <div id="subText">BEKLE...</div>
+    </div>
+</div>
+
+<div id="createModal" class="modal">
+    <div class="modal-content">
+        <h2 style="font-family:'Orbitron'; color:var(--p);">ODA KUR</h2>
+        <input type="text" id="roomPassInput" placeholder="ŞİFRE (BOŞ BIRAKILABİLİR)">
+        <button class="btn create-btn" id="confirmCreateBtn" style="width:100%">OLUŞTUR</button>
+        <p onclick="closeModal('createModal')" style="margin-top:10px; cursor:pointer;">İptal</p>
+    </div>
+</div>
 
 <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getFirestore, doc, onSnapshot, updateDoc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, doc, setDoc, updateDoc, onSnapshot, collection, query, where, getDoc, deleteDoc, serverTimestamp, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-    const firebaseConfig = {
-        apiKey: "AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
-        authDomain: "emirhan-site.firebaseapp.com",
-        projectId: "emirhan-site",
-        storageBucket: "emirhan-site.firebasestorage.app",
-        messagingSenderId: "668871888390",
-        appId: "1:668871888390:web:76568bda84cb1641f7bd87"
-    };
+const firebaseConfig = {
+    apiKey: "AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
+    authDomain: "emirhan-site.firebaseapp.com",
+    projectId: "emirhan-site",
+    storageBucket: "emirhan-site.firebasestorage.app",
+    messagingSenderId: "668871888390",
+    appId: "1:668871888390:web:76568bda84cb1641f7bd87"
+};
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const auth = getAuth(app);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
 
-    const gridEl = document.getElementById('gameGrid');
-    const timerEl = document.getElementById('timer');
-    let myRole = 'p1'; // Varsayılan
-    let gameActive = false;
+let uid, username, currentRoomId = null, unsubRoom = null, roomData = null;
 
-    // Izgarayı Oluştur
-    for (let i = 0; i < 36; i++) {
-        const cell = document.createElement('div');
-        cell.className = 'cell';
-        cell.dataset.id = i;
-        cell.onclick = () => handleMove(i);
-        gridEl.appendChild(cell);
-    }
+// GİRİŞ KONTROLÜ
+onAuthStateChanged(auth, async (user) => {
+    if (!user) { window.location.href = 'index.html'; return; }
+    uid = user.uid;
+    const snap = await getDoc(doc(db, "users", uid));
+    username = snap.data()?.username || "Warrior";
+    listenLobby();
+});
 
-    async function handleMove(index) {
-        if (!gameActive) return;
-        const gameRef = doc(db, "games", "active_conquest");
-        const updates = {};
-        updates[`cells.${index}`] = myRole;
-        await updateDoc(gameRef, updates);
-    }
+// LOBİ DİNLEME
+function listenLobby() {
+    onSnapshot(collection(db, "rooms"), (snap) => {
+        const list = document.getElementById("roomList");
+        list.innerHTML = "";
+        snap.forEach(d => {
+            const data = d.data();
+            const card = document.createElement("div");
+            card.className = "room-card";
+            card.innerHTML = `
+                <div>
+                    <b>${data.player1Name.toUpperCase()}</b>
+                    <div style="font-size:10px; color:#777;">#${d.id.slice(0,5)}</div>
+                </div>
+                <button class="btn" style="padding:8px 15px; background:var(--p); color:black;" 
+                onclick="window.joinRoom('${d.id}')">KATIL</button>
+            `;
+            list.appendChild(card);
+        });
+    });
+}
 
-    onAuthStateChanged(auth, user => {
-        if (user) {
-            initGame();
-        } else {
-            location.href = 'index.html';
+// ODA KURMA
+document.getElementById("confirmCreateBtn").onclick = async () => {
+    const pass = document.getElementById("roomPassInput").value;
+    const roomRef = doc(collection(db, "rooms"));
+    currentRoomId = roomRef.id;
+    await setDoc(roomRef, {
+        player1: uid, player1Name: username, player2: null, player2Name: "Bekleniyor...",
+        score1: 0, score2: 0, state: "waiting", host: uid, password: pass,
+        displayBig: "HAZIR", displaySub: "RAKİP BEKLENİYOR"
+    });
+    enterGame();
+    closeModal('createModal');
+};
+
+// KATILMA FONKSİYONU
+window.joinRoom = async (id) => {
+    const roomRef = doc(db, "rooms", id);
+    await updateDoc(roomRef, { player2: uid, player2Name: username, state: "matched" });
+    currentRoomId = id;
+    enterGame();
+};
+
+// OYUN EKRANINA GEÇİŞ
+function enterGame() {
+    document.getElementById("lobby").style.display = "none";
+    document.getElementById("game-view").style.display = "flex";
+    
+    unsubRoom = onSnapshot(doc(db, "rooms", currentRoomId), (snap) => {
+        if(!snap.exists()) return;
+        const d = snap.data();
+        roomData = d;
+        
+        document.getElementById("p1Name").innerText = d.player1Name;
+        document.getElementById("p2Name").innerText = d.player2Name;
+        document.getElementById("p1Score").innerText = d.score1;
+        document.getElementById("p2Score").innerText = d.score2;
+        document.getElementById("bigText").innerText = d.displayBig;
+        document.getElementById("subText").innerText = d.displaySub;
+        
+        // Host ise oyun mantığını yönet
+        if(uid === d.host && d.state === "matched") {
+            startCountdown();
         }
     });
+}
 
-    async function initGame() {
-        const gameRef = doc(db, "games", "active_conquest");
-        
-        // Oyunu Dinle
-        onSnapshot(gameRef, (snapshot) => {
-            if (!snapshot.exists()) {
-                // Oyun yoksa başlat (Reset)
-                setDoc(gameRef, { cells: {}, timer: 30, status: 'playing' });
-                return;
-            }
+// OYUN MANTIĞI (SADECE HOST ÇALIŞTIRIR)
+function startCountdown() {
+    updateDoc(doc(db, "rooms", currentRoomId), { state: "playing", displayBig: "3", displaySub: "ODAKLAN" });
+    let count = 3;
+    const intv = setInterval(() => {
+        count--;
+        if(count > 0) {
+            updateDoc(doc(db, "rooms", currentRoomId), { displayBig: count.toString() });
+        } else {
+            clearInterval(intv);
+            const randomWait = Math.random() * 3000 + 1000;
+            setTimeout(() => {
+                updateDoc(doc(db, "rooms", currentRoomId), { state: "active", displayBig: "GO!", displaySub: "VUR!" });
+            }, randomWait);
+        }
+    }, 1000);
+}
 
-            const data = snapshot.data();
-            renderGrid(data.cells);
-            timerEl.innerText = data.timer;
-            
-            if (data.timer <= 0) {
-                gameActive = false;
-                calculateWinner(data.cells);
-            } else {
-                gameActive = true;
-            }
-        });
-    }
+// TIKLAMA (REAKSİYON)
+document.getElementById("arena").onclick = async () => {
+    if(!roomData || roomData.state !== "active") return;
+    
+    const isP1 = uid === roomData.player1;
+    await updateDoc(doc(db, "rooms", currentRoomId), {
+        state: "matched",
+        score1: isP1 ? roomData.score1 + 1 : roomData.score1,
+        score2: !isP1 ? roomData.score2 + 1 : roomData.score2,
+        displayBig: "KAZANDI",
+        displaySub: username.toUpperCase()
+    });
+};
 
-    function renderGrid(cells) {
-        let s1 = 0, s2 = 0;
-        const allCells = document.querySelectorAll('.cell');
-        allCells.forEach((cell, i) => {
-            cell.className = 'cell'; // Reset
-            if (cells[i]) {
-                cell.classList.add(cells[i]);
-                cells[i] === 'p1' ? s1++ : s2++;
-            }
-        });
-        document.getElementById('score1').innerText = s1;
-        document.getElementById('score2').innerText = s2;
-    }
-
-    function calculateWinner(cells) {
-        // Puan hesaplama ve bitiş ekranı buraya gelecek
-        alert("Oyun Bitti! Skorları kontrol edin.");
-        location.href = 'index.html';
-    }
+window.openModal = (id) => document.getElementById(id).style.display = 'flex';
+window.closeModal = (id) => document.getElementById(id).style.display = 'none';
 
 </script>
 </body>
