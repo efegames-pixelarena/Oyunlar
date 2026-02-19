@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Neon Conquest | Ultimate V7 Fixed</title>
+    <title>Neon Conquest | Ultimate V7 Final</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@500;800&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -11,14 +11,14 @@
             --glass: rgba(10, 15, 25, 0.95); --border: rgba(0, 242, 255, 0.2);
         }
 
-        * { margin:0; padding:0; box-sizing:border-box; font-family: 'JetBrains+Mono', monospace; -webkit-tap-highlight-color: transparent; }
+        /* Font düzeltmesi yapıldı */
+        * { margin:0; padding:0; box-sizing:border-box; font-family: 'JetBrains Mono', monospace; -webkit-tap-highlight-color: transparent; }
         
         body { 
             background: var(--bg); color: white; height: 100vh; overflow: hidden;
             display: flex; flex-direction: column; position: relative;
         }
 
-        /* --- SİBER ARKA PLAN ANİMASYONU --- */
         .bg-fx { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at 50% 50%, #0a1020 0%, #020408 100%); }
         .grid-layer {
             position: absolute; width: 200%; height: 200%; top: -50%; left: -50%;
@@ -27,7 +27,6 @@
         }
         @keyframes gridMove { from { transform: perspective(500px) rotateX(60deg) translateY(0); } to { transform: perspective(500px) rotateX(60deg) translateY(45px); } }
 
-        /* --- ÜST PANEL --- */
         .header {
             height: 70px; padding: 0 15px; display: flex; align-items: center; justify-content: space-between;
             background: rgba(0,0,0,0.8); border-bottom: 1px solid var(--border); backdrop-filter: blur(15px); z-index: 100;
@@ -35,7 +34,6 @@
         .logo { font-family: 'Orbitron'; font-weight: 900; font-size: 0.85rem; text-shadow: 0 0 10px var(--p1); letter-spacing: 1px; }
         .user-badge { font-size: 0.65rem; color: var(--p1); border: 1px solid var(--p1); padding: 5px 10px; border-radius: 4px; }
 
-        /* --- LOBİ --- */
         #lobby { flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto; z-index: 10; }
         .room-card {
             background: var(--glass); border: 1px solid var(--border); padding: 15px; border-radius: 15px;
@@ -46,12 +44,10 @@
         .tag-waiting { background: rgba(0,255,65,0.1); color: var(--p1); }
         .tag-playing { background: rgba(255,0,247,0.1); color: var(--p2); }
 
-        /* --- MODALLAR --- */
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(10px); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 20px; }
         .modal-box { background: var(--glass); border: 2px solid var(--p1); padding: 30px; border-radius: 20px; width: 100%; max-width: 340px; text-align: center; box-shadow: 0 0 30px rgba(0,255,65,0.2); }
         .modal-input { width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border); padding: 12px; border-radius: 10px; color: #fff; margin-bottom: 15px; outline: none; text-align: center; }
 
-        /* --- OYUN ALANI --- */
         #game-view { display: none; flex: 1; flex-direction: column; z-index: 10; }
         .game-hud { display: grid; grid-template-columns: 1fr auto 1fr; padding: 15px; align-items: center; background: rgba(0,0,0,0.6); }
         .score { font-family: 'Orbitron'; font-size: 1.8rem; font-weight: 900; }
@@ -66,14 +62,14 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
-<body onclick="unlockAudio()">
+<body onclick="window.unlockAudio()">
 
     <div class="bg-fx"><div class="grid-layer"></div></div>
 
     <div class="header">
         <div class="user-badge" id="meName">GİRİŞ...</div>
         <div class="logo">NEON CONQUEST</div>
-        <button onclick="location.reload()" style="background:none; border:1px solid #ff4444; color:#ff4444; padding:5px 10px; border-radius:5px; font-size:0.6rem; cursor:pointer;">AYRIL</button>
+        <button onclick="location.reload()" style="background:none; border:1px solid #ff4444; color:#ff4444; padding:5px 10px; border-radius:5px; font-size:0.6rem; cursor:pointer;">ÇIKIŞ</button>
     </div>
 
     <div id="lobby">
@@ -165,7 +161,6 @@
     let uid, username, curRoomId, myRole, isFin = false, canPlay = false, timerInt = null;
     let pRoom = "", pPass = "";
 
-    // 1. GLOBAL FONKSİYONLAR (window'a bağlandı)
     window.toggleModal = (id, show) => { document.getElementById(id).style.display = show ? 'flex' : 'none'; };
 
     onAuthStateChanged(auth, async user => {
@@ -178,14 +173,12 @@
         cleanOldRooms();
     });
 
-    // 4. TEMİZLİK FİLTRESİ (Sadece beklemedeki eski odaları siler)
     async function cleanOldRooms() {
         const q = query(collection(db, "conquest_rooms"), where("p1", "==", uid), where("status", "==", "waiting"));
         const snap = await getDocs(q);
         snap.forEach(d => deleteDoc(d.ref));
     }
 
-    // 5. SEARCH FİLTRELEME
     document.getElementById('searchInput').oninput = (e) => {
         const term = e.target.value.toLowerCase();
         document.querySelectorAll('.room-card').forEach(card => {
@@ -201,10 +194,8 @@
             snap.forEach(d => {
                 const r = d.data();
                 if(r.status === 'finished') return;
-
                 let s1=0, s2=0;
-                Object.values(r.cells || {}).forEach(v => v === 'p1' ? s1++ : s2++);
-
+                if(r.cells) Object.values(r.cells).forEach(v => v === 'p1' ? s1++ : s2++);
                 const card = document.createElement('div');
                 card.className = "room-card";
                 card.setAttribute('data-name', r.p1Name);
@@ -238,10 +229,8 @@
 
     window.joinReq = (id, pass, p1) => {
         if(p1 === uid) return;
-        if(pass) {
-            pRoom = id; pPass = pass;
-            window.toggleModal('passModal', true);
-        } else finalizeJoin(id);
+        if(pass) { pRoom = id; pPass = pass; window.toggleModal('passModal', true); } 
+        else finalizeJoin(id);
     };
 
     document.getElementById('confirmJoin').onclick = () => {
@@ -253,7 +242,6 @@
 
     window.openQuickModal = async () => {
         window.toggleModal('quickModal', true);
-        document.getElementById('quickStatus').innerText = "TARANIYOR...";
         const q = query(collection(db, "conquest_rooms"), where("status", "==", "waiting"));
         const snap = await getDocs(q);
         let found = false;
@@ -277,31 +265,47 @@
         document.getElementById('game-view').style.display = 'flex';
         const g = document.getElementById('grid');
         g.innerHTML = "";
+        
+        let currentCells = {}; // Yerel hücre takibi
+
         for(let i=0; i<36; i++) {
             const c = document.createElement('div');
             c.className = 'cell';
-            c.onclick = () => { if(canPlay && !isFin) { play('box'); updateDoc(doc(db, "conquest_rooms", id), { [`cells.${i}`]: myRole }); }};
+            // Hücre Çalma Engeli: !currentCells[i] eklendi
+            c.onclick = () => { 
+                if(canPlay && !isFin && !currentCells[i]) { 
+                    play('box'); 
+                    updateDoc(doc(db, "conquest_rooms", id), { [`cells.${i}`]: myRole }); 
+                }
+            };
             g.appendChild(c);
         }
 
         onSnapshot(doc(db, "conquest_rooms", id), snap => {
             if(!snap.exists()) { if(!isFin) location.reload(); return; }
             const d = snap.data();
+            currentCells = d.cells || {};
+            
             document.getElementById('n1').innerText = d.p1Name;
             document.getElementById('n2').innerText = d.p2Name;
             document.getElementById('timer-box').innerText = d.timer;
 
             if(d.status === 'playing') {
                 if(!canPlay) { play('start'); canPlay = true; document.getElementById('statusInfo').style.display='none'; }
-                // 2. TİMER ÇAKIŞMA ÖNLEYİCİ
+                
+                // Stabil Timer Akışı (P1 yönetir, kota dostu)
                 if(myRole === 'p1' && !timerInt && !isFin) {
+                    let localTimer = d.timer;
                     timerInt = setInterval(() => {
-                        if(!isFin) {
-                            getDoc(doc(db, "conquest_rooms", id)).then(s => {
-                                let t = s.data().timer;
-                                if(t > 0) updateDoc(doc(db, "conquest_rooms", id), { timer: t - 1 });
-                                else finishGame(id);
-                            });
+                        if(!isFin && localTimer > 0) {
+                            localTimer--;
+                            document.getElementById('timer-box').innerText = localTimer;
+                            // Her 2 saniyede bir DB senkronizasyonu
+                            if(localTimer % 2 === 0 || localTimer === 0) {
+                                updateDoc(doc(db, "conquest_rooms", id), { timer: localTimer });
+                            }
+                        } else if(localTimer <= 0) {
+                            clearInterval(timerInt);
                         }
                     }, 1000);
                 }
@@ -309,21 +313,18 @@
 
             let s1=0, s2=0;
             document.querySelectorAll('.cell').forEach((c, i) => {
-                if(d.cells && d.cells[i]) {
-                    c.className = 'cell ' + d.cells[i];
-                    d.cells[i] === 'p1' ? s1++ : s2++;
+                if(currentCells[i]) {
+                    c.className = 'cell ' + currentCells[i];
+                    currentCells[i] === 'p1' ? s1++ : s2++;
                 }
             });
             document.getElementById('s1').innerText = s1;
             document.getElementById('s2').innerText = s2;
 
-            if((d.timer <= 0 || (d.cells && Object.keys(d.cells).length === 36)) && !isFin) finish(s1, s2);
+            if((d.timer <= 0 || Object.keys(currentCells).length === 36) && !isFin) finish(s1, s2);
         });
     }
 
-    async function finishGame(id) { if(myRole === 'p1') await updateDoc(doc(db, "conquest_rooms", id), { timer: 0 }); }
-
-    // 3. EKSİK isFin KONTROLÜ
     function finish(s1, s2) {
         if(isFin) return; 
         isFin = true; 
