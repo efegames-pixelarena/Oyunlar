@@ -75,6 +75,7 @@ body::before {
     border: none; border-radius: 8px; font-weight: 900; font-family: 'Orbitron'; 
     font-size: 0.65rem; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center;
 }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(1); }
 .create-btn { flex: 1; padding: 15px; background: var(--p); color: #000; box-shadow: 0 0 15px rgba(0,242,255,0.3); }
 .quick-btn { flex: 1; padding: 15px; background: var(--success); color: #000; }
 
@@ -97,13 +98,6 @@ body::before {
 @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
 @keyframes slideIn { from { transform: translateX(-20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
-/* BOŞ DURUM */
-.empty-state {
-    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-    text-align: center; gap: 15px; padding: 40px 0; color: #444;
-}
-.empty-icon { font-size: 3rem; filter: grayscale(1); opacity: 0.3; }
-
 /* MODALLAR */
 .modal {
     position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px);
@@ -118,7 +112,6 @@ body::before {
     background: #000; border: 1px solid #333; padding: 12px; color: var(--p);
     border-radius: 8px; font-family: 'Orbitron'; font-size: 0.8rem; text-align: center; outline: none;
 }
-.modal-content input:focus { border-color: var(--p); }
 
 /* OYUN GÖRÜNÜMÜ */
 #game-view { display: none; flex: 1; flex-direction: column; }
@@ -153,7 +146,6 @@ body::before {
 <div id="createModal" class="modal">
     <div class="modal-content">
         <h2 style="font-family:'Orbitron'; color:var(--p); font-size:1.1rem;">ARENA OLUŞTUR</h2>
-        <p style="font-size:0.75rem; color:#888;">Rakiplerini beklemek için bir oda hazırla.</p>
         <input type="text" id="roomPassInput" placeholder="ŞİFRE (İSTEĞE BAĞLI)" maxlength="10">
         <div style="display:flex; gap:10px;">
             <button onclick="closeModal('createModal')" style="flex:1; padding:12px; border-radius:8px; background:#222; border:none; color:white; font-family:'Orbitron'; font-size:0.7rem;">İPTAL</button>
@@ -165,7 +157,6 @@ body::before {
 <div id="passwordModal" class="modal">
     <div class="modal-content">
         <h2 style="font-family:'Orbitron'; color:var(--gold); font-size:1.1rem;">ŞİFRE GEREKLİ</h2>
-        <p style="font-size:0.75rem; color:#888;">Bu arena kilitli. Giriş anahtarını yaz.</p>
         <input type="password" id="joinPassInput" placeholder="ŞİFRE" maxlength="10">
         <div style="display:flex; gap:10px;">
             <button onclick="closeModal('passwordModal')" style="flex:1; padding:12px; border-radius:8px; background:#222; border:none; color:white; font-family:'Orbitron'; font-size:0.7rem;">İPTAL</button>
@@ -177,7 +168,7 @@ body::before {
 <div id="quickJoinModal" class="modal">
     <div class="modal-content">
         <h2 style="font-family:'Orbitron'; color:var(--a); font-size:1.1rem;">DURUM</h2>
-        <p id="quickJoinMsg" style="font-size:0.75rem; color:#888;"></p>
+        <p id="quickJoinMsg" style="font-size:0.75rem; color:#888; text-align:center;"></p>
         <button onclick="closeModal('quickJoinModal')" style="width:100%; padding:12px; border-radius:8px; background:#222; border:none; color:white; font-family:'Orbitron'; font-size:0.7rem;">KAPAT</button>
     </div>
 </div>
@@ -192,7 +183,6 @@ body::before {
             <button class="btn quick-btn" id="quickJoinBtn">HIZLI KATIL</button>
         </div>
     </div>
-
     <div id="roomList"></div>
 </div>
 
@@ -239,7 +229,7 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 
 let uid, username, currentRoomId = null, unsubRoom = null, unsubLobby = null, tapLock = false;
-let countdownInterval = null, lastTapTime = 0, lastState = "", allRooms = [];
+let countdownInterval = null, lastState = "", allRooms = [];
 let serverOffset = 0;
 let pendingRoomId = null;
 
@@ -253,14 +243,16 @@ const initAudio = () => {
 };
 function playBeep(freq, type, duration) {
     if(!audioCtx) return;
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.type = type;
-    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
-    osc.connect(gain); gain.connect(audioCtx.destination);
-    osc.start(); osc.stop(audioCtx.currentTime + duration);
+    try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + duration);
+    } catch(e) {}
 }
 const sounds = {
     tick: () => playBeep(400, 'sine', 0.1),
@@ -272,16 +264,9 @@ const sounds = {
     }
 };
 
-// MODAL YÖNETİMİ
-window.openModal = (id) => { 
-    initAudio(); 
-    document.getElementById(id).style.display = "flex"; 
-};
-window.closeModal = (id) => {
-    document.getElementById(id).style.display = "none";
-};
+window.openModal = (id) => { initAudio(); document.getElementById(id).style.display = "flex"; };
+window.closeModal = (id) => { document.getElementById(id).style.display = "none"; };
 
-// KİMLİK DOĞRULAMA
 onAuthStateChanged(auth, async (user) => {
     if (!user) { signInAnonymously(auth); return; }
     uid = user.uid;
@@ -297,7 +282,6 @@ onAuthStateChanged(auth, async (user) => {
     listenLobby();
 });
 
-// LOBİ DİNLEME
 function listenLobby() {
     if(unsubLobby) unsubLobby(); 
     const q = query(collection(db, "rooms"), where("state", "in", ["waiting", "matched", "countdown", "active", "result"]));
@@ -308,7 +292,6 @@ function listenLobby() {
     });
 }
 
-// ODA LİSTELEME VE FİLTRELEME
 function renderRooms() {
     const list = document.getElementById("roomList");
     const searchTerm = document.getElementById("searchInput").value.toLowerCase();
@@ -320,25 +303,20 @@ function renderRooms() {
     );
 
     if (filtered.length === 0) {
-        list.innerHTML = `
-            <div class="empty-state">
-                <div class="empty-icon">🛰️</div>
-                <div style="font-family:'Orbitron'; font-size:0.7rem; letter-spacing:1px;">AKTİF ARENA BULUNAMADI</div>
-            </div>`;
+        list.innerHTML = `<div class="empty-state"><div class="empty-icon">🛰️</div><div style="font-family:'Orbitron'; font-size:0.7rem; letter-spacing:1px;">AKTİF ARENA BULUNAMADI</div></div>`;
         return;
     }
 
     filtered.forEach(data => {
         const isFull = data.player1 && data.player2;
         const isMyRoom = data.player1 === uid;
-        const p1Display = (data.player1Name || "Bilinmiyor").toUpperCase();
         const isInGame = ["countdown", "active", "result"].includes(data.state);
         
         const div = document.createElement("div");
         div.className = "room-card";
         div.innerHTML = `
             <div class="room-details">
-                <div class="room-host">${p1Display} ${isMyRoom ? '<small>(SEN)</small>' : ''}</div>
+                <div class="room-host">${(data.player1Name || "Bilinmiyor").toUpperCase()} ${isMyRoom ? '<small>(SEN)</small>' : ''}</div>
                 <div class="room-meta">
                     <span class="badge ${isInGame ? 'badge-live' : 'badge-wait'}">${isInGame ? 'CANLI' : 'BEKLEMEDE'}</span>
                     <span>•</span>
@@ -361,18 +339,19 @@ function renderRooms() {
 
 document.getElementById("searchInput").oninput = renderRooms;
 
-// HIZLI KATIL BUTONU
-document.getElementById("quickJoinBtn").onclick = () => {
-    const available = allRooms.find(r => !r.player2 && !r.password && r.player1 !== uid);
+// DÜZELTME 1 & 2: Hızlı Katıl Mantığı ve Spam Engelleme
+document.getElementById("quickJoinBtn").onclick = async function() {
+    this.disabled = true; // Yarış durumu engelleme
+    const available = allRooms.find(r => !r.player2 && !r.password && r.player1 !== uid && r.state === "waiting");
     if (available) {
-        joinRoom(available.id, false);
+        await joinRoom(available.id, false);
     } else {
         document.getElementById("quickJoinMsg").innerText = "ŞU AN UYGUN AÇIK ARENA BULUNAMADI. KENDİ ODANI KURABİLİRSİN.";
         openModal("quickJoinModal");
     }
+    this.disabled = false;
 };
 
-// ODA KURMA ONAY
 document.getElementById("confirmCreateBtn").onclick = async () => {
     const pass = document.getElementById("roomPassInput").value.trim();
     const newRoomRef = doc(collection(db, "rooms"));
@@ -385,7 +364,6 @@ document.getElementById("confirmCreateBtn").onclick = async () => {
     closeModal("createModal"); enterRoom();
 };
 
-// ODAYA GİRİŞ VE ŞİFRE KONTROLÜ
 window.joinRoom = async (id, isLocked) => {
     initAudio();
     if (isLocked) {
@@ -397,7 +375,6 @@ window.joinRoom = async (id, isLocked) => {
     executeJoin(id);
 };
 
-// ŞİFRE ONAY BUTONU
 document.getElementById("confirmJoinPassBtn").onclick = async () => {
     const pass = document.getElementById("joinPassInput").value.trim();
     const roomRef = doc(db, "rooms", pendingRoomId);
@@ -424,7 +401,6 @@ async function executeJoin(id) {
     } catch (e) { alert(e); }
 }
 
-// OYUN İÇİ MANTIK
 function enterRoom() {
     if(unsubLobby) { unsubLobby(); unsubLobby = null; } 
     document.getElementById("lobby").style.display = "none";
@@ -437,7 +413,8 @@ function enterRoom() {
         if (!snap.exists()) { quitGame(); return; }
         const d = snap.data();
 
-        if (d.createdAt && serverOffset === 0) {
+        // DÜZELTME 3: Garantili Zaman Senkronizasyonu
+        if (d.createdAt && d.createdAt.toMillis && serverOffset === 0) {
             serverOffset = d.createdAt.toMillis() - Date.now();
         }
         
