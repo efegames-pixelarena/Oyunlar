@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Neon Conquest | Ultimate V8 Final</title>
+    <title>Neon Conquest | Ultimate V8.1 Final</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@500;800&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -111,8 +111,8 @@
     <div id="quickModal" class="modal">
         <div class="modal-box" style="border-color:#fff">
             <h3 id="quickStatus">TARANIYOR...</h3>
-            <div style="margin:20px 0; color:var(--p1); font-size:0.7rem;">Uygun boş oda aranıyor...</div>
-            <button onclick="window.closeQuick()" class="btn-neon" style="background:#ff4444; width:100%">DURDUR</button>
+            <div id="quickSub" style="margin:20px 0; color:var(--p1); font-size:0.7rem;">Uygun boş oda aranıyor...</div>
+            <button id="quickBtn" onclick="window.closeQuick()" class="btn-neon" style="background:#ff4444; width:100%">DURDUR</button>
         </div>
     </div>
 
@@ -154,17 +154,22 @@
 
     window.toggleModal = (id, show) => { document.getElementById(id).style.display = show ? 'flex' : 'none'; };
 
-    // --- BUTON KONTROLCÜSÜ ---
+    // --- BUTON KONTROLCÜSÜ (TEMİZLİK GARANTİLİ) ---
     window.exitController = async () => {
+        const exitBtn = document.getElementById('mainExitBtn');
+        exitBtn.disabled = true;
+        exitBtn.innerText = "...";
+
         if (!curRoomId) {
             window.location.href = "index.html";
         } else {
-            // Zombi oda temizliği
-            if (myRole === 'p1') {
-                await deleteDoc(doc(db, "conquest_rooms", curRoomId));
-            } else {
-                await updateDoc(doc(db, "conquest_rooms", curRoomId), { p2: null, status: 'waiting' });
-            }
+            try {
+                if (myRole === 'p1') {
+                    await deleteDoc(doc(db, "conquest_rooms", curRoomId));
+                } else {
+                    await updateDoc(doc(db, "conquest_rooms", curRoomId), { p2: null, status: 'waiting' });
+                }
+            } catch (e) { console.error("Çıkış hatası:", e); }
             location.reload();
         }
     };
@@ -182,21 +187,37 @@
     async function cleanOldRooms() {
         const q = query(collection(db, "conquest_rooms"), where("p1", "==", uid), where("status", "==", "waiting"));
         const snap = await getDocs(q);
-        snap.forEach(d => deleteDoc(d.ref));
+        const batch = [];
+        snap.forEach(d => batch.push(deleteDoc(d.ref)));
+        await Promise.all(batch);
     }
+
+    // --- ARAMA KUTUSU VE LOBİ DİNLEME ---
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+        const term = e.target.value.toLowerCase();
+        document.querySelectorAll('.room-card').forEach(card => {
+            const name = card.getAttribute('data-name').toLowerCase();
+            card.style.display = name.includes(term) ? 'flex' : 'none';
+        });
+    });
 
     function listenLobby() {
         onSnapshot(collection(db, "conquest_rooms"), snap => {
             const list = document.getElementById('roomList');
+            const searchVal = document.getElementById('searchInput').value.toLowerCase();
             list.innerHTML = "";
             snap.forEach(d => {
                 const r = d.data();
                 if(r.status === 'finished') return;
+                
                 let s1=0, s2=0;
                 if(r.cells) Object.values(r.cells).forEach(v => v === 'p1' ? s1++ : s2++);
+                
                 const card = document.createElement('div');
                 card.className = "room-card";
                 card.setAttribute('data-name', r.p1Name);
+                if (searchVal && !r.p1Name.toLowerCase().includes(searchVal)) card.style.display = 'none';
+
                 card.innerHTML = `
                     <div>
                         <b>${r.p1Name} ${r.pass ? '🔒' : ''}</b>
@@ -225,19 +246,42 @@
         enterGame(id);
     };
 
+    // --- GELİŞTİRİLMİŞ HIZLI KATIL ---
     window.openQuickModal = async () => {
         window.toggleModal('quickModal', true);
+        document.getElementById('quickStatus').innerText = "TARANIYOR...";
+        document.getElementById('quickBtn').innerText = "DURDUR";
+        document.getElementById('quickBtn').style.background = "#ff4444";
         quickSearching = true;
+
         const q = query(collection(db, "conquest_rooms"), where("status", "==", "waiting"));
         const snap = await getDocs(q);
-        let found = false;
-        snap.forEach(d => {
-            if(!found && !d.data().pass && d.data().p1 !== uid && quickSearching) {
-                found = true;
-                setTimeout(() => { if(quickSearching) { window.toggleModal('quickModal', false); finalizeJoin(d.id); } }, 1000);
+        let foundId = null;
+
+        for (let d of snap.docs) {
+            const r = d.data();
+            if(!r.pass && r.p1 !== uid && quickSearching) {
+                foundId = d.id;
+                break;
             }
-        });
-        if(!found) setTimeout(() => { if(quickSearching) document.getElementById('quickStatus').innerText = "ODA BULUNAMADI"; }, 2000);
+        }
+
+        if(foundId && quickSearching) {
+            setTimeout(() => { 
+                if(quickSearching) {
+                    window.toggleModal('quickModal', false); 
+                    finalizeJoin(foundId); 
+                }
+            }, 1000);
+        } else {
+            setTimeout(() => { 
+                if(quickSearching) {
+                    document.getElementById('quickStatus').innerText = "ODA BULUNAMADI";
+                    document.getElementById('quickBtn').innerText = "KAPAT";
+                    document.getElementById('quickBtn').style.background = "#444";
+                }
+            }, 2000);
+        }
     };
 
     window.closeQuick = () => { quickSearching = false; window.toggleModal('quickModal', false); };
@@ -265,6 +309,7 @@
         document.getElementById('mainExitBtn').innerText = "LOBİ";
         document.getElementById('mainExitBtn').style.borderColor = "#00f2ff";
         document.getElementById('mainExitBtn').style.color = "#00f2ff";
+        document.getElementById('mainExitBtn').disabled = false;
         
         document.getElementById('lobby').style.display = 'none';
         document.getElementById('game-view').style.display = 'flex';
@@ -278,7 +323,7 @@
             c.className = 'cell';
             c.onclick = () => { 
                 if(canPlay && !isFin && !currentCells[i]) { 
-                    play('box'); 
+                    playSfx('box'); 
                     updateDoc(doc(db, "conquest_rooms", id), { [`cells.${i}`]: myRole }); 
                 }
             };
@@ -295,7 +340,7 @@
             document.getElementById('timer-box').innerText = d.timer;
 
             if(d.status === 'playing') {
-                if(!canPlay) { play('start'); canPlay = true; document.getElementById('statusInfo').style.display='none'; }
+                if(!canPlay) { playSfx('start'); canPlay = true; document.getElementById('statusInfo').style.display='none'; }
                 
                 if(myRole === 'p1' && !timerInt && !isFin) {
                     let localTimer = d.timer;
@@ -334,13 +379,29 @@
         clearInterval(timerInt);
         const win = (myRole === 'p1' && s1 > s2) || (myRole === 'p2' && s2 > s1);
         const draw = s1 === s2;
-        play(draw ? 'lose' : (win ? 'win' : 'lose'));
+        playSfx(draw ? 'lose' : (win ? 'win' : 'lose'));
         document.getElementById('winnerLabel').innerText = draw ? "BERABERE" : (win ? "ZAFER!" : "KAYBETTİN");
         document.getElementById('scoreLabel').innerText = `${s1} - ${s2}`;
         window.toggleModal('resultModal', true);
     }
 
-    window.unlockAudio = () => { if(audioReady) return; Object.values(sfx).forEach(s => { s.play(); s.pause(); }); audioReady = true; };
+    // --- GELİŞTİRİLMİŞ SES SİSTEMİ (iOS/SAFARI UYUMLU) ---
+    window.unlockAudio = () => { 
+        if(audioReady) return; 
+        Object.values(sfx).forEach(s => { 
+            s.play().then(() => { s.pause(); s.currentTime = 0; }).catch(e => console.log("Audio warm-up skip"));
+        }); 
+        audioReady = true; 
+    };
+
+    function playSfx(key) {
+        if(!audioReady) return;
+        const sound = sfx[key];
+        if(sound) {
+            sound.currentTime = 0;
+            sound.play().catch(e => console.log("Playback blocked"));
+        }
+    }
 </script>
 </body>
 </html>
