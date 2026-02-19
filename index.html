@@ -3,142 +3,146 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>PixelArena | Elite Gaming Experience</title>
+<title>PixelArena | Next-Gen Interface</title>
 
 <style>
-/* --- PREMIUIM DESIGN SYSTEM --- */
+/* --- NEXT-GEN DESIGN SYSTEM --- */
 :root {
-    --primary: #00f2ff;
-    --primary-glow: rgba(0, 242, 255, 0.4);
-    --accent: #ffd700;
-    --accent-glow: rgba(255, 215, 0, 0.3);
-    --bg-deep: #020408;
-    --glass-bright: rgba(255, 255, 255, 0.03);
-    --glass-dark: rgba(0, 0, 0, 0.6);
-    --border-gold: rgba(212, 175, 55, 0.2);
-    --success: #00ffaa;
+    --bg: #020617;
+    --card: rgba(15, 23, 42, 0.6);
+    --primary: #8b5cf6; /* Electric Violet */
+    --primary-glow: rgba(139, 92, 246, 0.3);
+    --secondary: #0ea5e9; /* Sky Blue */
+    --border: rgba(255, 255, 255, 0.05);
+    --text-main: #f8fafc;
+    --text-dim: #94a3b8;
+    --success: #22c55e;
 }
 
-* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; font-family: 'Inter', -apple-system, system-ui, sans-serif; }
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
 
 body { 
-    background: var(--bg-deep); 
-    background-image: 
-        radial-gradient(at 0% 0%, rgba(0, 242, 255, 0.08) 0, transparent 50%),
-        radial-gradient(at 100% 100%, rgba(212, 175, 55, 0.08) 0, transparent 50%);
-    color:#f8fafc; 
-    overflow-x:hidden;
+    background-color: var(--bg);
+    color: var(--text-main);
+    overflow-x: hidden;
     min-height: 100vh;
+    /* Dinamik Aura Arka Plan */
+    background-image: 
+        radial-gradient(circle at 0% 0%, rgba(139, 92, 246, 0.15) 0%, transparent 40%),
+        radial-gradient(circle at 100% 100%, rgba(14, 165, 233, 0.1) 0%, transparent 40%);
 }
 
-#snow { position:fixed; top:0; left:0; width:100%; height:100%; z-index:1; pointer-events:none; opacity: 0.25; }
+#snow { position:fixed; top:0; left:0; width:100%; height:100%; z-index:1; pointer-events:none; opacity: 0.3; }
 
-/* --- NAVIGATION ELITE --- */
+/* --- NAV BAR --- */
 .top-bar {
     position: fixed; top: 0; width: 100%; height: 80px;
     display: flex; align-items: center; justify-content: space-between;
-    padding: 0 40px; background: rgba(2, 4, 8, 0.7);
-    backdrop-filter: blur(25px); border-bottom: 1px solid var(--glass-bright); z-index: 2000;
+    padding: 0 5%; background: rgba(2, 6, 23, 0.8);
+    backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); z-index: 2000;
 }
 
 .brand {
-    font-size: 24px; font-weight: 900; letter-spacing: 4px;
-    background: linear-gradient(to right, #fff, var(--primary), var(--accent));
+    font-size: 24px; font-weight: 900; letter-spacing: -0.5px;
+    background: linear-gradient(to right, #fff, var(--secondary));
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    text-transform: uppercase;
 }
 
 .right-menu { display: flex; align-items: center; gap: 15px; }
 
-/* --- PROFILE & DROPDOWN --- */
+/* --- AUTH BUTTONS --- */
+.btn { 
+    padding: 12px 24px; border-radius: 12px; border: none; 
+    font-weight: 700; font-size: 14px; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+}
+.login-btn { background: transparent; color: #fff; border: 1px solid var(--border); }
+.login-btn:hover { background: rgba(255,255,255,0.05); border-color: #fff; }
+.register-btn { background: #fff; color: #000; }
+.register-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(255,255,255,0.1); }
+
+/* --- PROFILE SYSTEM --- */
 .profile-wrapper { position: relative; display: none; }
 .avatar-trigger {
-    width: 48px; height: 48px; border-radius: 50%;
-    background: linear-gradient(135deg, #111, #222);
-    border: 2px solid var(--border-gold); display: flex; align-items: center;
-    justify-content: center; font-weight: 800; color: var(--accent);
-    cursor: pointer; transition: 0.4s; box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    width: 48px; height: 48px; border-radius: 16px;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    border: 2px solid rgba(255,255,255,0.1); display: flex; align-items: center;
+    justify-content: center; font-weight: 800; color: #fff;
+    cursor: pointer; transition: 0.3s;
 }
-.avatar-trigger:hover { transform: scale(1.05); border-color: var(--primary); box-shadow: 0 0 15px var(--primary-glow); }
 
 .dropdown-menu {
     position: absolute; top: 70px; right: 0; width: 300px;
-    background: rgba(10, 12, 18, 0.95); border: 1px solid var(--border-gold);
-    border-radius: 20px; display: none; flex-direction: column;
-    overflow: hidden; box-shadow: 0 40px 80px rgba(0,0,0,0.9); z-index: 3000;
-    backdrop-filter: blur(20px);
+    background: #0f172a; border: 1px solid var(--border);
+    border-radius: 24px; display: none; flex-direction: column;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.5); z-index: 3000; padding: 10px;
 }
-.dropdown-menu.active { display: flex; animation: slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+.dropdown-menu.active { display: flex; animation: scaleIn 0.3s ease; }
 
-@keyframes slideDown { from { opacity: 0; transform: translateY(-10px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes scaleIn { from { opacity: 0; transform: scale(0.95) translateY(-10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
 
-.u-header { padding: 25px; border-bottom: 1px solid var(--glass-bright); background: linear-gradient(to bottom, rgba(255,215,0,0.05), transparent); }
-.u-header .name { font-size: 18px; font-weight: 800; color: #fff; letter-spacing: 0.5px; }
-.u-header .rank { font-size: 11px; font-weight: 900; color: var(--accent); border: 1px solid var(--accent); padding: 2px 12px; border-radius: 5px; display: inline-block; margin-top: 8px; text-transform: uppercase; }
+.u-header { padding: 20px; border-bottom: 1px solid var(--border); }
+.u-header .name { font-size: 18px; font-weight: 800; display: block; }
+.u-header .rank { font-size: 11px; font-weight: 700; color: var(--secondary); background: rgba(14, 165, 233, 0.1); padding: 4px 10px; border-radius: 8px; display: inline-block; margin-top: 8px; }
 
-.u-balance { padding: 20px 25px; background: rgba(255,255,255,0.02); display: flex; flex-direction: column; gap: 5px; }
-.u-balance span { font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
-.u-balance b { font-size: 22px; color: var(--success); letter-spacing: 1px; font-family: 'Courier New', Courier, monospace; }
+.u-balance { padding: 20px; display: flex; justify-content: space-between; align-items: center; }
+.u-balance b { font-size: 20px; color: var(--success); }
 
-.menu-links { padding: 10px; }
 .m-item {
-    display: flex; align-items: center; gap: 15px; padding: 14px 20px;
-    border-radius: 12px; text-decoration: none; color: #94a3b8;
-    font-size: 14px; font-weight: 600; transition: 0.3s;
+    display: flex; align-items: center; gap: 12px; padding: 12px;
+    border-radius: 12px; text-decoration: none; color: var(--text-dim);
+    font-size: 14px; font-weight: 600; transition: 0.2s;
 }
-.m-item:hover { background: var(--glass-bright); color: #fff; transform: translateX(8px); }
-.m-item i { font-style: normal; font-size: 18px; }
+.m-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
 
-/* --- HERO & SEARCH --- */
-.hero-search { margin-top: 130px; padding: 0 20px; }
-.search-container { max-width: 700px; margin: 0 auto; position: relative; }
+/* --- SEARCH --- */
+.hero-search { margin-top: 140px; padding: 0 20px; text-align: center; }
+.search-container { max-width: 650px; margin: 0 auto; position: relative; }
 .search-container input {
-    width: 100%; padding: 22px 30px 22px 70px; border-radius: 50px;
-    background: rgba(15, 23, 42, 0.6); border: 1px solid var(--glass-bright); color: white; 
-    font-size: 16px; outline: none; transition: 0.5s; backdrop-filter: blur(10px);
+    width: 100%; padding: 20px 30px 20px 60px; border-radius: 20px;
+    background: var(--card); border: 1px solid var(--border); color: white; 
+    font-size: 16px; outline: none; transition: 0.3s; backdrop-filter: blur(10px);
 }
-.search-container input:focus { border-color: var(--primary); box-shadow: 0 0 30px var(--primary-glow); }
-.search-container::before { content: '⚡'; position: absolute; left: 30px; top: 22px; font-size: 20px; opacity: 0.8; }
+.search-container input:focus { border-color: var(--primary); background: rgba(15,23,42,0.8); }
+.search-container::before { content: '⚡'; position: absolute; left: 25px; top: 20px; font-size: 20px; }
 
-/* --- GRID & CARDS PREMIUM --- */
-.section-title { padding: 50px 40px 20px; font-size: 12px; font-weight: 900; text-transform: uppercase; color: #475569; letter-spacing: 4px; display: flex; align-items: center; gap: 15px; }
-.section-title::after { content: ''; height: 1px; flex: 1; background: linear-gradient(to right, var(--border-gold), transparent); }
+/* --- GRID & CARDS --- */
+.section-title { padding: 60px 5% 20px; font-size: 13px; font-weight: 800; text-transform: uppercase; color: var(--text-dim); letter-spacing: 2px; }
 
-.games-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 30px; padding: 0 40px; }
+.games-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 25px; padding: 0 5%; }
 
 .game-card {
-    background: var(--glass-bright); border-radius: 24px; padding: 40px 20px; text-align: center;
-    border: 1px solid var(--glass-bright); transition: 0.5s cubic-bezier(0.2, 1, 0.2, 1);
-    position: relative; overflow: hidden; cursor: pointer;
-    backdrop-filter: blur(5px);
+    background: var(--card); border-radius: 32px; padding: 40px 25px; text-align: center;
+    border: 1px solid var(--border); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    backdrop-filter: blur(10px); cursor: pointer; position: relative;
 }
-.game-card:hover { transform: translateY(-15px); border-color: var(--border-gold); background: rgba(255,255,255,0.05); box-shadow: 0 20px 40px rgba(0,0,0,0.6); }
+.game-card:hover { transform: translateY(-12px); border-color: var(--primary); background: rgba(139, 92, 246, 0.05); }
 
-.game-icon { font-size: 60px; margin-bottom: 20px; display: block; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.5)); transition: 0.5s; }
-.game-card:hover .game-icon { transform: scale(1.2) rotate(8deg); }
+.game-icon { font-size: 55px; margin-bottom: 20px; display: block; transition: 0.4s; }
+.game-card:hover .game-icon { transform: scale(1.15) rotate(-5deg); filter: drop-shadow(0 0 20px var(--primary-glow)); }
 
-.game-card span { font-weight: 800; font-size: 18px; display: block; margin-bottom: 12px; color: #fff; letter-spacing: 0.5px; }
-.badge { font-size: 9px; font-weight: 900; padding: 6px 15px; border-radius: 50px; background: rgba(0,0,0,0.4); color: var(--primary); border: 1px solid var(--primary); text-transform: uppercase; }
-.badge-free { color: var(--success); border-color: var(--success); }
+.game-card span { font-weight: 800; font-size: 18px; color: #fff; display: block; margin-bottom: 12px; }
+.badge { font-size: 10px; font-weight: 900; padding: 6px 16px; border-radius: 50px; background: rgba(255,255,255,0.05); color: var(--text-dim); border: 1px solid var(--border); }
+.game-card:hover .badge { border-color: var(--primary); color: var(--primary); }
 
-/* --- BUTTONS --- */
-.btn { padding: 12px 28px; border-radius: 50px; border: none; font-weight: 800; font-size: 13px; cursor: pointer; transition: 0.4s; letter-spacing: 1px; }
-.login-btn { background: transparent; color: #fff; border: 1px solid var(--border-gold); }
-.register-btn { background: var(--accent); color: #000; box-shadow: 0 10px 20px var(--accent-glow); }
-.register-btn:hover { transform: scale(1.05); box-shadow: 0 15px 25px var(--accent-glow); }
+/* --- WHEEL MODAL --- */
+.custom-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(2,6,23,0.95); backdrop-filter: blur(20px); display: none; align-items: center; justify-content: center; z-index: 6000; }
+.modal-box { width: 95%; max-width: 440px; padding: 40px; border-radius: 40px; background: #0f172a; border: 1px solid var(--border); text-align: center; }
 
-.auth-btn { width: 100%; padding: 18px; border-radius: 50px; border: none; background: linear-gradient(to right, var(--primary), #00a2ff); color:#000; font-weight: 900; margin-top: 15px; cursor: pointer; }
+.wheel-container { position: relative; width: 280px; height: 280px; margin: 30px auto; border-radius: 50%; padding: 10px; background: rgba(255,255,255,0.02); border: 2px solid var(--border); }
+#wheelCanvas { width: 100%; height: 100%; border-radius: 50%; transition: transform 4s cubic-bezier(0.15, 0, 0.15, 1); }
+.wheel-pointer { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-top: 30px solid var(--primary); z-index: 10; }
 
-/* --- WHEEL PREMIUM --- */
-.wheel-container { position: relative; width: 280px; height: 280px; margin: 30px auto; border: 10px solid var(--border-gold); border-radius: 50%; padding: 5px; box-shadow: 0 0 50px rgba(0,0,0,0.5); }
-#wheelCanvas { width: 100%; height: 100%; border-radius: 50%; transition: transform 5s cubic-bezier(0.15, 0, 0.15, 1); }
-.wheel-pointer { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 20px solid transparent; border-right: 20px solid transparent; border-top: 40px solid var(--accent); z-index: 10; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.5)); }
+.footer { padding: 100px 0 50px; text-align: center; border-top: 1px solid var(--border); margin-top: 100px; }
+.footer p { color: var(--text-dim); font-size: 13px; margin-top: 15px; }
 
-/* --- MODALS --- */
-.custom-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); backdrop-filter: blur(20px); display: none; align-items: center; justify-content: center; z-index: 6000; }
-.modal-box { width: 90%; max-width: 450px; padding: 50px; border-radius: 40px; background: #0a0c12; border: 1px solid var(--border-gold); text-align: center; }
-
-.footer { padding: 100px 20px 60px; text-align: center; opacity: 0.4; font-size: 12px; letter-spacing: 2px; }
+/* --- MOBILE RESPONSIVE --- */
+@media (max-width: 768px) {
+    .top-bar { padding: 0 20px; }
+    .games-grid { grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 0 15px; }
+    .game-card { padding: 25px 15px; border-radius: 24px; }
+    .game-icon { font-size: 40px; }
+    .game-card span { font-size: 15px; }
+}
 </style>
 </head>
 <body>
@@ -146,31 +150,28 @@ body {
 <canvas id="snow"></canvas>
 
 <nav class="top-bar">
-    <div class="brand">PixelArena</div>
+    <div class="brand">PIXELARENA</div>
     
     <div class="right-menu">
-        <button class="btn login-btn" id="loginBtn">LOG IN</button>
-        <button class="btn register-btn" id="regBtn">JOIN ELITE</button>
+        <button class="btn login-btn" id="loginBtn">Giriş</button>
+        <button class="btn register-btn" id="regBtn">Kayıt Ol</button>
 
         <div class="profile-wrapper" id="profileWrapper">
             <div class="avatar-trigger" id="avatarTrigger">?</div>
             <div class="dropdown-menu" id="userDropdown">
                 <div class="u-header">
                     <span class="name" id="dropName">...</span>
-                    <div class="rank">PREMIUM MEMBER</div>
+                    <div class="rank">PLATINUM MEMBER</div>
                 </div>
-                
                 <div class="u-balance">
-                    <span>CURRENT BALANCE</span>
+                    <span style="color:var(--text-dim); font-size:12px; font-weight:700;">BAKİYE</span>
                     <b id="dropBalance">0.00 ₺</b>
                 </div>
-                
                 <div class="menu-links">
-                    <a href="panel.html" class="m-item"><i>👤</i> ACCOUNT PANEL</a>
-                    <a href="javascript:void(0)" class="m-item" onclick="openWheel()"><i>🎡</i> LUCKY SPIN</a>
-                    <a href="javascript:void(0)" class="m-item" onclick="openBonusModal()"><i>🎫</i> PROMO CODE</a>
-                    <a href="https://instagram.com" target="_blank" class="m-item"><i>💬</i> LIVE SUPPORT</a>
-                    <a href="javascript:void(0)" class="m-item" id="logoutBtn" style="color:#f43f5e; margin-top:10px; border-top:1px solid var(--glass-bright); padding-top:20px;"><i>🛑</i> LOGOUT</a>
+                    <a href="panel.html" class="m-item">👤 Profilim</a>
+                    <a href="javascript:void(0)" class="m-item" onclick="openWheel()">🎡 Günlük Çark</a>
+                    <a href="javascript:void(0)" class="m-item" onclick="openBonusModal()">🎁 Bonus Kod</a>
+                    <a href="javascript:void(0)" class="m-item" id="logoutBtn" style="color:#ef4444; border-top:1px solid var(--border); margin-top:10px; padding-top:15px;">🛑 Çıkış Yap</a>
                 </div>
             </div>
         </div>
@@ -179,90 +180,84 @@ body {
 
 <div class="custom-modal" id="wheelModal">
     <div class="modal-box">
-        <h2 style="color:var(--accent); letter-spacing:3px; margin-bottom:10px;">LUCKY WHEEL</h2>
-        <p style="font-size:12px; color:#64748b; margin-bottom:20px;">WIN UP TO 10,000 ₺ INSTANTLY</p>
+        <h2 style="margin-bottom:10px;">Şanslı Çark</h2>
         <div class="wheel-container">
             <div class="wheel-pointer"></div>
             <canvas id="wheelCanvas" width="500" height="500"></canvas>
         </div>
-        <button class="auth-btn" id="spinBtn">SPIN FOR FREE</button>
-        <p id="wheelMsg" style="margin-top:20px; font-weight:700; color:var(--success);"></p>
-        <p onclick="closeModal('wheelModal')" style="margin-top:30px; font-size:11px; cursor:pointer; opacity:0.4; letter-spacing:2px;">DISMISS</p>
+        <button class="btn register-btn" id="spinBtn" style="width:100%; padding:18px;">ÇEVİR</button>
+        <p id="wheelMsg" style="margin-top:20px; font-weight:700;"></p>
+        <p onclick="closeModal('wheelModal')" style="margin-top:25px; cursor:pointer; font-size:12px; opacity:0.5;">Kapat</p>
     </div>
 </div>
 
 <div class="custom-modal" id="bonusCodeModal">
     <div class="modal-box">
-        <h2 style="color:var(--accent); margin-bottom:20px;">PROMO CODE</h2>
-        <input type="text" id="bonusCodeInput" placeholder="ENTER YOUR CODE" style="width: 100%; padding: 20px; border-radius: 50px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-gold); color: white; outline: none; margin-bottom: 20px; text-align: center; font-size:18px; letter-spacing:5px; font-weight: 800;">
-        <button class="auth-btn" id="redeemBtn" style="background:var(--accent); color:#000;">ACTIVATE CODE</button>
-        <p onclick="closeModal('bonusCodeModal')" style="margin-top:25px; font-size:11px; cursor:pointer; opacity:0.4;">CANCEL</p>
+        <h2 style="margin-bottom:20px;">Promosyon Kodu</h2>
+        <input type="text" id="bonusCodeInput" placeholder="KODU GİRİN" style="width:100%; padding:18px; border-radius:15px; background:rgba(255,255,255,0.05); border:1px solid var(--border); color:#fff; text-align:center; font-size:18px; font-weight:800; outline:none; margin-bottom:20px;">
+        <button class="btn register-btn" id="redeemBtn" style="width:100%;">AKTİF ET</button>
+        <p onclick="closeModal('bonusCodeModal')" style="margin-top:20px; cursor:pointer; opacity:0.5;">İptal</p>
     </div>
 </div>
 
 <div class="hero-search">
     <div class="search-container">
-        <input type="text" id="searchInput" placeholder="Search elite games...">
+        <input type="text" id="searchInput" placeholder="Favori oyununu ara...">
     </div>
 </div>
 
-<main id="games">
-    <div class="section-title">Exclusive Arena</div>
+<main>
+    <div class="section-title">Online Arena</div>
     <div class="games-grid">
         <div class="game-card" data-name="reflex duel" onclick="checkLogin('duel.html')">
             <div class="game-icon">⚡</div>
             <span>Reflex Duel</span>
-            <div class="badge">ULTRA PVP</div>
+            <div class="badge">RANKED PVP</div>
         </div>
         <div class="game-card" data-name="skycrash" onclick="checkLogin('skycrash.html')">
             <div class="game-icon">🚀</div>
             <span>SkyCrash</span>
-            <div class="badge">PREMIUM</div>
+            <div class="badge">HIGH SPEED</div>
         </div>
         <div class="game-card" data-name="mines" onclick="checkLogin('mines.html')">
             <div class="game-icon">💎</div>
             <span>Elite Mines</span>
-            <div class="badge">INSTANT</div>
+            <div class="badge">PRO LEVEL</div>
         </div>
     </div>
 
-    <div class="section-title">Classic Selection</div>
+    <div class="section-title">Kart Oyunları</div>
     <div class="games-grid">
         <div class="game-card" data-name="blackjack" onclick="checkLogin('blackjack.html')">
             <div class="game-icon">♠️</div>
             <span>BlackJack</span>
-            <div class="badge">HIGH STAKES</div>
+            <div class="badge">CASINO</div>
         </div>
-        <div class="game-card" data-name="pattern master" onclick="location.href='patternmaster.html'">
-            <div class="game-icon">🧩</div>
-            <span>Pattern Master</span>
-            <div class="badge badge-free">PUBLIC</div>
-        </div>
-        <div class="game-card" data-name="space war" onclick="location.href='spacepro.html'">
-            <div class="game-icon">🛸</div>
-            <span>Space Pro</span>
-            <div class="badge badge-free">PUBLIC</div>
+        <div class="game-card" data-name="pişti" onclick="checkLogin('pisti.html')">
+            <div class="game-icon">🃏</div>
+            <span>Pişti Online</span>
+            <div class="badge">SOCIAL</div>
         </div>
     </div>
 </main>
 
 <footer class="footer">
-    <div class="brand" style="font-size: 16px; opacity: 0.5;">PIXELARENA ELITE NETWORK</div>
-    <p style="margin-top:20px;">© 2026 THE FUTURE OF GAMING. ALL RIGHTS RESERVED.</p>
+    <div class="brand">PIXELARENA</div>
+    <p>© 2026 Next-Gen Gaming Infrastructure. All rights reserved.</p>
 </footer>
 
-<div class="auth-overlay" id="authOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(2,4,8,0.98); display:none; align-items:center; justify-content:center; z-index:5000; backdrop-filter:blur(10px);">
-    <div class="modal-box" style="border-radius:20px;">
-        <h2 id="authTitle" style="margin-bottom:30px; letter-spacing:2px;">MEMBER ACCESS</h2>
-        <input type="email" id="authEmail" placeholder="EMAIL ADDRESS" style="width:100%; padding:18px; margin-bottom:15px; border-radius:10px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); color:white; outline:none;">
-        <input type="password" id="authPassword" placeholder="PASSWORD" style="width:100%; padding:18px; margin-bottom:15px; border-radius:10px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); color:white; outline:none;">
-        <input type="text" id="authUsername" placeholder="CHOOSE USERNAME" style="display:none; width:100%; padding:18px; margin-bottom:15px; border-radius:10px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); color:white; outline:none;">
-        <button class="auth-btn" id="authSubmit" style="background:var(--accent); color:#000;">AUTHORIZE</button>
-        <p style="margin-top:25px; font-size:12px; color:#64748b;">
-            <span id="switchText">New to the arena?</span> 
-            <b id="switchMode" style="color:var(--primary); cursor:pointer;">SIGN UP</b>
+<div class="auth-overlay" id="authOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg); display:none; align-items:center; justify-content:center; z-index:5000;">
+    <div class="modal-box">
+        <h2 id="authTitle" style="margin-bottom:30px;">Hoş Geldiniz</h2>
+        <input type="email" id="authEmail" placeholder="E-posta" style="width:100%; padding:15px; margin-bottom:12px; border-radius:12px; background:rgba(255,255,255,0.05); border:1px solid var(--border); color:#fff; outline:none;">
+        <input type="password" id="authPassword" placeholder="Şifre" style="width:100%; padding:15px; margin-bottom:12px; border-radius:12px; background:rgba(255,255,255,0.05); border:1px solid var(--border); color:#fff; outline:none;">
+        <input type="text" id="authUsername" placeholder="Kullanıcı Adı" style="display:none; width:100%; padding:15px; margin-bottom:12px; border-radius:12px; background:rgba(255,255,255,0.05); border:1px solid var(--border); color:#fff; outline:none;">
+        <button class="btn register-btn" id="authSubmit" style="width:100%; padding:18px; margin-top:10px;">DEVAM ET</button>
+        <p style="margin-top:20px; font-size:14px; color:var(--text-dim);">
+            <span id="switchText">Henüz üye değil misiniz?</span> 
+            <b id="switchMode" style="color:var(--primary); cursor:pointer;">Kayıt Ol</b>
         </p>
-        <p id="authBack" style="margin-top:30px; font-size:11px; cursor:pointer; opacity:0.3; letter-spacing:1px;">CLOSE</p>
+        <p id="authBack" style="margin-top:30px; cursor:pointer; opacity:0.3; font-size:12px;">Geri Dön</p>
     </div>
 </div>
 
@@ -306,9 +301,9 @@ regBtn.onclick = () => { overlay.style.display="flex"; isLogin=false; updateAuth
 document.getElementById("authBack").onclick = () => overlay.style.display="none";
 
 function updateAuthUI() {
-    document.getElementById("authTitle").innerText = isLogin ? "MEMBER ACCESS" : "JOIN ELITE";
+    document.getElementById("authTitle").innerText = isLogin ? "Giriş Yap" : "Kayıt Ol";
     document.getElementById("authUsername").style.display = isLogin ? "none" : "block";
-    document.getElementById("switchMode").innerText = isLogin ? "SIGN UP" : "LOG IN";
+    document.getElementById("switchMode").innerText = isLogin ? "Kayıt Ol" : "Giriş Yap";
 }
 
 document.getElementById("switchMode").onclick = () => { isLogin = !isLogin; updateAuthUI(); };
@@ -324,7 +319,7 @@ document.getElementById("authSubmit").onclick = async () => {
             await setDoc(doc(db, "users", res.user.uid), { username: userN, balance: 10000, createdAt: new Date() });
         }
         overlay.style.display = "none";
-    } catch(e) { alert("ERROR: " + e.message); }
+    } catch(e) { alert("Hata: " + e.message); }
 };
 
 onAuthStateChanged(auth, user => {
@@ -334,7 +329,7 @@ onAuthStateChanged(auth, user => {
         onSnapshot(doc(db, "users", user.uid), s => {
             if(s.exists()) {
                 const data = s.data();
-                document.getElementById("dropBalance").innerText = data.balance.toLocaleString('tr-TR', {minimumFractionDigits: 2}) + " ₺";
+                document.getElementById("dropBalance").innerText = data.balance.toLocaleString() + " ₺";
                 document.getElementById("dropName").innerText = data.username.toUpperCase();
                 avatarTrigger.innerText = data.username.charAt(0).toUpperCase();
             }
@@ -349,11 +344,10 @@ document.getElementById("logoutBtn").onclick = () => signOut(auth);
 
 // --- WHEEL SYSTEM ---
 const rewards = [
-    { label: "500₺", color: "#05070a" },
+    { label: "500₺", color: "#0f172a" },
     { label: "1.000₺", color: "#1e293b" },
-    { label: "2.500₺", color: "#00f2ff" },
-    { label: "5.000₺", color: "#ffd700" },
-    { label: "10.000₺", color: "#ff4d4d" }
+    { label: "5.000₺", color: "#8b5cf6" },
+    { label: "10.000₺", color: "#0ea5e9" }
 ];
 
 function drawWheel() {
@@ -369,7 +363,7 @@ function drawWheel() {
         ctx.save(); ctx.fillStyle = "white";
         ctx.translate(250 + Math.cos(angle + arc / 2) * 160, 250 + Math.sin(angle + arc / 2) * 160);
         ctx.rotate(angle + arc / 2 + Math.PI / 2);
-        ctx.font = "bold 20px Inter";
+        ctx.font = "bold 24px Inter";
         ctx.fillText(reward.label, -ctx.measureText(reward.label).width / 2, 0);
         ctx.restore();
     });
@@ -387,9 +381,9 @@ document.getElementById("spinBtn").onclick = async () => {
     setTimeout(async () => {
         const winAmount = parseInt(rewards[rand].label.replace(".", "").replace("₺", ""));
         await updateDoc(doc(db, "users", auth.currentUser.uid), { balance: increment(winAmount) });
-        document.getElementById("wheelMsg").innerHTML = `CONGRATULATIONS! YOU WON ${rewards[rand].label}`;
+        document.getElementById("wheelMsg").innerHTML = `<span style="color:var(--success)">Tebrikler! ${rewards[rand].label} kazandınız.</span>`;
         isSpinning = false;
-    }, 5000);
+    }, 4500);
 };
 
 // --- SEARCH ---
@@ -402,15 +396,15 @@ document.getElementById("searchInput").oninput = (e) => {
 
 window.checkLogin = (url) => { if(!auth.currentUser) overlay.style.display="flex"; else location.href = url; };
 
-// --- LUXURY SPARKLE ---
+// --- ANIMATED PARTICLES ---
 const sc = document.getElementById("snow");
 const sctx = sc.getContext("2d");
 let p = [];
 function res() { sc.width = window.innerWidth; sc.height = window.innerHeight; }
 window.onresize = res; res();
-for(let i=0; i<60; i++) p.push({x:Math.random()*sc.width, y:Math.random()*sc.height, r:Math.random()*1.5+0.5, d:Math.random()*0.3+0.1});
+for(let i=0; i<50; i++) p.push({x:Math.random()*sc.width, y:Math.random()*sc.height, r:Math.random()*1+0.5, d:Math.random()*0.2+0.1});
 function drawS() {
-    sctx.clearRect(0,0,sc.width, sc.height); sctx.fillStyle = "rgba(255,255,255,0.3)"; sctx.beginPath();
+    sctx.clearRect(0,0,sc.width, sc.height); sctx.fillStyle = "rgba(255,255,255,0.2)"; sctx.beginPath();
     p.forEach(i => { sctx.moveTo(i.x, i.y); sctx.arc(i.x, i.y, i.r, 0, Math.PI*2); i.y += i.d; if(i.y > sc.height) i.y = -5; });
     sctx.fill(); requestAnimationFrame(drawS);
 }
