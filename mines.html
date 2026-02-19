@@ -3,19 +3,31 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>PixelArena Mines</title>
+<title>PixelArena Mines PRO</title>
 
 <style>
-    /* SKYCRASH GENEL RESET - Gecikme Önleyici touch-action eklendi */
+    /* PROFESYONEL RESET & ARKA PLAN */
     *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
-    html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;background:#03050a;color:white;}
+    html,body{
+        height:100%; overflow:hidden; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
+        background: #05080f; /* Daha derin siyah */
+        color:white;
+    }
 
-    /* BİREBİR SKYCRASH TOP BAR */
+    /* PROFESYONEL HAREKETLİ ARKA PLAN */
+    body::before {
+        content: ""; position: absolute; width: 200%; height: 200%; top: -50%; left: -50%;
+        background: radial-gradient(circle at center, #161d36 0%, #05080f 70%);
+        z-index: -1; animation: bgPulse 10s ease infinite;
+    }
+    @keyframes bgPulse { 0%, 100% { opacity: 0.8; } 50% { opacity: 1; } }
+
+    /* TOP BAR */
     .top-bar{
         position:fixed;top:0;width:100%;height:60px;
         display:flex;align-items:center;justify-content:space-between;
-        padding:0 12px; background: rgba(10, 15, 30, 0.9);
-        backdrop-filter: blur(10px); border-bottom: 1px solid #1e2642; z-index:1000;
+        padding:0 12px; background: rgba(10, 15, 30, 0.95);
+        backdrop-filter: blur(15px); border-bottom: 1px solid #1e2642; z-index:1000;
     }
 
     .brand{
@@ -25,67 +37,70 @@
     }
 
     .right-menu{display:flex;gap:6px;align-items: center;}
-    
     .nav-box{
         padding:6px 10px; border-radius:10px; font-weight:700; font-size:11px; 
-        min-width:100px; text-align:center; display: flex; align-items: center; justify-content: center;
-        height: 32px;
+        min-width:90px; text-align:center; display: flex; align-items: center; justify-content: center; height: 32px;
     }
-    
-    .balance-box{background:#1a2248; border: 1px solid #4fd1ff44; color: #4fd1ff;}
+    .balance-box{background:#1a2248; border: 1px solid #4fd1ff44; color: #4fd1ff; box-shadow: 0 0 10px rgba(79, 209, 255, 0.2);}
     .bet-box{background:linear-gradient(90deg,#ff8a00,#ff5f00); color:#000;}
-
     .back-btn {
         background: #e74c3c; color: white; text-decoration: none; padding: 6px 12px;
         border-radius: 10px; font-size: 11px; font-weight: 800; border-bottom: 2px solid #c0392b;
-        transition: 0.1s; display: flex; align-items: center; justify-content: center; height: 32px;
+        height: 32px; display: flex; align-items: center;
     }
-    .back-btn:active { transform: scale(0.95); border-bottom: none; }
 
-    /* OYUN ALANI DÜZENLEME */
+    /* CONTAINER */
     .container{
         position:absolute;top:60px;bottom:0;width:100%;
         display:flex;flex-direction:column;padding:15px;overflow-y:auto;
-        background: radial-gradient(circle at 50% 50%, #0a0f1e 0%, #03050a 100%);
     }
 
     .mines-header{
         display:flex;justify-content:space-between;align-items:center;
-        background:rgba(26, 34, 72, 0.5); padding:12px 15px; border-radius:14px; 
+        background:rgba(26, 34, 72, 0.4); padding:12px 15px; border-radius:14px; 
         margin-bottom:15px; border: 1px solid #1e2642;
     }
     
-    /* GRID TASARIMI */
+    /* GRID & PROFESYONEL ANİMASYONLAR */
     #grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:20px;}
     
     .tile{
-        background:#161d36; height:68px; border-radius:14px; 
+        background:#161d36; height:65px; border-radius:12px; 
         display:flex; align-items:center; justify-content:center; 
-        font-size:22px; cursor:pointer; transition: 0.1s; /* Gecikmeyi azaltmak için kısaltıldı */
-        border: 1px solid #273c8f;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        font-size:24px; cursor:pointer; transition: transform 0.1s, background 0.3s;
+        border: 1px solid #273c8f; position: relative; overflow: hidden;
     }
+    .tile:active { transform: scale(0.9); }
     
+    /* KUTU AÇILIŞ ANİMASYONU */
     .tile.open{
+        animation: openFlip 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         background: linear-gradient(145deg, #00b894, #00d2ad);
         border-color: #55efc4;
-        box-shadow: 0 0 15px rgba(0, 184, 148, 0.4);
     }
-    
-    .tile.mine{
-        background: linear-gradient(145deg, #d63031, #ff7675);
-        border-color: #ff7675;
-        box-shadow: 0 0 20px rgba(214, 48, 49, 0.5);
-        animation: shake 0.3s;
+    @keyframes openFlip {
+        0% { transform: rotateY(0deg) scale(1); }
+        50% { transform: rotateY(90deg) scale(1.1); }
+        100% { transform: rotateY(0deg) scale(1); }
     }
 
-    @keyframes shake{0%,100%{transform:translateX(0)} 25%{transform:translateX(-4px)} 75%{transform:translateX(4px)}}
+    /* PATLAMA ANİMASYONU */
+    .tile.mine{
+        animation: explodeEffect 0.5s ease-out forwards;
+        background: radial-gradient(circle, #ff7675, #d63031);
+        border-color: #ff7675; z-index: 10;
+    }
+    @keyframes explodeEffect {
+        0% { transform: scale(1); filter: brightness(1); }
+        20% { transform: scale(1.2); filter: brightness(2); }
+        100% { transform: scale(1); filter: brightness(1); box-shadow: 0 0 30px #d63031; }
+    }
 
     /* ALT PANEL */
     .bet-panel{
-        background:#0a0f1e; border-top: 1px solid #1e2642;
-        padding:20px 15px; margin: 0 -15px -15px -15px;
-        display: flex; flex-direction: column; gap: 10px;
+        background:rgba(10, 15, 30, 0.8); border-top: 1px solid #1e2642;
+        padding:20px 15px; margin: auto -15px 0 -15px;
+        display: flex; flex-direction: column; gap: 10px; backdrop-filter: blur(10px);
     }
 
     input, select{
@@ -96,21 +111,19 @@
 
     button{
         width:100%; padding:15px; border-radius:12px; border:none; 
-        font-weight:900; cursor:pointer; font-size:15px; 
-        background:#5743d6; color:white; transition: 0.1s;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+        font-weight:900; cursor:pointer; font-size:16px; 
+        background:#5743d6; color:white; transition: 0.2s;
+        box-shadow: 0 4px 15px rgba(87, 67, 214, 0.3);
     }
-
-    .start-active{ background:#00b894 !important; color: white; }
+    button:active { transform: scale(0.98); }
+    .start-active{ background:#00b894 !important; box-shadow: 0 4px 15px rgba(0, 184, 148, 0.4); }
     .is-lose{ background:#d63031 !important; }
-
-    button:disabled{opacity:0.4; pointer-events:none;}
 </style>
 </head>
 <body>
 
 <div class="top-bar">
-    <div class="brand">Mines</div>
+    <div class="brand">PIXEL ARENA</div>
     <div class="right-menu">
         <div class="nav-box balance-box">₺<span id="userBalance">0</span></div>
         <div class="nav-box bet-box">B: ₺<span id="currentBet">0</span></div>
@@ -120,7 +133,7 @@
 
 <div class="container">
     <div class="mines-header">
-        <div style="font-weight: 800; color: #4fd1ff; font-size: 14px;">MINES PRO</div>
+        <div style="font-weight: 800; color: #4fd1ff; font-size: 14px; letter-spacing:1px;">MINES PRO</div>
         <div style="color:#aaa; font-size: 12px; font-weight: 700;">MAYIN: <span id="mineDisplay" style="color:#ff2a4d;">1</span></div>
     </div>
 
@@ -151,41 +164,42 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+// --- PROFESYONEL SES SİSTEMİ (iOS UYUMLU) ---
 let audioCtx = null;
 const sounds = {};
+const soundUrls = {
+    bet: 'https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3', // Bet sound
+    open: 'https://assets.mixkit.co/active_storage/sfx/2017/2017-preview.mp3', // Pop/Open
+    explode: 'https://assets.mixkit.co/active_storage/sfx/2802/2802-preview.mp3', // Boom
+    win: 'https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3' // Win
+};
 
-async function unlockAudio() {
-    if (audioCtx) {
-        if (audioCtx.state === 'suspended') await audioCtx.resume();
-        return;
-    }
+async function initAudio() {
+    if (audioCtx) return;
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const urls = {
-        bet: 'https://cdn.freesound.org/previews/256/256113_3263901-lq.mp3',
-        open: 'https://cdn.freesound.org/previews/415/415510_7914934-lq.mp3',
-        explode: 'https://cdn.freesound.org/previews/440/440455_9038237-lq.mp3',
-        win: 'https://cdn.freesound.org/previews/511/511484_10834246-lq.mp3'
-    };
-    for (const [name, url] of Object.entries(urls)) {
+    for (const [name, url] of Object.entries(soundUrls)) {
         try {
-            const res = await fetch(url);
-            const buffer = await res.arrayBuffer();
-            sounds[name] = await audioCtx.decodeAudioData(buffer);
-        } catch (e) { console.error("Ses yüklenemedi:", name); }
+            const response = await fetch(url);
+            const arrayBuffer = await response.arrayBuffer();
+            sounds[name] = await audioCtx.decodeAudioData(arrayBuffer);
+        } catch (e) { console.log(name + " yüklenemedi"); }
     }
 }
 
 function playSound(name) {
     if (!audioCtx || !sounds[name]) return;
+    if (audioCtx.state === 'suspended') audioCtx.resume();
     const source = audioCtx.createBufferSource();
     source.buffer = sounds[name];
     source.connect(audioCtx.destination);
     source.start(0);
 }
 
-// Gecikme Önleyici: click yerine touchstart ile sesi hazırlıyoruz
-document.addEventListener('touchstart', unlockAudio, { passive: true });
+// iOS için kullanıcı etkileşimi şartı
+const triggerInit = () => { initAudio(); window.removeEventListener('touchstart', triggerInit); };
+window.addEventListener('touchstart', triggerInit);
 
+// --- OYUN MANTIĞI ---
 let mines = [], opened = 0, betAmount = 0, mineTotal = 1, multiplier = 1, gameActive = false;
 let tileElements = [];
 
@@ -210,10 +224,7 @@ function createGrid() {
     for(let i=0; i<25; i++){
         let tile = document.createElement("div");
         tile.classList.add("tile");
-        tile.addEventListener("click", (e) => {
-            e.preventDefault();
-            reveal(i, tile);
-        });
+        tile.addEventListener("click", (e) => { e.preventDefault(); reveal(i, tile); });
         gridEl.appendChild(tile);
         tileElements.push(tile);
     }
@@ -224,12 +235,11 @@ function getMultiplier(nMines, nOpened) {
     for (let i = 0; i < nOpened; i++) {
         prob *= (25 - nMines - i) / (25 - i);
     }
-    return (1 / prob) * 0.97;
+    return (1 / prob) * 0.98; // House edge %2
 }
 
-startBtn.addEventListener("click", async (e) => {
-    e.preventDefault();
-    if (!audioCtx) await unlockAudio();
+startBtn.addEventListener("click", async () => {
+    if (!audioCtx) await initAudio();
     if (!auth.currentUser) return;
     const userRef = doc(db, "users", auth.currentUser.uid);
 
@@ -249,35 +259,28 @@ startBtn.addEventListener("click", async (e) => {
     }
 
     betAmount = parseInt(betInput.value);
-    // GÜNCELLEME: Limit Kontrolü (100 - 10.000)
-    if(isNaN(betAmount) || betAmount < 100) {
-        alert("Minimum bahis 100₺.");
+    if(isNaN(betAmount) || betAmount < 100 || betAmount > 10000) {
+        alert("Bahis 100₺ - 10.000₺ arası olmalıdır.");
         return;
     }
-    if(betAmount > 10000) {
-        alert("Maksimum bahis 10.000₺.");
-        return;
-    }
-
-    mineTotal = parseInt(mineSelect.value);
 
     try {
         await runTransaction(db, async (t) => {
             const snap = await t.get(userRef);
-            if (snap.data().balance < betAmount) throw "YETERSİZ BAKİYE!";
+            if (snap.data().balance < betAmount) throw "Yetersiz Bakiye";
             t.update(userRef, { balance: snap.data().balance - betAmount });
         });
         
         playSound("bet");
         opened = 0; multiplier = 1; mines = [];
+        mineTotal = parseInt(mineSelect.value);
         while(mines.length < mineTotal){
             let r = Math.floor(Math.random() * 25);
             if(!mines.includes(r)) mines.push(r);
         }
         createGrid();
         gameActive = true;
-        betInput.disabled = true;
-        mineSelect.disabled = true;
+        betInput.disabled = true; mineSelect.disabled = true;
         currentBetText.innerText = betAmount.toLocaleString('tr-TR');
         startBtn.innerText = "KAZANCI ÇEK";
         startBtn.classList.add("start-active");
@@ -294,10 +297,10 @@ function reveal(i, tile) {
             tileElements[mIdx].classList.add("mine");
             tileElements[mIdx].innerHTML = "💣";
         });
-        startBtn.innerText = "PATLADI!";
+        startBtn.innerText = "KAYBETTİN!";
         startBtn.classList.remove("start-active");
         startBtn.classList.add("is-lose");
-        setTimeout(resetGame, 1500); // Gecikme süresi kısaltıldı
+        setTimeout(resetGame, 2000);
     } else {
         opened++;
         tile.classList.add("open");
@@ -320,11 +323,8 @@ function resetGame() {
 
 onAuthStateChanged(auth, user => {
     if (!user) return;
-    const userRef = doc(db, "users", user.uid);
-    onSnapshot(userRef, snap => {
-        if (snap.exists()) {
-            balanceText.innerText = Math.floor(snap.data().balance).toLocaleString('tr-TR');
-        }
+    onSnapshot(doc(db, "users", user.uid), snap => {
+        if (snap.exists()) balanceText.innerText = Math.floor(snap.data().balance).toLocaleString('tr-TR');
     });
 });
 
