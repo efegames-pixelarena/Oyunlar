@@ -31,10 +31,28 @@
         -webkit-background-clip:text; -webkit-text-fill-color:transparent;
     }
 
-    .right-menu{display:flex;gap:6px;}
+    .right-menu{display:flex;gap:6px;align-items:center;}
     .nav-box{padding:6px 10px; border-radius:10px; font-weight:700; font-size:11px; min-width:85px; text-align:center;}
     .balance-box{background:#1a2248; border: 1px solid #4fd1ff44; color: #4fd1ff;}
     .bet-box{background:linear-gradient(90deg,#ff8a00,#ff5f00); color:#000;}
+    
+    /* KIRMIZI GERİ BUTONU */
+    .back-btn {
+        background: #ff3b30;
+        color: white;
+        text-decoration: none;
+        padding: 6px 12px;
+        border-radius: 10px;
+        font-size: 11px;
+        font-weight: 900;
+        text-align: center;
+        border-bottom: 2px solid #b32b23;
+        transition: 0.1s;
+    }
+    .back-btn:active {
+        transform: scale(0.95);
+        border-bottom: 0;
+    }
     /* ------------------------------------ */
 
     h1 { margin-top:80px; font-size: 18px; letter-spacing: 1px; color: rgba(255,255,255,0.8); }
@@ -117,6 +135,7 @@
     <div class="right-menu">
         <div class="nav-box balance-box">₺<span id="balance">0</span></div>
         <div class="nav-box bet-box">B: ₺<span id="bet">0</span></div>
+        <a href="index.html" class="back-btn">GERİ</a>
     </div>
 </div>
 
