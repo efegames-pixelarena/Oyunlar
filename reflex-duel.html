@@ -312,7 +312,6 @@ document.getElementById("quickJoinBtn").onclick = async function() {
     initAudio();
     if(this.disabled) return;
     this.disabled = true;
-    // Sadece bekleme listesindeki açık odalara bakar
     const available = allRooms.find(r => r.state === "waiting" && !r.player2 && !r.password && r.player1 !== uid);
     if (available) {
         await executeJoin(available.id);
@@ -334,8 +333,7 @@ document.getElementById("confirmCreateBtn").onclick = async () => {
         await setDoc(newRoomRef, {
             player1: uid, player1Name: username, player2: null, player2Name: null,
             score1: 0, score2: 0, round: 1, state: "waiting", host: uid, 
-            password: pass, createdAt: serverTimestamp(), penalty: false,
-            matchedAt: null // Sonsuz bekleme kontrolü için
+            password: pass, createdAt: serverTimestamp(), penalty: false
         });
         closeModal("createModal"); 
         enterRoom();
@@ -372,8 +370,7 @@ async function executeJoin(id) {
             t.update(roomRef, { 
                 player2: uid, 
                 player2Name: username, 
-                state: "matched",
-                matchedAt: Date.now() // Giriş zamanını kaydet
+                state: "matched"
             });
             currentRoomId = id;
         });
@@ -393,9 +390,8 @@ function enterRoom() {
         const d = snap.data();
         roomData = d;
 
-        // SENKRONİZASYON OPTİMİZASYONU: Sadece bir kez veya büyük sapmalarda
         if (d.createdAt && d.createdAt.toMillis && !snap.metadata.hasPendingWrites) {
-            const diff = d.createdAt.toMillis() - (Date.now() - (performance.now() % 1)); // Daha hassas zaman
+            const diff = d.createdAt.toMillis() - (Date.now() - (performance.now() % 1));
             if (!offsetCalculated || Math.abs(serverOffset - diff) > 2000) {
                 serverOffset = diff;
                 offsetCalculated = true;
@@ -411,26 +407,11 @@ function enterRoom() {
         if (d.state !== lastState) {
             if (countdownInterval) clearInterval(countdownInterval);
             
-            // SONSUZ BEKLEME GÜVENLİĞİ: 
-            // Eğer durum 'matched' ise ve 3 saniye geçmişse, misafir de oyunu başlatabilir.
-            if (d.state === "matched") {
-                const triggerStart = () => {
-                    updateDoc(doc(db, "rooms", currentRoomId), { 
-                        state: "countdown", 
-                        startTime: getServerTime() + 5000 
-                    });
-                };
-
-                if (uid === d.host) {
-                    triggerStart();
-                } else {
-                    // Host başlatmazsa misafir 3sn sonra başlatır
-                    setTimeout(() => {
-                        getDoc(doc(db, "rooms", currentRoomId)).then(s => {
-                            if(s.exists() && s.data().state === "matched") triggerStart();
-                        });
-                    }, 3000);
-                }
+            if (d.state === "matched" && uid === d.host) {
+                updateDoc(doc(db, "rooms", currentRoomId), { 
+                    state: "countdown", 
+                    startTime: getServerTime() + 5500 
+                });
             }
 
             if (d.state === "countdown") {
@@ -443,22 +424,23 @@ function enterRoom() {
                     const diffMs = d.startTime - now;
                     const diffSec = Math.max(0, Math.ceil(diffMs / 1000));
                     
-                    document.getElementById("bigText").innerText = diffSec > 0 ? diffSec : "GO!";
-                    document.getElementById("subText").innerText = "HAZIRLAN";
-                    
-                    // Saniye değişiminde ses çal (İki oyuncu için aynı anda)
-                    if (diffSec !== lastTick && diffSec > 0) {
-                        sounds.tick();
-                        lastTick = diffSec;
+                    if (diffSec > 0 && diffSec <= 5) {
+                        document.getElementById("bigText").innerText = diffSec;
+                        document.getElementById("subText").innerText = "HAZIRLAN";
+                        if (diffSec !== lastTick) {
+                            sounds.tick();
+                            lastTick = diffSec;
+                        }
                     }
 
                     if (diffMs <= 0) {
                         clearInterval(countdownInterval);
+                        document.getElementById("bigText").innerText = "GO!";
                         if (uid === d.host) {
                             updateDoc(doc(db, "rooms", currentRoomId), { state: "active", roundStart: getServerTime() });
                         }
                     }
-                }, 16); // 60fps tazeleme
+                }, 30);
             }
 
             if (d.state === "active") {
@@ -485,11 +467,11 @@ function enterRoom() {
                         const isFinal = (d.score1 >= 11 || d.score2 >= 11);
                         updateDoc(doc(db, "rooms", currentRoomId), { 
                             state: isFinal ? "finished" : "countdown", 
-                            startTime: getServerTime() + 3000, 
+                            startTime: getServerTime() + 5500, // <--- HER RAUND İÇİN 5 SANİYE FİX
                             round: isFinal ? d.round : d.round + 1,
                             penalty: false
                         });
-                    }, 2000);
+                    }, 2500);
                 }
             }
 
@@ -513,7 +495,6 @@ document.getElementById("arena").addEventListener('pointerdown', async (e) => {
     const d = roomData;
     const roomRef = doc(db, "rooms", currentRoomId);
     
-    // Erken Basma Mantığı
     if (d.state === "countdown" || (d.state === "matched" && d.player2)) {
         tapLock = true;
         const isP1 = uid === d.player1;
@@ -527,7 +508,6 @@ document.getElementById("arena").addEventListener('pointerdown', async (e) => {
         });
         setTimeout(() => tapLock = false, 800);
     } 
-    // Doğru Basma Mantığı
     else if (d.state === "active") {
         tapLock = true;
         const reaction = now - d.roundStart;
@@ -551,7 +531,6 @@ document.getElementById("arena").addEventListener('pointerdown', async (e) => {
 async function quitGame() {
     if (unsubRoom) { unsubRoom(); unsubRoom = null; }
     if (countdownInterval) clearInterval(countdownInterval);
-    
     if (currentRoomId) {
         const rId = currentRoomId;
         currentRoomId = null;
@@ -570,7 +549,6 @@ async function quitGame() {
     }
     location.reload();
 }
-
 document.getElementById("leaveBtn").onclick = quitGame;
 </script>
 </body>
