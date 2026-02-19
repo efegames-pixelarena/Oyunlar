@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>PixelArena | Snake Pro</title>
+<title>PixelArena | Snake Pro Elite</title>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 
 <style>
@@ -15,24 +15,22 @@
     --nokia-screen: #9bbc0f;
 }
 
-/* Çift Tıklama (Double-Tap Zoom) ve Seçmeyi Tamamen Engelle */
+/* Çift Tıklama Zoom Sorununu Kökten Çözen Ayarlar */
 * { 
     margin:0; padding:0; box-sizing:border-box; 
     -webkit-tap-highlight-color:transparent; 
     outline: none; 
     user-select: none;
-    touch-action: manipulation; /* iOS Zoom sorununu çözen kritik kod */
+    /* iOS'ta çift tıkla büyütmeyi kapatır */
+    touch-action: manipulation; 
 }
 
 body {
     background: var(--bg-dark);
     background-image: radial-gradient(circle at 50% 50%, #1a2248 0%, #03050a 100%);
-    height: 100vh;
-    width: 100vw;
-    overflow: hidden;
+    height: 100vh; width: 100vw; overflow: hidden;
     font-family: 'Press Start 2P', monospace;
-    display: flex;
-    flex-direction: column;
+    display: flex; flex-direction: column;
 }
 
 /* --- ÜST BAR --- */
@@ -68,7 +66,7 @@ body {
 
 canvas { display: block; width: 100%; height: auto; image-rendering: pixelated; }
 
-/* --- KONTROLLER --- */
+/* --- KONTROLLER (TASARIM BOZULMADI) --- */
 .controls { display: grid; grid-template-columns: repeat(3, 1fr); grid-gap: 12px; margin-top: 20px; }
 
 .btn {
@@ -140,175 +138,166 @@ const size = 300;
 let snake, direction, nextDirection, food, score, started = false;
 let currentSpeed, lastMoveTime, gameInterval;
 
-// --- PROFESYONEL SES MOTORU (Web Audio API) ---
+/* --- AKTARILAN SES SİSTEMİ (3310 Tarzı) --- */
 let audioCtx;
 function initAudio() {
     if (!audioCtx) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        // iOS sessiz mod kilidini açan boş buffer
-        const buffer = audioCtx.createBuffer(1, 1, 22050);
-        const source = audioCtx.createBufferSource();
-        source.buffer = buffer;
-        source.connect(audioCtx.destination);
-        source.start(0);
     }
     if (audioCtx.state === 'suspended') audioCtx.resume();
 }
 
-function playTone(freq, type, dur, vol = 0.1) {
+function beep(freq, duration) {
     if (!audioCtx) return;
-    try {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = type;
-        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-        gain.gain.setValueAtTime(vol, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + dur);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + dur);
-    } catch(e) { console.log("Ses hatası:", e); }
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = "square"; // Nokia sesi için kare dalga
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration / 1000);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + duration / 1000);
 }
 
-const getHigh = () => localStorage.getItem("snake_pro_best") || 0;
+const getHigh = () => localStorage.getItem("snakeHigh") || 0;
 document.getElementById("high").innerText = getHigh();
 
-function spawnFood() {
-    const isSpecial = Math.random() < 0.15; // %15 ihtimalle nadir elma
-    food = {
-        x: Math.floor(Math.random() * (size/box)) * box,
-        y: Math.floor(Math.random() * (size/box)) * box,
-        type: isSpecial ? '🍎' : '🍏',
-        value: isSpecial ? 3 : 1
+function randomFood() {
+    let isRed = Math.random() < 0.15;
+    return {
+        x: Math.floor(Math.random() * (size / box)) * box,
+        y: Math.floor(Math.random() * (size / box)) * box,
+        type: isRed ? "red" : "green"
     };
-    if(snake.some(s => s.x === food.x && s.y === food.y)) spawnFood();
 }
 
 function startGame() {
-    initAudio(); // iOS etkileşim onayı
-    playTone(500, 'sine', 0.1); 
+    initAudio();
+    beep(700, 150); // Başlangıç bipi
     
-    snake = [{x: 10*box, y: 10*box}, {x: 9*box, y: 10*box}];
+    snake = [{x: 150, y: 150}, {x: 135, y: 150}];
     direction = "RIGHT";
     nextDirection = "RIGHT";
     score = 0;
-    currentSpeed = 150;
+    currentSpeed = 200;
     lastMoveTime = 0;
-    spawnFood();
+    food = randomFood();
     
-    document.getElementById("score").innerText = "0";
+    document.getElementById("score").innerText = 0;
     document.getElementById("startup").style.display = "none";
     document.getElementById("gameover").style.display = "none";
     
     started = true;
-    if(gameInterval) cancelAnimationFrame(gameInterval);
-    gameInterval = requestAnimationFrame(gameLoop);
+    requestAnimationFrame(gameLoop);
 }
 
-function gameLoop(time) {
+function gameLoop(timestamp) {
     if (!started) return;
-    if (time - lastMoveTime > currentSpeed) {
+    if (timestamp - lastMoveTime > currentSpeed) {
         update();
-        lastMoveTime = time;
+        lastMoveTime = timestamp;
     }
     draw();
-    gameInterval = requestAnimationFrame(gameLoop);
+    requestAnimationFrame(gameLoop);
 }
 
 function update() {
     direction = nextDirection;
-    let head = { x: snake[0].x, y: snake[0].y };
+    let headX = snake[0].x;
+    let headY = snake[0].y;
 
-    if (direction === "UP") head.y -= box;
-    if (direction === "DOWN") head.y += box;
-    if (direction === "LEFT") head.x -= box;
-    if (direction === "RIGHT") head.x += box;
+    if (direction === "UP") headY -= box;
+    if (direction === "DOWN") headY += box;
+    if (direction === "LEFT") headX -= box;
+    if (direction === "RIGHT") headX += box;
 
-    // Çarpışma
-    if (head.x < 0 || head.y < 0 || head.x >= size || head.y >= size || 
-        snake.some(s => s.x === head.x && s.y === head.y)) {
-        return endGame();
+    // Çarpışma Kontrolü
+    if (headX < 0 || headY < 0 || headX >= size || headY >= size || snake.some(s => s.x === headX && s.y === headY)) {
+        gameOver();
+        return;
     }
 
-    // Yemek yeme
-    if (head.x === food.x && head.y === food.y) {
-        score += food.value;
-        document.getElementById("score").innerText = score;
-        
-        // Profesyonel Yem Sesi (🍏 normal, 🍎 tiz/nadir)
-        playTone(food.value === 3 ? 1000 : 700, 'triangle', 0.1);
-        
-        spawnFood();
-        if(currentSpeed > 65) currentSpeed -= 1.5;
+    // Yemek Yeme
+    if (headX === food.x && headY === food.y) {
+        if (food.type === "red") {
+            score += 3;
+            beep(900, 120); // 🍎 Nadir Yem Sesi
+        } else {
+            score += 1;
+            beep(600, 100); // 🍏 Normal Yem Sesi
+        }
+        food = randomFood();
+        if(currentSpeed > 70) currentSpeed -= 3;
     } else {
         snake.pop();
     }
-    snake.unshift(head);
+
+    snake.unshift({x: headX, y: headY});
+    document.getElementById("score").innerText = score;
 }
 
 function draw() {
     ctx.fillStyle = "#9bbc0f";
     ctx.fillRect(0, 0, size, size);
 
-    // Food Drawing (Emoji)
-    ctx.font = "12px Arial";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(food.type, food.x + box/2, food.y + box/2);
-
-    // Snake Drawing
-    snake.forEach((s, i) => {
+    // Yılan Çizimi
+    snake.forEach(s => {
         ctx.fillStyle = "#0f380f";
         ctx.fillRect(s.x + 1, s.y + 1, box - 2, box - 2);
     });
+
+    // Yemek Çizimi
+    ctx.font = "14px Arial";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(food.type === "red" ? "🍎" : "🍏", food.x + box/2, food.y + box/2);
 }
 
-function endGame() {
+function gameOver() {
     started = false;
-    playTone(150, 'square', 0.5, 0.2); // Profesyonel Kaybetme Sesi (Bas ve uzun)
-    if (score > getHigh()) localStorage.setItem("snake_pro_best", score);
+    beep(150, 500); // Kaybetme Sesi (Bas ve uzun)
+    if (score > getHigh()) localStorage.setItem("snakeHigh", score);
     document.getElementById("high").innerText = getHigh();
-    document.getElementById("finalScore").innerText = "SKOR: " + score;
+    document.getElementById("finalScore").innerText = "SKORUN: " + score;
     document.getElementById("gameover").style.display = "flex";
 }
 
-function moveAction(dir) {
-    initAudio(); // Her butonda sesi garantile
-    playTone(300, 'sine', 0.05, 0.05); // Hafif tık sesi
+function setDir(dir) {
+    initAudio(); 
+    beep(300, 30); // Profesyonel Buton Tık Sesi
     if (dir === "UP" && direction !== "DOWN") nextDirection = "UP";
     if (dir === "DOWN" && direction !== "UP") nextDirection = "DOWN";
     if (dir === "LEFT" && direction !== "RIGHT") nextDirection = "LEFT";
     if (dir === "RIGHT" && direction !== "LEFT") nextDirection = "RIGHT";
 }
 
-// Buton Etkileşimleri - Gecikmesiz ve Zoomsuz
-const btns = ["UP", "DOWN", "LEFT", "RIGHT"];
-btns.forEach(id => {
+/* ÇİFT TIK ENGELLEYİCİ - IMPORT */
+const btnElements = ["UP", "DOWN", "LEFT", "RIGHT"];
+btnElements.forEach(id => {
     const el = document.getElementById("btn-" + id);
-    // Gecikmeyi ve çift tıkı önlemek için touchstart kullanıldı
-    el.addEventListener("touchstart", (e) => {
-        e.preventDefault();
-        moveAction(id);
+    el.addEventListener("touchstart", function(e) {
+        e.preventDefault(); // Tarayıcı davranışını durdur
+        setDir(id);
     }, { passive: false });
 });
 
 // Klavye Desteği
-document.addEventListener("keydown", e => {
-    if (e.key === "ArrowUp") moveAction("UP");
-    if (e.key === "ArrowDown") moveAction("DOWN");
-    if (e.key === "ArrowLeft") moveAction("LEFT");
-    if (e.key === "ArrowRight") moveAction("RIGHT");
+document.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowUp") setDir("UP");
+    if (e.key === "ArrowDown") setDir("DOWN");
+    if (e.key === "ArrowLeft") setDir("LEFT");
+    if (e.key === "ArrowRight") setDir("RIGHT");
 });
 
-// Başlatma Etkileşimleri
+// Başlatma ve Yeniden Başlatma
 document.getElementById("startup").addEventListener("touchstart", (e) => {
     e.preventDefault(); startGame();
-}, { passive: false });
-
+});
 document.getElementById("gameover").addEventListener("touchstart", (e) => {
     e.preventDefault(); startGame();
-}, { passive: false });
+});
 
 </script>
 </body>
