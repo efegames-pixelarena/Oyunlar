@@ -51,7 +51,7 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
 }
 @keyframes shine { to { background-position: 200% center; } }
 
-/* --- NEW PROFESSIONAL DROPDOWN --- */
+/* --- PROFESSIONAL DROPDOWN --- */
 .profile-wrapper { position: relative; display: none; }
 .avatar-trigger {
     width: 40px; height: 40px; border-radius: 12px;
@@ -61,7 +61,6 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
     cursor: pointer; border: 2px solid rgba(255,255,255,0.1);
     transition: 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
 }
-.avatar-trigger:hover { transform: scale(1.05); border-color: var(--primary); }
 
 .dropdown-menu {
     position: absolute; top: 55px; right: 0; width: 260px;
@@ -74,7 +73,6 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
 
 @keyframes dropAnim { from { opacity: 0; transform: translateY(15px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
-/* Dropdown Header */
 .u-header-premium {
     background: linear-gradient(to bottom, rgba(79, 209, 255, 0.1), transparent);
     padding: 20px; border-bottom: 1px solid var(--border);
@@ -90,7 +88,6 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
     border: 1px solid rgba(255, 138, 0, 0.3); text-transform: uppercase;
 }
 
-/* Dropdown Stats */
 .u-stats-grid {
     display: grid; grid-template-columns: 1fr; gap: 1px;
     background: var(--border); border-bottom: 1px solid var(--border);
@@ -102,7 +99,6 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
 .u-stat-box span { font-size: 11px; color: #8892b0; font-weight: 600; text-transform: uppercase; }
 .u-stat-box b { font-size: 16px; color: var(--success); font-family: 'Courier New', monospace; }
 
-/* Dropdown Links */
 .menu-links { padding: 10px; display: flex; flex-direction: column; gap: 5px; }
 .menu-btn-item {
     display: flex; align-items: center; gap: 12px; padding: 12px 15px;
@@ -114,10 +110,8 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
     background: rgba(255,255,255,0.05); border-radius: 8px; font-size: 14px;
 }
 .menu-btn-item:hover { background: rgba(79, 209, 255, 0.1); color: var(--primary); transform: translateX(5px); }
-.menu-btn-item:hover i-icon { background: var(--primary); color: #000; }
 
 .logout-item { color: #ff4d4d !important; margin-top: 5px; }
-.logout-item:hover { background: rgba(255,77,77,0.1) !important; }
 
 /* --- CUSTOM MODALS --- */
 .custom-modal {
@@ -151,7 +145,7 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
     font-weight: 800; font-size: 12px; transition: 0.3s; white-space: nowrap;
 }
 .login-btn { background: #1e2642; color: white; border: 1px solid rgba(255,255,255,0.1); }
-.register-btn { background: linear-gradient(90deg, #ff8a00, #ff5f00); color: #000; box-shadow: 0 4px 15px rgba(255, 138, 0, 0.3); }
+.register-btn { background: linear-gradient(90deg, #ff8a00, #ff5f00); color: #000; }
 
 /* --- HERO & SEARCH --- */
 .hero-search { margin-top: 85px; padding: 0 20px; text-align: center; }
@@ -231,11 +225,11 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
                         <i-icon>🎁</i-icon> Bonus Kod Gir
                     </a>
                     <a href="https://www.instagram.com/pixel_arena_games" target="_blank" class="menu-btn-item">
-                        <i-icon>🚔</i-icon> Canlı Destek
+                        <i-icon>🚨</i-icon> Canlı Destek
                     </a>
                     <div style="height:1px; background:var(--border); margin:5px 0;"></div>
                     <a href="javascript:void(0)" class="menu-btn-item logout-item" id="logoutBtn">
-                        <i-icon>🔴</i-icon> Güvenli Çıkış
+                        <i-icon>🛑</i-icon> Güvenli Çıkış
                     </a>
                 </div>
             </div>
@@ -284,7 +278,7 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
     <div class="section-title">Premium Games</div>
     <div class="games-grid">
         <div class="game-card" data-name="skycrash" onclick="checkLogin('skycrash.html')">
-            <div class="game-icon">✈️</div>
+            <div class="game-icon">🚀</div>
             <span>SkyCrash</span>
             <div class="badge">Giriş Gerekir</div>
         </div>
@@ -294,12 +288,12 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
             <div class="badge">Giriş Gerekir</div>
         </div>
         <div class="game-card" data-name="blackjack" onclick="checkLogin('blackjack.html')">
-            <div class="game-icon">🃏</div>
+            <div class="game-icon">♠️</div>
             <span>BlackJack</span>
             <div class="badge">Giriş Gerekir</div>
         </div>
         <div class="game-card" data-name="pişti" onclick="checkLogin('pisti.html')">
-            <div class="game-icon">🎴</div>
+            <div class="game-icon">🃏</div>
             <span>Pişti</span>
             <div class="badge">Giriş Gerekir</div>
         </div>
@@ -308,12 +302,12 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
     <div class="section-title">Free Play</div>
     <div class="games-grid">
         <div class="game-card" data-name="pattern master" onclick="location.href='patternmaster.html'">
-            <div class="game-icon">🥇</div>
+            <div class="game-icon">🧩</div>
             <span>Pattern Master</span>
             <div class="badge badge-free">Giriş Gerekmez</div>
         </div>
         <div class="game-card" data-name="space war" onclick="location.href='spacepro.html'">
-            <div class="game-icon" style="filter: drop-shadow(0 0 8px #00ff88);">🚀</div>
+            <div class="game-icon" style="filter: drop-shadow(0 0 8px #00ff88);">👽</div>
             <span>Space Pro</span>
             <div class="badge badge-free">Giriş Gerekmez</div>
         </div>
@@ -422,13 +416,13 @@ document.getElementById("spinBtn").onclick = async () => {
     const rand = Math.random() * 100;
     let selectedIdx = 0;
     if(rand <= 10) selectedIdx = 3; 
-    else if(rand <= 30) selectedIdx = 2;
-    else if(rand <= 60) selectedIdx = 1;
-    else selectedIdx = 0;
+    else if(rand <= 30) selectedIdx = 2; 
+    else if(rand <= 60) selectedIdx = 1; 
+    else selectedIdx = 0; 
 
     const arcSize = 360 / rewards.length;
     const stopAngle = 360 - (selectedIdx * arcSize) - (arcSize / 2);
-    const totalRotation = 1440 + stopAngle;
+    const totalRotation = 1440 + stopAngle; 
 
     canvas.style.transform = `rotate(${totalRotation}deg)`;
     msg.innerText = "Şansın dönüyor...";
