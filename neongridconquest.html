@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Neon Conquest | Ultimate V7 Final</title>
+    <title>Neon Conquest | Ultimate V8 Final</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@500;800&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -11,7 +11,6 @@
             --glass: rgba(10, 15, 25, 0.95); --border: rgba(0, 242, 255, 0.2);
         }
 
-        /* Font düzeltmesi yapıldı */
         * { margin:0; padding:0; box-sizing:border-box; font-family: 'JetBrains Mono', monospace; -webkit-tap-highlight-color: transparent; }
         
         body { 
@@ -69,7 +68,7 @@
     <div class="header">
         <div class="user-badge" id="meName">GİRİŞ...</div>
         <div class="logo">NEON CONQUEST</div>
-        <button onclick="location.reload()" style="background:none; border:1px solid #ff4444; color:#ff4444; padding:5px 10px; border-radius:5px; font-size:0.6rem; cursor:pointer;">ÇIKIŞ</button>
+        <button id="mainExitBtn" onclick="window.exitController()" style="background:none; border:1px solid #ff4444; color:#ff4444; padding:5px 10px; border-radius:5px; font-size:0.6rem; cursor:pointer;">ÇIKIŞ</button>
     </div>
 
     <div id="lobby">
@@ -113,7 +112,7 @@
         <div class="modal-box" style="border-color:#fff">
             <h3 id="quickStatus">TARANIYOR...</h3>
             <div style="margin:20px 0; color:var(--p1); font-size:0.7rem;">Uygun boş oda aranıyor...</div>
-            <button onclick="window.toggleModal('quickModal', false)" class="btn-neon" style="background:#ff4444; width:100%">DURDUR</button>
+            <button onclick="window.closeQuick()" class="btn-neon" style="background:#ff4444; width:100%">DURDUR</button>
         </div>
     </div>
 
@@ -150,18 +149,25 @@
         start: new Audio('https://assets.mixkit.co/active_storage/sfx/2017/2017-preview.mp3')
     };
 
-    let audioReady = false;
-    window.unlockAudio = () => {
-        if(audioReady) return;
-        Object.values(sfx).forEach(s => { s.play(); s.pause(); s.currentTime = 0; });
-        audioReady = true;
-    };
-    const play = (k) => { if(audioReady) sfx[k].cloneNode(true).play(); };
-
-    let uid, username, curRoomId, myRole, isFin = false, canPlay = false, timerInt = null;
-    let pRoom = "", pPass = "";
+    let audioReady = false, uid, username, curRoomId = null, myRole, isFin = false, canPlay = false, timerInt = null;
+    let pRoom = "", pPass = "", quickSearching = false;
 
     window.toggleModal = (id, show) => { document.getElementById(id).style.display = show ? 'flex' : 'none'; };
+
+    // --- BUTON KONTROLCÜSÜ ---
+    window.exitController = async () => {
+        if (!curRoomId) {
+            window.location.href = "index.html";
+        } else {
+            // Zombi oda temizliği
+            if (myRole === 'p1') {
+                await deleteDoc(doc(db, "conquest_rooms", curRoomId));
+            } else {
+                await updateDoc(doc(db, "conquest_rooms", curRoomId), { p2: null, status: 'waiting' });
+            }
+            location.reload();
+        }
+    };
 
     onAuthStateChanged(auth, async user => {
         if(!user) { signInAnonymously(auth); return; }
@@ -178,14 +184,6 @@
         const snap = await getDocs(q);
         snap.forEach(d => deleteDoc(d.ref));
     }
-
-    document.getElementById('searchInput').oninput = (e) => {
-        const term = e.target.value.toLowerCase();
-        document.querySelectorAll('.room-card').forEach(card => {
-            const name = card.getAttribute('data-name').toLowerCase();
-            card.style.display = name.includes(term) ? 'flex' : 'none';
-        });
-    };
 
     function listenLobby() {
         onSnapshot(collection(db, "conquest_rooms"), snap => {
@@ -227,6 +225,23 @@
         enterGame(id);
     };
 
+    window.openQuickModal = async () => {
+        window.toggleModal('quickModal', true);
+        quickSearching = true;
+        const q = query(collection(db, "conquest_rooms"), where("status", "==", "waiting"));
+        const snap = await getDocs(q);
+        let found = false;
+        snap.forEach(d => {
+            if(!found && !d.data().pass && d.data().p1 !== uid && quickSearching) {
+                found = true;
+                setTimeout(() => { if(quickSearching) { window.toggleModal('quickModal', false); finalizeJoin(d.id); } }, 1000);
+            }
+        });
+        if(!found) setTimeout(() => { if(quickSearching) document.getElementById('quickStatus').innerText = "ODA BULUNAMADI"; }, 2000);
+    };
+
+    window.closeQuick = () => { quickSearching = false; window.toggleModal('quickModal', false); };
+
     window.joinReq = (id, pass, p1) => {
         if(p1 === uid) return;
         if(pass) { pRoom = id; pPass = pass; window.toggleModal('passModal', true); } 
@@ -240,20 +255,6 @@
         } else alert("Hatalı Şifre!");
     };
 
-    window.openQuickModal = async () => {
-        window.toggleModal('quickModal', true);
-        const q = query(collection(db, "conquest_rooms"), where("status", "==", "waiting"));
-        const snap = await getDocs(q);
-        let found = false;
-        snap.forEach(d => {
-            if(!found && !d.data().pass && d.data().p1 !== uid) {
-                found = true;
-                setTimeout(() => { window.toggleModal('quickModal', false); finalizeJoin(d.id); }, 1200);
-            }
-        });
-        if(!found) setTimeout(() => { document.getElementById('quickStatus').innerText = "ODA BULUNAMADI"; }, 2000);
-    };
-
     async function finalizeJoin(id) {
         curRoomId = id; myRole = 'p2';
         await updateDoc(doc(db, "conquest_rooms", id), { p2: uid, p2Name: username, status: 'playing' });
@@ -261,17 +262,20 @@
     }
 
     function enterGame(id) {
+        document.getElementById('mainExitBtn').innerText = "LOBİ";
+        document.getElementById('mainExitBtn').style.borderColor = "#00f2ff";
+        document.getElementById('mainExitBtn').style.color = "#00f2ff";
+        
         document.getElementById('lobby').style.display = 'none';
         document.getElementById('game-view').style.display = 'flex';
         const g = document.getElementById('grid');
         g.innerHTML = "";
         
-        let currentCells = {}; // Yerel hücre takibi
+        let currentCells = {};
 
         for(let i=0; i<36; i++) {
             const c = document.createElement('div');
             c.className = 'cell';
-            // Hücre Çalma Engeli: !currentCells[i] eklendi
             c.onclick = () => { 
                 if(canPlay && !isFin && !currentCells[i]) { 
                     play('box'); 
@@ -293,19 +297,18 @@
             if(d.status === 'playing') {
                 if(!canPlay) { play('start'); canPlay = true; document.getElementById('statusInfo').style.display='none'; }
                 
-                // Stabil Timer Akışı (P1 yönetir, kota dostu)
                 if(myRole === 'p1' && !timerInt && !isFin) {
                     let localTimer = d.timer;
                     timerInt = setInterval(() => {
                         if(!isFin && localTimer > 0) {
                             localTimer--;
                             document.getElementById('timer-box').innerText = localTimer;
-                            // Her 2 saniyede bir DB senkronizasyonu
                             if(localTimer % 2 === 0 || localTimer === 0) {
                                 updateDoc(doc(db, "conquest_rooms", id), { timer: localTimer });
                             }
                         } else if(localTimer <= 0) {
                             clearInterval(timerInt);
+                            updateDoc(doc(db, "conquest_rooms", id), { status: 'finished' });
                         }
                     }, 1000);
                 }
@@ -321,7 +324,7 @@
             document.getElementById('s1').innerText = s1;
             document.getElementById('s2').innerText = s2;
 
-            if((d.timer <= 0 || Object.keys(currentCells).length === 36) && !isFin) finish(s1, s2);
+            if((d.timer <= 0 || Object.keys(currentCells).length === 36 || d.status === 'finished') && !isFin) finish(s1, s2);
         });
     }
 
@@ -329,18 +332,15 @@
         if(isFin) return; 
         isFin = true; 
         clearInterval(timerInt);
-        
         const win = (myRole === 'p1' && s1 > s2) || (myRole === 'p2' && s2 > s1);
         const draw = s1 === s2;
-        
         play(draw ? 'lose' : (win ? 'win' : 'lose'));
         document.getElementById('winnerLabel').innerText = draw ? "BERABERE" : (win ? "ZAFER!" : "KAYBETTİN");
         document.getElementById('scoreLabel').innerText = `${s1} - ${s2}`;
-        document.getElementById('resultBox').style.borderColor = draw ? 'white' : (win ? 'var(--p1)' : '#ff4444');
-        
         window.toggleModal('resultModal', true);
-        if(myRole === 'p1') updateDoc(doc(db, "conquest_rooms", curRoomId), { status: 'finished' });
     }
+
+    window.unlockAudio = () => { if(audioReady) return; Object.values(sfx).forEach(s => { s.play(); s.pause(); }); audioReady = true; };
 </script>
 </body>
 </html>
