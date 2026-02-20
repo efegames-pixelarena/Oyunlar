@@ -2,230 +2,333 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Cyber-Stack | Pixel Arena</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Cyber-Stack Pro | Pixel Arena</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Montserrat:wght@900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
             --primary: #4fd1ff;
-            --accent: #ff8a00;
+            --primary-glow: rgba(79, 209, 255, 0.4);
             --bg: #03050a;
-            --success: #00ffa3;
+            --glass: rgba(15, 22, 36, 0.9);
+            --border: rgba(255, 255, 255, 0.1);
+            --accent: #ff8a00;
         }
 
-        body {
-            margin: 0; background: var(--bg); color: white;
-            font-family: 'Inter', sans-serif; overflow: hidden;
-            display: flex; align-items: center; justify-content: center; height: 100vh;
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        body { 
+            background: var(--bg); 
+            color: white; 
+            font-family: 'Inter', sans-serif; 
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
-        #game-container { position: relative; width: 100%; height: 100%; max-width: 500px; }
-
-        canvas { display: block; width: 100%; height: 100%; }
-
-        .ui {
-            position: absolute; top: 40px; left: 0; width: 100%;
-            text-align: center; pointer-events: none; z-index: 10;
+        /* --- PROFESYONEL ÜST BAR --- */
+        .top-bar {
+            height: 65px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            z-index: 1000;
         }
 
-        #score { font-size: 80px; font-weight: 900; color: white; opacity: 0.3; }
+        .brand {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 18px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            background: linear-gradient(90deg, var(--primary), #fff, var(--primary));
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shine 4s linear infinite;
+        }
+        @keyframes shine { to { background-position: 200% center; } }
 
-        .msg {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            text-align: center; width: 80%; display: block;
+        .stat-group {
+            display: flex;
+            gap: 15px;
         }
 
-        h1 { font-size: 24px; letter-spacing: 5px; color: var(--primary); text-transform: uppercase; }
-        p { color: #94a3b8; font-size: 14px; margin-bottom: 20px; }
+        .stat-pill {
+            background: rgba(255,255,255,0.05);
+            padding: 6px 15px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 700;
+        }
+        .stat-pill i { color: var(--primary); font-size: 11px; }
 
-        .btn-start {
-            padding: 15px 40px; border-radius: 12px; background: var(--primary);
-            color: #000; border: none; font-weight: 900; cursor: pointer;
-            text-transform: uppercase; pointer-events: auto;
+        /* --- OYUN ALANI --- */
+        #game-wrapper {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
         }
 
-        #restart-screen { display: none; }
+        canvas { width: 100%; height: 100%; display: block; }
+
+        /* --- UI OVERLAYS --- */
+        .game-ui {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+        }
+
+        #big-score {
+            position: absolute;
+            top: 20px;
+            font-size: 120px;
+            font-weight: 900;
+            opacity: 0.1;
+            color: white;
+        }
+
+        .modal {
+            background: var(--glass);
+            padding: 40px;
+            border-radius: 30px;
+            border: 1px solid var(--border);
+            text-align: center;
+            backdrop-filter: blur(15px);
+            pointer-events: auto;
+            max-width: 320px;
+            width: 90%;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+        .modal h2 {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: var(--primary);
+            text-shadow: 0 0 15px var(--primary-glow);
+        }
+
+        .modal p { color: #94a3b8; font-size: 14px; margin-bottom: 25px; line-height: 1.6; }
+
+        .btn-action {
+            width: 100%;
+            padding: 16px;
+            border-radius: 15px;
+            border: none;
+            background: var(--primary);
+            color: #000;
+            font-weight: 900;
+            font-size: 14px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: 0.3s;
+            box-shadow: 0 5px 15px var(--primary-glow);
+        }
+        .btn-action:hover { transform: scale(1.02); filter: brightness(1.1); }
+
+        #game-over-ui { display: none; }
+
+        /* --- ALT BİLGİ --- */
+        .controls-hint {
+            position: absolute;
+            bottom: 30px;
+            font-size: 11px;
+            color: var(--border);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 800;
+        }
     </style>
 </head>
-<body onclick="handleAction()">
+<body onclick="gameInput()">
 
-    <div id="game-container">
-        <div class="ui">
-            <div id="score">0</div>
+    <div class="top-bar">
+        <div class="brand">PIXELARENA</div>
+        <div class="stat-group">
+            <div class="stat-pill"><i class="fa-solid fa-trophy"></i> <span id="highScore">0</span></div>
+            <div class="stat-pill"><i class="fa-solid fa-layer-group"></i> <span id="currentScore">0</span></div>
         </div>
+    </div>
 
-        <div id="start-screen" class="msg">
-            <h1>CYBER STACK</h1>
-            <p>Kuleyi yükseltmek için tam zamanında tıkla!</p>
-            <button class="btn-start">BAŞLAT</button>
+    <div id="game-wrapper">
+        <canvas id="stackCanvas"></canvas>
+
+        <div class="game-ui">
+            <div id="big-score">0</div>
+
+            <div id="start-ui" class="modal">
+                <h2>CYBER STACK</h2>
+                <p>Blokları üst üste dizerek en yüksek kuleyi inşa et. Her kat kazancını katlar!</p>
+                <button class="btn-action" onclick="startGame(event)">SİSTEMİ BAŞLAT</button>
+            </div>
+
+            <div id="game-over-ui" class="modal">
+                <h2 style="color:var(--accent)">SİSTEM ÇÖKTÜ</h2>
+                <p>Kule dengesini kaybetti. <br>Elde edilen kat: <b id="finalScore" style="color:white">0</b></p>
+                <button class="btn-action" onclick="restartGame(event)">YENİDEN YÜKLE</button>
+            </div>
+
+            <div class="controls-hint">Ekrana dokunarak bloğu bırak</div>
         </div>
-
-        <div id="restart-screen" class="msg">
-            <h1 style="color:var(--accent)">GAME OVER</h1>
-            <p id="final-score-msg">Skor: 0</p>
-            <button class="btn-start">TEKRAR DENE</button>
-        </div>
-
-        <canvas id="gameCanvas"></canvas>
     </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
-    // OYUN AYARLARI
-    let scene, camera, renderer;
-    let stack = [];
-    const boxHeight = 1;
-    const originalBoxSize = 3;
-    let gameStarted = false;
-    let gameOver = false;
-    let score = 0;
-    let speed = 0.15;
+    let scene, camera, renderer, stack = [];
+    let gameStarted = false, gameOver = false;
+    let score = 0, highScore = localStorage.getItem('stack_highscore') || 0;
+    let speed = 0.12, direction = 'x';
+    const boxHeight = 1, originalSize = 3;
 
     function init() {
+        document.getElementById('highScore').innerText = highScore;
+        
         scene = new THREE.Scene();
         scene.background = new THREE.Color(0x03050a);
 
-        // Kamera
-        const aspect = window.innerWidth / window.innerHeight;
+        const aspect = window.innerWidth / (window.innerHeight - 65);
         const d = 5;
         camera = new THREE.OrthographicCamera(-d * aspect, d * aspect, d, -d, 0.1, 1000);
         camera.position.set(4, 4, 4);
         camera.lookAt(0, 0, 0);
 
-        // Renderer
-        const canvas = document.getElementById('gameCanvas');
-        renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('stackCanvas'), antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight - 65);
         renderer.setPixelRatio(window.devicePixelRatio);
 
-        // Işıklandırma
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-        scene.add(ambientLight);
+        const ambient = new THREE.AmbientLight(0xffffff, 0.7);
+        scene.add(ambient);
 
-        const dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
-        dirLight.position.set(10, 20, 0);
-        scene.add(dirLight);
+        const light = new THREE.DirectionalLight(0xffffff, 0.5);
+        light.position.set(10, 20, 5);
+        scene.add(light);
 
-        resetGame();
+        setupLevel();
         animate();
     }
 
-    function resetGame() {
-        // Temizlik
-        stack.forEach(obj => scene.remove(obj.mesh));
+    function setupLevel() {
+        stack.forEach(b => scene.remove(b.mesh));
         stack = [];
         score = 0;
-        speed = 0.15;
-        gameOver = false;
-        document.getElementById('score').innerText = score;
-
-        // Temel Blok
-        addLayer(0, 0, originalBoxSize, originalBoxSize);
-        // Hareketli İlk Blok
-        addLayer(0, 0, originalBoxSize, originalBoxSize, 'x');
+        speed = 0.12;
+        updateUI();
+        
+        // Base block
+        addBlock(0, 0, originalSize, originalSize, null);
+        // First moving block
+        addBlock(0, 0, originalSize, originalSize, 'x');
     }
 
-    function addLayer(x, z, width, depth, direction) {
-        const y = boxHeight * stack.length;
-        const color = new THREE.Color(`hsl(${180 + stack.length * 4}, 100%, 50%)`); // Neon Mavi Tonları
+    function addBlock(x, z, w, d, dir) {
+        const y = stack.length * boxHeight;
+        const color = new THREE.Color().setHSL(0.55 + (stack.length * 0.03), 0.8, 0.5); // Dinamik neon geçişi
         
-        const geometry = new THREE.BoxGeometry(width, boxHeight, depth);
-        const material = new THREE.MeshPhongMaterial({ 
-            color, 
-            emissive: color,
-            emissiveIntensity: 0.2
-        });
+        const geometry = new THREE.BoxGeometry(w, boxHeight, d);
+        const material = new THREE.MeshPhongMaterial({ color, emissive: color, emissiveIntensity: 0.1 });
         const mesh = new THREE.Mesh(geometry, material);
+        
         mesh.position.set(x, y, z);
         scene.add(mesh);
-
-        stack.push({ mesh, width, depth, direction });
+        stack.push({ mesh, width: w, depth: d, direction: dir });
     }
 
-    function handleAction() {
-        if (!gameStarted) {
-            startGame();
-            return;
-        }
-        if (gameOver) {
-            restartGame();
-            return;
-        }
+    function gameInput() {
+        if (!gameStarted || gameOver) return;
 
         const top = stack[stack.length - 1];
         const prev = stack[stack.length - 2];
-        const direction = top.direction;
+        const dir = top.direction;
 
-        let delta, size;
-        if (direction === 'x') {
-            delta = top.mesh.position.x - prev.mesh.position.x;
-            size = top.width;
-        } else {
-            delta = top.mesh.position.z - prev.mesh.position.z;
-            size = top.depth;
-        }
-
+        const delta = dir === 'x' ? top.mesh.position.x - prev.mesh.position.x : top.mesh.position.z - prev.mesh.position.z;
+        const size = dir === 'x' ? top.width : top.depth;
         const overlap = size - Math.abs(delta);
 
         if (overlap > 0) {
-            // Başarılı Yerleştirme
-            const newWidth = direction === 'x' ? overlap : top.width;
-            const newDepth = direction === 'z' ? overlap : top.depth;
-            const newX = direction === 'x' ? prev.mesh.position.x + delta / 2 : top.mesh.position.x;
-            const newZ = direction === 'z' ? prev.mesh.position.z + delta / 2 : top.mesh.position.z;
+            // Kesme işlemi
+            const newW = dir === 'x' ? overlap : top.width;
+            const newD = dir === 'z' ? overlap : top.depth;
+            const newX = dir === 'x' ? prev.mesh.position.x + delta / 2 : top.mesh.position.x;
+            const newZ = dir === 'z' ? prev.mesh.position.z + delta / 2 : top.mesh.position.z;
 
-            top.width = newWidth;
-            top.depth = newDepth;
-            top.mesh.scale.set(newWidth / (direction === 'x' ? size : newWidth), 1, newDepth / (direction === 'z' ? size : newDepth));
+            top.mesh.scale[dir] = overlap / size;
+            top.mesh.position[dir] = newX || newZ; // Basitleştirilmiş
+            top.width = newW; top.depth = newD;
             top.mesh.position.set(newX, top.mesh.position.y, newZ);
 
             score++;
-            document.getElementById('score').innerText = score;
-            speed += 0.005;
+            if(score > highScore) {
+                highScore = score;
+                localStorage.setItem('stack_highscore', highScore);
+            }
+            updateUI();
+            speed += 0.004;
 
-            addLayer(newX, newZ, newWidth, newDepth, direction === 'x' ? 'z' : 'x');
-            
-            // Kamera Yükselt
+            addBlock(newX, newZ, newW, newD, dir === 'x' ? 'z' : 'x');
             camera.position.y += boxHeight;
         } else {
-            endGame();
+            handleGameOver();
         }
+    }
+
+    function updateUI() {
+        document.getElementById('currentScore').innerText = score;
+        document.getElementById('big-score').innerText = score;
+        document.getElementById('highScore').innerText = highScore;
     }
 
     function animate() {
         requestAnimationFrame(animate);
-
         if (gameStarted && !gameOver) {
             const top = stack[stack.length - 1];
-            if (top.direction === 'x') {
-                top.mesh.position.x += speed;
-                if (top.mesh.position.x > 5) top.mesh.position.x = -5;
-            } else {
-                top.mesh.position.z += speed;
-                if (top.mesh.position.z > 5) top.mesh.position.z = -5;
-            }
+            top.mesh.position[top.direction] += speed;
+            if (Math.abs(top.mesh.position[top.direction]) > 6) speed *= -1;
         }
         renderer.render(scene, camera);
     }
 
-    function startGame() {
+    window.startGame = (e) => {
+        e.stopPropagation();
         gameStarted = true;
-        document.getElementById('start-screen').style.display = 'none';
-    }
+        document.getElementById('start-ui').style.display = 'none';
+    };
 
-    function endGame() {
+    function handleGameOver() {
         gameOver = true;
-        document.getElementById('restart-screen').style.display = 'block';
-        document.getElementById('final-score-msg').innerText = "Skor: " + score;
-        
-        // BURADA FIREBASE SKOR KAYDETME YAPABİLİRSİN
-        // updateDoc(doc(db, "users", uid), { balance: increment(score * 10) });
+        document.getElementById('game-over-ui').style.display = 'block';
+        document.getElementById('finalScore').innerText = score;
     }
 
-    function restartGame() {
-        document.getElementById('restart-screen').style.display = 'none';
+    window.restartGame = (e) => {
+        e.stopPropagation();
+        gameOver = false;
         camera.position.set(4, 4, 4);
-        resetGame();
-    }
+        document.getElementById('game-over-ui').style.display = 'none';
+        setupLevel();
+    };
+
+    window.addEventListener('resize', () => {
+        const h = window.innerHeight - 65;
+        renderer.setSize(window.innerWidth, h);
+        camera.aspect = window.innerWidth / h;
+        camera.updateProjectionMatrix();
+    });
 
     init();
 </script>
