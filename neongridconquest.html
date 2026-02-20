@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Neon Conquest | Pro Edition V10.2</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@500;800&swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@500;800&display=swap" rel="stylesheet">
     <style>
         :root {
             --p1: #00ff41; --p2: #ff00f7; --bg: #020408;
@@ -37,9 +37,10 @@
         .user-badge { font-size: 0.65rem; color: var(--p1); border: 1px solid var(--p1); padding: 5px 10px; border-radius: 4px; }
 
         #lobby { flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto; z-index: 10; }
-        .room-card { background: var(--glass); border: 1px solid var(--border); padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; transition: 0.3s; margin-bottom: 5px; }
-        .room-info b { font-size: 0.9rem; color: #fff; }
-        .room-stats { font-size: 0.6rem; color: var(--p1); margin-top: 4px; display: block; }
+        .room-card { background: var(--glass); border: 1px solid var(--border); padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; transition: 0.3s; margin-bottom: 8px; border-left: 4px solid var(--p1); }
+        .room-info b { font-size: 0.8rem; color: #fff; display: block; margin-bottom: 2px; }
+        .room-stats { font-size: 0.55rem; color: #aaa; display: block; line-height: 1.4; }
+        .live-score { font-family: 'Orbitron'; color: var(--p1); font-weight: 700; font-size: 0.7rem; margin-top: 2px; }
 
         #game-view { display: none; flex: 1; flex-direction: column; z-index: 10; }
         .game-hud { display: grid; grid-template-columns: 1fr auto 1fr; padding: 20px; align-items: center; background: rgba(0,0,0,0.7); }
@@ -57,10 +58,6 @@
         .modal-input { width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border); padding: 12px; border-radius: 10px; color: #fff; margin-bottom: 15px; text-align: center; outline: none; }
         
         .empty-arena { text-align: center; padding: 40px 20px; color: #888; border: 1px dashed var(--border); border-radius: 15px; }
-        
-        /* Rehber Metin Stili */
-        .guide-text { text-align: left; font-size: 0.75rem; line-height: 1.6; color: #ccc; margin: 15px 0; }
-        .guide-text b { color: var(--p1); }
     </style>
 </head>
 <body onclick="window.unlockAudio()">
@@ -76,7 +73,6 @@
 
     <div id="lobby">
         <button class="btn-neon" style="background:#fff;" onclick="window.openQuickModal()">HIZLI KATIL / ODA KUR</button>
-        <button class="btn-neon" style="background:transparent; border:1px solid var(--p1); color:var(--p1); margin-top: -5px;" onclick="window.toggleModal('howToPlayModal', true)">NASIL OYNANIR?</button>
         <div id="roomList"></div>
     </div>
 
@@ -90,16 +86,11 @@
         <div class="grid" id="grid"></div>
     </div>
 
-    <div id="howToPlayModal" class="modal">
-        <div class="modal-box">
-            <h3 style="font-family:'Orbitron'; color:var(--p1); margin-bottom:10px;">OPERASYON REHBERİ</h3>
-            <div class="guide-text">
-                <p>• <b>AMAÇ:</b> 60 saniye içinde arenadaki karelerin çoğunu kendi rengine boya.</p>
-                <p>• <b>KONTROL:</b> Boş karelere dokunarak onları ele geçir.</p>
-                <p>• <b>SABOTAJ:</b> Rakibinin karesine dokunarak onu kendi rengine çevirebilirsin.</p>
-                <p>• <b>ZAFER:</b> Süre bittiğinde veya tüm kareler dolduğunda en çok karesi olan kazanır.</p>
-            </div>
-            <button onclick="window.toggleModal('howToPlayModal', false)" class="btn-neon" style="width:100%">ANLAŞILDI</button>
+    <div id="errorModal" class="modal">
+        <div class="modal-box danger">
+            <h3 style="color:var(--danger); font-family:'Orbitron';">SİSTEM HATASI</h3>
+            <p id="errorMsg" style="margin:20px 0; font-size:0.8rem;"></p>
+            <button onclick="window.toggleModal('errorModal', false)" class="btn-neon" style="background:var(--danger); color:white; width:100%;">TAMAM</button>
         </div>
     </div>
 
@@ -164,23 +155,21 @@
     let audioReady = false, uid, username, curRoomId = null, myRole, isFin = false, canPlay = false, timerInt = null, lastCellsCount = 0;
     let unsubLobby = null, unsubGame = null;
 
-    window.history.pushState(null, null, window.location.href);
-    window.onpopstate = function() {
-        window.history.pushState(null, null, window.location.href);
-        window.showExitConfirm();
-    };
-
     window.toggleModal = (id, show) => { document.getElementById(id).style.display = show ? 'flex' : 'none'; };
 
-    window.showExitConfirm = () => {
-        if (!curRoomId) { location.reload(); return; }
-        window.toggleModal('confirmExitModal', true);
+    window.showError = (msg) => {
+        document.getElementById('errorMsg').innerText = msg;
+        window.toggleModal('errorModal', true);
     };
 
     window.finalizeExit = async () => {
         if (curRoomId) {
             if(unsubGame) { unsubGame(); unsubGame = null; }
-            await updateDoc(doc(db, "conquest_rooms", curRoomId), { status: 'escaped' });
+            if(myRole === 'p1') {
+                await deleteDoc(doc(db, "conquest_rooms", curRoomId));
+            } else {
+                await updateDoc(doc(db, "conquest_rooms", curRoomId), { status: 'escaped' });
+            }
         }
         location.reload();
     };
@@ -188,15 +177,10 @@
     onAuthStateChanged(auth, async user => {
         if(!user) { signInAnonymously(auth); return; }
         uid = user.uid;
-        
         try {
             const uSnap = await getDoc(doc(db, "users", uid));
-            const userData = uSnap.exists() ? uSnap.data() : null;
-            username = userData && userData.username ? userData.username : "PILOT_" + uid.slice(0,4);
-        } catch(e) {
-            username = "PILOT_" + uid.slice(0,4);
-        }
-        
+            username = uSnap.exists() ? uSnap.data().username : "PILOT_" + uid.slice(0,4);
+        } catch(e) { username = "PILOT_" + uid.slice(0,4); }
         document.getElementById('meName').innerText = username;
         listenLobby();
         initWarp();
@@ -208,18 +192,25 @@
             const list = document.getElementById('roomList');
             list.innerHTML = "";
             if (snap.empty) {
-                list.innerHTML = `<div class="empty-arena"><p style="color:var(--p1);">ARENA SESSİZ...</p></div>`;
+                list.innerHTML = `<div class="empty-arena"><p>ARENA SESSİZ...</p></div>`;
                 return;
             }
             snap.forEach(d => {
                 const r = d.data();
-                if(r.status === 'finished' || r.status === 'escaped' || r.p1 === uid) return;
+                // Zombie Temizliği: P1 yoksa veya oda çok eskiyse listeden gizle
+                if(!r.p1 || r.status === 'finished' || r.status === 'escaped') return;
+
+                // Hücre sayılarını hesapla
+                let s1=0, s2=0;
+                Object.values(r.cells || {}).forEach(v => { if(v==='p1') s1++; else s2++; });
+
                 const card = document.createElement('div');
                 card.className = "room-card";
                 card.innerHTML = `
                     <div class="room-info">
-                        <b>${r.p1Name} ${r.pass ? '🔒' : ''}</b>
-                        <span class="room-stats">DURUM: ${r.status === 'playing' ? 'SAVAŞTA' : 'BEKLİYOR'}</span>
+                        <b>${r.p1Name} VS ${r.p2Name || '???'} ${r.pass ? '🔒' : ''}</b>
+                        <span class="room-stats">SÜRE: ${r.timer}s | DURUM: ${r.status === 'playing' ? 'SAVAŞTA' : 'BEKLİYOR'}</span>
+                        <div class="live-score">SKOR: ${s1} - ${s2}</div>
                     </div>
                     <button class="btn-neon" style="padding:8px 15px; font-size:0.6rem;" onclick="window.joinHandler('${d.id}', '${r.pass||''}')">
                         ${r.status === 'playing' ? 'İZLE' : 'KATIL'}
@@ -232,7 +223,7 @@
     window.joinHandler = async (id, pass) => {
         if(pass !== "") {
             const input = prompt("ARENA ŞİFRESİ:");
-            if(input !== pass) { alert("ŞİFRE HATALI!"); return; }
+            if(input !== pass) { window.showError("ŞİFRE HATALI!"); return; }
         }
         window.finalizeJoin(id);
     };
@@ -243,14 +234,8 @@
         const snap = await getDocs(q);
         let found = null;
         snap.forEach(d => { if(d.data().p1 !== uid) found = d.id; });
-
-        if(found) {
-            window.toggleModal('quickModal', false);
-            window.finalizeJoin(found);
-        } else {
-            window.toggleModal('quickModal', false);
-            window.toggleModal('createModal', true);
-        }
+        window.toggleModal('quickModal', false);
+        if(found) window.finalizeJoin(found); else window.toggleModal('createModal', true);
     };
 
     document.getElementById('confirmCreate').onclick = async () => {
@@ -258,7 +243,7 @@
         const id = Math.random().toString(36).substring(2,8);
         curRoomId = id; myRole = 'p1';
         await setDoc(doc(db, "conquest_rooms", id), {
-            p1: uid, p1Name: username, p2: null, p2Name: "...", cells: {}, timer: 60, status: 'waiting', pass: pass
+            p1: uid, p1Name: username, p2: null, p2Name: "...", cells: {}, timer: 60, status: 'waiting', pass: pass, createdAt: Date.now()
         });
         enterGame(id);
     };
@@ -266,16 +251,17 @@
     window.finalizeJoin = async (id) => {
         const roomRef = doc(db, "conquest_rooms", id);
         const snap = await getDoc(roomRef);
-        if(!snap.exists() || snap.data().status !== 'waiting') { alert("ARENA DOLU VEYA KAPANDI!"); return; }
-        
+        if(!snap.exists() || snap.data().status !== 'waiting') { 
+            window.showError("ARENA DOLU VEYA KAPANDI!"); 
+            return; 
+        }
         curRoomId = id; myRole = 'p2';
-        document.getElementById('n2').innerText = username; 
         await updateDoc(roomRef, { p2: uid, p2Name: username, status: 'playing' });
         enterGame(id);
     };
 
     function enterGame(id) {
-        if(unsubLobby) { unsubLobby(); unsubLobby = null; }
+        if(unsubLobby) unsubLobby();
         document.getElementById('lobby').style.display = 'none';
         document.getElementById('game-view').style.display = 'flex';
         document.getElementById('game-bg').style.display = 'block';
@@ -289,39 +275,32 @@
         }
 
         unsubGame = onSnapshot(doc(db, "conquest_rooms", id), snap => {
-            if(!snap.exists()) return;
+            if(!snap.exists()) {
+                if(!isFin) window.finalizeExit();
+                return;
+            }
             const d = snap.data();
-            
             if(d.status === 'escaped' && !isFin) {
                 isFin = true; 
-                if(timerInt) { clearInterval(timerInt); timerInt = null; }
-                if(unsubGame) { unsubGame(); unsubGame = null; } 
+                clearInterval(timerInt);
                 playSfx('alert'); window.toggleModal('escapeModal', true);
-                setTimeout(() => { try { deleteDoc(doc(db, "conquest_rooms", id)); } catch(e){} }, 2000);
+                setTimeout(() => { deleteDoc(doc(db, "conquest_rooms", id)); }, 2000);
                 return;
             }
 
             const cells = d.cells || {};
             if(Object.keys(cells).length > lastCellsCount) { playSfx('box'); lastCellsCount = Object.keys(cells).length; }
-            
             document.getElementById('n1').innerText = d.p1Name;
             document.getElementById('n2').innerText = d.p2Name;
             document.getElementById('timer-box').innerText = d.timer;
 
             if(d.status === 'playing' && !canPlay) { playSfx('start'); canPlay = true; }
             
-            if(myRole === 'p1' && d.status === 'playing') {
-                if(!timerInt) {
-                    timerInt = setInterval(() => {
-                        if(d.timer > 0) {
-                            updateDoc(doc(db, "conquest_rooms", id), { timer: increment(-1) });
-                        } else {
-                            clearInterval(timerInt);
-                            timerInt = null;
-                            updateDoc(doc(db, "conquest_rooms", id), { status: 'finished' });
-                        }
-                    }, 1000);
-                }
+            if(myRole === 'p1' && d.status === 'playing' && !timerInt) {
+                timerInt = setInterval(() => {
+                    if(d.timer > 0) updateDoc(doc(db, "conquest_rooms", id), { timer: increment(-1) });
+                    else { clearInterval(timerInt); updateDoc(doc(db, "conquest_rooms", id), { status: 'finished' }); }
+                }, 1000);
             }
 
             let s1=0, s2=0;
@@ -330,33 +309,22 @@
             });
             document.getElementById('s1').innerText = s1; document.getElementById('s2').innerText = s2;
             
-            if((d.timer <= 0 || Object.keys(cells).length === 36 || d.status === 'finished') && !isFin) {
-                finish(id, s1, s2);
-            }
+            if((d.timer <= 0 || Object.keys(cells).length === 36 || d.status === 'finished') && !isFin) finish(id, s1, s2);
         });
     }
 
     async function finish(id, s1, s2) {
-        if(isFin) return;
-        isFin = true; 
-        if(timerInt) { clearInterval(timerInt); timerInt = null; }
-        if(unsubGame) { unsubGame(); unsubGame = null; } 
-        
+        isFin = true; clearInterval(timerInt);
         const win = (myRole === 'p1' && s1 > s2) || (myRole === 'p2' && s2 > s1);
         playSfx(win ? 'win' : 'lose');
-                
         document.getElementById('winnerLabel').innerText = win ? "ZAFER!" : "KAYBETTİN";
         document.getElementById('scoreLabel').innerText = `${s1} - ${s2}`;
         window.toggleModal('resultModal', true);
-        
-        if(myRole === 'p1') {
-            setTimeout(() => { try { deleteDoc(doc(db, "conquest_rooms", id)); } catch(e){} }, 5000);
-        }
+        if(myRole === 'p1') setTimeout(() => { deleteDoc(doc(db, "conquest_rooms", id)); }, 5000);
     }
 
     function initWarp() {
-        const bg = document.getElementById('game-bg');
-        if(!bg) return;
+        const bg = document.getElementById('game-bg'); if(!bg) return;
         bg.innerHTML = "";
         for(let i=0; i<40; i++) {
             const star = document.createElement('div');
@@ -370,6 +338,7 @@
 
     window.unlockAudio = () => { if(audioReady) return; Object.values(sfx).forEach(s => { s.play().then(()=> {s.pause(); s.currentTime=0;}).catch(()=>{}); }); audioReady = true; };
     function playSfx(key) { if(audioReady && sfx[key]) { sfx[key].currentTime=0; sfx[key].play().catch(()=>{}); } }
+    window.showExitConfirm = () => { if (!curRoomId) { location.reload(); return; } window.toggleModal('confirmExitModal', true); };
 </script>
 </body>
 </html>
