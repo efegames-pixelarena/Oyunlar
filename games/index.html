@@ -3,174 +3,238 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Nebula Elite | Pro Arena</title>
+    <title>PixelArena | Elite Gaming</title>
 
-    <link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@700&family=Plus+Jakarta+Sans:wght@300;500;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Syncopate:wght@700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
     <style>
         :root {
+            --primary: #00f2ff;
             --accent: #7000ff;
-            --accent-glow: rgba(112, 0, 255, 0.3);
-            --bg: #020408;
-            --card: rgba(15, 20, 35, 0.7);
-            --border: rgba(255, 255, 255, 0.06);
-            --success: #00f2ff;
-            --danger: #ff0055;
-            --text: #ffffff;
+            --bg: #05070a;
+            --card-glass: rgba(15, 20, 30, 0.4);
+            --border: rgba(255, 255, 255, 0.08);
+            --success: #00ff88;
+            --error: #ff3366;
+            --header-h: 75px;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
-        body { background: var(--bg); color: var(--text); overflow-x: hidden; min-height: 100vh; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        body { background: var(--bg); color: #fff; overflow-x: hidden; min-height: 100vh; }
 
-        /* --- ATMOSFERİK ARKA PLAN (KAR & YAĞMUR) --- */
-        #storm-canvas { position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: 0.8; }
+        /* --- ATMOSFERİK ARKA PLAN (KAR + YAĞMUR) --- */
+        #weather-canvas { position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: 0.7; }
 
-        /* --- ÜST BAR (TAŞMAYA KARŞI ZIRHLI) --- */
-        .top-nav {
-            position: fixed; top: 0; width: 100%; height: 85px;
-            background: rgba(2, 4, 8, 0.8); backdrop-filter: blur(25px);
-            border-bottom: 1px solid var(--border); z-index: 2000;
+        /* --- TAŞMAYA DAYANIKLI HEADER --- */
+        header {
+            position: fixed; top: 0; width: 100%; height: var(--header-h);
+            background: rgba(5, 7, 10, 0.8); backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border); z-index: 1000;
             display: flex; align-items: center; justify-content: space-between;
             padding: 0 5%;
         }
 
-        .logo { font-family: 'Syncopate', sans-serif; font-size: 22px; letter-spacing: 4px; color: var(--accent); text-shadow: 0 0 15px var(--accent-glow); }
+        .logo { font-family: 'Syncopate', sans-serif; font-size: 20px; letter-spacing: 3px; color: var(--primary); text-shadow: 0 0 10px rgba(0,242,255,0.5); }
 
-        .user-center { display: none; align-items: center; gap: 15px; background: rgba(255,255,255,0.03); padding: 8px 10px 8px 20px; border-radius: 100px; border: 1px solid var(--border); max-width: 300px; }
+        .user-nav { display: none; align-items: center; gap: 12px; max-width: 50%; }
         
-        .balance-box { display: flex; flex-direction: column; overflow: hidden; min-width: 80px; }
-        .balance-box span { font-size: 9px; text-transform: uppercase; color: #666; font-weight: 800; }
-        .balance-box b { color: var(--success); font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .bakiye-container {
+            background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+            padding: 8px 15px; border-radius: 100px; display: flex; align-items: center;
+            gap: 8px; overflow: hidden; white-space: nowrap;
+        }
+        .bakiye-container b { color: var(--success); font-weight: 800; font-size: 14px; text-overflow: ellipsis; overflow: hidden; }
 
-        .pfp-wrap { width: 42px; height: 42px; border-radius: 50%; border: 2px solid var(--accent); cursor: pointer; position: relative; transition: 0.3s; }
-        .pfp-wrap:hover { transform: scale(1.1); box-shadow: 0 0 15px var(--accent-glow); }
-        .pfp-wrap img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+        .avatar-box { 
+            width: 44px; height: 44px; border-radius: 12px; border: 2px solid var(--accent);
+            cursor: pointer; transition: 0.3s; padding: 2px;
+        }
+        .avatar-box img { width: 100%; height: 100%; border-radius: 8px; object-fit: cover; }
+        .avatar-box:hover { transform: scale(1.1); box-shadow: 0 0 15px var(--accent); }
 
-        /* --- PROFESYONEL KARTLAR --- */
-        .main-container { position: relative; z-index: 10; padding: 120px 8% 60px; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 30px; }
+        /* --- GRID SİSTEMİ (PC 5x5 - MOBILE 2x2) --- */
+        .content { position: relative; z-index: 10; padding: 100px 5% 50px; }
+        
+        .section-header { margin: 30px 0 20px; font-size: 12px; letter-spacing: 4px; text-transform: uppercase; color: #555; font-weight: 800; }
+
+        .games-grid {
+            display: grid; gap: 15px;
+        }
+
+        /* Responsive Grid Ayarları */
+        @media (min-width: 1024px) { .games-grid { grid-template-columns: repeat(5, 1fr); } }
+        @media (max-width: 1023px) { .games-grid { grid-template-columns: repeat(2, 1fr); } }
 
         .game-card {
-            background: var(--card); border: 1px solid var(--border); border-radius: 30px;
-            padding: 40px 30px; position: relative; overflow: hidden;
-            transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1); cursor: pointer;
+            background: var(--card-glass); border: 1px solid var(--border);
+            border-radius: 24px; padding: 25px 15px; text-align: center;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer; position: relative; overflow: hidden;
         }
-        .game-card:hover { transform: translateY(-10px); border-color: var(--accent); background: rgba(112, 0, 255, 0.05); }
-        .game-card i { font-size: 45px; margin-bottom: 25px; color: var(--accent); display: block; }
-        .game-card h3 { font-size: 22px; margin-bottom: 10px; font-weight: 800; }
-        .game-card p { font-size: 13px; color: #888; line-height: 1.6; }
+        .game-card:hover { border-color: var(--primary); transform: translateY(-8px); background: rgba(0,242,255,0.05); }
+        .game-card i { font-size: 40px; margin-bottom: 15px; display: block; filter: drop-shadow(0 0 10px var(--primary)); }
+        .game-card h3 { font-size: 15px; font-weight: 800; margin-bottom: 5px; color: #fff; }
+        .game-card .status { font-size: 9px; font-weight: 900; color: var(--primary); opacity: 0.7; }
 
-        .status-badge { position: absolute; top: 20px; right: 20px; font-size: 10px; padding: 6px 12px; border-radius: 10px; background: rgba(255,255,255,0.05); font-weight: 900; }
-
-        /* --- MODALLAR VE FORMLAR --- */
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(15px); z-index: 5000; display: none; align-items: center; justify-content: center; padding: 20px; }
-        .modal { width: 100%; max-width: 480px; background: #0a0c12; border: 1px solid var(--border); border-radius: 40px; padding: 40px; position: relative; }
-        
+        /* --- MODAL TASARIMLARI --- */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.95);
+            backdrop-filter: blur(10px); z-index: 2000; display: none;
+            align-items: center; justify-content: center; padding: 20px;
+        }
+        .modal {
+            width: 100%; max-width: 450px; background: #0c0e14; border: 1px solid var(--border);
+            border-radius: 35px; padding: 35px; position: relative;
+        }
         .input-group { margin-bottom: 20px; text-align: left; }
-        .input-group label { display: block; font-size: 11px; font-weight: 800; color: #555; margin-bottom: 8px; text-transform: uppercase; }
-        .input-group input { width: 100%; padding: 16px 20px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 18px; color: white; outline: none; }
-        .input-group input:disabled { opacity: 0.4; border-style: dashed; }
+        .input-group label { display: block; font-size: 11px; font-weight: 800; color: #666; margin-bottom: 8px; text-transform: uppercase; }
+        .input-group input { 
+            width: 100%; padding: 15px; background: rgba(255,255,255,0.02); 
+            border: 1px solid var(--border); border-radius: 15px; color: #fff; outline: none;
+        }
+        .input-group input:disabled { opacity: 0.4; cursor: not-allowed; border-style: dashed; }
         
-        .err-msg { color: var(--danger); font-size: 12px; font-weight: 700; margin-top: 5px; display: none; }
+        .promo-error { color: var(--error); font-size: 12px; font-weight: 700; margin-top: 8px; display: none; }
 
-        /* --- GERÇEK ÇARK --- */
-        .wheel-container { position: relative; width: 320px; height: 320px; margin: 30px auto; }
-        #wheel-img { width: 100%; height: 100%; transition: 5s cubic-bezier(0.15, 0, 0.15, 1); }
-        .wheel-needle { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 40px; z-index: 20; }
+        .btn-action {
+            width: 100%; padding: 18px; border-radius: 18px; border: none;
+            background: linear-gradient(135deg, var(--accent), var(--primary));
+            color: #fff; font-weight: 800; cursor: pointer; transition: 0.3s;
+        }
+        .btn-action:hover { box-shadow: 0 0 25px rgba(112, 0, 255, 0.4); transform: scale(1.02); }
 
-        .btn-main { width: 100%; padding: 18px; border-radius: 20px; border: none; background: var(--accent); color: white; font-weight: 900; cursor: pointer; transition: 0.3s; }
-        .btn-main:hover { transform: scale(1.02); box-shadow: 0 10px 30px var(--accent-glow); }
+        /* --- ÇARK SİSTEMİ --- */
+        .wheel-box { position: relative; width: 300px; height: 300px; margin: 20px auto; }
+        #wheelImg { width: 100%; height: 100%; transition: 5s cubic-bezier(0.1, 0, 0.1, 1); }
+        .needle { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 40px; z-index: 10; }
+
+        /* --- AVATAR SEÇİMİ --- */
+        .av-list { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 15px; }
+        .av-item { aspect-ratio: 1; border-radius: 12px; border: 2px solid transparent; cursor: pointer; overflow: hidden; opacity: 0.5; }
+        .av-item.active { border-color: var(--primary); opacity: 1; transform: scale(1.1); }
+        .av-item img { width: 100%; height: 100%; object-fit: cover; }
 
         /* --- DROPDOWN --- */
-        .dd-menu { position: absolute; top: 95px; right: 5%; width: 240px; background: #0a0c12; border: 1px solid var(--border); border-radius: 25px; display: none; flex-direction: column; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
-        .dd-item { padding: 18px 25px; display: flex; align-items: center; gap: 15px; color: #aaa; text-decoration: none; font-weight: 600; font-size: 14px; }
-        .dd-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
-
-        .av-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 15px; }
-        .av-opt { aspect-ratio: 1; border-radius: 12px; cursor: pointer; border: 2px solid transparent; overflow: hidden; transition: 0.2s; }
-        .av-opt.active { border-color: var(--accent); transform: scale(1.1); }
-        .av-opt img { width: 100%; height: 100%; object-fit: cover; }
-
-        @media (max-width: 768px) {
-            .top-nav { padding: 0 20px; }
-            .balance-box { display: none; }
-            .main-container { padding: 100px 20px 40px; }
+        .drop-menu {
+            position: absolute; top: 85px; right: 5%; width: 240px;
+            background: #0c0e14; border: 1px solid var(--border); border-radius: 20px;
+            display: none; flex-direction: column; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
         }
+        .drop-link { padding: 15px 20px; display: flex; align-items: center; gap: 12px; color: #aaa; text-decoration: none; font-weight: 600; font-size: 14px; transition: 0.3s; }
+        .drop-link:hover { background: rgba(255,255,255,0.05); color: var(--primary); }
+
+        footer { text-align: center; padding: 50px; border-top: 1px solid var(--border); margin-top: 50px; background: #030406; position: relative; z-index: 10; }
+        .socials { display: flex; justify-content: center; gap: 20px; margin-bottom: 20px; }
+        .socials a { color: #fff; font-size: 20px; opacity: 0.5; transition: 0.3s; }
+        .socials a:hover { opacity: 1; color: var(--primary); }
+
     </style>
 </head>
 <body>
 
-<canvas id="storm-canvas"></canvas>
+<canvas id="weather-canvas"></canvas>
 
-<nav class="top-nav">
-    <div class="logo">NEBULA</div>
-    <div style="display: flex; gap: 10px;" id="auth-btns">
-        <button class="btn-main" style="padding: 10px 20px; font-size: 12px;" onclick="openAuth('login')">GİRİŞ</button>
-        <button class="btn-main" style="padding: 10px 20px; font-size: 12px; background: #1a1c24;" onclick="openAuth('reg')">KAYIT</button>
+<header>
+    <div class="logo">PIXELARENA</div>
+    
+    <div id="auth-buttons">
+        <button class="btn-action" style="padding: 10px 20px; font-size: 12px;" onclick="openAuth('login')">GİRİŞ YAP</button>
     </div>
-    <div class="user-center" id="user-ui">
-        <div class="balance-box">
-            <span>VARLIKLAR</span>
-            <b id="ui-balance">0.00 ₺</b>
+
+    <div class="user-nav" id="user-nav">
+        <div class="bakiye-container">
+            <i class="fa-solid fa-wallet" style="color: var(--primary)"></i>
+            <b id="top-balance">0.00 ₺</b>
         </div>
-        <div class="pfp-wrap" onclick="toggleDD()">
-            <img src="" id="ui-avatar">
+        <div class="avatar-box" onclick="toggleDrop()">
+            <img src="" id="top-avatar">
         </div>
     </div>
 
-    <div class="dd-menu" id="dd-menu">
-        <a href="#" class="dd-item" onclick="openModal('modal-prof')"><i class="fa-solid fa-id-card"></i> Profil Ayarları</a>
-        <a href="#" class="dd-item" onclick="openModal('modal-wheel')"><i class="fa-solid fa-dharmachakra"></i> Şans Çarkı</a>
-        <a href="#" class="dd-item" onclick="openModal('modal-promo')"><i class="fa-solid fa-ticket"></i> Promo Kod</a>
-        <a href="#" class="dd-item" id="logout-btn" style="color: var(--danger); border-top: 1px solid var(--border);"><i class="fa-solid fa-power-off"></i> Güvenli Çıkış</a>
+    <div class="drop-menu" id="drop-menu">
+        <a href="#" class="drop-link" onclick="openModal('modal-prof')"><i class="fa-solid fa-user-gear"></i> Profil Ayarları</a>
+        <a href="#" class="drop-link" onclick="openModal('modal-wheel')"><i class="fa-solid fa-dharmachakra"></i> Şans Çarkı</a>
+        <a href="#" class="drop-link" onclick="openModal('modal-promo')"><i class="fa-solid fa-ticket"></i> Promo Kod Kullan</a>
+        <a href="#" class="drop-link" id="logout-btn" style="color:var(--error); border-top: 1px solid var(--border);"><i class="fa-solid fa-power-off"></i> Çıkış Yap</a>
     </div>
-</nav>
+</header>
 
-<main class="main-container">
-    <h2 style="margin-bottom: 40px; font-family: 'Syncopate'; font-size: 14px; letter-spacing: 2px; color: #444;">ARENA OYUNLARI</h2>
-    <div class="grid">
+<main class="content">
+    <div class="section-header">Ana Arenalar</div>
+    <div class="games-grid">
         <div class="game-card" onclick="play('duel.html')">
-            <span class="status-badge" style="color: var(--success)">ONLINE PVP</span>
-            <i class="fa-solid fa-shield-halved"></i>
+            <i class="fa-solid fa-bolt-lightning" style="color: #ffaa00;"></i>
             <h3>Reflex Duel</h3>
-            <p>Rakiplerine karşı milisaniyelik hızınla hükmet. Profesyonel refleks testi.</p>
+            <div class="status">ONLINE PVP</div>
         </div>
         <div class="game-card" onclick="play('skycrash.html')">
-            <span class="status-badge" style="color: var(--accent)">MULTIPLIER</span>
-            <i class="fa-solid fa-jet-fighter-up"></i>
-            <h3>Nebula Crash</h3>
-            <p>Yükseldikçe kazan, patlamadan önce kaç. En yüksek çarpanı yakala.</p>
+            <i class="fa-solid fa-plane-up" style="color: #00f2ff;"></i>
+            <h3>SkyCrash</h3>
+            <div class="status">HIGH MULTIPLIER</div>
         </div>
         <div class="game-card" onclick="play('mines.html')">
-            <span class="status-badge">HIGH RISK</span>
-            <i class="fa-solid fa-land-mine-on"></i>
-            <h3>Elite Mines</h3>
-            <p>Mayınsız bölgeleri keşfet, her başarılı adımda ödülünü katla.</p>
+            <i class="fa-solid fa-burst" style="color: #ff3366;"></i>
+            <h3>Pro Mines</h3>
+            <div class="status">TACTICAL</div>
         </div>
         <div class="game-card" onclick="play('blackjack.html')">
-            <span class="status-badge">CASINO</span>
-            <i class="fa-solid fa-spade"></i>
+            <i class="fa-solid fa-spade" style="color: #ffffff;"></i>
             <h3>BlackJack 21</h3>
-            <p>Kasanın elini oku, stratejini belirle ve masanın hakimi ol.</p>
+            <div class="status">CASINO ELITE</div>
+        </div>
+        <div class="game-card" onclick="play('neongrid.html')">
+            <i class="fa-solid fa-table-cells" style="color: #7000ff;"></i>
+            <h3>Neon Grid</h3>
+            <div class="status">CONQUEST</div>
         </div>
     </div>
 
-    <div style="margin-top: 80px; text-align: center;">
-        <div style="display: flex; justify-content: center; gap: 30px; margin-bottom: 20px;">
-            <a href="#" style="color: #444; font-size: 24px;"><i class="fa-brands fa-discord"></i></a>
-            <a href="#" style="color: #444; font-size: 24px;"><i class="fa-brands fa-telegram"></i></a>
-            <a href="#" style="color: #444; font-size: 24px;"><i class="fa-brands fa-instagram"></i></a>
+    <div class="section-header">Klasik Oyunlar</div>
+    <div class="games-grid">
+        <div class="game-card" onclick="play('snake.html')">
+            <i class="fa-solid fa-worm" style="color: #00ff88;"></i>
+            <h3>Snake Pro</h3>
+            <div class="status">FREE PLAY</div>
         </div>
-        <p style="font-size: 11px; color: #333; letter-spacing: 1px;">© 2026 NEBULA ELITE GLOBAL ARENA</p>
+        <div class="game-card" onclick="play('space.html')">
+            <i class="fa-solid fa-shuttle-space" style="color: #4fd1ff;"></i>
+            <h3>Space Arena</h3>
+            <div class="status">FREE PLAY</div>
+        </div>
+        <div class="game-card" onclick="play('pisti.html')">
+            <i class="fa-solid fa-clone" style="color: #ff8a00;"></i>
+            <h3>Pişti Online</h3>
+            <div class="status">MULTIPLAYER</div>
+        </div>
+        <div class="game-card" onclick="play('stack.html')">
+            <i class="fa-solid fa-layer-group" style="color: #ff3366;"></i>
+            <h3>Cyber Stack</h3>
+            <div class="status">FREE PLAY</div>
+        </div>
+        <div class="game-card" onclick="play('loops.html')">
+            <i class="fa-solid fa-infinity" style="color: #ffffff;"></i>
+            <h3>Brain Loops</h3>
+            <div class="status">PUZZLE</div>
+        </div>
     </div>
 </main>
 
-<div class="overlay" id="modal-prof">
+<footer>
+    <div class="logo" style="margin-bottom: 20px;">PIXELARENA</div>
+    <div class="socials">
+        <a href="#"><i class="fa-brands fa-discord"></i></a>
+        <a href="#"><i class="fa-brands fa-telegram"></i></a>
+        <a href="#"><i class="fa-brands fa-instagram"></i></a>
+    </div>
+    <p style="font-size: 11px; color: #444; letter-spacing: 2px;">© 2026 GLOBAL ENTERTAINMENT NETWORK</p>
+</footer>
+
+<div class="modal-overlay" id="modal-prof">
     <div class="modal">
-        <h2 style="margin-bottom: 30px; font-weight: 900;">PROFİL AYARLARI</h2>
+        <h2 style="margin-bottom: 20px; font-weight: 800;">PROFİL AYARLARI</h2>
         <div class="input-group">
-            <label>E-POSTA (PASİF)</label>
+            <label>E-POSTA ADRESİ</label>
             <input type="text" id="p-email" disabled>
         </div>
         <div class="input-group">
@@ -179,51 +243,51 @@
         </div>
         <div class="input-group">
             <label>KULLANICI ADI (1 HAK)</label>
-            <input type="text" id="p-user" placeholder="Kullanıcı adı">
+            <input type="text" id="p-username" placeholder="Kullanıcı adı">
         </div>
         <div class="input-group">
-            <label>AVATAR SEÇ (HAK: <span id="p-av-hak">0</span>)</label>
-            <div class="av-grid" id="av-list"></div>
+            <label>AVATAR SEÇ (KALAN HAK: <span id="av-hak-count">0</span>)</label>
+            <div class="av-list" id="av-selection"></div>
         </div>
-        <button class="btn-main" onclick="saveProfile()">DEĞİŞİKLİKLERİ KAYDET</button>
-        <p onclick="closeModal('modal-prof')" style="text-align: center; margin-top: 20px; cursor: pointer; opacity: 0.5; font-size: 13px;">Vazgeç</p>
+        <button class="btn-action" onclick="saveProfile()">BİLGİLERİ GÜNCELLE</button>
+        <p onclick="closeModal('modal-prof')" style="text-align:center; margin-top:15px; cursor:pointer; opacity:0.5; font-size:13px;">Pencereyi Kapat</p>
     </div>
 </div>
 
-<div class="overlay" id="modal-wheel">
+<div class="modal-overlay" id="modal-wheel">
     <div class="modal" style="text-align: center;">
-        <h2 style="margin-bottom: 20px; font-weight: 900;">ŞANS ÇARKİ</h2>
-        <div class="wheel-container">
-            <img src="https://i.ibb.co/9H6S4xy/pointer.png" class="wheel-needle">
-            <img src="https://i.ibb.co/mRT80Pz/wheel.png" id="wheel-img">
+        <h2 style="margin-bottom: 10px; font-weight: 800;">GÜNLÜK ÇARK</h2>
+        <div class="wheel-box">
+            <img src="https://i.ibb.co/9H6S4xy/pointer.png" class="needle">
+            <img src="https://i.ibb.co/mRT80Pz/wheel.png" id="wheelImg">
         </div>
-        <button class="btn-main" id="spin-btn" onclick="spinWheel()">ÜCRETSİZ ÇEVİR</button>
-        <p id="wheel-timer" style="margin-top: 15px; font-weight: 800; color: var(--accent);"></p>
-        <p onclick="closeModal('modal-wheel')" style="margin-top: 20px; cursor: pointer; opacity: 0.5;">Kapat</p>
+        <button class="btn-action" id="spinBtn" onclick="spinWheel()">ÜCRETSİZ ÇEVİR</button>
+        <p id="wheelTimer" style="margin-top: 15px; font-weight: 800; color: var(--primary);"></p>
+        <p onclick="closeModal('modal-wheel')" style="margin-top:15px; cursor:pointer; opacity:0.5;">Kapat</p>
     </div>
 </div>
 
-<div class="overlay" id="modal-promo">
+<div class="modal-overlay" id="modal-promo">
     <div class="modal">
-        <h2 style="margin-bottom: 30px; font-weight: 900;">PROMO KOD</h2>
+        <h2 style="margin-bottom: 25px; font-weight: 800;">PROMO KOD KULLAN</h2>
         <div class="input-group">
-            <label>KODU GİRİN</label>
-            <input type="text" id="promo-input" placeholder="XXXX-XXXX" style="text-align: center; font-family: monospace; font-size: 20px; letter-spacing: 5px;">
-            <p class="err-msg" id="promo-error">Geçersiz kod veya daha önce kullanılmış!</p>
+            <label>KODUNUZU YAZIN</label>
+            <input type="text" id="promo-input" placeholder="PA-XXXX-XXXX" style="text-align: center; letter-spacing: 2px; font-weight: 800; border-color: var(--accent);">
+            <p class="promo-error" id="promo-error">Geçersiz veya kullanılmış bir kod girdiniz!</p>
         </div>
-        <button class="btn-main" onclick="redeemPromo()">AKTİVE ET</button>
-        <p onclick="closeModal('modal-promo')" style="text-align: center; margin-top: 20px; cursor: pointer; opacity: 0.5;">Kapat</p>
+        <button class="btn-action" onclick="redeemPromo()">KODU AKTİVE ET</button>
+        <p onclick="closeModal('modal-promo')" style="text-align:center; margin-top:15px; cursor:pointer; opacity:0.5;">Kapat</p>
     </div>
 </div>
 
-<div class="overlay" id="modal-auth">
+<div class="modal-overlay" id="modal-auth">
     <div class="modal">
-        <h2 id="auth-title" style="margin-bottom: 30px; font-weight: 900;">GİRİŞ YAP</h2>
+        <h2 id="auth-title" style="margin-bottom: 25px; font-weight: 800;">HOŞ GELDİNİZ</h2>
         <div class="input-group"><label>E-POSTA</label><input type="email" id="a-email"></div>
         <div class="input-group"><label>ŞİFRE</label><input type="password" id="a-pass"></div>
-        <div class="input-group" id="a-nick-box" style="display:none;"><label>KULLANICI ADI</label><input type="text" id="a-nick"></div>
-        <button class="btn-main" id="auth-submit">DEVAM ET</button>
-        <p id="auth-switch" style="text-align: center; margin-top: 20px; font-size: 13px; cursor: pointer;">Hesabın yok mu? <b style="color:var(--accent)">Kayıt Ol</b></p>
+        <div class="input-group" id="a-nick-group" style="display:none;"><label>KULLANICI ADI</label><input type="text" id="a-nick"></div>
+        <button class="btn-action" id="auth-submit">DEVAM ET</button>
+        <p id="auth-switch" style="text-align:center; margin-top:20px; cursor:pointer; font-size:13px; color: #666;">Henüz hesabın yok mu? <b style="color:var(--primary)">Kayıt Ol</b></p>
     </div>
 </div>
 
@@ -245,227 +309,215 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-let uData = null;
-let selAv = "";
-const AVATAR_LINKS = [
-    "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix",
-    "https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka",
-    "https://api.dicebear.com/7.x/avataaars/svg?seed=Buster",
-    "https://api.dicebear.com/7.x/avataaars/svg?seed=Caspian",
-    "https://api.dicebear.com/7.x/avataaars/svg?seed=Dahlia",
-    "https://api.dicebear.com/7.x/avataaars/svg?seed=Elias",
-    "https://api.dicebear.com/7.x/avataaars/svg?seed=Fiona",
-    "https://api.dicebear.com/7.x/avataaars/svg?seed=Gideon"
-];
-
-// --- FIRTINA SİMÜLASYONU (KAR & YAĞMUR) ---
-const canvas = document.getElementById('storm-canvas');
+// --- KAR VE YAĞMUR EFEKTİ (PROFESYONEL CANVAS) ---
+const canvas = document.getElementById('weather-canvas');
 const ctx = canvas.getContext('2d');
-let particles = [];
+let drops = [];
 
-function initStorm() {
+function initWeather() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    particles = [];
+    drops = [];
     for(let i=0; i<150; i++) {
-        particles.push({
+        drops.push({
             x: Math.random() * canvas.width,
             y: Math.random() * canvas.height,
-            v: Math.random() * 4 + 2,
-            s: Math.random() * 2 + 1,
-            o: Math.random() * 0.5
+            type: Math.random() > 0.5 ? 'snow' : 'rain',
+            size: Math.random() * 2 + 1,
+            speed: Math.random() * 3 + 1
         });
     }
 }
 
-function draw() {
+function animateWeather() {
     ctx.clearRect(0,0,canvas.width, canvas.height);
-    ctx.fillStyle = "rgba(255,255,255,0.4)";
-    particles.forEach(p => {
+    drops.forEach(d => {
         ctx.beginPath();
-        ctx.arc(p.x, p.y, p.s, 0, Math.PI*2);
+        if(d.type === 'snow') {
+            ctx.fillStyle = "rgba(255,255,255,0.4)";
+            ctx.arc(d.x, d.y, d.size, 0, Math.PI*2);
+        } else {
+            ctx.strokeStyle = "rgba(0,242,255,0.15)";
+            ctx.moveTo(d.x, d.y);
+            ctx.lineTo(d.x, d.y + 10);
+            ctx.stroke();
+        }
         ctx.fill();
-        p.y += p.v;
-        p.x += Math.sin(p.y/20);
-        if(p.y > canvas.height) p.y = -10;
+        d.y += d.speed;
+        if(d.y > canvas.height) d.y = -10;
     });
-    requestAnimationFrame(draw);
+    requestAnimationFrame(animateWeather);
 }
-window.addEventListener('resize', initStorm);
-initStorm(); draw();
+initWeather(); animateWeather();
+window.onresize = initWeather;
 
-// --- AUTH İŞLEMLERİ ---
-let mode = 'login';
+// --- AUTH MANTIĞI ---
+let authMode = 'login';
 window.openAuth = (m) => {
-    mode = m;
-    document.getElementById('auth-title').innerText = mode === 'login' ? "GİRİŞ YAP" : "KAYIT OL";
-    document.getElementById('a-nick-box').style.display = mode === 'login' ? "none" : "block";
+    authMode = m;
     document.getElementById('modal-auth').style.display = 'flex';
+    document.getElementById('auth-title').innerText = authMode === 'login' ? 'GİRİŞ YAP' : 'KAYIT OL';
+    document.getElementById('a-nick-group').style.display = authMode === 'login' ? 'none' : 'block';
 };
 
 document.getElementById('auth-switch').onclick = () => {
-    mode = mode === 'login' ? 'reg' : 'login';
-    openAuth(mode);
+    authMode = authMode === 'login' ? 'reg' : 'login';
+    openAuth(authMode);
 };
 
 document.getElementById('auth-submit').onclick = async () => {
     const email = document.getElementById('a-email').value;
     const pass = document.getElementById('a-pass').value;
+    const nick = document.getElementById('a-nick').value;
     try {
-        if(mode === 'login') {
+        if(authMode === 'login') {
             await signInWithEmailAndPassword(auth, email, pass);
         } else {
-            const nick = document.getElementById('a-nick').value;
             const res = await createUserWithEmailAndPassword(auth, email, pass);
             await setDoc(doc(db, "users", res.user.uid), {
-                username: nick, balance: 1000, avatar: AVATAR_LINKS[0],
-                fullName: "", nickHak: 1, avHak: 3, lastSpin: 0
+                username: nick, balance: 1000, lastSpin: 0,
+                nickHak: 1, avHak: 3, fullName: "", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix"
             });
         }
-        document.getElementById('modal-auth').style.display = 'none';
+        closeModal('modal-auth');
     } catch(e) { alert("Hata: " + e.message); }
 };
 
+// --- DATA TAKİBİ ---
+let userData = null;
 onAuthStateChanged(auth, user => {
     if(user) {
-        document.getElementById('auth-btns').style.display = 'none';
-        document.getElementById('user-ui').style.display = 'flex';
+        document.getElementById('auth-buttons').style.display = 'none';
+        document.getElementById('user-nav').style.display = 'flex';
         onSnapshot(doc(db, "users", user.uid), s => {
             if(s.exists()) {
-                uData = s.data();
-                document.getElementById('ui-balance').innerText = uData.balance.toLocaleString('tr-TR') + " ₺";
-                document.getElementById('ui-avatar').src = uData.avatar;
-                
+                userData = s.data();
+                document.getElementById('top-balance').innerText = userData.balance.toLocaleString('tr-TR') + " ₺";
+                document.getElementById('top-avatar').src = userData.avatar;
                 document.getElementById('p-email').value = user.email;
-                document.getElementById('p-fullname').value = uData.fullName;
-                document.getElementById('p-user').value = uData.username;
-                document.getElementById('p-av-hak').innerText = uData.avHak;
+                document.getElementById('p-fullname').value = userData.fullName || "";
+                document.getElementById('p-username').value = userData.username;
+                document.getElementById('av-hak-count').innerText = userData.avHak;
 
-                if(uData.fullName) document.getElementById('p-fullname').disabled = true;
-                if(uData.nickHak <= 0) document.getElementById('p-user').disabled = true;
+                if(userData.fullName) document.getElementById('p-fullname').disabled = true;
+                if(userData.nickHak <= 0) document.getElementById('p-username').disabled = true;
+                
                 loadAvatars();
             }
         });
     } else {
-        document.getElementById('auth-btns').style.display = 'flex';
-        document.getElementById('user-ui').style.display = 'none';
-        document.getElementById('dd-menu').style.display = 'none';
+        document.getElementById('auth-buttons').style.display = 'block';
+        document.getElementById('user-nav').style.display = 'none';
+        document.getElementById('drop-menu').style.display = 'none';
     }
 });
 
 document.getElementById('logout-btn').onclick = () => signOut(auth);
 
-// --- PROFİL ---
+// --- PROFİL GÜNCELLEME ---
+let selectedAv = "";
+const avatarPool = ["Felix", "Aneka", "Buster", "Caspian", "Dahlia", "Elias", "Fiona", "Gideon"];
+
 function loadAvatars() {
-    const grid = document.getElementById('av-list');
-    grid.innerHTML = "";
-    AVATAR_LINKS.forEach(url => {
+    const list = document.getElementById('av-selection');
+    list.innerHTML = "";
+    avatarPool.forEach(seed => {
+        const url = `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}`;
         const div = document.createElement('div');
-        div.className = `av-opt ${url === uData.avatar ? 'active' : ''}`;
+        div.className = `av-item ${url === userData.avatar ? 'active' : ''}`;
         div.innerHTML = `<img src="${url}">`;
         div.onclick = () => {
-            if(uData.avHak > 0) {
-                document.querySelectorAll('.av-opt').forEach(x => x.classList.remove('active'));
+            if(userData.avHak > 0) {
+                document.querySelectorAll('.av-item').forEach(i => i.classList.remove('active'));
                 div.classList.add('active');
-                selAv = url;
-            } else { alert("Avatar değişim hakkınız bitti!"); }
+                selectedAv = url;
+            } else { alert("Avatar değişim hakkınız doldu!"); }
         };
-        grid.appendChild(div);
+        list.appendChild(div);
     });
 }
 
 window.saveProfile = async () => {
     const upd = {};
-    const nNick = document.getElementById('p-user').value;
+    const nUser = document.getElementById('p-username').value;
     const nFull = document.getElementById('p-fullname').value;
 
-    if(nNick !== uData.username && uData.nickHak > 0) {
-        upd.username = nNick;
-        upd.nickHak = 0;
+    if(nUser !== userData.username && userData.nickHak > 0) {
+        upd.username = nUser; upd.nickHak = 0;
     }
-    if(nFull && !uData.fullName) upd.fullName = nFull;
-    if(selAv && selAv !== uData.avatar && uData.avHak > 0) {
-        upd.avatar = selAv;
-        upd.avHak = increment(-1);
+    if(nFull && !userData.fullName) upd.fullName = nFull;
+    if(selectedAv && selectedAv !== userData.avatar && userData.avHak > 0) {
+        upd.avatar = selectedAv; upd.avHak = increment(-1);
     }
 
     if(Object.keys(upd).length > 0) {
         await updateDoc(doc(db, "users", auth.currentUser.uid), upd);
-        alert("Profil güncellendi!");
+        alert("Profil başarıyla güncellendi!");
         closeModal('modal-prof');
     }
 };
 
 // --- ÇARK ---
 window.spinWheel = async () => {
-    if(Date.now() - (uData.lastSpin || 0) < 86400000) return;
-    
-    const btn = document.getElementById('spin-btn');
+    if(Date.now() - (userData.lastSpin || 0) < 86400000) return;
+    const btn = document.getElementById('spinBtn');
     btn.disabled = true;
-    const wheel = document.getElementById('wheel-img');
-    const deg = Math.floor(Math.random() * 360) + 3600; 
+    const wheel = document.getElementById('wheelImg');
+    const deg = Math.floor(Math.random() * 360) + 3600;
     wheel.style.transform = `rotate(${deg}deg)`;
 
     setTimeout(async () => {
-        const prizes = [1000, 50, 500, 0, 250, 100, 5000, 25];
-        const winIdx = Math.floor((deg % 360) / 45);
-        const win = prizes[winIdx];
-
-        await updateDoc(doc(db, "users", auth.currentUser.uid), {
-            balance: increment(win),
-            lastSpin: Date.now()
-        });
-        alert(win > 0 ? `Tebrikler! ${win} ₺ kazandınız!` : "Şansına küs!");
+        const prizes = [500, 100, 1000, 50, 2500, 0, 100, 5000];
+        const win = prizes[Math.floor((deg % 360) / 45)];
+        await updateDoc(doc(db, "users", auth.currentUser.uid), { balance: increment(win), lastSpin: Date.now() });
+        alert(win > 0 ? `Tebrikler! ${win} ₺ Kazandınız!` : "Şansına küs, bir dahaki sefere!");
         checkWheel();
     }, 5100);
 };
 
 function checkWheel() {
-    const timer = document.getElementById('wheel-timer');
-    const btn = document.getElementById('spin-btn');
-    const diff = Date.now() - (uData.lastSpin || 0);
-
+    const timer = document.getElementById('wheelTimer');
+    const diff = Date.now() - (userData.lastSpin || 0);
     if(diff < 86400000) {
-        btn.style.display = "none";
+        document.getElementById('spinBtn').style.display = 'none';
         const rem = 86400000 - diff;
         const h = Math.floor(rem / 3600000);
         const m = Math.floor((rem % 3600000) / 60000);
-        timer.innerText = `SONRAKİ HAK: ${h}s ${m}d`;
+        timer.innerText = `SONRAKİ HAK: ${h}s ${m}dk`;
     } else {
-        btn.style.display = "block";
-        btn.disabled = false;
-        timer.innerText = "Şansın açık olsun!";
+        document.getElementById('spinBtn').style.display = 'block';
+        document.getElementById('spinBtn').disabled = false;
+        timer.innerText = "Şu an çevirebilirsiniz!";
     }
 }
 
-// --- PROMO ---
+// --- PROMO KOD ---
 window.redeemPromo = async () => {
-    const code = document.getElementById('promo-input').value.trim().toUpperCase();
+    const input = document.getElementById('promo-input').value.trim();
     const err = document.getElementById('promo-error');
-    err.style.display = "none";
+    err.style.display = 'none';
 
-    const q = query(collection(db, "promos"), where("code", "==", code));
+    const q = query(collection(db, "promos"), where("code", "==", input));
     const snap = await getDocs(q);
 
     if(!snap.empty) {
-        const dRef = snap.docs[0];
-        const pData = dRef.data();
-        await updateDoc(doc(db, "users", auth.currentUser.uid), { balance: increment(pData.amount) });
-        await deleteDoc(doc(db, "promos", dRef.id));
-        alert(`${pData.amount} ₺ hesabınıza tanımlandı!`);
+        const pDoc = snap.docs[0];
+        const val = pDoc.data().value;
+        await updateDoc(doc(db, "users", auth.currentUser.uid), { balance: increment(val) });
+        await deleteDoc(doc(db, "promos", pDoc.id));
+        alert(`${val} ₺ Hesabınıza yüklendi!`);
         closeModal('modal-promo');
     } else {
-        err.style.display = "block";
+        err.style.display = 'block';
     }
 };
 
-// --- YARDIMCI ---
-window.toggleDD = () => {
-    const m = document.getElementById('dd-menu');
-    m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
+// --- UI HELPERS ---
+window.toggleDrop = () => {
+    const d = document.getElementById('drop-menu');
+    d.style.display = d.style.display === 'flex' ? 'none' : 'flex';
 };
 window.openModal = (id) => {
-    document.querySelectorAll('.overlay').forEach(o => o.style.display = 'none');
     document.getElementById(id).style.display = 'flex';
     if(id === 'modal-wheel') checkWheel();
 };
