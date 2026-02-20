@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Neon Conquest | Pro Edition V10.2</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@500;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@500;800&swap" rel="stylesheet">
     <style>
         :root {
             --p1: #00ff41; --p2: #ff00f7; --bg: #020408;
@@ -57,6 +57,10 @@
         .modal-input { width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border); padding: 12px; border-radius: 10px; color: #fff; margin-bottom: 15px; text-align: center; outline: none; }
         
         .empty-arena { text-align: center; padding: 40px 20px; color: #888; border: 1px dashed var(--border); border-radius: 15px; }
+        
+        /* Rehber Metin Stili */
+        .guide-text { text-align: left; font-size: 0.75rem; line-height: 1.6; color: #ccc; margin: 15px 0; }
+        .guide-text b { color: var(--p1); }
     </style>
 </head>
 <body onclick="window.unlockAudio()">
@@ -72,6 +76,7 @@
 
     <div id="lobby">
         <button class="btn-neon" style="background:#fff;" onclick="window.openQuickModal()">HIZLI KATIL / ODA KUR</button>
+        <button class="btn-neon" style="background:transparent; border:1px solid var(--p1); color:var(--p1); margin-top: -5px;" onclick="window.toggleModal('howToPlayModal', true)">NASIL OYNANIR?</button>
         <div id="roomList"></div>
     </div>
 
@@ -83,6 +88,19 @@
         </div>
         <div id="statusInfo" style="text-align:center; padding:10px; color:var(--p1); font-size:0.7rem; letter-spacing: 2px;">BAĞLANTI STABİL...</div>
         <div class="grid" id="grid"></div>
+    </div>
+
+    <div id="howToPlayModal" class="modal">
+        <div class="modal-box">
+            <h3 style="font-family:'Orbitron'; color:var(--p1); margin-bottom:10px;">OPERASYON REHBERİ</h3>
+            <div class="guide-text">
+                <p>• <b>AMAÇ:</b> 60 saniye içinde arenadaki karelerin çoğunu kendi rengine boya.</p>
+                <p>• <b>KONTROL:</b> Boş karelere dokunarak onları ele geçir.</p>
+                <p>• <b>SABOTAJ:</b> Rakibinin karesine dokunarak onu kendi rengine çevirebilirsin.</p>
+                <p>• <b>ZAFER:</b> Süre bittiğinde veya tüm kareler dolduğunda en çok karesi olan kazanır.</p>
+            </div>
+            <button onclick="window.toggleModal('howToPlayModal', false)" class="btn-neon" style="width:100%">ANLAŞILDI</button>
+        </div>
     </div>
 
     <div id="confirmExitModal" class="modal">
@@ -134,7 +152,6 @@
     const db = getFirestore(app);
     const auth = getAuth(app);
 
-    // --- FIX 3: iOS SES UYUMLULUĞU (PRELOAD) ---
     const sfx = {
         box: new Audio('https://cdn.pixabay.com/audio/2022/03/15/audio_78396032a7.mp3'),
         win: new Audio('https://cdn.pixabay.com/audio/2021/08/04/audio_0625c1539c.mp3'),
@@ -162,7 +179,6 @@
 
     window.finalizeExit = async () => {
         if (curRoomId) {
-            // Çıkışta dinleyiciyi kapat (Bellek sızıntısı önlemi)
             if(unsubGame) { unsubGame(); unsubGame = null; }
             await updateDoc(doc(db, "conquest_rooms", curRoomId), { status: 'escaped' });
         }
@@ -279,7 +295,7 @@
             if(d.status === 'escaped' && !isFin) {
                 isFin = true; 
                 if(timerInt) { clearInterval(timerInt); timerInt = null; }
-                if(unsubGame) { unsubGame(); unsubGame = null; } // FIX 1: BELLEK SIZINTISI ÖNLEMİ
+                if(unsubGame) { unsubGame(); unsubGame = null; } 
                 playSfx('alert'); window.toggleModal('escapeModal', true);
                 setTimeout(() => { try { deleteDoc(doc(db, "conquest_rooms", id)); } catch(e){} }, 2000);
                 return;
@@ -294,7 +310,6 @@
 
             if(d.status === 'playing' && !canPlay) { playSfx('start'); canPlay = true; }
             
-            // --- FIX 2: GÜVENLİ ZAMANLAYICI (DB VERİSİNDEN BESLENİR) ---
             if(myRole === 'p1' && d.status === 'playing') {
                 if(!timerInt) {
                     timerInt = setInterval(() => {
@@ -325,7 +340,7 @@
         if(isFin) return;
         isFin = true; 
         if(timerInt) { clearInterval(timerInt); timerInt = null; }
-        if(unsubGame) { unsubGame(); unsubGame = null; } // FIX 1: BELLEK SIZINTISI ÖNLEMİ
+        if(unsubGame) { unsubGame(); unsubGame = null; } 
         
         const win = (myRole === 'p1' && s1 > s2) || (myRole === 'p2' && s2 > s1);
         playSfx(win ? 'win' : 'lose');
