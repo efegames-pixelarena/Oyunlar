@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PixelArena | Elite Gaming Experience</title>
+    <title>PixelArena | Profesyonel Oyun Platformu</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -23,7 +23,7 @@
             --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* Base Reset */
+        /* Temel Sıfırlama */
         * {
             margin: 0;
             padding: 0;
@@ -45,7 +45,7 @@
 
         #snow { position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: 0.3; }
 
-        /* --- NAVIGATION --- */
+        /* --- ÜST BAR (NAVBAR) --- */
         .navbar {
             position: fixed; top: 0; left: 0; width: 100%; height: 75px;
             display: flex; align-items: center; justify-content: space-between;
@@ -59,32 +59,30 @@
             font-size: 24px; font-weight: 900; letter-spacing: 2px;
             background: linear-gradient(to right, var(--neon-blue), #fff);
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            text-transform: uppercase;
+            text-transform: uppercase; flex-shrink: 0;
         }
 
-        .nav-right { display: flex; align-items: center; gap: 15px; max-width: 60%; }
+        .nav-right { display: flex; align-items: center; gap: 15px; max-width: 70%; }
 
-        .auth-buttons { display: flex; gap: 10px; }
-        
-        /* Bakiye Koruma Tasarımı */
+        /* Bakiye Koruma Tasarımı - Taşmayı Önleyen Yapı */
         .user-hub {
             display: none; align-items: center; gap: 12px;
             background: rgba(255,255,255,0.03); padding: 5px 5px 5px 15px;
             border-radius: 50px; border: 1px solid rgba(255,255,255,0.1);
             transition: var(--transition); cursor: pointer;
-            max-width: 100%; /* Taşmayı engeller */
+            min-width: 0; /* Flexbox taşma koruması */
         }
         .user-hub:hover { border-color: var(--neon-blue); background: rgba(255,255,255,0.06); }
 
-        .balance-container {
+        .balance-box {
             display: flex; flex-direction: column; align-items: flex-end;
             min-width: 0; /* İçeriğin büzülmesine izin verir */
         }
-        .balance-label { font-size: 9px; color: var(--text-muted); text-transform: uppercase; font-weight: 800; }
+        .balance-label { font-size: 9px; color: var(--text-muted); text-transform: uppercase; font-weight: 800; letter-spacing: 1px; }
         .balance-val { 
             font-family: 'Orbitron', sans-serif; color: var(--success); 
             font-size: 14px; font-weight: 700; white-space: nowrap;
-            overflow: hidden; text-overflow: ellipsis; max-width: 150px;
+            overflow: hidden; text-overflow: ellipsis; max-width: 150px; /* Çok uzun rakamlarda noktalar */
         }
 
         .user-avatar {
@@ -94,37 +92,39 @@
         }
         .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
 
-        /* --- HERO & SEARCH --- */
-        .hero { margin-top: 130px; text-align: center; padding: 0 20px; }
+        .auth-buttons { display: flex; gap: 10px; }
+        
+        /* --- ARAMA BÖLÜMÜ --- */
+        .hero { margin-top: 130px; text-align: center; padding: 0 20px; position: relative; z-index: 10; }
         .hero h1 { 
             font-family: 'Orbitron', sans-serif; font-size: clamp(24px, 5vw, 42px);
             margin-bottom: 25px; color: #fff; text-shadow: 0 0 30px rgba(0,210,255,0.4);
         }
-        .search-box {
+        .search-wrapper {
             position: relative; max-width: 550px; margin: 0 auto;
         }
-        .search-box input {
+        .search-wrapper input {
             width: 100%; padding: 18px 25px 18px 55px; border-radius: 15px;
             background: var(--bg-card); border: 1px solid rgba(255,255,255,0.05);
             color: #fff; font-size: 15px; transition: var(--transition);
         }
-        .search-box i { position: absolute; left: 20px; top: 50%; transform: translateY(-50%); color: var(--neon-blue); }
-        .search-box input:focus { border-color: var(--neon-blue); box-shadow: 0 0 20px var(--border-glow); }
+        .search-wrapper i { position: absolute; left: 20px; top: 50%; transform: translateY(-50%); color: var(--neon-blue); font-size: 18px; }
+        .search-wrapper input:focus { border-color: var(--neon-blue); box-shadow: 0 0 20px var(--border-glow); }
 
-        /* --- GAME CARDS --- */
-        .container { padding: 40px 8%; position: relative; z-index: 10; }
+        /* --- OYUN KARTLARI --- */
+        .main-content { padding: 40px 8%; position: relative; z-index: 10; }
         
-        .section-header {
+        .group-header {
             display: flex; align-items: center; gap: 20px; margin: 50px 0 25px;
         }
-        .section-header h2 { 
-            font-family: 'Orbitron', sans-serif; font-size: 16px; 
+        .group-header h2 { 
+            font-family: 'Orbitron', sans-serif; font-size: 14px; 
             letter-spacing: 3px; color: var(--neon-blue); text-transform: uppercase;
         }
-        .section-line { flex: 1; height: 1px; background: linear-gradient(90deg, rgba(0,210,255,0.3), transparent); }
+        .header-line { flex: 1; height: 1px; background: linear-gradient(90deg, rgba(0,210,255,0.3), transparent); }
 
-        .grid {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        .game-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
             gap: 25px;
         }
 
@@ -134,15 +134,7 @@
             transition: var(--transition); cursor: pointer; overflow: hidden;
             text-align: center;
         }
-        .card::before {
-            content: ''; position: absolute; inset: 0;
-            background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
-            opacity: 0; transition: var(--transition); z-index: 0;
-        }
-        .card:hover { transform: translateY(-10px); border-color: var(--neon-blue); }
-        .card:hover::before { opacity: 0.05; }
-
-        .card-content { position: relative; z-index: 1; }
+        .card:hover { transform: translateY(-10px); border-color: var(--neon-blue); box-shadow: 0 15px 40px rgba(0,0,0,0.6); }
         
         .card-icon {
             font-size: 45px; margin-bottom: 20px; display: inline-block;
@@ -151,63 +143,65 @@
             filter: drop-shadow(0 0 10px rgba(0,210,255,0.3));
         }
 
-        .card h3 { font-family: 'Orbitron', sans-serif; font-size: 19px; margin-bottom: 10px; font-weight: 700; }
+        .card h3 { font-family: 'Orbitron', sans-serif; font-size: 18px; margin-bottom: 12px; font-weight: 700; color: #fff; }
         
-        .badge {
+        .game-status {
             font-size: 10px; font-weight: 800; padding: 6px 14px; border-radius: 8px;
             background: rgba(255,255,255,0.05); color: var(--text-muted);
             text-transform: uppercase; letter-spacing: 1px;
         }
-        .badge.active { background: rgba(16, 185, 129, 0.1); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.2); }
+        .game-status.free { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+        .game-status.premium { background: rgba(79, 209, 255, 0.1); color: var(--neon-blue); }
 
-        /* --- MODALS --- */
-        .modal-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.9);
+        /* --- MODALLAR --- */
+        .modal-bg {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.95);
             backdrop-filter: blur(15px); display: none; align-items: center;
-            justify-content: center; z-index: 2000; padding: 20px;
+            justify-content: center; z-index: 5000; padding: 20px;
         }
-        .modal {
-            background: #0f141f; width: 100%; max-width: 450px;
+        .modal-box {
+            background: #0f141f; width: 100%; max-width: 420px;
             border-radius: 30px; padding: 40px; border: 1px solid rgba(255,255,255,0.1);
-            position: relative; animation: modalIn 0.4s ease-out;
+            position: relative; animation: modalSlide 0.4s ease-out;
         }
-        @keyframes modalIn { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes modalSlide { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
 
-        .input-group { margin-bottom: 20px; text-align: left; }
-        .input-group label { display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 8px; font-weight: 700; text-transform: uppercase; }
-        .input-group input {
+        .input-field { margin-bottom: 20px; text-align: left; }
+        .input-field label { display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 8px; font-weight: 700; text-transform: uppercase; }
+        .input-field input {
             width: 100%; padding: 15px; background: #05070a; border: 1px solid rgba(255,255,255,0.05);
-            border-radius: 12px; color: #fff;
+            border-radius: 12px; color: #fff; transition: 0.3s;
         }
+        .input-field input:focus { border-color: var(--neon-blue); background: #0a0d16; }
 
-        .btn-main {
+        .btn-action {
             width: 100%; padding: 16px; border-radius: 15px; border: none;
             background: linear-gradient(45deg, var(--neon-blue), var(--neon-purple));
             color: #fff; font-family: 'Orbitron', sans-serif; font-weight: 700;
             cursor: pointer; transition: var(--transition);
         }
-        .btn-main:hover { filter: brightness(1.2); transform: scale(1.02); }
+        .btn-action:hover { filter: brightness(1.2); transform: scale(1.02); }
 
         /* --- DROPDOWN --- */
-        .dropdown {
-            position: absolute; top: 85px; right: 5%; width: 250px;
+        .dropdown-menu {
+            position: absolute; top: 80px; right: 0; width: 240px;
             background: #121826; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1);
             display: none; flex-direction: column; overflow: hidden; z-index: 1500;
             box-shadow: 0 20px 50px rgba(0,0,0,0.5);
         }
-        .dropdown.active { display: flex; }
-        .drop-item {
+        .dropdown-menu.show { display: flex; animation: slideUp 0.3s ease-out; }
+        .drop-link {
             padding: 15px 20px; display: flex; align-items: center; gap: 15px;
             color: var(--text-main); text-decoration: none; transition: 0.2s;
             font-size: 14px; font-weight: 600;
         }
-        .drop-item:hover { background: rgba(255,255,255,0.05); color: var(--neon-blue); }
-        .drop-item i { width: 20px; font-size: 16px; }
+        .drop-link:hover { background: rgba(255,255,255,0.05); color: var(--neon-blue); }
+        .drop-link i { width: 20px; font-size: 16px; color: var(--neon-blue); }
 
         @media (max-width: 768px) {
-            .grid { grid-template-columns: repeat(2, 1fr); gap: 15px; }
-            .container { padding: 20px 5%; }
-            .navbar { padding: 0 20px; }
+            .game-grid { grid-template-columns: repeat(2, 1fr); gap: 15px; }
+            .main-content { padding: 20px 5%; }
+            .navbar { padding: 0 15px; height: 65px; }
             .logo { font-size: 18px; }
             .balance-val { max-width: 80px; font-size: 12px; }
         }
@@ -221,147 +215,123 @@
         <div class="logo">Pixel<span>Arena</span></div>
         
         <div class="nav-right">
-            <div class="auth-buttons" id="authSection">
-                <button class="btn-main" style="padding: 10px 20px; font-size: 10px;" id="loginBtn">GİRİŞ</button>
-                <button class="btn-main" style="padding: 10px 20px; font-size: 10px; background: #1a1f2e;" id="regBtn">KAYIT</button>
+            <div class="auth-buttons" id="guestPanel">
+                <button class="btn-action" style="padding: 10px 18px; font-size: 10px;" id="loginBtn">GİRİŞ</button>
+                <button class="btn-action" style="padding: 10px 18px; font-size: 10px; background: #1a1f2e;" id="regBtn">KAYIT</button>
             </div>
 
-            <div class="user-hub" id="userPill">
-                <div class="balance-container">
-                    <span class="balance-label">Cüzdan</span>
+            <div class="user-hub" id="userPanel">
+                <div class="balance-box">
+                    <span class="balance-label">BAKİYE</span>
                     <span class="balance-val" id="userBalance">0.00 ₺</span>
                 </div>
-                <div class="user-avatar" id="avatarTrigger">
-                    <img src="https://i.pravatar.cc/150?u=pixel" id="userProfileImg">
+                <div class="user-avatar" id="avatarBtn">
+                    <img src="" id="userProfileImg">
                 </div>
-                <div class="dropdown" id="userDropdown">
-                    <a href="javascript:void(0)" class="drop-item" onclick="openModal('profileModal')"><i class="fa-solid fa-circle-user"></i> Profilim</a>
-                    <a href="javascript:void(0)" class="drop-item" onclick="openModal('wheelModal')"><i class="fa-solid fa-spinner"></i> Şans Çarkı</a>
-                    <a href="javascript:void(0)" class="drop-item" onclick="openModal('bonusModal')"><i class="fa-solid fa-ticket"></i> Bonus Kullan</a>
+                <div class="dropdown-menu" id="userDropdown">
+                    <a href="javascript:void(0)" class="drop-link" onclick="openModal('profileModal')"><i class="fa-solid fa-id-card"></i> Profil Ayarları</a>
+                    <a href="javascript:void(0)" class="drop-link" onclick="openModal('wheelModal')"><i class="fa-solid fa-clover"></i> Şans Çarkı</a>
+                    <a href="javascript:void(0)" class="drop-link" onclick="openModal('bonusModal')"><i class="fa-solid fa-gift"></i> Bonus Kodu</a>
                     <div style="height: 1px; background: rgba(255,255,255,0.05); margin: 5px 0;"></div>
-                    <a href="javascript:void(0)" class="drop-item" id="logoutBtn" style="color: var(--danger);"><i class="fa-solid fa-power-off"></i> Çıkış Yap</a>
+                    <a href="javascript:void(0)" class="drop-link" id="logoutBtn" style="color: var(--danger);"><i class="fa-solid fa-power-off"></i> Güvenli Çıkış</a>
                 </div>
             </div>
         </div>
     </nav>
 
-    <div class="hero">
+    <header class="hero">
         <h1>GELECEĞİN ARENASI</h1>
-        <div class="search-box">
+        <div class="search-wrapper">
             <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" id="searchInput" placeholder="Favori oyununu veya oyuncuyu ara...">
+            <input type="text" id="searchInput" placeholder="Oyun, turnuva veya oyuncu ara...">
         </div>
-    </div>
+    </header>
 
-    <main class="container">
+    <main class="main-content">
         
-        <div class="section-header">
+        <div class="group-header">
             <h2>Multiplayer Arenası</h2>
-            <div class="section-line"></div>
+            <div class="header-line"></div>
         </div>
-        <div class="grid">
+        <div class="game-grid">
             <div class="card" data-name="reflex duel" onclick="checkLogin('duel.html')">
-                <div class="card-content">
-                    <i class="fa-solid fa-bolt-lightning card-icon"></i>
-                    <h3>Reflex Duel</h3>
-                    <div class="badge auth-badge">Online PvP</div>
-                </div>
+                <i class="fa-solid fa-bolt-lightning card-icon"></i>
+                <h3>Reflex Duel</h3>
+                <div class="game-status premium">Online PvP</div>
             </div>
             <div class="card" data-name="neon grid conquest" onclick="checkLogin('neongridconquest.html')">
-                <div class="card-content">
-                    <i class="fa-solid fa-border-none card-icon"></i>
-                    <h3>Grid Conquest</h3>
-                    <div class="badge auth-badge">Strateji</div>
-                </div>
+                <i class="fa-solid fa-border-all card-icon"></i>
+                <h3>Grid Conquest</h3>
+                <div class="game-status premium">Strateji PvP</div>
             </div>
         </div>
 
-        <div class="section-header">
-            <h2>Zeka & Strateji</h2>
-            <div class="section-line"></div>
+        <div class="group-header">
+            <h2>Zeka & Mantık</h2>
+            <div class="header-line"></div>
         </div>
-        <div class="grid">
+        <div class="game-grid">
             <div class="card" data-name="loops" onclick="location.href='loops.html'">
-                <div class="card-content">
-                    <i class="fa-solid fa-infinity card-icon"></i>
-                    <h3>Loops</h3>
-                    <div class="badge active">Ücretsiz</div>
-                </div>
+                <i class="fa-solid fa-infinity card-icon"></i>
+                <h3>Loops</h3>
+                <div class="game-status free">Erişim Açık</div>
             </div>
             <div class="card" data-name="pattern master" onclick="location.href='patternmaster.html'">
-                <div class="card-content">
-                    <i class="fa-solid fa-brain card-icon"></i>
-                    <h3>Pattern Master</h3>
-                    <div class="badge active">Ücretsiz</div>
-                </div>
+                <i class="fa-solid fa-brain card-icon"></i>
+                <h3>Pattern Master</h3>
+                <div class="game-status free">Erişim Açık</div>
             </div>
         </div>
 
-        <div class="section-header">
-            <h2>Elite Premium</h2>
-            <div class="section-line"></div>
+        <div class="group-header">
+            <h2>Premium Deneyim</h2>
+            <div class="header-line"></div>
         </div>
-        <div class="grid">
+        <div class="game-grid">
             <div class="card" data-name="skycrash" onclick="checkLogin('skycrash.html')">
-                <div class="card-content">
-                    <i class="fa-solid fa-plane-up card-icon"></i>
-                    <h3>SkyCrash</h3>
-                    <div class="badge auth-badge">Premium</div>
-                </div>
+                <i class="fa-solid fa-jet-fighter-up card-icon"></i>
+                <h3>SkyCrash</h3>
+                <div class="game-status premium">Limitli</div>
             </div>
             <div class="card" data-name="mines" onclick="checkLogin('mines.html')">
-                <div class="card-content">
-                    <i class="fa-solid fa-bomb card-icon"></i>
-                    <h3>Mines</h3>
-                    <div class="badge auth-badge">Premium</div>
-                </div>
+                <i class="fa-solid fa-land-mine-on card-icon"></i>
+                <h3>Mines</h3>
+                <div class="game-status premium">Limitli</div>
             </div>
             <div class="card" data-name="blackjack" onclick="checkLogin('blackjack.html')">
-                <div class="card-content">
-                    <i class="fa-solid fa-cards-diamond card-icon"></i>
-                    <h3>BlackJack</h3>
-                    <div class="badge auth-badge">Casino</div>
-                </div>
+                <i class="fa-solid fa-cards card-icon"></i>
+                <h3>BlackJack</h3>
+                <div class="game-status premium">Casino</div>
+            </div>
+            <div class="card" data-name="pisti" onclick="checkLogin('pisti.html')">
+                <i class="fa-solid fa-clone card-icon"></i>
+                <h3>Pişti Elite</h3>
+                <div class="game-status premium">Kart Oyunu</div>
             </div>
         </div>
 
     </main>
 
-    <div class="modal-overlay" id="authOverlay">
-        <div class="modal">
-            <h2 id="authTitle" style="font-family:'Orbitron'; margin-bottom: 25px;">Giriş Yap</h2>
-            <div class="input-group">
+    <div class="modal-bg" id="authModal">
+        <div class="modal-box">
+            <h2 id="authTitle" style="font-family:'Orbitron'; margin-bottom: 25px; text-align:center;">Giriş Yap</h2>
+            <div class="input-field">
                 <label>E-POSTA ADRESİ</label>
-                <input type="email" id="authEmail" placeholder="ornek@mail.com">
+                <input type="email" id="authEmail" placeholder="arena@pixel.com">
             </div>
-            <div class="input-group">
-                <label>ŞİFRE</label>
+            <div class="input-field">
+                <label>GÜVENLİ ŞİFRE</label>
                 <input type="password" id="authPassword" placeholder="••••••••">
             </div>
-            <div class="input-group" id="userGroup" style="display:none;">
+            <div class="input-field" id="userField" style="display:none;">
                 <label>KULLANICI ADI</label>
-                <input type="text" id="authUsername" placeholder="Kullanıcı Adınız">
+                <input type="text" id="authUsername" placeholder="Pilot123">
             </div>
-            <button class="btn-main" id="authSubmit">ARENAYA GİR</button>
-            <p id="switchMode" style="margin-top:20px; font-size:13px; text-align:center; cursor:pointer; color: var(--text-muted);">
+            <button class="btn-action" id="authSubmit">SİSTEME GİRİŞ YAP</button>
+            <p id="switchAuth" style="margin-top:20px; font-size:13px; text-align:center; cursor:pointer; color: var(--text-muted);">
                 Hesabın yok mu? <span style="color:var(--neon-blue)">Kayıt Ol</span>
             </p>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="profileModal">
-        <div class="modal">
-            <h2 style="font-family:'Orbitron'; margin-bottom:20px;">PROFİL AYARLARI</h2>
-            <div class="input-group">
-                <label>Görünen İsim</label>
-                <input type="text" id="profNameSurname">
-            </div>
-            <div class="input-group">
-                <label>Kullanıcı Adı</label>
-                <input type="text" id="profUser">
-            </div>
-            <button class="btn-main" onclick="updateProfile()">GÜNCELLE</button>
-            <button class="btn-main" onclick="closeModal('profileModal')" style="background:transparent; color:var(--text-muted); margin-top:10px;">KAPAT</button>
+            <p onclick="closeModal('authModal')" style="text-align:center; margin-top:15px; color:var(--danger); cursor:pointer; font-size:12px;">Kapat</p>
         </div>
     </div>
 
@@ -383,77 +353,94 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // Core UI Logic
-        const authOverlay = document.getElementById("authOverlay");
-        const userPill = document.getElementById("userPill");
-        const authSection = document.getElementById("authSection");
+        // UI Elementleri
+        const authModal = document.getElementById("authModal");
+        const userPanel = document.getElementById("userPanel");
+        const guestPanel = document.getElementById("guestPanel");
         const userDropdown = document.getElementById("userDropdown");
 
+        // Modal Fonksiyonları
         window.openModal = (id) => document.getElementById(id).style.display = 'flex';
         window.closeModal = (id) => document.getElementById(id).style.display = 'none';
 
-        document.getElementById("avatarTrigger").onclick = (e) => {
+        // Dropdown Kontrol
+        document.getElementById("avatarBtn").onclick = (e) => {
             e.stopPropagation();
-            userDropdown.classList.toggle("active");
+            userDropdown.classList.toggle("show");
         };
+        window.onclick = () => userDropdown.classList.remove("show");
 
-        window.onclick = () => userDropdown.classList.remove("active");
+        // Auth İşlemleri
+        let isLogin = true;
+        document.getElementById("loginBtn").onclick = () => { isLogin = true; syncAuthUI(); openModal('authModal'); };
+        document.getElementById("regBtn").onclick = () => { isLogin = false; syncAuthUI(); openModal('authModal'); };
+        document.getElementById("switchAuth").onclick = () => { isLogin = !isLogin; syncAuthUI(); };
 
-        // Auth Logic
-        let isLoginMode = true;
-        document.getElementById("loginBtn").onclick = () => { isLoginMode = true; updateAuthUI(); openModal("authOverlay"); };
-        document.getElementById("regBtn").onclick = () => { isLoginMode = false; updateAuthUI(); openModal("authOverlay"); };
-        document.getElementById("switchMode").onclick = () => { isLoginMode = !isLoginMode; updateAuthUI(); };
-
-        function updateAuthUI() {
-            document.getElementById("authTitle").innerText = isLoginMode ? "Giriş Yap" : "Kayıt Ol";
-            document.getElementById("userGroup").style.display = isLoginMode ? "none" : "block";
-            document.getElementById("switchMode").innerHTML = isLoginMode ? "Hesabın yok mu? <span>Kayıt Ol</span>" : "Zaten üye misin? <span>Giriş Yap</span>";
+        function syncAuthUI() {
+            document.getElementById("authTitle").innerText = isLogin ? "Giriş Yap" : "Kayıt Ol";
+            document.getElementById("userField").style.display = isLogin ? "none" : "block";
+            document.getElementById("switchAuth").innerHTML = isLogin ? "Hesabın yok mu? <span>Kayıt Ol</span>" : "Zaten üyen misin? <span>Giriş Yap</span>";
         }
 
         document.getElementById("authSubmit").onclick = async () => {
             const email = document.getElementById("authEmail").value;
             const pass = document.getElementById("authPassword").value;
             try {
-                if(isLoginMode) {
+                if(isLogin) {
                     await signInWithEmailAndPassword(auth, email, pass);
                 } else {
-                    const userN = document.getElementById("authUsername").value;
+                    const nick = document.getElementById("authUsername").value;
                     const res = await createUserWithEmailAndPassword(auth, email, pass);
                     await setDoc(doc(db, "users", res.user.uid), {
-                        username: userN, balance: 1500, lastSpin: 0, avatar: "https://i.pravatar.cc/150?u="+res.user.uid
+                        username: nick, balance: 1000, lastSpin: 0, avatar: "https://i.pravatar.cc/150?u=" + res.user.uid
                     });
                 }
-                closeModal("authOverlay");
+                closeModal('authModal');
             } catch(e) { alert("Hata: " + e.message); }
         };
 
+        // Auth Durumu Dinleme
         onAuthStateChanged(auth, user => {
             if(user) {
-                authSection.style.display = "none";
-                userPill.style.display = "flex";
+                guestPanel.style.display = "none";
+                userPanel.style.display = "flex";
                 onSnapshot(doc(db, "users", user.uid), s => {
                     if(s.exists()) {
-                        const data = s.data();
-                        document.getElementById("userBalance").innerText = data.balance.toLocaleString('tr-TR', { minimumFractionDigits: 2 }) + " ₺";
-                        document.getElementById("userProfileImg").src = data.avatar;
+                        const d = s.data();
+                        document.getElementById("userBalance").innerText = d.balance.toLocaleString('tr-TR', { minimumFractionDigits: 2 }) + " ₺";
+                        document.getElementById("userProfileImg").src = d.avatar;
                     }
                 });
             } else {
-                authSection.style.display = "flex";
-                userPill.style.display = "none";
+                guestPanel.style.display = "flex";
+                userPanel.style.display = "none";
             }
         });
 
         document.getElementById("logoutBtn").onclick = () => signOut(auth);
 
-        // Snow Effect
+        // Arama Motoru
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            document.querySelectorAll('.card').forEach(card => {
+                const name = card.getAttribute('data-name').toLowerCase();
+                card.style.display = name.includes(term) ? 'block' : 'none';
+            });
+        });
+
+        // Sayfa Kontrol
+        window.checkLogin = (url) => {
+            if(!auth.currentUser) openModal('authModal');
+            else location.href = url;
+        };
+
+        // Kar Efekti
         const canvas = document.getElementById("snow");
         const ctx = canvas.getContext("2d");
         let particles = [];
-        function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-        window.onresize = resize; resize();
-        for(let i=0; i<80; i++) particles.push({x: Math.random()*canvas.width, y: Math.random()*canvas.height, r: Math.random()*2+1, d: Math.random()*0.5+0.5});
+        function res() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        window.onresize = res; res();
+        for(let i=0; i<70; i++) particles.push({x: Math.random()*canvas.width, y: Math.random()*canvas.height, r: Math.random()*2+1, d: Math.random()*0.5+0.5});
         function draw() {
             ctx.clearRect(0,0,canvas.width, canvas.height);
             ctx.fillStyle = "rgba(255,255,255,0.4)";
@@ -467,20 +454,6 @@
             requestAnimationFrame(draw);
         }
         draw();
-
-        // Search
-        document.getElementById('searchInput').addEventListener('input', (e) => {
-            const term = e.target.value.toLowerCase();
-            document.querySelectorAll('.card').forEach(card => {
-                const name = card.getAttribute('data-name').toLowerCase();
-                card.style.display = name.includes(term) ? 'block' : 'none';
-            });
-        });
-
-        window.checkLogin = (url) => {
-            if(!auth.currentUser) openModal("authOverlay");
-            else location.href = url;
-        };
 
     </script>
 </body>
