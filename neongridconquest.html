@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Neon Conquest | Pro Edition V10.1</title>
+    <title>Neon Conquest | Pro Edition V10.2</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@500;800&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -134,6 +134,7 @@
     const db = getFirestore(app);
     const auth = getAuth(app);
 
+    // --- FIX 3: iOS SES UYUMLULUĞU (PRELOAD) ---
     const sfx = {
         box: new Audio('https://cdn.pixabay.com/audio/2022/03/15/audio_78396032a7.mp3'),
         win: new Audio('https://cdn.pixabay.com/audio/2021/08/04/audio_0625c1539c.mp3'),
@@ -141,6 +142,7 @@
         alert: new Audio('https://cdn.pixabay.com/audio/2021/08/04/audio_1949f53e34.mp3'),
         start: new Audio('https://cdn.pixabay.com/audio/2022/01/18/audio_d0a13f69d2.mp3')
     };
+    Object.values(sfx).forEach(a => a.preload = "auto");
 
     let audioReady = false, uid, username, curRoomId = null, myRole, isFin = false, canPlay = false, timerInt = null, lastCellsCount = 0;
     let unsubLobby = null, unsubGame = null;
@@ -160,6 +162,8 @@
 
     window.finalizeExit = async () => {
         if (curRoomId) {
+            // Çıkışta dinleyiciyi kapat (Bellek sızıntısı önlemi)
+            if(unsubGame) { unsubGame(); unsubGame = null; }
             await updateDoc(doc(db, "conquest_rooms", curRoomId), { status: 'escaped' });
         }
         location.reload();
@@ -169,7 +173,6 @@
         if(!user) { signInAnonymously(auth); return; }
         uid = user.uid;
         
-        // --- FIX: KULLANICI ADI ÇEKME GARANTİSİ ---
         try {
             const uSnap = await getDoc(doc(db, "users", uid));
             const userData = uSnap.exists() ? uSnap.data() : null;
@@ -250,7 +253,6 @@
         if(!snap.exists() || snap.data().status !== 'waiting') { alert("ARENA DOLU VEYA KAPANDI!"); return; }
         
         curRoomId = id; myRole = 'p2';
-        // --- FIX: P2 İÇİN ANLIK UI GÜNCELLEMESİ ---
         document.getElementById('n2').innerText = username; 
         await updateDoc(roomRef, { p2: uid, p2Name: username, status: 'playing' });
         enterGame(id);
@@ -277,8 +279,8 @@
             if(d.status === 'escaped' && !isFin) {
                 isFin = true; 
                 if(timerInt) { clearInterval(timerInt); timerInt = null; }
+                if(unsubGame) { unsubGame(); unsubGame = null; } // FIX 1: BELLEK SIZINTISI ÖNLEMİ
                 playSfx('alert'); window.toggleModal('escapeModal', true);
-                // --- FIX: ÇAKIŞMAYI ÖNLEYEN SİLME ---
                 setTimeout(() => { try { deleteDoc(doc(db, "conquest_rooms", id)); } catch(e){} }, 2000);
                 return;
             }
@@ -292,12 +294,11 @@
 
             if(d.status === 'playing' && !canPlay) { playSfx('start'); canPlay = true; }
             
-            // --- FIX: ZAMANLAYICI ÇAKIŞMASI KESİN ÇÖZÜM ---
+            // --- FIX 2: GÜVENLİ ZAMANLAYICI (DB VERİSİNDEN BESLENİR) ---
             if(myRole === 'p1' && d.status === 'playing') {
                 if(!timerInt) {
                     timerInt = setInterval(() => {
-                        const currentTimer = parseInt(document.getElementById('timer-box').innerText);
-                        if(currentTimer > 0) {
+                        if(d.timer > 0) {
                             updateDoc(doc(db, "conquest_rooms", id), { timer: increment(-1) });
                         } else {
                             clearInterval(timerInt);
@@ -324,6 +325,7 @@
         if(isFin) return;
         isFin = true; 
         if(timerInt) { clearInterval(timerInt); timerInt = null; }
+        if(unsubGame) { unsubGame(); unsubGame = null; } // FIX 1: BELLEK SIZINTISI ÖNLEMİ
         
         const win = (myRole === 'p1' && s1 > s2) || (myRole === 'p2' && s2 > s1);
         playSfx(win ? 'win' : 'lose');
