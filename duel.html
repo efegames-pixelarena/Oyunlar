@@ -90,8 +90,10 @@ body::before {
 .modal-content {
     background: var(--b); width: 100%; max-width: 350px; padding: 25px; border-radius: 20px;
     border: 1px solid var(--p); display: flex; flex-direction: column; gap: 15px;
-    text-align: center;
+    text-align: center; animation: modalPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
+@keyframes modalPop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
 .modal-content input {
     background: #000; border: 1px solid #333; padding: 12px; color: var(--p);
     border-radius: 8px; font-family: 'Orbitron'; font-size: 0.8rem; text-align: center; outline: none;
@@ -108,8 +110,9 @@ body::before {
 .flash { background: #fff !important; }
 .flash #bigText, .flash #subText { color: #000 !important; }
 
-/* Tutorial Styles */
+/* Tutorial & Error Icons */
 .tut-icon { font-size: 50px; margin-bottom: 10px; animation: float 2s infinite ease-in-out; }
+.err-icon { font-size: 50px; margin-bottom: 10px; color: var(--a); text-shadow: 0 0 15px var(--a); }
 @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 
 .winner-screen { position: fixed; inset: 0; background: #000; z-index: 5000; display: none; flex-direction: column; justify-content: center; align-items: center; }
@@ -130,7 +133,16 @@ body::before {
     </div>
 </div>
 
-<div id="tutorialModal" class="modal" style="display: none;">
+<div id="errorModal" class="modal">
+    <div class="modal-content" style="border-color: var(--a);">
+        <div class="err-icon">⚠️</div>
+        <h2 id="errorTitle" style="font-family:'Orbitron'; color:var(--a); font-size:1.1rem;">BAĞLANTI HATASI</h2>
+        <p id="errorDesc" style="font-size: 0.85rem; color: #aaa; line-height: 1.4;">Sistemde uygun arena bulunamadı.</p>
+        <button onclick="closeModal('errorModal')" style="padding:15px; border-radius:8px; background:var(--a); border:none; color:white; font-weight:900; font-family:'Orbitron'; font-size:0.75rem; cursor:pointer;">TAMAM</button>
+    </div>
+</div>
+
+<div id="tutorialModal" class="modal">
     <div class="modal-content">
         <div class="tut-icon">🥊</div>
         <h2 style="font-family:'Orbitron'; color:var(--p); font-size:1.1rem;">NASIL OYNANIR?</h2>
@@ -223,7 +235,7 @@ const auth = getAuth(app);
 let uid, username, currentRoomId = null, unsubRoom = null, unsubLobby = null;
 let roomData = null, tapLock = false, countdownInterval = null, lastState = "", lastBigText = "";
 let allRooms = [], serverOffset = 0, offsetCalculated = false, pendingRoomId = null;
-let isTutorialRead = false; // Kullanıcının rehberi okuyup okumadığı
+let isTutorialRead = false;
 
 const getServerTime = () => Date.now() + serverOffset;
 
@@ -260,6 +272,14 @@ const sounds = {
 
 window.openModal = (id) => { initAudio(); document.getElementById(id).style.display = "flex"; };
 window.closeModal = (id) => { document.getElementById(id).style.display = "none"; };
+
+// ÖZEL HATA GÖSTERİMİ
+function showError(title, desc) {
+    initAudio();
+    document.getElementById("errorTitle").innerText = title;
+    document.getElementById("errorDesc").innerText = desc;
+    openModal("errorModal");
+}
 
 onAuthStateChanged(auth, async (user) => {
     if (!user) { signInAnonymously(auth); return; }
@@ -328,7 +348,7 @@ document.getElementById("quickJoinBtn").onclick = async function() {
     if (available) {
         await executeJoin(available.id);
     } else {
-        alert("UYGUN BOŞ ARENA BULUNAMADI.");
+        showError("ARENA YOK", "Şu an boş ve şifresiz arena bulunamadı. Kendi arenanı kurabilirsin!");
     }
     this.disabled = false;
 };
@@ -346,7 +366,7 @@ document.getElementById("confirmCreateBtn").onclick = async () => {
             score1: 0, score2: 0, round: 1, state: "waiting", host: uid, 
             password: pass, createdAt: serverTimestamp(), penalty: false,
             displayBig: "READY", displaySub: "BEKLE...",
-            p1Ready: false, p2Ready: false // Hazır durumu eklendi
+            p1Ready: false, p2Ready: false
         });
         closeModal("createModal"); 
         openTutorial();
@@ -370,7 +390,9 @@ document.getElementById("confirmJoinPassBtn").onclick = async () => {
     if (snap.exists() && snap.data().password === pass) {
         closeModal("passwordModal");
         await executeJoin(pendingRoomId);
-    } else { alert("HATALI ŞİFRE!"); }
+    } else { 
+        showError("ŞİFRE HATASI", "Girdiğin arena şifresi yanlış.");
+    }
 };
 
 async function executeJoin(id) {
@@ -388,10 +410,9 @@ async function executeJoin(id) {
             currentRoomId = id;
         });
         openTutorial();
-    } catch (e) { alert(e); }
+    } catch (e) { showError("HATA", e); }
 }
 
-// ÖĞRETİCİ SİSTEMİ
 function openTutorial() {
     initAudio();
     document.getElementById("tutorialModal").style.display = "flex";
@@ -402,8 +423,6 @@ document.getElementById("tutConfirmBtn").onclick = async () => {
     isTutorialRead = true;
     closeModal("tutorialModal");
     enterRoom();
-    
-    // DB'ye hazır olduğunu bildir
     const isP1 = uid === roomData.player1;
     await updateDoc(doc(db, "rooms", currentRoomId), {
         [isP1 ? "p1Ready" : "p2Ready"]: true
@@ -421,37 +440,28 @@ function enterRoom() {
         if (!snap.exists()) { quitGame(); return; }
         const d = snap.data();
         roomData = d;
-
         document.getElementById("p1Name").innerText = (d.player1Name || "---").toUpperCase();
         document.getElementById("p1Score").innerText = d.score1 || 0;
         document.getElementById("p2Name").innerText = (d.player2Name || "BEKLENİYOR").toUpperCase();
         document.getElementById("p2Score").innerText = d.score2 || 0;
         document.getElementById("roundNum").innerText = `RD ${d.round}`;
-
         const bigText = document.getElementById("bigText");
         const subText = document.getElementById("subText");
         const arena = document.getElementById("arena");
-
         bigText.innerText = d.displayBig || "";
         subText.innerText = d.displaySub || "";
-
         if (d.displayBig !== lastBigText) {
             arena.classList.remove("flash");
             subText.classList.remove("penalty");
             bigText.style.color = "white";
-
             if (d.displayBig === "HAZIR") { bigText.style.color = "var(--p)"; sounds.ready(); }
             if (d.displayBig === "BEKLE") { bigText.style.color = "var(--gold)"; sounds.wait(); }
             if (d.displayBig === "GO!") { bigText.style.color = "black"; arena.classList.add("flash"); sounds.go(); }
             if (d.penalty) { subText.classList.add("penalty"); }
-            
             lastBigText = d.displayBig;
         }
-
         if (d.state !== lastState) {
             if (countdownInterval) clearInterval(countdownInterval);
-
-            // SADECE İKİ OYUNCU DA REHBERİ KAPATIP HAZIR OLUNCA BAŞLAR
             if (d.state === "matched" && uid === d.host && d.p1Ready && d.p2Ready) {
                 setTimeout(() => {
                     updateDoc(doc(db, "rooms", currentRoomId), { 
@@ -461,13 +471,11 @@ function enterRoom() {
                     });
                 }, 500);
             }
-
             if (d.state === "countdown" && uid === d.host) {
                 let currentStage = 0;
                 countdownInterval = setInterval(() => {
                     const now = getServerTime();
                     const diff = d.startTime - now;
-                    
                     if (diff > 1200 && currentStage === 0) {
                         updateDoc(doc(db, "rooms", currentRoomId), { displayBig: "HAZIR", displaySub: "ODAKLAN" });
                         currentStage = 1;
@@ -484,7 +492,6 @@ function enterRoom() {
                     }
                 }, 50);
             }
-
             if (d.state === "result" && uid === d.host) {
                 setTimeout(() => {
                     if(!currentRoomId) return;
@@ -498,7 +505,6 @@ function enterRoom() {
                     });
                 }, 2500);
             }
-
             if (d.state === "finished") {
                 document.getElementById("winnerScreen").style.display = "flex";
                 document.getElementById("championName").innerText = (d.score1 >= 11 ? d.player1Name : d.player2Name).toUpperCase();
@@ -514,11 +520,9 @@ document.getElementById("arena").addEventListener('pointerdown', async (e) => {
     e.preventDefault();
     initAudio();
     if (tapLock || !currentRoomId || !roomData) return;
-    
     const now = getServerTime();
     const d = roomData;
     const roomRef = doc(db, "rooms", currentRoomId);
-    
     if (d.state === "countdown" || (d.state === "matched" && d.player2)) {
         tapLock = true;
         const isP1 = uid === d.player1;
