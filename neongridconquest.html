@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Neon Conquest | Pro Edition V10.2</title>
+    <title>Neon Conquest | Pro Edition V10.3</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@500;800&display=swap" rel="stylesheet">
     <style>
         :root {
             --p1: #00ff41; --p2: #ff00f7; --bg: #020408;
             --glass: rgba(10, 15, 25, 0.9); --border: rgba(0, 242, 255, 0.3);
-            --danger: #ff4444;
+            --danger: #ff4444; --warning: #ffcc00;
         }
 
         * { margin:0; padding:0; box-sizing:border-box; font-family: 'JetBrains Mono', monospace; -webkit-tap-highlight-color: transparent; }
@@ -37,9 +37,15 @@
         .user-badge { font-size: 0.65rem; color: var(--p1); border: 1px solid var(--p1); padding: 5px 10px; border-radius: 4px; }
 
         #lobby { flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto; z-index: 10; }
-        .room-card { background: var(--glass); border: 1px solid var(--border); padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; transition: 0.3s; margin-bottom: 5px; }
-        .room-info b { font-size: 0.9rem; color: #fff; }
-        .room-stats { font-size: 0.6rem; color: var(--p1); margin-top: 4px; display: block; }
+        .room-card { 
+            background: var(--glass); border: 1px solid var(--border); padding: 15px; border-radius: 12px; 
+            display: flex; justify-content: space-between; align-items: center; transition: 0.3s; margin-bottom: 8px;
+            border-left: 4px solid var(--p1);
+        }
+        .room-info b { font-size: 0.85rem; color: #fff; display: block; margin-bottom: 4px; }
+        .room-stats { font-size: 0.65rem; color: var(--p1); display: block; line-height: 1.4; }
+        .live-tag { color: var(--p2); font-weight: 800; animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0.3; } }
 
         #game-view { display: none; flex: 1; flex-direction: column; z-index: 10; }
         .game-hud { display: grid; grid-template-columns: 1fr auto 1fr; padding: 20px; align-items: center; background: rgba(0,0,0,0.7); }
@@ -49,14 +55,19 @@
         .cell.p1 { background: var(--p1); box-shadow: 0 0 15px var(--p1); border: none; }
         .cell.p2 { background: var(--p2); box-shadow: 0 0 15px var(--p2); border: none; }
 
-        .btn-neon { background: var(--p1); color: #000; border: none; padding: 12px; border-radius: 10px; font-family: 'Orbitron'; font-weight: 900; cursor: pointer; text-transform: uppercase; font-size: 0.8rem; box-shadow: 0 0 15px rgba(0,255,65,0.3); }
+        .btn-neon { background: var(--p1); color: #000; border: none; padding: 12px; border-radius: 10px; font-family: 'Orbitron'; font-weight: 900; cursor: pointer; text-transform: uppercase; font-size: 0.8rem; box-shadow: 0 0 15px rgba(0,255,65,0.3); transition: 0.2s; }
+        .btn-neon:active { transform: scale(0.95); }
 
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); backdrop-filter: blur(10px); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 20px; }
         .modal-box { background: #0a0f18; border: 2px solid var(--p1); padding: 30px; border-radius: 20px; width: 100%; max-width: 340px; text-align: center; }
-        .modal-box.danger { border-color: var(--danger); box-shadow: 0 0 40px rgba(255,68,68,0.3); }
+        .modal-box.danger { border-color: var(--danger); }
         .modal-input { width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border); padding: 12px; border-radius: 10px; color: #fff; margin-bottom: 15px; text-align: center; outline: none; }
         
         .empty-arena { text-align: center; padding: 40px 20px; color: #888; border: 1px dashed var(--border); border-radius: 15px; }
+        
+        /* Tutorial Styling */
+        .how-to-list { text-align: left; font-size: 0.75rem; color: #ccc; margin: 15px 0; line-height: 1.6; }
+        .how-to-list li { margin-bottom: 8px; }
     </style>
 </head>
 <body onclick="window.unlockAudio()">
@@ -65,13 +76,16 @@
     <div id="game-bg"></div>
 
     <div class="header">
-        <div class="user-badge" id="meName">YÜKLENİYOR...</div>
+        <div class="user-badge" id="meName">...</div>
         <div class="logo">NEON CONQUEST</div>
         <button id="mainExitBtn" onclick="window.showExitConfirm()" style="background:none; border:1px solid #ff4444; color:#ff4444; padding:5px 10px; border-radius:5px; font-size:0.6rem; cursor:pointer;">GERİ</button>
     </div>
 
     <div id="lobby">
-        <button class="btn-neon" style="background:#fff;" onclick="window.openQuickModal()">HIZLI KATIL / ODA KUR</button>
+        <div style="display:flex; gap:10px;">
+            <button class="btn-neon" style="flex:2; background:#fff;" onclick="window.toggleModal('createModal', true)">ARENA OLUŞTUR</button>
+            <button class="btn-neon" style="flex:1; background:var(--warning);" onclick="window.toggleModal('howToModal', true)">?</button>
+        </div>
         <div id="roomList"></div>
     </div>
 
@@ -81,14 +95,27 @@
             <div id="timer-box" style="border:3px solid var(--p1); border-radius:50%; width:60px; height:60px; display:flex; align-items:center; justify-content:center; font-weight:900; font-family:'Orbitron';">60</div>
             <div style="color:var(--p2); text-align:right;"><small id="n2">...</small><div class="score" id="s2">0</div></div>
         </div>
-        <div id="statusInfo" style="text-align:center; padding:10px; color:var(--p1); font-size:0.7rem; letter-spacing: 2px;">BAĞLANTI STABİL...</div>
+        <div id="statusInfo" style="text-align:center; padding:10px; color:var(--p1); font-size:0.7rem; letter-spacing: 2px;">NEON SİNYALİ AKTİF...</div>
         <div class="grid" id="grid"></div>
+    </div>
+
+    <div id="howToModal" class="modal">
+        <div class="modal-box">
+            <h3 style="color:var(--p1); font-family:'Orbitron';">NASIL OYNANIR?</h3>
+            <ul class="how-to-list">
+                <li>• 6x6 karelerden oluşan arenayı ele geçir.</li>
+                <li>• Karelere dokunarak kendi rengine boya.</li>
+                <li>• 60 saniye sonunda en çok kareye sahip olan kazanır.</li>
+                <li>• Rakibinin boyadığı kareleri tekrar boyayabilirsin!</li>
+            </ul>
+            <button onclick="window.toggleModal('howToModal', false)" class="btn-neon" style="width:100%">ANLADIM</button>
+        </div>
     </div>
 
     <div id="confirmExitModal" class="modal">
         <div class="modal-box danger">
-            <h3 style="color:var(--danger); font-family:'Orbitron';">UYARI!</h3>
-            <p style="margin:20px 0; font-size:0.8rem;">SAVAŞTAN ÇEKİLMEK İSTEDİĞİNE EMİN MİSİN?</p>
+            <h3 style="color:var(--danger); font-family:'Orbitron';">SAVAŞTAN KAÇIŞ?</h3>
+            <p style="margin:20px 0; font-size:0.8rem;">Şu anki ilerlemen kaybolacak. Emin misin?</p>
             <div style="display:flex; gap:10px;">
                 <button onclick="window.finalizeExit()" class="btn-neon" style="background:var(--danger); color:white; flex:1;">EVET</button>
                 <button onclick="window.toggleModal('confirmExitModal', false)" class="btn-neon" style="background:#444; color:white; flex:1;">İPTAL</button>
@@ -96,20 +123,21 @@
         </div>
     </div>
 
-    <div id="quickModal" class="modal">
-        <div class="modal-box"><h3 id="quickStatus">TARANIYOR...</h3><button onclick="window.toggleModal('quickModal', false)" class="btn-neon" style="background:var(--danger); color:white; width:100%; margin-top:15px;">İPTAL</button></div>
-    </div>
-
     <div id="escapeModal" class="modal">
         <div class="modal-box danger">
             <h2 style="color:var(--danger); font-family:'Orbitron';">RAKİP KAÇTI!</h2>
-            <p style="margin: 20px 0; font-size: 0.85rem;">Hükmen galipsin!</p>
+            <p style="margin: 20px 0; font-size: 0.85rem;">Meydan sana kaldı. Zafer senin!</p>
             <button class="btn-neon" style="width:100%" onclick="location.reload()">LOBİYE DÖN</button>
         </div>
     </div>
 
     <div id="createModal" class="modal">
-        <div class="modal-box"><h3>ARENA KUR</h3><input type="password" id="createPass" class="modal-input" placeholder="ŞİFRE (OPSİYONEL)"><button class="btn-neon" style="width:100%" id="confirmCreate">OLUŞTUR</button><button onclick="window.toggleModal('createModal', false)" style="background:none; color:#888; border:none; margin-top:15px;">İPTAL</button></div>
+        <div class="modal-box">
+            <h3>ARENA KUR</h3>
+            <input type="password" id="createPass" class="modal-input" placeholder="ŞİFRE (OPSİYONEL)">
+            <button class="btn-neon" style="width:100%" id="confirmCreate">BAŞLAT</button>
+            <button onclick="window.toggleModal('createModal', false)" style="background:none; color:#888; border:none; margin-top:15px; cursor:pointer;">KAPAT</button>
+        </div>
     </div>
 
     <div id="resultModal" class="modal">
@@ -142,15 +170,13 @@
         start: new Audio('https://cdn.pixabay.com/audio/2022/01/18/audio_d0a13f69d2.mp3')
     };
 
-    let audioReady = false, uid, username, curRoomId = null, myRole, isFin = false, canPlay = false, timerInt = null, lastCellsCount = 0;
+    let audioReady = false, uid, username, curRoomId = null, myRole, isFin = false, canPlay = false, timerInt = null;
     let unsubLobby = null, unsubGame = null;
 
-    // --- TEMİZLEME FONKSİYONU (KESİN SİLME) ---
+    // --- PROFESYONEL TEMİZLEME VE GÜVENLİK ---
     async function forceCleanup(roomId) {
         if(!roomId) return;
-        try {
-            await deleteDoc(doc(db, "conquest_rooms", roomId));
-        } catch(e) { console.log("Oda zaten silinmiş."); }
+        try { await deleteDoc(doc(db, "conquest_rooms", roomId)); } catch(e) {}
     }
 
     window.toggleModal = (id, show) => { document.getElementById(id).style.display = show ? 'flex' : 'none'; };
@@ -167,7 +193,18 @@
     onAuthStateChanged(auth, async user => {
         if(!user) { signInAnonymously(auth); return; }
         uid = user.uid;
-        username = "PILOT_" + uid.slice(0,4);
+        
+        // 1. KULLANICI ADINI FIREBASE'DEN ÇEK
+        const userRef = doc(db, "users", uid);
+        const userSnap = await getDoc(userRef);
+        
+        if(userSnap.exists() && userSnap.data().username) {
+            username = userSnap.data().username;
+        } else {
+            username = "PILOT_" + uid.slice(0,4).toUpperCase();
+            await setDoc(userRef, { username: username }, { merge: true });
+        }
+        
         document.getElementById('meName').innerText = username;
         listenLobby();
         initWarp();
@@ -182,37 +219,47 @@
             list.innerHTML = "";
             const now = Date.now();
 
-            snap.forEach(async d => {
+            snap.forEach(d => {
                 const r = d.data();
                 const roomAge = r.createdAt ? (now - r.createdAt.toMillis()) / 1000 : 0;
 
-                // 65 SANİYE KURALI VE HAYALET ODA TEMİZLİĞİ
+                // HAYALET ODA KONTROLÜ (65 Saniye)
                 if(roomAge > 65) {
-                    if(myRole !== 'p2') forceCleanup(d.id);
+                    if(uid === r.p1) forceCleanup(d.id);
                     return;
                 }
 
                 if(r.p1 === uid) return;
+
+                // 2. LOBİDE CANLI SKOR VE SÜRE GÖSTERİMİ
+                const cells = r.cells || {};
+                let s1 = 0, s2 = 0;
+                Object.values(cells).forEach(v => { if(v === 'p1') s1++; else s2++; });
 
                 const card = document.createElement('div');
                 card.className = "room-card";
                 card.innerHTML = `
                     <div class="room-info">
                         <b>${r.p1Name} ${r.pass ? '🔒' : ''}</b>
-                        <span class="room-stats">SÜRE: ${Math.max(0, Math.floor(65 - roomAge))}s | ${r.status === 'playing' ? 'SAVAŞTA' : 'BEKLİYOR'}</span>
+                        <span class="room-stats">
+                            ${r.status === 'playing' ? `<span class="live-tag">CANLI YAYIN</span>` : 'BEKLENİYOR'} <br>
+                            KİMLER: ${r.p1Name} vs ${r.p2Name || '?'} <br>
+                            SKOR: <span style="color:var(--p1)">${s1}</span> - <span style="color:var(--p2)">${s2}</span> | SÜRE: ${r.timer}s
+                        </span>
                     </div>
-                    <button class="btn-neon" style="padding:8px 15px; font-size:0.6rem;" onclick="window.joinHandler('${d.id}', '${r.pass||''}')">
-                        KATIL
+                    <button class="btn-neon" style="padding:8px 12px; font-size:0.55rem; background:${r.status === 'playing' ? '#222' : 'var(--p1)'}; color:${r.status === 'playing' ? '#666' : '#000'}" 
+                        onclick="${r.status === 'playing' ? '' : `window.joinHandler('${d.id}', '${r.pass||''}')`}">
+                        ${r.status === 'playing' ? 'DOLU' : 'KATIL'}
                     </button>`;
                 list.appendChild(card);
             });
-            if(list.innerHTML === "") list.innerHTML = `<div class="empty-arena">ARENA SESSİZ...</div>`;
+            if(list.innerHTML === "") list.innerHTML = `<div class="empty-arena">AKTİF ARENA BULUNAMADI</div>`;
         });
     }
 
     document.getElementById('confirmCreate').onclick = async () => {
         const pass = document.getElementById('createPass').value;
-        const id = "ROOM_" + Math.random().toString(36).substring(2,7).toUpperCase();
+        const id = "ARENA_" + Math.random().toString(36).substring(2,7).toUpperCase();
         curRoomId = id; myRole = 'p1';
         
         await setDoc(doc(db, "conquest_rooms", id), {
@@ -220,16 +267,16 @@
             timer: 60, status: 'waiting', pass: pass, createdAt: serverTimestamp()
         });
         
-        // 65 Saniye sonra odayı kesin silme zamanlayıcısı
-        setTimeout(() => { if(!isFin) finalizeExit(); }, 65000);
+        // KESİN ODA TEMİZLEME ZAMANLAYICISI
+        setTimeout(() => { if(!isFin && curRoomId === id) finalizeExit(); }, 66000);
         enterGame(id);
     };
 
     window.joinHandler = async (id, pass) => {
-        if(pass && prompt("ŞİFRE:") !== pass) return alert("Hatalı!");
+        if(pass && prompt("ARENA ŞİFRESİ:") !== pass) return alert("ŞİFRE HATALI!");
         const roomRef = doc(db, "conquest_rooms", id);
         const snap = await getDoc(roomRef);
-        if(!snap.exists() || snap.data().status !== 'waiting') return alert("Arena Dolu!");
+        if(!snap.exists() || snap.data().status !== 'waiting') return alert("ARENA ARTIK AKTİF DEĞİL!");
         
         curRoomId = id; myRole = 'p2';
         await updateDoc(roomRef, { p2: uid, p2Name: username, status: 'playing' });
@@ -261,14 +308,13 @@
             }
 
             const cells = d.cells || {};
-            if(Object.keys(cells).length > lastCellsCount) { playSfx('box'); lastCellsCount = Object.keys(cells).length; }
-            
             document.getElementById('n1').innerText = d.p1Name;
             document.getElementById('n2').innerText = d.p2Name;
             document.getElementById('timer-box').innerText = d.timer;
 
             if(d.status === 'playing' && !canPlay) { playSfx('start'); canPlay = true; }
             
+            // MASTER TIMER (HOST TARAFINDAN YÖNETİLİR)
             if(myRole === 'p1' && d.status === 'playing' && !timerInt) {
                 timerInt = setInterval(() => {
                     if(d.timer > 0) updateDoc(doc(db, "conquest_rooms", id), { timer: increment(-1) });
@@ -278,7 +324,12 @@
 
             let s1=0, s2=0;
             document.querySelectorAll('.cell').forEach((c, i) => {
-                if(cells[i]) { c.className = 'cell ' + cells[i]; cells[i] === 'p1' ? s1++ : s2++; }
+                if(cells[i]) { 
+                    const owner = cells[i];
+                    if(!c.classList.contains(owner)) playSfx('box');
+                    c.className = 'cell ' + owner; 
+                    owner === 'p1' ? s1++ : s2++; 
+                }
             });
             document.getElementById('s1').innerText = s1; document.getElementById('s2').innerText = s2;
             
@@ -293,7 +344,7 @@
         document.getElementById('winnerLabel').innerText = win ? "ZAFER!" : "KAYBETTİN";
         document.getElementById('scoreLabel').innerText = `${s1} - ${s2}`;
         window.toggleModal('resultModal', true);
-        if(myRole === 'p1') setTimeout(() => forceCleanup(id), 3000);
+        if(myRole === 'p1') setTimeout(() => forceCleanup(id), 5000);
     }
 
     function initWarp() {
@@ -311,7 +362,6 @@
 
     window.unlockAudio = () => { if(audioReady) return; Object.values(sfx).forEach(s => { s.play().then(()=> {s.pause(); s.currentTime=0;}).catch(()=>{}); }); audioReady = true; };
     function playSfx(key) { if(audioReady && sfx[key]) { sfx[key].currentTime=0; sfx[key].play().catch(()=>{}); } }
-    window.openQuickModal = () => window.toggleModal('createModal', true);
     window.showExitConfirm = () => window.toggleModal('confirmExitModal', true);
 </script>
 </body>
