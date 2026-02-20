@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Neon Conquest | Pro Edition V9.1</title>
+    <title>Neon Conquest | Pro Edition V9.5</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@500;800&display=swap" rel="stylesheet">
     <style>
         :root {
             --p1: #00ff41; --p2: #ff00f7; --bg: #020408;
-            --glass: rgba(10, 15, 25, 0.9); --border: rgba(0, 242, 255, 0.2);
+            --glass: rgba(10, 15, 25, 0.9); --border: rgba(0, 242, 255, 0.3);
             --danger: #ff4444;
         }
 
@@ -16,13 +16,18 @@
         
         body { background: var(--bg); color: white; height: 100vh; overflow: hidden; display: flex; flex-direction: column; position: relative; }
 
-        #lobby-bg { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at 50% 50%, #0a1525 0%, #020408 100%); }
+        /* --- DAHA BELİRGİN LOBBY ARKA PLANI --- */
+        #lobby-bg { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at 50% 50%, #0a1c2f 0%, #020408 100%); }
         .grid-layer {
             position: absolute; width: 200%; height: 200%; top: -50%; left: -50%;
-            background-image: linear-gradient(to right, rgba(0, 255, 65, 0.05) 1px, transparent 1px), linear-gradient(to bottom, rgba(0, 255, 65, 0.05) 1px, transparent 1px);
-            background-size: 50px 50px; transform: perspective(1000px) rotateX(60deg); animation: gridMove 20s linear infinite;
+            background-image: 
+                linear-gradient(to right, rgba(0, 255, 65, 0.15) 2px, transparent 2px), 
+                linear-gradient(to bottom, rgba(0, 255, 65, 0.15) 2px, transparent 2px);
+            background-size: 60px 60px; transform: perspective(800px) rotateX(60deg); 
+            animation: gridMove 15s linear infinite;
+            filter: drop-shadow(0 0 5px var(--p1));
         }
-        @keyframes gridMove { from { transform: perspective(1000px) rotateX(60deg) translateY(0); } to { transform: perspective(1000px) rotateX(60deg) translateY(50px); } }
+        @keyframes gridMove { from { transform: perspective(800px) rotateX(60deg) translateY(0); } to { transform: perspective(800px) rotateX(60deg) translateY(60px); } }
 
         #game-bg { position: fixed; inset: 0; z-index: -2; display: none; background: #000; overflow: hidden; }
         .star { position: absolute; background: #fff; border-radius: 50%; opacity: 0.5; animation: starTravel linear infinite; }
@@ -33,7 +38,9 @@
         .user-badge { font-size: 0.65rem; color: var(--p1); border: 1px solid var(--p1); padding: 5px 10px; border-radius: 4px; }
 
         #lobby { flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto; z-index: 10; }
-        .room-card { background: var(--glass); border: 1px solid var(--border); padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; transition: 0.3s; }
+        .room-card { background: var(--glass); border: 1px solid var(--border); padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; transition: 0.3s; margin-bottom: 5px; }
+        .room-info b { font-size: 0.9rem; color: #fff; }
+        .room-stats { font-size: 0.6rem; color: var(--p1); margin-top: 4px; display: block; }
 
         #game-view { display: none; flex: 1; flex-direction: column; z-index: 10; }
         .game-hud { display: grid; grid-template-columns: 1fr auto 1fr; padding: 20px; align-items: center; background: rgba(0,0,0,0.7); }
@@ -43,13 +50,15 @@
         .cell.p1 { background: var(--p1); box-shadow: 0 0 15px var(--p1); border: none; }
         .cell.p2 { background: var(--p2); box-shadow: 0 0 15px var(--p2); border: none; }
 
-        .btn-neon { background: var(--p1); color: #000; border: none; padding: 12px; border-radius: 10px; font-family: 'Orbitron'; font-weight: 900; cursor: pointer; text-transform: uppercase; font-size: 0.8rem; }
-        .floating-create { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 220px; z-index: 100; box-shadow: 0 0 20px var(--p1); }
+        .btn-neon { background: var(--p1); color: #000; border: none; padding: 12px; border-radius: 10px; font-family: 'Orbitron'; font-weight: 900; cursor: pointer; text-transform: uppercase; font-size: 0.8rem; box-shadow: 0 0 15px rgba(0,255,65,0.3); }
+        .floating-create { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 220px; z-index: 100; }
 
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); backdrop-filter: blur(10px); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 20px; }
         .modal-box { background: #0a0f18; border: 2px solid var(--p1); padding: 30px; border-radius: 20px; width: 100%; max-width: 340px; text-align: center; }
         .modal-box.danger { border-color: var(--danger); box-shadow: 0 0 40px rgba(255,68,68,0.3); }
         .modal-input { width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border); padding: 12px; border-radius: 10px; color: #fff; margin-bottom: 15px; text-align: center; outline: none; }
+        
+        .empty-arena { text-align: center; padding: 40px 20px; color: #888; border: 1px dashed var(--border); border-radius: 15px; }
     </style>
 </head>
 <body onclick="window.unlockAudio()">
@@ -60,13 +69,12 @@
     <div class="header">
         <div class="user-badge" id="meName">GİRİŞ...</div>
         <div class="logo">NEON CONQUEST</div>
-        <button id="mainExitBtn" onclick="window.exitController()" style="background:none; border:1px solid #ff4444; color:#ff4444; padding:5px 10px; border-radius:5px; font-size:0.6rem; cursor:pointer;">GERİ</button>
+        <button id="mainExitBtn" onclick="window.showExitConfirm()" style="background:none; border:1px solid #ff4444; color:#ff4444; padding:5px 10px; border-radius:5px; font-size:0.6rem; cursor:pointer;">GERİ</button>
     </div>
 
     <div id="lobby">
-        <button class="btn-neon" style="background:#fff;" onclick="window.openQuickModal()">HIZLI KATIL</button>
+        <button class="btn-neon" style="background:#fff;" onclick="window.openQuickModal()">HIZLI KATIL / ODA KUR</button>
         <div id="roomList"></div>
-        <button class="btn-neon floating-create" onclick="window.toggleModal('createModal', true)">ODA KUR</button>
     </div>
 
     <div id="game-view">
@@ -77,6 +85,17 @@
         </div>
         <div id="statusInfo" style="text-align:center; padding:10px; color:var(--p1); font-size:0.7rem; letter-spacing: 2px;">SİSTEMLER AKTİF...</div>
         <div class="grid" id="grid"></div>
+    </div>
+
+    <div id="confirmExitModal" class="modal">
+        <div class="modal-box danger">
+            <h3 style="color:var(--danger); font-family:'Orbitron';">UYARI!</h3>
+            <p style="margin:20px 0; font-size:0.8rem; line-height:1.5;">SAVAŞTAN ÇEKİLMEK İSTEDİĞİNE EMİN MİSİN? BU İŞLEM KAYIP OLARAK SAYILIR.</p>
+            <div style="display:flex; gap:10px;">
+                <button onclick="window.finalizeExit()" class="btn-neon" style="background:var(--danger); color:white; flex:1;">EVET, ÇEKİL</button>
+                <button onclick="window.toggleModal('confirmExitModal', false)" class="btn-neon" style="background:#444; color:white; flex:1;">İPTAL</button>
+            </div>
+        </div>
     </div>
 
     <div id="quickModal" class="modal">
@@ -147,7 +166,20 @@
 
     window.toggleModal = (id, show) => { document.getElementById(id).style.display = show ? 'flex' : 'none'; };
 
-    // --- HIZLI KATIL SİSTEMİ ---
+    // --- EXIT CONTROLLER (MODAL VERSION) ---
+    window.showExitConfirm = () => {
+        if (!curRoomId) { location.reload(); return; }
+        window.toggleModal('confirmExitModal', true);
+    };
+
+    window.finalizeExit = async () => {
+        if (curRoomId) {
+            await updateDoc(doc(db, "conquest_rooms", curRoomId), { status: 'escaped' });
+        }
+        location.reload();
+    };
+
+    // --- HIZLI KATIL / ODA KUR MANTIĞI ---
     window.openQuickModal = async () => {
         window.toggleModal('quickModal', true);
         document.getElementById('quickStatus').innerText = "TARANIYOR...";
@@ -169,19 +201,14 @@
                     window.finalizeJoin(found);
                 }, 1000);
             } else {
-                document.getElementById('quickStatus').innerText = "ODA BULUNAMADI";
+                document.getElementById('quickStatus').innerText = "ODA BULUNAMADI!";
+                setTimeout(() => {
+                    window.toggleModal('quickModal', false);
+                    window.toggleModal('createModal', true); // Boş oda yoksa kurdur
+                }, 1200);
             }
         } catch(e) {
-            console.error(e);
-            document.getElementById('quickStatus').innerText = "HATA OLUŞTU";
-        }
-    };
-
-    window.exitController = async () => {
-        if (!curRoomId) { location.reload(); return; }
-        if (confirm("Savaştan çekilmek istediğine emin misin?")) {
-            await updateDoc(doc(db, "conquest_rooms", curRoomId), { status: 'escaped' });
-            location.reload();
+            window.toggleModal('quickModal', false);
         }
     };
 
@@ -205,23 +232,45 @@
         onSnapshot(collection(db, "conquest_rooms"), snap => {
             const list = document.getElementById('roomList');
             list.innerHTML = "";
+            
+            if (snap.empty) {
+                list.innerHTML = `
+                    <div class="empty-arena">
+                        <p style="color:var(--p1); font-weight:bold; margin-bottom:10px;">ARENA ŞUAN SESSİZ...</p>
+                        <p style="font-size:0.7rem;">İLK SAVAŞI SEN BAŞLATMAK İSTER MİSİN?</p>
+                    </div>`;
+                return;
+            }
+
             snap.forEach(d => {
                 const r = d.data();
-                if(r.status !== 'waiting' || r.p1 === uid) return;
+                if(r.status === 'finished' || r.p1 === uid) return;
+                
+                // Skor hesapla
+                const c = r.cells || {};
+                let s1=0, s2=0; Object.values(c).forEach(v => v === 'p1' ? s1++ : s2++);
+
                 const card = document.createElement('div');
                 card.className = "room-card";
-                card.innerHTML = `<div><b>${r.p1Name}</b><br><small style="color:var(--p1)">MÜSAİT</small></div>
-                <button class="btn-neon" onclick="window.finalizeJoin('${d.id}')">KATIL</button>`;
+                card.innerHTML = `
+                    <div class="room-info">
+                        <b>${r.p1Name} ${r.pass ? '🔒' : ''}</b>
+                        <span class="room-stats">SKOR: ${s1} - ${s2} | DURUM: ${r.status === 'playing' ? 'SAVAŞTA' : 'BEKLİYOR'}</span>
+                    </div>
+                    <button class="btn-neon" style="padding:8px 15px; font-size:0.6rem;" onclick="window.finalizeJoin('${d.id}')">
+                        ${r.status === 'playing' ? 'İZLE/KATIL' : 'KATIL'}
+                    </button>`;
                 list.appendChild(card);
             });
         });
     }
 
     document.getElementById('confirmCreate').onclick = async () => {
+        const pass = document.getElementById('createPass').value;
         const id = Math.random().toString(36).substring(2,7);
         curRoomId = id; myRole = 'p1';
         await setDoc(doc(db, "conquest_rooms", id), {
-            p1: uid, p1Name: username, p2: null, p2Name: "...", cells: {}, timer: 60, status: 'waiting'
+            p1: uid, p1Name: username, p2: null, p2Name: "...", cells: {}, timer: 60, status: 'waiting', pass: pass
         });
         enterGame(id);
     };
