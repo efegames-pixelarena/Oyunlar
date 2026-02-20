@@ -16,13 +16,12 @@
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        
         body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; overflow: hidden; height: 100vh; }
 
-        /* --- NEON BG --- */
-        #neon-bg { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at center, #0a1120 0%, #03050a 100%); }
+        /* --- ANİMASYONLU NEON ARKA PLAN --- */
+        #bg-canvas { position: fixed; inset: 0; z-index: -1; }
 
-        /* --- TOP BAR --- */
+        /* --- ÜST BAR --- */
         .top-bar {
             height: 65px; display: flex; align-items: center; justify-content: space-between;
             padding: 0 15px; background: var(--glass); backdrop-filter: blur(25px);
@@ -34,19 +33,19 @@
         .stat-pill { background: rgba(255,255,255,0.03); padding: 6px 12px; border-radius: 10px; border: 1px solid var(--border); font-size: 12px; font-weight: 800; display: flex; align-items: center; gap: 6px; }
         .exit-btn { background: rgba(255, 77, 77, 0.15); border: 1px solid var(--danger); color: var(--danger); padding: 6px 14px; border-radius: 8px; font-size: 11px; font-weight: 900; cursor: pointer; text-decoration: none; }
 
-        /* --- GAME --- */
+        /* --- OYUN ALANI --- */
         #game-container { width: 100%; height: calc(100vh - 65px); position: relative; }
-        canvas { width: 100%; height: 100%; display: block; }
+        canvas#stackCanvas { width: 100%; height: 100%; display: block; }
 
         .game-overlay { position: absolute; inset: 0; pointer-events: none; display: flex; align-items: center; justify-content: center; z-index: 100; }
-        .modal { background: var(--glass); padding: 40px 30px; border-radius: 30px; border: 1px solid var(--border); text-align: center; backdrop-filter: blur(20px); pointer-events: auto; width: 85%; max-width: 340px; }
-        .btn-action { width: 100%; padding: 16px; border-radius: 15px; border: none; background: var(--primary); color: #000; font-weight: 900; cursor: pointer; text-transform: uppercase; box-shadow: 0 0 20px rgba(79, 209, 255, 0.4); }
-        #score-display { position: absolute; top: 20px; font-size: 110px; font-weight: 900; color: white; opacity: 0.08; }
+        .modal { background: var(--glass); padding: 40px 30px; border-radius: 30px; border: 1px solid var(--border); text-align: center; backdrop-filter: blur(20px); pointer-events: auto; width: 85%; max-width: 340px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+        .btn-action { width: 100%; padding: 18px; border-radius: 15px; border: none; background: var(--primary); color: #000; font-weight: 900; cursor: pointer; text-transform: uppercase; box-shadow: 0 0 20px rgba(79, 209, 255, 0.4); }
+        #score-display { position: absolute; top: 20px; font-size: 110px; font-weight: 900; color: white; opacity: 0.1; }
     </style>
 </head>
 <body onclick="gameInput()">
 
-    <canvas id="neon-bg"></canvas>
+    <canvas id="bg-canvas"></canvas>
 
     <div class="top-bar">
         <div class="brand">PIXELARENA</div>
@@ -63,33 +62,80 @@
             <div id="score-display">0</div>
             <div id="start-ui" class="modal">
                 <h2 style="font-family:'Montserrat'; margin-bottom:15px; color:var(--primary)">CYBER STACK</h2>
-                <p style="color:#94a3b8; font-size:14px; margin-bottom:25px;">Tam zamanında tıkla, kuleyi inşa et!</p>
-                <button class="btn-action" onclick="startGame(event)">BAŞLAT</button>
+                <p style="color:#94a3b8; font-size:14px; margin-bottom:25px;">Kuleyi göklere çıkar! iOS uyumlu sesler aktif edildi.</p>
+                <button class="btn-action" onclick="startGame(event)">OYUNU BAŞLAT</button>
             </div>
             <div id="game-over-ui" class="modal" style="display:none;">
-                <h2 style="font-family:'Montserrat'; margin-bottom:15px; color:var(--danger)">SİSTEM ÇÖKTÜ</h2>
-                <p style="color:#94a3b8; font-size:14px; margin-bottom:25px;">Hizalama hatası. Skorun: <b id="finalScore" style="color:white">0</b></p>
-                <button class="btn-action" onclick="restartGame(event)">YENİDEN DENE</button>
+                <h2 style="font-family:'Montserrat'; margin-bottom:15px; color:var(--danger)">SİSTEM HATASI</h2>
+                <p style="color:#94a3b8; font-size:14px; margin-bottom:25px;">Kule devrildi. Ulaşılan kat: <b id="finalScore" style="color:white">0</b></p>
+                <button class="btn-action" onclick="restartGame(event)">YENİDEN YÜKLE</button>
             </div>
         </div>
     </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
-    // --- SESLER ---
+    // --- SES SİSTEMİ (iOS UYUMLU) ---
     const sounds = {
-        drop: new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3'), // Bırakma
-        fail: new Audio('https://assets.mixkit.co/active_storage/sfx/253/253-preview.mp3'),   // Kaybetme
-        start: new Audio('https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3') // Başlama
+        // Yeni Giriş Sesi (Epic Cyber Intro)
+        intro: new Audio('https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3'),
+        // Her kule konulduğunda (High Tech Click)
+        place: new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3'),
+        // Kaybetme Sesi
+        fail: new Audio('https://assets.mixkit.co/active_storage/sfx/253/253-preview.mp3')
     };
-    Object.values(sounds).forEach(s => s.volume = 0.4);
 
+    // iOS için sesleri önceden yükleme ve kilit açma fonksiyonu
+    function unlockAudio() {
+        Object.values(sounds).forEach(sound => {
+            sound.play();
+            sound.pause();
+            sound.currentTime = 0;
+        });
+    }
+
+    // --- ARKA PLAN ANİMASYONU (Matrix Neon Lines) ---
+    const bgCanvas = document.getElementById('bg-canvas');
+    const bgCtx = bgCanvas.getContext('2d');
+    let particles = [];
+
+    function initBG() {
+        bgCanvas.width = window.innerWidth;
+        bgCanvas.height = window.innerHeight;
+        for(let i=0; i<30; i++) {
+            particles.push({
+                x: Math.random() * bgCanvas.width,
+                y: Math.random() * bgCanvas.height,
+                speed: 0.5 + Math.random() * 2,
+                len: 50 + Math.random() * 150
+            });
+        }
+    }
+
+    function drawBG() {
+        bgCtx.fillStyle = 'rgba(3, 5, 10, 0.2)';
+        bgCtx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
+        bgCtx.strokeStyle = '#4fd1ff';
+        bgCtx.lineWidth = 1;
+
+        particles.forEach(p => {
+            bgCtx.beginPath();
+            bgCtx.moveTo(p.x, p.y);
+            bgCtx.lineTo(p.x, p.y + p.len);
+            bgCtx.stroke();
+            p.y += p.speed;
+            if(p.y > bgCanvas.height) p.y = -p.len;
+        });
+        requestAnimationFrame(drawBG);
+    }
+
+    // --- OYUN MOTORU ---
     let scene, camera, renderer, stack = [], debris = [];
     let gameStarted = false, gameOver = false;
     let score = 0, highScore = localStorage.getItem('stack_highscore') || 0;
-    let speed = 0.12, bgHue = 210;
+    let speed = 0.12;
 
-    function init() {
+    function initGame() {
         document.getElementById('highScore').innerText = highScore;
         scene = new THREE.Scene();
         const aspect = window.innerWidth / (window.innerHeight - 65);
@@ -103,24 +149,24 @@
         const light = new THREE.DirectionalLight(0xffffff, 0.5);
         light.position.set(10, 20, 5); scene.add(light);
 
-        resetGame();
+        resetLevel();
         animate();
     }
 
-    function resetGame() {
+    function resetLevel() {
         stack.forEach(b => scene.remove(b.mesh));
         debris.forEach(d => scene.remove(d.mesh));
         stack = []; debris = [];
         score = 0; speed = 0.12;
         updateUI();
-        addBlock(0, 0, 3, 3, null); // Zemin
-        addBlock(0, 0, 3, 3, 'x'); // Hareketli
+        addBlock(0, 0, 3, 3, null); // Base
+        addBlock(0, 0, 3, 3, 'x'); // Mover
     }
 
     function addBlock(x, z, w, d, dir) {
         const y = stack.length;
-        // RENK MANTIĞI: (Skor * 30) derece döndürerek her katın farklı renk olmasını sağlar
-        const color = new THREE.Color().setHSL((stack.length * 0.15) % 1, 0.8, 0.5);
+        // Farklı renk mantığı
+        const color = new THREE.Color().setHSL((stack.length * 0.1) % 1, 0.8, 0.5);
         const mesh = new THREE.Mesh(
             new THREE.BoxGeometry(w, 1, d),
             new THREE.MeshPhongMaterial({ color, emissive: color, emissiveIntensity: 0.15 })
@@ -132,10 +178,7 @@
 
     function addDebris(x, y, z, w, d) {
         const color = stack[stack.length - 1].mesh.material.color;
-        const mesh = new THREE.Mesh(
-            new THREE.BoxGeometry(w, 1, d),
-            new THREE.MeshPhongMaterial({ color, transparent: true, opacity: 0.8 })
-        );
+        const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, 1, d), new THREE.MeshPhongMaterial({ color, transparent: true, opacity: 0.7 }));
         mesh.position.set(x, y, z);
         scene.add(mesh);
         debris.push({ mesh, velocity: -0.1 });
@@ -153,21 +196,22 @@
         const overlap = size - Math.abs(delta);
 
         if (overlap > 0) {
-            sounds.drop.currentTime = 0; sounds.drop.play();
+            // HER KULE KONULDUĞUNDA SES (iOS için currentTime sıfırlama şart)
+            sounds.place.currentTime = 0;
+            sounds.place.play().catch(e => console.log("Ses hatası:", e));
             
             const newW = dir === 'x' ? overlap : top.width;
             const newD = dir === 'z' ? overlap : top.depth;
             const newX = dir === 'x' ? prev.mesh.position.x + delta/2 : top.mesh.position.x;
             const newZ = dir === 'z' ? prev.mesh.position.z + delta/2 : top.mesh.position.z;
 
-            // Kesilen Parçayı Düşür (Asılı Kalmaması İçin)
-            const debrisSize = size - overlap;
-            let debrisX = newX, debrisZ = newZ;
-            if(dir === 'x') debrisX += (delta > 0 ? overlap/2 + debrisSize/2 : -overlap/2 - debrisSize/2);
-            else debrisZ += (delta > 0 ? overlap/2 + debrisSize/2 : -overlap/2 - debrisSize/2);
-            addDebris(debrisX, top.mesh.position.y, debrisZ, dir === 'x' ? debrisSize : newW, dir === 'z' ? debrisSize : newD);
+            // Parça Düşürme
+            const dSize = size - overlap;
+            let dX = newX, dZ = newZ;
+            if(dir === 'x') dX += (delta > 0 ? overlap/2 + dSize/2 : -overlap/2 - dSize/2);
+            else dZ += (delta > 0 ? overlap/2 + dSize/2 : -overlap/2 - dSize/2);
+            addDebris(dX, top.mesh.position.y, dZ, dir === 'x' ? dSize : newW, dir === 'z' ? dSize : newD);
 
-            // Bloğu Güncelle
             top.mesh.scale[dir] = overlap / size;
             top.mesh.position.set(newX, top.mesh.position.y, newZ);
             top.width = newW; top.depth = newD;
@@ -180,9 +224,6 @@
             addBlock(newX, newZ, newW, newD, dir === 'x' ? 'z' : 'x');
             camera.position.y += 1;
         } else {
-            // Tamamen Kaçırdıysa Bloğu Düşür
-            addDebris(top.mesh.position.x, top.mesh.position.y, top.mesh.position.z, top.width, top.depth);
-            scene.remove(top.mesh);
             sounds.fail.play();
             gameOver = true;
             document.getElementById('game-over-ui').style.display = 'block';
@@ -197,15 +238,10 @@
             top.mesh.position[top.direction] += speed;
             if (Math.abs(top.mesh.position[top.direction]) > 5.5) speed *= -1;
         }
-        // Düşen Parçaları Hareket Ettir
-        debris.forEach((d, index) => {
+        debris.forEach((d, i) => {
             d.velocity -= 0.01;
             d.mesh.position.y += d.velocity;
-            d.mesh.rotation.x += 0.05;
-            if (d.mesh.position.y < -10) {
-                scene.remove(d.mesh);
-                debris.splice(index, 1);
-            }
+            if (d.mesh.position.y < -10) { scene.remove(d.mesh); debris.splice(i, 1); }
         });
         renderer.render(scene, camera);
     }
@@ -216,10 +252,26 @@
         document.getElementById('highScore').innerText = highScore;
     }
 
-    window.startGame = (e) => { e.stopPropagation(); sounds.start.play(); gameStarted = true; document.getElementById('start-ui').style.display = 'none'; };
-    window.restartGame = (e) => { e.stopPropagation(); gameOver = false; camera.position.set(4, 4, 4); document.getElementById('game-over-ui').style.display = 'none'; resetGame(); };
+    window.startGame = (e) => {
+        e.stopPropagation();
+        unlockAudio(); // iOS SES KİLİDİNİ AÇAR
+        sounds.intro.play();
+        gameStarted = true;
+        document.getElementById('start-ui').style.display = 'none';
+    };
 
-    init();
+    window.restartGame = (e) => {
+        e.stopPropagation();
+        gameOver = false;
+        camera.position.y = 4;
+        camera.position.set(4, 4, 4);
+        document.getElementById('game-over-ui').style.display = 'none';
+        resetLevel();
+    };
+
+    initBG();
+    drawBG();
+    initGame();
 </script>
 </body>
 </html>
