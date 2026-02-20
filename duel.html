@@ -90,6 +90,7 @@ body::before {
 .modal-content {
     background: var(--b); width: 100%; max-width: 350px; padding: 25px; border-radius: 20px;
     border: 1px solid var(--p); display: flex; flex-direction: column; gap: 15px;
+    text-align: center;
 }
 .modal-content input {
     background: #000; border: 1px solid #333; padding: 12px; color: var(--p);
@@ -107,6 +108,10 @@ body::before {
 .flash { background: #fff !important; }
 .flash #bigText, .flash #subText { color: #000 !important; }
 
+/* Tutorial Styles */
+.tut-icon { font-size: 50px; margin-bottom: 10px; animation: float 2s infinite ease-in-out; }
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
 .winner-screen { position: fixed; inset: 0; background: #000; z-index: 5000; display: none; flex-direction: column; justify-content: center; align-items: center; }
 .back-btn { background: var(--a); color: white; border: none; padding: 8px 12px; border-radius: 6px; font-weight: 800; font-size: 0.7rem; font-family: 'Orbitron'; }
 .exit-btn { background: #333; color: #ff4444; border: 1px solid #444; padding: 6px 10px; border-radius: 6px; font-weight: 800; font-size: 0.65rem; font-family: 'Orbitron'; }
@@ -122,6 +127,19 @@ body::before {
         <div id="userBox">...</div>
         <button id="lobbyExitBtn" class="exit-btn" onclick="window.location.href='index.html'">ÇIKIŞ</button>
         <button id="leaveBtn" class="back-btn" style="display:none;">AYRIL</button>
+    </div>
+</div>
+
+<div id="tutorialModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="tut-icon">🥊</div>
+        <h2 style="font-family:'Orbitron'; color:var(--p); font-size:1.1rem;">NASIL OYNANIR?</h2>
+        <p style="font-size: 0.85rem; color: #aaa; line-height: 1.4;">
+            Ekran <b style="color:var(--gold)">BEKLE</b> aşamasındayken basma! 
+            Beyaz <b style="color:#fff">FLASH</b> patladığı anda rakibinden önce dokun. 
+            Erken basarsan rakibin puan kazanır. 11 puana ulaşan kazanır!
+        </p>
+        <button id="tutConfirmBtn" style="padding:15px; border-radius:8px; background:var(--p); border:none; color:black; font-weight:900; font-family:'Orbitron'; font-size:0.75rem; cursor:pointer;">ANLADIM, ARENAYA GİR!</button>
     </div>
 </div>
 
@@ -205,6 +223,7 @@ const auth = getAuth(app);
 let uid, username, currentRoomId = null, unsubRoom = null, unsubLobby = null;
 let roomData = null, tapLock = false, countdownInterval = null, lastState = "", lastBigText = "";
 let allRooms = [], serverOffset = 0, offsetCalculated = false, pendingRoomId = null;
+let isTutorialRead = false; // Kullanıcının rehberi okuyup okumadığı
 
 const getServerTime = () => Date.now() + serverOffset;
 
@@ -259,7 +278,7 @@ onAuthStateChanged(auth, async (user) => {
 
 function listenLobby() {
     if(unsubLobby) unsubLobby(); 
-    const q = query(collection(db, "rooms"), where("state", "in", ["waiting", "matched", "countdown", "active", "result"]));
+    const q = query(collection(db, "rooms"), where("state", "in", ["waiting", "matched", "countdown", "active", "result", "finished"]));
     unsubLobby = onSnapshot(q, (snap) => {
         allRooms = snap.docs.map(d => ({id: d.id, ...d.data()}));
         renderRooms();
@@ -326,10 +345,11 @@ document.getElementById("confirmCreateBtn").onclick = async () => {
             player1: uid, player1Name: username, player2: null, player2Name: null,
             score1: 0, score2: 0, round: 1, state: "waiting", host: uid, 
             password: pass, createdAt: serverTimestamp(), penalty: false,
-            displayBig: "READY", displaySub: "BEKLE..."
+            displayBig: "READY", displaySub: "BEKLE...",
+            p1Ready: false, p2Ready: false // Hazır durumu eklendi
         });
         closeModal("createModal"); 
-        enterRoom();
+        openTutorial();
     } catch(e) { btn.disabled = false; }
 };
 
@@ -367,9 +387,28 @@ async function executeJoin(id) {
             });
             currentRoomId = id;
         });
-        enterRoom();
+        openTutorial();
     } catch (e) { alert(e); }
 }
+
+// ÖĞRETİCİ SİSTEMİ
+function openTutorial() {
+    initAudio();
+    document.getElementById("tutorialModal").style.display = "flex";
+}
+
+document.getElementById("tutConfirmBtn").onclick = async () => {
+    initAudio();
+    isTutorialRead = true;
+    closeModal("tutorialModal");
+    enterRoom();
+    
+    // DB'ye hazır olduğunu bildir
+    const isP1 = uid === roomData.player1;
+    await updateDoc(doc(db, "rooms", currentRoomId), {
+        [isP1 ? "p1Ready" : "p2Ready"]: true
+    });
+};
 
 function enterRoom() {
     if(unsubLobby) unsubLobby(); 
@@ -383,7 +422,6 @@ function enterRoom() {
         const d = snap.data();
         roomData = d;
 
-        // UI Verileri
         document.getElementById("p1Name").innerText = (d.player1Name || "---").toUpperCase();
         document.getElementById("p1Score").innerText = d.score1 || 0;
         document.getElementById("p2Name").innerText = (d.player2Name || "BEKLENİYOR").toUpperCase();
@@ -394,11 +432,9 @@ function enterRoom() {
         const subText = document.getElementById("subText");
         const arena = document.getElementById("arena");
 
-        // --- ULTRA SENKRONİZASYON (Host'un ekranını doğrudan yansıtma) ---
         bigText.innerText = d.displayBig || "";
         subText.innerText = d.displaySub || "";
 
-        // Metin veya Renk Değişimini Dinle
         if (d.displayBig !== lastBigText) {
             arena.classList.remove("flash");
             subText.classList.remove("penalty");
@@ -412,22 +448,20 @@ function enterRoom() {
             lastBigText = d.displayBig;
         }
 
-        // --- SADECE HOST'UN HESAPLAYACAĞI MANTIKLAR ---
         if (d.state !== lastState) {
             if (countdownInterval) clearInterval(countdownInterval);
 
-            // Başlangıç tetiği
-            if (d.state === "matched" && uid === d.host) {
+            // SADECE İKİ OYUNCU DA REHBERİ KAPATIP HAZIR OLUNCA BAŞLAR
+            if (d.state === "matched" && uid === d.host && d.p1Ready && d.p2Ready) {
                 setTimeout(() => {
                     updateDoc(doc(db, "rooms", currentRoomId), { 
                         state: "countdown", 
                         displayBig: "HAZIR", displaySub: "ODAKLAN",
                         startTime: getServerTime() + 2500 
                     });
-                }, 1000);
+                }, 500);
             }
 
-            // Geri sayım hesaplama (Sadece Host yapar, DB'ye yazar, Guest sadece görür)
             if (d.state === "countdown" && uid === d.host) {
                 let currentStage = 0;
                 countdownInterval = setInterval(() => {
@@ -448,10 +482,9 @@ function enterRoom() {
                             displayBig: "GO!", displaySub: "ŞİMDİ VUR!" 
                         });
                     }
-                }, 50); // Daha hızlı kontrol için 50ms
+                }, 50);
             }
 
-            // Raund Bitimi (Sadece Host yönetir)
             if (d.state === "result" && uid === d.host) {
                 setTimeout(() => {
                     if(!currentRoomId) return;
@@ -474,7 +507,7 @@ function enterRoom() {
             }
             lastState = d.state;
         }
-    }, (error) => { quitGame(); });
+    });
 }
 
 document.getElementById("arena").addEventListener('pointerdown', async (e) => {
@@ -486,7 +519,6 @@ document.getElementById("arena").addEventListener('pointerdown', async (e) => {
     const d = roomData;
     const roomRef = doc(db, "rooms", currentRoomId);
     
-    // Hatalı Basış
     if (d.state === "countdown" || (d.state === "matched" && d.player2)) {
         tapLock = true;
         const isP1 = uid === d.player1;
@@ -499,7 +531,6 @@ document.getElementById("arena").addEventListener('pointerdown', async (e) => {
         });
         setTimeout(() => tapLock = false, 1000);
     } 
-    // Başarılı Basış
     else if (d.state === "active") {
         tapLock = true;
         const reaction = now - d.roundStart;
