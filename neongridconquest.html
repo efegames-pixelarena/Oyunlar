@@ -3,144 +3,153 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Neon Conquest | Pro Elite V12</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@500;800&display=swap" rel="stylesheet">
+    <title>Neon Conquest | Elite V14</title>
+    <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --p1: #00ff41; --p2: #ff00f7; --bg: #03050a;
-            --glass: rgba(15, 20, 30, 0.9); --border: rgba(0, 242, 255, 0.2);
-            --danger: #ff2d55; --warning: #ffb800; --accent: #00f2ff;
+            --p1: #ff0055; --p2: #00f2ff; --bg: #05070a;
+            --glass: rgba(10, 15, 25, 0.95); --border: #ffcc00;
+            --danger: #ff2d55; --warning: #ffb800; --accent: #7d00ff;
+            --btn-main: #ffcc00; --btn-sec: #00f2ff;
         }
 
-        * { margin:0; padding:0; box-sizing:border-box; font-family: 'JetBrains Mono', monospace; -webkit-tap-highlight-color: transparent; }
-        body { background: var(--bg); color: white; height: 100vh; overflow: hidden; display: flex; flex-direction: column; position: relative; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family: 'Rajdhani', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg); color: #e0e0e0; height: 100vh; overflow: hidden; display: flex; flex-direction: column; position: relative; }
 
-        /* --- ARKA PLAN TASARIMI --- */
-        #lobby-bg { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at 50% 50%, #0a1c2f 0%, #03050a 100%); }
-        .grid-layer {
-            position: absolute; width: 200%; height: 200%; top: -50%; left: -50%;
-            background-image: linear-gradient(to right, rgba(0, 242, 255, 0.05) 1px, transparent 1px), 
-                              linear-gradient(to bottom, rgba(0, 242, 255, 0.05) 1px, transparent 1px);
-            background-size: 50px 50px; transform: perspective(1000px) rotateX(60deg); 
-            animation: gridMove 20s linear infinite;
+        /* --- LOBİ ARKA PLAN (SİBER HEX) --- */
+        #lobby-bg { 
+            position: fixed; inset: 0; z-index: -1; 
+            background: linear-gradient(45deg, #05070a 0%, #0f121d 100%);
+            overflow: hidden;
         }
-        @keyframes gridMove { from { transform: perspective(1000px) rotateX(60deg) translateY(0); } to { transform: perspective(1000px) rotateX(60deg) translateY(50px); } }
+        .hex-pattern {
+            position: absolute; width: 100%; height: 100%;
+            background-image: url('https://www.transparenttextures.com/patterns/carbon-fibre.png');
+            opacity: 0.3;
+        }
+        .scanner {
+            position: absolute; width: 100%; height: 5px; background: var(--btn-sec);
+            box-shadow: 0 0 20px var(--btn-sec); top: -10px; animation: scan 4s linear infinite;
+        }
+        @keyframes scan { 0% { top: -10px; } 100% { top: 100%; } }
 
-        /* --- ÜST BAR TASARIMI (TAŞMA ENGELLİ) --- */
+        /* --- OYUN ARKA PLAN (DEEP GRID) --- */
+        #game-bg-fx { 
+            position: fixed; inset: 0; z-index: -2; background: #000; 
+            display: none; background-image: 
+                linear-gradient(rgba(125, 0, 255, 0.1) 2px, transparent 2px),
+                linear-gradient(90deg, rgba(125, 0, 255, 0.1) 2px, transparent 2px);
+            background-size: 40px 40px;
+            perspective: 500px;
+        }
+        .horizon {
+            position: absolute; bottom: 0; width: 100%; height: 50%;
+            background: linear-gradient(to top, #7d00ff33, transparent);
+            transform: rotateX(60deg); transform-origin: bottom;
+        }
+
+        /* --- ÜST BAR --- */
         .header { 
-            height: 65px; min-height: 65px; padding: 0 15px; display: flex; align-items: center; justify-content: space-between; 
-            background: rgba(0,0,0,0.8); border-bottom: 1px solid var(--border); backdrop-filter: blur(20px); z-index: 100;
+            height: 70px; padding: 0 20px; display: flex; align-items: center; justify-content: space-between; 
+            background: rgba(0,0,0,0.9); border-bottom: 2px solid var(--border); box-shadow: 0 5px 15px rgba(0,0,0,0.5); z-index: 100;
         }
-        .logo { font-family: 'Orbitron'; font-weight: 900; font-size: 0.85rem; color: var(--accent); letter-spacing: 1px; white-space: nowrap; }
-        .user-badge { font-size: 0.6rem; color: var(--p1); border: 1px solid var(--p1); padding: 4px 10px; border-radius: 4px; max-width: 120px; overflow: hidden; text-overflow: ellipsis; }
+        .logo { font-family: 'Black Ops One'; font-size: 1.1rem; color: var(--border); letter-spacing: 2px; text-transform: uppercase; }
+        .user-badge { font-weight: 700; color: var(--p2); border-left: 3px solid var(--p2); padding-left: 10px; font-size: 0.8rem; }
 
-        /* --- LOBİ & BUTONLAR --- */
-        #lobby { flex: 1; padding: 15px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; z-index: 10; }
-        .menu-buttons { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+        /* --- LOBİ VE BUTONLAR --- */
+        #lobby { flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto; z-index: 10; }
         
-        .room-card { 
-            background: var(--glass); border: 1px solid var(--border); padding: 15px; border-radius: 12px; 
-            display: flex; justify-content: space-between; align-items: center; 
-            border-left: 4px solid var(--accent); margin-bottom: 5px;
+        .btn-neon { 
+            background: var(--btn-main); color: #000; border: none; padding: 16px; 
+            font-family: 'Black Ops One'; font-size: 0.9rem; cursor: pointer;
+            clip-path: polygon(5% 0%, 100% 0%, 95% 100%, 0% 100%);
+            transition: 0.3s; width: 100%;
         }
-        .room-info b { font-size: 0.8rem; display: block; margin-bottom: 4px; color: #fff; }
-        .room-stats { font-size: 0.6rem; color: #888; line-height: 1.5; }
-        .live-tag { color: var(--danger); font-weight: 800; animation: blink 1s infinite; }
-        @keyframes blink { 50% { opacity: 0.3; } }
+        .btn-neon:active { transform: scale(0.95); background: #fff; }
+        .btn-sec { background: var(--btn-sec); margin-top: 5px; }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--border); }
 
-        /* --- OYUN İÇİ ÜST BAR & SKORLAR --- */
-        #game-view { display: none; flex: 1; flex-direction: column; z-index: 10; background: rgba(0,0,0,0.4); }
-        .game-hud { display: grid; grid-template-columns: 1fr auto 1fr; padding: 20px 15px; align-items: center; border-bottom: 1px solid var(--border); }
-        .score-wrap { text-align: center; }
-        .score-name { font-size: 0.6rem; margin-bottom: 5px; opacity: 0.8; text-transform: uppercase; }
-        .score-num { font-family: 'Orbitron'; font-size: 1.8rem; font-weight: 900; text-shadow: 0 0 10px currentColor; }
-        #timer-display { font-family: 'Orbitron'; width: 55px; height: 55px; border: 2px solid var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.2rem; color: var(--accent); }
+        .room-card { 
+            background: var(--glass); border: 1px solid rgba(255,204,0,0.2); padding: 18px; border-radius: 4px; 
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;
+            box-shadow: inset 0 0 15px rgba(255,204,0,0.05);
+        }
+        .room-info b { font-family: 'Black Ops One'; color: var(--btn-sec); font-size: 0.9rem; }
+        .room-stats { font-size: 0.75rem; color: #888; font-weight: 700; }
 
         /* --- OYUN ALANI --- */
-        .grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; width: 90vw; max-width: 380px; margin: auto; padding: 10px; }
-        .cell { aspect-ratio: 1/1; background: rgba(255,255,255,0.03); border-radius: 6px; border: 1px solid rgba(255,255,255,0.05); transition: 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .cell.p1 { background: var(--p1); box-shadow: 0 0 15px var(--p1); border: none; transform: scale(0.95); }
-        .cell.p2 { background: var(--p2); box-shadow: 0 0 15px var(--p2); border: none; transform: scale(0.95); }
+        #game-view { display: none; flex: 1; flex-direction: column; z-index: 10; }
+        .game-hud { display: flex; justify-content: space-around; align-items: center; padding: 20px; background: rgba(0,0,0,0.7); }
+        .score-num { font-family: 'Black Ops One'; font-size: 2.2rem; text-shadow: 0 0 15px currentColor; }
+        #timer-display { 
+            font-family: 'Black Ops One'; width: 65px; height: 65px; border: 3px solid var(--warning); 
+            border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+            font-size: 1.4rem; color: var(--warning); box-shadow: 0 0 15px rgba(255,184,0,0.3);
+        }
 
-        /* --- PROFESYONEL MODALLAR --- */
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.92); backdrop-filter: blur(15px); display: none; align-items: center; justify-content: center; z-index: 3000; padding: 20px; }
-        .modal-box { background: #0a0f18; border: 1px solid var(--accent); padding: 25px; border-radius: 20px; width: 100%; max-width: 350px; text-align: center; box-shadow: 0 0 30px rgba(0, 242, 255, 0.1); }
-        .modal-box h3 { font-family: 'Orbitron'; margin-bottom: 15px; font-size: 1.1rem; color: var(--accent); }
-        .modal-input { width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border); padding: 12px; border-radius: 10px; color: #fff; margin-bottom: 15px; text-align: center; outline: none; }
+        .grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; width: 90vw; max-width: 400px; margin: auto; padding: 15px; }
+        .cell { aspect-ratio: 1/1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; }
+        .cell.p1 { background: var(--p1); box-shadow: 0 0 20px var(--p1); border: none; }
+        .cell.p2 { background: var(--p2); box-shadow: 0 0 20px var(--p2); border: none; }
 
-        .btn-neon { background: var(--accent); color: #000; border: none; padding: 14px; border-radius: 10px; font-family: 'Orbitron'; font-weight: 900; cursor: pointer; text-transform: uppercase; font-size: 0.75rem; transition: 0.2s; width: 100%; }
-        .btn-neon:active { transform: scale(0.96); }
-        .btn-outline { background: transparent; border: 1px solid var(--border); color: #fff; margin-top: 10px; }
-        .btn-quick { background: #fff; color: #000; }
-
-        /* --- OYUN İÇİ EFEKT --- */
-        #game-bg-fx { position: fixed; inset: 0; z-index: -2; background: #000; overflow: hidden; display: none; }
-        .warp { position: absolute; background: #fff; width: 1px; height: 20px; opacity: 0.4; animation: warpMove linear infinite; }
-        @keyframes warpMove { from { transform: translateY(-100px); } to { transform: translateY(110vh); } }
+        /* --- MODALLAR --- */
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.96); backdrop-filter: blur(10px); display: none; align-items: center; justify-content: center; z-index: 5000; padding: 20px; }
+        .modal-box { background: #0d1117; border: 2px solid var(--border); padding: 30px; width: 100%; max-width: 360px; text-align: center; position: relative; }
+        .modal-box::before { content: 'SYSTEM ALERT'; position: absolute; top: -12px; left: 20px; background: var(--border); color: #000; padding: 0 10px; font-weight: 900; font-size: 0.7rem; }
+        .modal-box h3 { font-family: 'Black Ops One'; color: var(--border); margin-bottom: 15px; }
+        .modal-input { width: 100%; background: #161b22; border: 1px solid #30363d; padding: 15px; color: #fff; margin-bottom: 20px; text-align: center; font-size: 1.1rem; }
     </style>
 </head>
-<body onclick="window.unlockAudio()">
+<body onclick="window.unlockAudio()" onbeforeunload="window.handleForceQuit()">
 
-    <div id="lobby-bg"><div class="grid-layer"></div></div>
-    <div id="game-bg-fx"></div>
+    <div id="lobby-bg">
+        <div class="hex-pattern"></div>
+        <div class="scanner"></div>
+    </div>
+    <div id="game-bg-fx"><div class="horizon"></div></div>
 
     <div class="header">
-        <div class="user-badge" id="meName">CONNECTING...</div>
+        <div class="user-badge" id="meName">INITIALIZING...</div>
         <div class="logo">NEON CONQUEST</div>
-        <button onclick="location.reload()" style="background:none; border:1px solid var(--danger); color:var(--danger); padding:5px 12px; border-radius:6px; font-size:0.6rem; font-weight:800;">AYRIL</button>
+        <button onclick="window.leaveRoom()" style="background:var(--danger); border:none; color:white; padding:8px 15px; font-weight:900; cursor:pointer; font-size:0.7rem;">AYRIL</button>
     </div>
 
     <div id="lobby">
-        <div class="menu-buttons">
-            <button class="btn-neon" onclick="window.toggleModal('createModal', true)">ARENA OLUŞTUR</button>
-            <button class="btn-neon btn-quick" onclick="window.quickJoin()">HIZLI KATIL</button>
-            <button class="btn-neon btn-outline" onclick="window.toggleModal('howToModal', true)">NASIL OYNANIR?</button>
-        </div>
+        <button class="btn-neon" onclick="window.toggleModal('createModal', true)">ARENA OLUŞTUR</button>
+        <button class="btn-neon btn-sec" onclick="window.quickJoin()">HIZLI SAVAŞ</button>
         <div id="roomList"></div>
     </div>
 
     <div id="game-view">
         <div class="game-hud">
-            <div class="score-wrap" style="color:var(--p1)">
-                <div class="score-name" id="n1">PILOT 1</div>
-                <div class="score-num" id="s1">0</div>
-            </div>
+            <div style="color:var(--p1); text-align:center;"><small id="n1">P1</small><div class="score-num" id="s1">0</div></div>
             <div id="timer-display">60</div>
-            <div class="score-wrap" style="color:var(--p2)">
-                <div class="score-name" id="n2">PILOT 2</div>
-                <div class="score-num" id="s2">0</div>
-            </div>
+            <div style="color:var(--p2); text-align:center;"><small id="n2">P2</small><div class="score-num" id="s2">0</div></div>
         </div>
-        <div id="statusInfo" style="text-align:center; padding:10px; color:var(--accent); font-size:0.6rem; letter-spacing: 3px; opacity:0.6;">SİSTEMLER AKTİF...</div>
         <div class="grid" id="grid"></div>
     </div>
 
-    <div id="howToModal" class="modal">
-        <div class="modal-box">
-            <h3>MİSYON REHBERİ</h3>
-            <div style="text-align:left; font-size:0.75rem; color:#aaa; line-height:1.7; margin-bottom:20px;">
-                • 6x6 boyutundaki arenada hücrelere dokunarak kendi rengine boya.<br>
-                • Rakibin hücrelerini tekrar boyayarak çalabilirsin.<br>
-                • 60 saniye sonunda en fazla hücreye sahip olan kazanır.<br>
-                • Hızlı ol, stratejini kur!
-            </div>
-            <button onclick="window.toggleModal('howToModal', false)" class="btn-neon">ANLAŞILDI</button>
+    <div id="disconnectModal" class="modal">
+        <div class="modal-box" style="border-color:var(--danger)">
+            <h3 style="color:var(--danger)">BAĞLANTI KESİLDİ</h3>
+            <p id="dcMsg" style="margin-bottom:25px; line-height:1.5;">Rakip sahadan ayrıldı veya bağlantısı koptu. Oda kapatılıyor.</p>
+            <button class="btn-neon" onclick="location.reload()">LOBİYE DÖN</button>
         </div>
     </div>
 
     <div id="createModal" class="modal">
         <div class="modal-box">
-            <h3>ARENA AYARLARI</h3>
-            <input type="password" id="createPass" class="modal-input" placeholder="ŞİFRE (OPSİYONEL)">
-            <button class="btn-neon" id="confirmCreate">ARENAYI AÇ</button>
-            <button onclick="window.toggleModal('createModal', false)" class="btn-neon btn-outline">İPTAL</button>
+            <h3>OPERASYON MERKEZİ</h3>
+            <input type="password" id="createPass" class="modal-input" placeholder="ŞİFRE (BOŞ BIRAKILABİLİR)">
+            <button class="btn-neon" id="confirmCreate">ARENAYI AKTİF ET</button>
+            <button onclick="window.toggleModal('createModal', false)" class="btn-neon btn-outline" style="margin-top:10px;">İPTAL</button>
         </div>
     </div>
 
     <div id="resultModal" class="modal">
         <div class="modal-box">
-            <h2 id="winnerLabel" style="font-family:'Orbitron'; margin-bottom:10px;">ZAFER!</h2>
-            <div id="scoreLabel" style="font-size:2.5rem; color:var(--accent); margin-bottom:20px;">0 - 0</div>
+            <h2 id="winnerLabel" style="font-family:'Black Ops One'; color:var(--btn-sec);">ZAFER!</h2>
+            <div id="scoreLabel" style="font-size:3rem; margin:20px 0;">0 - 0</div>
             <button class="btn-neon" onclick="location.reload()">MERKEZE DÖN</button>
         </div>
     </div>
@@ -166,34 +175,38 @@
     const sfx = {
         lobby: new Audio('https://codeskulptor-demos.commondatastorage.googleapis.com/GalaxyInvaders/theme.mp3'),
         game: new Audio('https://codeskulptor-demos.commondatastorage.googleapis.com/descent/background%20music.mp3'),
-        tap: new Audio('https://cdn.pixabay.com/audio/2022/03/15/audio_78396032a7.mp3'),
-        win: new Audio('https://cdn.pixabay.com/audio/2021/08/04/audio_0625c1539c.mp3')
+        tap: new Audio('https://cdn.pixabay.com/audio/2022/03/15/audio_78396032a7.mp3')
     };
-    sfx.lobby.loop = true; sfx.game.loop = true; sfx.lobby.volume = 0.4; sfx.game.volume = 0.3;
+    sfx.lobby.loop = true; sfx.game.loop = true;
 
     let audioReady = false, uid, username, curRoomId = null, myRole, isFin = false, canPlay = false, timerInt = null;
     let unsubLobby = null, unsubGame = null;
 
     window.toggleModal = (id, show) => { document.getElementById(id).style.display = show ? 'flex' : 'none'; };
 
+    // --- KRİTİK: AYRILMA VE KAPATMA SİSTEMİ ---
+    window.leaveRoom = async () => {
+        if(curRoomId) {
+            await updateDoc(doc(db, "conquest_rooms", curRoomId), { status: 'terminated', leaver: username });
+        }
+        location.reload();
+    };
+
+    window.handleForceQuit = () => {
+        if(curRoomId && !isFin) {
+            // Senkronize çalıştırmak zor olduğu için sadece lobiye atmayı hedefler
+            updateDoc(doc(db, "conquest_rooms", curRoomId), { status: 'terminated', leaver: username });
+        }
+    };
+
     onAuthStateChanged(auth, async user => {
         if(!user) { signInAnonymously(auth); return; }
         uid = user.uid;
-        
-        // 1. KULLANICI ADI FIREBASE'DEN
         const userRef = doc(db, "users", uid);
         const userSnap = await getDoc(userRef);
-        
-        if(userSnap.exists() && userSnap.data().username) {
-            username = userSnap.data().username;
-        } else {
-            username = "PILOT_" + uid.slice(0,4).toUpperCase();
-            await setDoc(userRef, { username: username }, { merge: true });
-        }
-        
+        username = userSnap.exists() ? userSnap.data().username : "PILOT_" + uid.slice(0,4).toUpperCase();
         document.getElementById('meName').innerText = username;
         listenLobby();
-        initWarp();
     });
 
     function listenLobby() {
@@ -209,54 +222,42 @@
                 const r = d.data();
                 const roomAge = r.createdAt ? (now - r.createdAt.toMillis()) / 1000 : 0;
 
-                // HAYALET ODA TEMİZLİĞİ (70 saniyeden eski ve dolmamış odaları siler)
-                if(roomAge > 70 && r.status === 'waiting') {
+                // ÜST SEVİYE TEMİZLİK (300 saniye/5dk üstü her oda silinir)
+                if(roomAge > 300) {
                     deleteDoc(doc(db, "conquest_rooms", d.id));
                     return;
                 }
 
                 if(r.p1 === uid) return;
 
-                // LOBİDE CANLI SKOR VE SÜRE
-                const cells = r.cells || {};
-                let s1=0, s2=0; Object.values(cells).forEach(v => v==='p1'?s1++:s2++);
-
                 const card = document.createElement('div');
                 card.className = "room-card";
                 card.innerHTML = `
                     <div class="room-info">
-                        <b>${r.p1Name} ARENASI ${r.pass ? '🔒' : ''}</b>
-                        <span class="room-stats">
-                            ${r.status === 'playing' ? '<span class="live-tag">CANLI</span>' : 'BEKLENİYOR'}<br>
-                            SKOR: <span style="color:var(--p1)">${s1}</span>-<span style="color:var(--p2)">${s2}</span> | SÜRE: ${r.timer}s
-                        </span>
+                        <b>${r.p1Name} UNIT</b>
+                        <div class="room-stats">${r.status === 'playing' ? 'AKTİF SAVAŞ' : 'BEKLENİYOR'} | ${r.timer}S</div>
                     </div>
-                    <button class="btn-neon" style="width:auto; padding:8px 15px; font-size:0.6rem; background:${r.status==='playing'?'#222':'var(--accent)'}" 
+                    <button class="btn-neon" style="width:auto; padding:8px 15px; font-size:0.7rem; background:${r.status==='playing'?'#333':'var(--btn-sec)'}" 
                         onclick="${r.status==='playing'?'':'window.joinHandler(\''+d.id+'\', \''+(r.pass||'')+'\')'}">
-                        ${r.status==='playing'?'DOLU':'KATIL'}
+                        ${r.status==='playing'?'DOLU':'SAVAŞA GİR'}
                     </button>`;
                 list.appendChild(card);
             });
-            if(list.innerHTML === "") list.innerHTML = `<div style="text-align:center; padding:30px; color:#444; font-size:0.7rem;">ARENA ARANIYOR...</div>`;
         });
     }
 
     window.quickJoin = () => {
-        const available = document.querySelector('.room-card button:not([style*="background:#222"])');
-        if(available) available.click();
-        else alert("Şu an boş şifresiz arena bulunamadı!");
+        const available = document.querySelector('.room-card button:not([style*="#333"])');
+        if(available) available.click(); else alert("Boş arena bulunamadı!");
     };
 
     document.getElementById('confirmCreate').onclick = async () => {
-        const pass = document.getElementById('createPass').value;
-        const id = "ARENA_" + Math.random().toString(36).substring(2,8).toUpperCase();
+        const id = "OP_" + Math.random().toString(36).substring(2,7).toUpperCase();
         curRoomId = id; myRole = 'p1';
-        
         await setDoc(doc(db, "conquest_rooms", id), {
-            p1: uid, p1Name: username, p2: null, p2Name: "...", cells: {}, 
-            timer: 60, status: 'waiting', pass: pass, createdAt: serverTimestamp()
+            p1: uid, p1Name: username, p2: null, cells: {}, 
+            timer: 60, status: 'waiting', pass: document.getElementById('createPass').value, createdAt: serverTimestamp()
         });
-        
         enterGame(id);
     };
 
@@ -286,13 +287,19 @@
             if(!snap.exists()) { if(!isFin) location.reload(); return; }
             const d = snap.data();
             
-            document.getElementById('n1').innerText = d.p1Name;
-            document.getElementById('n2').innerText = d.p2Name;
+            // --- BAĞLANTI KESİLME MODAL KONTROLÜ ---
+            if(d.status === 'terminated' && !isFin) {
+                isFin = true; clearInterval(timerInt);
+                document.getElementById('dcMsg').innerText = `${d.leaver} sahadan ayrıldı. Veri akışı kesildi.`;
+                window.toggleModal('disconnectModal', true);
+                return;
+            }
+
+            document.getElementById('n1').innerText = d.p1Name || "P1";
+            document.getElementById('n2').innerText = d.p2Name || "P2";
             document.getElementById('timer-display').innerText = d.timer;
 
             if(d.status === 'playing' && !canPlay) canPlay = true;
-            
-            // MASTER TIMER
             if(myRole === 'p1' && d.status === 'playing' && !timerInt) {
                 timerInt = setInterval(() => {
                     if(d.timer > 0) updateDoc(doc(db, "conquest_rooms", id), { timer: increment(-1) });
@@ -303,37 +310,20 @@
             let s1=0, s2=0;
             const cells = d.cells || {};
             document.querySelectorAll('.cell').forEach((c, i) => {
-                if(cells[i]) { 
-                    c.className = 'cell ' + cells[i]; 
-                    cells[i] === 'p1' ? s1++ : s2++; 
-                }
+                if(cells[i]) { c.className = 'cell ' + cells[i]; cells[i] === 'p1' ? s1++ : s2++; }
             });
             document.getElementById('s1').innerText = s1; document.getElementById('s2').innerText = s2;
-            
             if(d.status === 'finished' && !isFin) finish(id, s1, s2);
         });
     }
 
     async function finish(id, s1, s2) {
         isFin = true; clearInterval(timerInt);
-        sfx.game.pause(); sfx.win.play();
         const win = (myRole === 'p1' && s1 > s2) || (myRole === 'p2' && s2 > s1);
-        document.getElementById('winnerLabel').innerText = win ? "ZAFER!" : "KAYBETTİN";
+        document.getElementById('winnerLabel').innerText = win ? "GÖREV BAŞARILI" : "GÖREV BAŞARISIZ";
         document.getElementById('scoreLabel').innerText = `${s1} - ${s2}`;
         window.toggleModal('resultModal', true);
         if(myRole === 'p1') setTimeout(() => deleteDoc(doc(db, "conquest_rooms", id)), 5000);
-    }
-
-    function initWarp() {
-        const bg = document.getElementById('game-bg-fx');
-        for(let i=0; i<40; i++) {
-            const star = document.createElement('div');
-            star.className = 'warp';
-            star.style.left = Math.random() * 100 + 'vw';
-            star.style.animationDuration = (Math.random() * 1 + 0.5) + 's';
-            star.style.animationDelay = Math.random() * 2 + 's';
-            bg.appendChild(star);
-        }
     }
 
     window.unlockAudio = () => { if(audioReady) return; sfx.lobby.play(); audioReady = true; };
