@@ -3,147 +3,151 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>PixelArena | Ultra Gaming Experience</title>
+<title>PixelArena | Profesyonel Oyun Platformu</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 <style>
 :root {
-    --primary: #00d2ff;
-    --primary-glow: rgba(0, 210, 255, 0.4);
-    --accent: #9d50bb;
-    --bg-dark: #02040a;
-    --card-bg: rgba(13, 17, 28, 0.7);
-    --glass: rgba(6, 9, 16, 0.92);
+    --primary: #00e5ff; /* Turkuaz Neon */
+    --primary-glow: rgba(0, 229, 255, 0.3);
+    --accent: #bc13fe; /* Mor Neon */
+    --bg-dark: #05070a;
+    --card-bg: rgba(15, 18, 26, 0.8);
+    --glass: rgba(5, 7, 10, 0.9);
     --border: rgba(255, 255, 255, 0.05);
-    --text-main: #e2e8f0;
-    --text-dim: #94a3b8;
-    --success: #00ffa3;
-    --danger: #ff4d6d;
+    --text-main: #ffffff;
+    --text-dim: #8e9aaf;
+    --success: #00ff88;
+    --danger: #ff3366;
 }
 
-* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; transition: all 0.2s ease; }
-body { 
-    background: var(--bg-dark); 
-    color: var(--text-main); 
-    font-family: 'Inter', sans-serif; 
-    overflow-x:hidden;
-    background-image: radial-gradient(circle at 50% -20%, #1e1b4b 0%, #02040a 100%);
-}
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; font-family: 'Inter', sans-serif; }
+body { background: var(--bg-dark); color: var(--text-main); overflow-x:hidden; line-height: 1.6; }
 
-#snow { position:fixed; top:0; left:0; width:100%; height:100%; z-index:1; pointer-events:none; opacity: 0.3; }
+/* Dinamik Arka Plan Efekti */
+#snow { position:fixed; top:0; left:0; width:100%; height:100%; z-index:1; pointer-events:none; opacity: 0.4; }
 
-/* --- Üst Bar (Nav) --- */
+/* --- Üst Menü --- */
 .top-bar {
     position: fixed; top: 0; width: 100%; height: 70px;
     display: flex; align-items: center; justify-content: space-between;
-    padding: 0 5%; background: var(--glass);
-    backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); z-index: 2000;
+    padding: 0 40px; background: var(--glass);
+    backdrop-filter: blur(25px); border-bottom: 1px solid var(--border); z-index: 2000;
 }
 
 .brand {
-    font-family: 'Orbitron', sans-serif; font-size: 22px; font-weight: 900; 
+    font-family: 'Orbitron', sans-serif; font-size: 24px; font-weight: 900; 
     letter-spacing: 2px; color: #fff; text-shadow: 0 0 10px var(--primary-glow);
+    display: flex; align-items: center; gap: 10px;
 }
 .brand span { color: var(--primary); }
 
 .right-menu { display: flex; gap: 12px; align-items: center; }
 
 .user-pill { 
-    display: none; align-items: center; gap: 12px; background: rgba(255,255,255,0.03); 
-    padding: 5px 5px 5px 15px; border-radius: 14px; border: 1px solid var(--border); 
-    cursor: pointer; position: relative;
+    display: none; align-items: center; gap: 12px; 
+    background: rgba(255,255,255,0.03); padding: 6px 6px 6px 15px; 
+    border-radius: 14px; border: 1px solid var(--border); cursor: pointer; position: relative;
+    transition: 0.3s;
 }
-.user-pill:hover { border-color: var(--primary); background: rgba(255,255,255,0.07); }
-
+.user-pill:hover { background: rgba(255,255,255,0.07); border-color: var(--primary); }
 .balance-info b { font-size: 14px; color: var(--success); font-family: 'Orbitron', sans-serif; }
-.avatar { width: 36px; height: 36px; border-radius: 10px; overflow: hidden; border: 1.5px solid var(--primary); }
+.avatar { width: 34px; height: 34px; border-radius: 10px; overflow: hidden; border: 1.5px solid var(--primary); }
 .avatar img { width: 100%; height: 100%; object-fit: cover; }
 
 .dropdown {
-    position: absolute; top: 60px; right: 0; width: 230px;
-    background: #0d111b; border: 1px solid var(--border);
-    border-radius: 18px; display: none; flex-direction: column; overflow: hidden;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.8); z-index: 3000; padding: 8px;
+    position: absolute; top: 60px; right: 0; width: 240px;
+    background: #0a0c10; border: 1px solid var(--border);
+    border-radius: 20px; display: none; flex-direction: column; overflow: hidden;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.8); z-index: 3000; padding: 10px;
 }
-.dropdown.active { display: flex; animation: slideUp 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28); }
-@keyframes slideUp { from { opacity:0; transform: translateY(15px); } to { opacity:1; transform: translateY(0); } }
+.dropdown.active { display: flex; animation: slideUp 0.3s ease; }
+@keyframes slideUp { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
 
 .drop-item { padding: 12px 15px; display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--text-dim); font-weight: 600; font-size: 14px; border-radius: 12px; }
 .drop-item i { width: 20px; font-size: 16px; color: var(--primary); }
-.drop-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
+.drop-item:hover { background: rgba(0,229,255,0.05); color: #fff; }
 
-.btn { padding: 10px 22px; border-radius: 12px; border: none; font-weight: 800; font-family: 'Orbitron', sans-serif; font-size: 11px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; }
+.btn { padding: 10px 20px; border-radius: 12px; border: none; font-weight: 800; font-family: 'Orbitron', sans-serif; font-size: 11px; cursor: pointer; transition: 0.3s; text-transform: uppercase; letter-spacing: 1px; }
 .login-btn { background: transparent; color: white; border: 1px solid var(--border); }
 .login-btn:hover { background: rgba(255,255,255,0.05); border-color: #fff; }
 .register-btn { background: var(--primary); color: #000; box-shadow: 0 4px 15px var(--primary-glow); }
-.register-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px var(--primary-glow); }
+.register-btn:hover { transform: scale(1.05); }
 
-/* --- Hero & Arama --- */
-.hero { margin-top: 130px; text-align: center; padding: 0 20px; }
-.hero h1 { font-family: 'Orbitron', sans-serif; font-size: 32px; margin-bottom: 10px; background: linear-gradient(to bottom, #fff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-.search-container { max-width: 550px; margin: 30px auto; position: relative; }
-.search-container input { width: 100%; padding: 18px 25px; border-radius: 20px; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border); color: white; outline: none; font-size: 15px; backdrop-filter: blur(10px); }
-.search-container input:focus { border-color: var(--primary); box-shadow: 0 0 20px var(--primary-glow); }
+/* --- Arama & Hero --- */
+.hero-search { margin-top: 120px; text-align:center; padding: 0 20px; }
+.hero-search h1 { font-family: 'Orbitron', sans-serif; font-size: 2.5rem; margin-bottom: 20px; color: #fff; }
+.search-container input { 
+    width: 100%; max-width: 600px; padding: 18px 25px; border-radius: 20px; 
+    background: var(--card-bg); border: 1px solid var(--border); color: white; 
+    outline: none; font-size: 16px; transition: 0.3s;
+}
+.search-container input:focus { border-color: var(--primary); box-shadow: 0 0 25px var(--primary-glow); }
 
 /* --- Oyun Kartları --- */
 .section-title {
-    padding: 40px 10% 20px; font-family: 'Orbitron', sans-serif; font-size: 13px;
-    text-transform: uppercase; letter-spacing: 3px; color: var(--primary);
-    display: flex; align-items: center; gap: 15px;
+    padding: 50px 10% 25px; font-family: 'Orbitron', sans-serif; font-size: 14px; 
+    font-weight: 900; text-transform: uppercase; letter-spacing: 3px; color: var(--primary);
+    display: flex; align-items: center; gap: 20px;
 }
-.section-title::after { content: ''; flex: 1; height: 1px; background: linear-gradient(to right, var(--border), transparent); }
+.section-title::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, var(--border), transparent); }
 
 .games-grid {
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); 
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); 
     gap: 25px; padding: 0 10%;
 }
 
 .game-card {
-    background: var(--card-bg); border-radius: 28px; padding: 40px 25px;
+    background: var(--card-bg); border-radius: 24px; padding: 40px 20px;
     text-align: center; border: 1px solid var(--border); position: relative;
-    cursor: pointer; z-index: 10; overflow: hidden;
+    transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: pointer; overflow: hidden;
 }
-.game-card:hover { transform: translateY(-10px); border-color: var(--primary); background: rgba(20, 25, 40, 0.9); box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
-.game-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: var(--primary); opacity: 0; }
+.game-card:hover { transform: translateY(-12px); border-color: var(--primary); background: rgba(0, 229, 255, 0.02); }
+.game-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(180deg, transparent, rgba(0, 229, 255, 0.05)); opacity: 0; transition: 0.3s; }
 .game-card:hover::before { opacity: 1; }
 
-.game-icon { font-size: 50px; margin-bottom: 20px; display: block; filter: drop-shadow(0 5px 15px rgba(0,0,0,0.5)); }
-.game-card span { font-family: 'Orbitron', sans-serif; font-size: 17px; display: block; margin-bottom: 12px; color: #fff; }
-
-.badge { font-size: 10px; font-weight: 800; padding: 6px 15px; border-radius: 8px; display: inline-block; background: rgba(255, 255, 255, 0.04); color: var(--text-dim); text-transform: uppercase; }
-.badge-free { color: var(--success) !important; background: rgba(0, 255, 163, 0.1) !important; border: 1px solid rgba(0, 255, 163, 0.2); }
-
-/* --- Footer --- */
-.footer { background: #010205; padding: 60px 20px; border-top: 1px solid var(--border); text-align: center; margin-top: 100px; }
-.social-btn {
-    width: 45px; height: 45px; background: #0b0f1a; border-radius: 12px;
-    display: inline-flex; align-items: center; justify-content: center; margin: 0 8px;
-    transition: 0.3s; border: 1px solid var(--border); color: white; text-decoration: none; font-size: 20px;
+.game-icon { 
+    font-size: 50px; margin-bottom: 20px; display: block; 
+    color: var(--primary); filter: drop-shadow(0 0 15px var(--primary-glow));
 }
-.social-btn:hover { background: var(--primary); color: #000; transform: translateY(-5px); box-shadow: 0 5px 15px var(--primary-glow); }
+.game-card span { font-family: 'Orbitron', sans-serif; font-weight: 800; font-size: 18px; display: block; margin-bottom: 12px; letter-spacing: 1px; }
+
+.badge { 
+    font-size: 10px; font-weight: 800; padding: 6px 14px; border-radius: 8px; 
+    background: rgba(255, 255, 255, 0.05); color: var(--text-dim); text-transform: uppercase;
+}
+.badge-free { color: var(--success) !important; background: rgba(0, 255, 136, 0.1) !important; border: 1px solid rgba(0, 255, 136, 0.2); }
 
 /* --- Modallar --- */
 .modal-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.96); backdrop-filter: blur(15px);
+    background: rgba(0,0,0,0.95); backdrop-filter: blur(10px);
     display: none; align-items: center; justify-content: center; z-index: 5000;
 }
-.modal-card { width: 90%; max-width: 460px; padding: 40px; border-radius: 30px; background: #0d111b; border: 1px solid var(--border); text-align: center; position: relative; }
-.modal-card h2 { font-family: 'Orbitron', sans-serif; margin-bottom: 25px; color: #fff; font-size: 20px; }
-.modal-card input { width: 100%; padding: 16px; margin-bottom: 15px; border-radius: 15px; background: #05070f; border: 1px solid var(--border); color: white; outline: none; }
-.modal-card input:focus { border-color: var(--primary); }
-.modal-btn { width: 100%; padding: 16px; border-radius: 15px; border: none; background: var(--primary); color: #000; font-family: 'Orbitron', sans-serif; font-weight: 900; cursor: pointer; margin-top: 10px; }
+.modal-card { width: 90%; max-width: 480px; padding: 40px; border-radius: 32px; background: #0e1117; border: 1px solid var(--border); text-align: center; }
+.modal-card h2 { font-family: 'Orbitron', sans-serif; font-size: 22px; margin-bottom: 25px; }
+.modal-card input { width: 100%; padding: 15px; margin-bottom: 15px; border-radius: 15px; background: #05070a; border: 1px solid var(--border); color: white; outline: none; }
+.modal-btn { width: 100%; padding: 16px; border-radius: 15px; border: none; background: var(--primary); color: #000; font-family: 'Orbitron', sans-serif; font-weight: 900; cursor: pointer; font-size: 14px; }
 
-.avatar-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 20px 0; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 20px; }
-.avatar-item { width: 100%; aspect-ratio: 1/1; border-radius: 12px; cursor: pointer; border: 2px solid transparent; overflow: hidden; }
-.avatar-item.active { border-color: var(--primary); transform: scale(1.1); box-shadow: 0 0 15px var(--primary-glow); }
+.avatar-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 20px 0; }
+.avatar-item { width: 100%; aspect-ratio: 1/1; border-radius: 15px; cursor: pointer; border: 2px solid transparent; transition: 0.2s; overflow: hidden; }
+.avatar-item.active { border-color: var(--primary); box-shadow: 0 0 15px var(--primary); }
+
+/* --- Footer --- */
+.footer { background: #020305; padding: 80px 20px; border-top: 1px solid var(--border); text-align: center; margin-top: 100px; }
+.social-btn {
+    width: 45px; height: 45px; background: #0a0c10; border-radius: 14px;
+    display: inline-flex; align-items: center; justify-content: center; margin: 0 8px;
+    transition: 0.3s; border: 1px solid var(--border); color: white; text-decoration: none; font-size: 20px;
+}
+.social-btn:hover { background: var(--primary); transform: translateY(-5px); color: #000; box-shadow: 0 5px 20px var(--primary-glow); }
 
 @media(max-width: 768px) {
     .games-grid { grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 0 15px; }
-    .top-bar { height: 65px; padding: 0 15px; }
-    .hero h1 { font-size: 24px; }
+    .top-bar { padding: 0 20px; }
+    .hero-search h1 { font-size: 1.8rem; }
 }
 </style>
 </head>
@@ -163,32 +167,32 @@ body {
                 <img src="" id="userProfileImg">
             </div>
             <div class="dropdown" id="userDropdown">
-                <div class="drop-item" onclick="openModal('profileModal')"><i class="fa-solid fa-user-gear"></i> Profil Ayarları</div>
-                <div class="drop-item" onclick="openModal('wheelModal')"><i class="fa-solid fa-dharmachakra"></i> Günlük Çark</div>
-                <div class="drop-item" onclick="openModal('bonusModal')"><i class="fa-solid fa-gift"></i> Bonus Kodu</div>
-                <div class="drop-item" id="logoutBtn" style="color:var(--danger); border-top:1px solid var(--border); margin-top:5px;"><i class="fa-solid fa-power-off"></i> Güvenli Çıkış</div>
+                <div class="drop-item" onclick="openModal('profileModal')"><i class="fa-solid fa-id-card"></i> Profilim</div>
+                <div class="drop-item" onclick="openModal('wheelModal')"><i class="fa-solid fa-spinner"></i> Şans Çarkı</div>
+                <div class="drop-item" onclick="openModal('bonusModal')"><i class="fa-solid fa-ticket"></i> Bonus Kullan</div>
+                <div class="drop-item" id="logoutBtn" style="color:var(--danger); border-top:1px solid var(--border); margin-top:5px;"><i class="fa-solid fa-power-off"></i> Çıkış Yap</div>
             </div>
         </div>
     </div>
 </div>
 
-<header class="hero">
+<div class="hero-search">
     <h1>ARENAYA HOŞ GELDİN</h1>
     <div class="search-container">
-        <input type="text" id="searchInput" placeholder="Favori oyununu hemen bul...">
+        <input type="text" id="searchInput" placeholder="Oynamak istediğin oyunu ara...">
     </div>
-</header>
+</div>
 
 <main id="games">
-    <div class="section-title">Çok Oyunculu</div>
+    <div class="section-title">Rekabetçi Modlar</div>
     <div class="games-grid">
         <div class="game-card" data-name="reflex duel" onclick="checkLogin('duel.html')">
-            <div class="game-icon">🥊</div>
+            <i class="fa-solid fa-hand-fist game-icon"></i>
             <span>Reflex Duel</span>
             <div class="badge auth-badge">ONLINE PVP</div>
         </div>
         <div class="game-card" data-name="neon grid conquest" onclick="checkLogin('neongridconquest.html')">
-            <div class="game-icon">💎</div>
+            <i class="fa-solid fa-border-all game-icon"></i>
             <span>Grid Conquest</span>
             <div class="badge auth-badge">ONLINE PVP</div>
         </div>
@@ -197,118 +201,120 @@ body {
     <div class="section-title">Zeka & Strateji</div>
     <div class="games-grid">
         <div class="game-card" data-name="loops" onclick="location.href='loops.html'">
-            <div class="game-icon">🧠</div>
+            <i class="fa-solid fa-infinity game-icon"></i>
             <span>Loops</span>
-            <div class="badge badge-free">Ücretsiz</div>
+            <div class="badge badge-free">HERKESE AÇIK</div>
         </div>
         <div class="game-card" data-name="pattern master" onclick="location.href='patternmaster.html'">
-            <div class="game-icon">🥇</div>
+            <i class="fa-solid fa-microchip game-icon"></i>
             <span>Pattern Master</span>
-            <div class="badge badge-free">Ücretsiz</div>
+            <div class="badge badge-free">HERKESE AÇIK</div>
         </div>
     </div>
 
-    <div class="section-title">Premium Seçenekler</div>
+    <div class="section-title">Premium Arenalar</div>
     <div class="games-grid">
         <div class="game-card" data-name="skycrash" onclick="checkLogin('skycrash.html')">
-            <div class="game-icon">🚀</div>
+            <i class="fa-solid fa-jet-fighter-up game-icon"></i>
             <span>SkyCrash</span>
-            <div class="badge auth-badge">GİRİŞ GEREKLİ</div>
+            <div class="badge auth-badge">PREMIUM ACCESS</div>
         </div>
         <div class="game-card" data-name="mines" onclick="checkLogin('mines.html')">
-            <div class="game-icon">💣</div>
+            <i class="fa-solid fa-land-mine-on game-icon"></i>
             <span>Mines</span>
-            <div class="badge auth-badge">GİRİŞ GEREKLİ</div>
+            <div class="badge auth-badge">PREMIUM ACCESS</div>
         </div>
         <div class="game-card" data-name="blackjack" onclick="checkLogin('blackjack.html')">
-            <div class="game-icon">🃏</div>
+            <i class="fa-solid fa-spade game-icon"></i>
             <span>BlackJack</span>
-            <div class="badge auth-badge">GİRİŞ GEREKLİ</div>
+            <div class="badge auth-badge">PREMIUM ACCESS</div>
         </div>
         <div class="game-card" data-name="pisti" onclick="checkLogin('pisti.html')">
-            <div class="game-icon">🎴</div>
-            <span>Pişti</span>
-            <div class="badge auth-badge">GİRİŞ GEREKLİ</div>
+            <i class="fa-solid fa-clone game-icon"></i>
+            <span>Pişti Online</span>
+            <div class="badge auth-badge">PREMIUM ACCESS</div>
         </div>    
     </div>
 
-    <div class="section-title">Hızlı Oyun</div>
+    <div class="section-title">Eğlence Zamanı</div>
     <div class="games-grid">
         <div class="game-card" data-name="space pro" onclick="location.href='spacepro.html'">
-            <div class="game-icon">🛸</div>
+            <i class="fa-solid fa-shuttle-space game-icon"></i>
             <span>Space Pro</span>
-            <div class="badge badge-free">Ücretsiz</div>
+            <div class="badge badge-free">GİRİŞ GEREKMEZ</div>
         </div>
         <div class="game-card" data-name="snake pro" onclick="location.href='snakepro.html'">
-            <div class="game-icon">🐍</div>
+            <i class="fa-solid fa-worm game-icon"></i>
             <span>Snake Pro</span>
-            <div class="badge badge-free">Ücretsiz</div>
+            <div class="badge badge-free">GİRİŞ GEREKMEZ</div>
         </div>
         <div class="game-card" data-name="Cyber Stack" onclick="location.href='cyberstack.html'">
-            <div class="game-icon">🗼</div>
+            <i class="fa-solid fa-layer-group game-icon"></i>
             <span>Cyber Stack</span>
-            <div class="badge badge-free">Ücretsiz</div>
+            <div class="badge badge-free">GİRİŞ GEREKMEZ</div>
         </div>
     </div>
 </main>
 
 <footer class="footer">
-    <div class="brand" style="font-size:26px; margin-bottom: 15px;">PIXEL<span>ARENA</span></div>
-    <p style="color: var(--text-dim); font-size: 14px; max-width: 400px; margin: 0 auto 30px;">Profesyonel oyun deneyimi, yüksek rekabet ve eğlencenin dijital adresi.</p>
+    <div class="brand" style="justify-content:center; font-size:30px; margin-bottom: 20px;">PIXEL<span>ARENA</span></div>
+    <p style="color: var(--text-dim); max-width: 500px; margin: 0 auto;">Türkiye'nin en gelişmiş oyun simülasyonu platformu. Profesyonel oyun deneyimi ve yüksek rekabetin tek adresi.</p>
     <div class="social-icons">
         <a href="#" class="social-btn"><i class="fa-brands fa-discord"></i></a>
         <a href="#" class="social-btn"><i class="fa-brands fa-instagram"></i></a>
         <a href="#" class="social-btn"><i class="fa-brands fa-telegram"></i></a>
     </div>
-    <p style="color:#2d3748; font-size:12px; margin-top: 40px;">© 2026 PixelArena Global. Tüm Hakları Saklıdır.</p>
+    <p style="color:#222; font-size:12px; margin-top: 40px; font-family: 'Orbitron';">© 2026 PIXELARENA GLOBAL LTD. ALL RIGHTS RESERVED.</p>
 </footer>
 
 <div class="modal-overlay" id="profileModal">
     <div class="modal-card">
-        <h2>PROFİL AYARLARI</h2>
-        <div style="text-align:left; margin-bottom:15px;">
-            <input type="text" id="profEmail" disabled style="opacity: 0.5;">
-            <input type="text" id="profNameSurname" placeholder="Ad Soyad">
-            <input type="text" id="profPhone" placeholder="Telefon (05xx)">
-            <input type="text" id="profUser" placeholder="Kullanıcı Adı">
+        <h2>PROFIL AYARLARI</h2>
+        <div style="text-align:left;">
+            <label style="font-size:11px; color:var(--text-dim);">E-POSTA ADRESİ</label>
+            <input type="text" id="profEmail" disabled>
+            <label style="font-size:11px; color:var(--text-dim);">AD SOYAD</label>
+            <input type="text" id="profNameSurname">
+            <label style="font-size:11px; color:var(--text-dim);">KULLANICI ADI</label>
+            <input type="text" id="profUser">
         </div>
         <div class="avatar-grid" id="avatarLibrary"></div>
-        <button class="modal-btn" onclick="updateProfile()">GÜNCELLEMELERİ KAYDET</button>
-        <p onclick="closeModal('profileModal')" style="margin-top:20px;cursor:pointer;opacity:0.5; font-size: 12px;">Vazgeç</p>
+        <button class="modal-btn" onclick="updateProfile()">GÜNCELLE</button>
+        <p onclick="closeModal('profileModal')" style="margin-top:20px;cursor:pointer;opacity:0.5;">Kapat</p>
     </div>
 </div>
 
 <div class="modal-overlay" id="bonusModal">
     <div class="modal-card">
         <i class="fa-solid fa-gift" style="font-size:50px;color:var(--primary);margin-bottom:20px;"></i>
-        <h2>BONUS KODU</h2>
-        <input type="text" id="bonusInput" placeholder="Kodu buraya girin...">
-        <button class="modal-btn" onclick="claimBonus()">KODU AKTİF ET</button>
-        <p onclick="closeModal('bonusModal')" style="margin-top:20px;cursor:pointer;opacity:0.5;">Kapat</p>
+        <h2>PROMOSYON KODU</h2>
+        <input type="text" id="bonusInput" placeholder="Kodu buraya yazın...">
+        <button class="modal-btn" onclick="claimBonus()">AKTİF ET</button>
+        <p onclick="closeModal('bonusModal')" style="margin-top:20px;cursor:pointer;opacity:0.5;">İptal</p>
     </div>
 </div>
 
 <div class="modal-overlay" id="wheelModal">
     <div class="modal-card">
         <h2>ŞANS ÇARKI</h2>
-        <div style="position:relative;width:260px;height:260px;margin:25px auto;">
+        <div style="position:relative;width:280px;height:280px;margin:20px auto;">
             <img src="https://i.ibb.co/mRT80Pz/wheel.png" id="wheelImg" style="width:100%;height:100%;transition:5s cubic-bezier(0.15,0,0.15,1);">
-            <img src="https://i.ibb.co/9H6S4xy/pointer.png" style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);width:40px;z-index:10;filter: drop-shadow(0 0 10px #000);">
+            <img src="https://i.ibb.co/9H6S4xy/pointer.png" style="position:absolute;top:-5px;left:50%;transform:translateX(-50%);width:35px;z-index:10;">
         </div>
-        <button class="modal-btn" id="spinBtn" onclick="spinWheel()">ŞANSIMI DENE!</button>
-        <div id="wheelTimer" style="margin-top:15px;font-weight:800;color:var(--primary); font-family: 'Orbitron';"></div>
-        <p onclick="closeModal('wheelModal')" style="margin-top:15px;cursor:pointer;opacity:0.5;">Geri Dön</p>
+        <button class="modal-btn" id="spinBtn" onclick="spinWheel()">ÇEVİR (24S)</button>
+        <div id="wheelTimer" style="margin-top:15px; font-family:'Orbitron'; color:var(--primary);"></div>
+        <p onclick="closeModal('wheelModal')" style="margin-top:20px;cursor:pointer;opacity:0.5;">Kapat</p>
     </div>
 </div>
 
 <div class="modal-overlay" id="authOverlay">
     <div class="modal-card">
-        <h2 id="authTitle">GİRİŞ YAP</h2>
-        <input type="email" id="authEmail" placeholder="E-posta Adresi">
+        <h2 id="authTitle">Giriş Yap</h2>
+        <input type="email" id="authEmail" placeholder="E-posta">
         <input type="password" id="authPassword" placeholder="Şifre">
         <input type="text" id="authUsername" placeholder="Kullanıcı Adı" style="display:none;">
-        <button class="modal-btn" id="authSubmit">ARENAYA GİRİŞ YAP</button>
-        <p id="switchMode" style="margin-top:25px;font-size:14px;cursor:pointer; color: var(--text-dim);">Hesabın yok mu? <b style="color:var(--primary)">Kayıt Ol</b></p>
+        <button class="modal-btn" id="authSubmit">DEVAM ET</button>
+        <p id="switchMode" style="margin-top:25px;font-size:14px;cursor:pointer;">Hesabın yok mu? <b style="color:var(--primary)">Kayıt Ol</b></p>
     </div>
 </div>
 
@@ -330,7 +336,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// --- ARAMA ---
+// Arama Motoru
 document.getElementById('searchInput').addEventListener('input', (e) => {
     const term = e.target.value.toLowerCase().trim();
     document.querySelectorAll('.game-card').forEach(card => {
@@ -339,14 +345,14 @@ document.getElementById('searchInput').addEventListener('input', (e) => {
     });
 });
 
-// --- UI GÜNCELLEME ---
+// UI Güncelleme
 function updateUIForAuth(isLoggedIn) {
     const badges = document.querySelectorAll('.auth-badge');
     badges.forEach(badge => {
         if (isLoggedIn) {
             badge.innerHTML = '<i class="fa-solid fa-play"></i> OYNA';
             badge.style.color = "var(--success)";
-            badge.style.background = "rgba(0, 255, 163, 0.1)";
+            badge.style.background = "rgba(0, 255, 136, 0.1)";
         } else {
             badge.innerText = 'Giriş Gerekir';
             badge.style.color = "var(--text-dim)";
@@ -355,12 +361,16 @@ function updateUIForAuth(isLoggedIn) {
     });
 }
 
-// --- AVATARLAR ---
+// Avatarlar
 const avatarLinks = [
-    "https://i.pravatar.cc/150?img=11", "https://i.pravatar.cc/150?img=12", 
-    "https://i.pravatar.cc/150?img=13", "https://i.pravatar.cc/150?img=14", 
-    "https://i.pravatar.cc/150?img=15", "https://i.pravatar.cc/150?img=16", 
-    "https://i.pravatar.cc/150?img=17", "https://i.pravatar.cc/150?img=18"
+    "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix",
+    "https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka",
+    "https://api.dicebear.com/7.x/avataaars/svg?seed=Max",
+    "https://api.dicebear.com/7.x/avataaars/svg?seed=Luna",
+    "https://api.dicebear.com/7.x/avataaars/svg?seed=Jack",
+    "https://api.dicebear.com/7.x/avataaars/svg?seed=Milo",
+    "https://api.dicebear.com/7.x/avataaars/svg?seed=Zoe",
+    "https://api.dicebear.com/7.x/avataaars/svg?seed=Leo"
 ];
 let selectedAvatar = "";
 
@@ -368,23 +378,19 @@ function loadAvatars(current) {
     const container = document.getElementById("avatarLibrary"); container.innerHTML = "";
     avatarLinks.forEach(link => {
         const div = document.createElement("div"); div.className = `avatar-item ${link === current ? 'active' : ''}`;
-        div.innerHTML = `<img src="${link}" style="width:100%;height:100%;object-fit:cover;">`;
-        div.onclick = () => { 
-            document.querySelectorAll(".avatar-item").forEach(i => i.classList.remove("active")); 
-            div.classList.add("active"); 
-            selectedAvatar = link; 
-        };
+        div.innerHTML = `<img src="${link}" style="width:100%; height:100%;">`;
+        div.onclick = () => { document.querySelectorAll(".avatar-item").forEach(i => i.classList.remove("active")); div.classList.add("active"); selectedAvatar = link; };
         container.appendChild(div);
     });
 }
 
-// --- MODAL & DROPDOWN ---
+// Modal İşlemleri
 window.openModal = (id) => { document.getElementById(id).style.display = 'flex'; if(id === 'wheelModal') checkWheelCooldown(); };
 window.closeModal = (id) => document.getElementById(id).style.display = 'none';
 document.getElementById("avatarTrigger").onclick = (e) => { e.stopPropagation(); document.getElementById("userDropdown").classList.toggle("active"); };
 window.onclick = () => document.getElementById("userDropdown").classList.remove("active");
 
-// --- AUTH ---
+// Auth Sistemi
 let isLogin = true;
 const authOverlay = document.getElementById("authOverlay");
 document.getElementById("loginBtn").onclick = () => { isLogin=true; updateAuthUI(); authOverlay.style.display="flex"; };
@@ -392,7 +398,7 @@ document.getElementById("regBtn").onclick = () => { isLogin=false; updateAuthUI(
 document.getElementById("switchMode").onclick = () => { isLogin = !isLogin; updateAuthUI(); };
 
 function updateAuthUI() { 
-    document.getElementById("authTitle").innerText = isLogin ? "GİRİŞ YAP" : "KAYIT OL"; 
+    document.getElementById("authTitle").innerText = isLogin ? "Tekrar Hoş Geldin" : "Arenaya Katıl"; 
     document.getElementById("authUsername").style.display = isLogin ? "none" : "block"; 
 }
 
@@ -407,7 +413,7 @@ document.getElementById("authSubmit").onclick = async () => {
             await setDoc(doc(db, "users", res.user.uid), { username: userN, balance: 1000, lastSpin: 0, nameChanges: 0, fullName: "", phone: "", avatar: avatarLinks[0] });
         }
         authOverlay.style.display = "none";
-    } catch(e) { alert("Arena Hatası: " + e.message); }
+    } catch(e) { alert("Hata: " + e.message); }
 };
 
 onAuthStateChanged(auth, user => {
@@ -423,7 +429,6 @@ onAuthStateChanged(auth, user => {
                 document.getElementById("userProfileImg").src = data.avatar;
                 document.getElementById("profEmail").value = user.email;
                 document.getElementById("profNameSurname").value = data.fullName || "";
-                document.getElementById("profPhone").value = data.phone || "";
                 document.getElementById("profUser").value = data.username;
                 if(data.nameChanges >= 1) document.getElementById("profUser").disabled = true;
                 loadAvatars(data.avatar);
@@ -439,22 +444,20 @@ onAuthStateChanged(auth, user => {
 
 document.getElementById("logoutBtn").onclick = () => signOut(auth);
 
-// --- ÇARK ---
+// Çark Sistemi
 window.spinWheel = async () => {
     const wheel = document.getElementById("wheelImg"); const spinBtn = document.getElementById("spinBtn");
     const rand = Math.random() * 100; let prize = 0; let rotation = 0;
-    
     if (rand <= 1) { prize = 20000; rotation = 60; } 
-    else if (rand <= 5) { prize = 10000; rotation = 180; } 
-    else if (rand <= 40) { prize = 5000; rotation = 240; } 
-    else { prize = 1000; rotation = 360; }
-
-    wheel.style.transform = `rotate(${(360 * 8) + rotation}deg)`; 
+    else if (rand <= 10) { prize = 5000; rotation = 180; } 
+    else { prize = 1000; rotation = 300; }
+    
+    wheel.style.transform = `rotate(${(360 * 10) + rotation}deg)`; 
     spinBtn.disabled = true;
-
+    
     setTimeout(async () => { 
         await updateDoc(doc(db, "users", auth.currentUser.uid), { balance: increment(prize), lastSpin: Date.now() }); 
-        alert(`Tebrikler Arena Savaşçısı! ${prize.toLocaleString()} ₺ kazandın.`); 
+        alert(`TEBRİKLER! ${prize} ₺ hesabına eklendi.`); 
         checkWheelCooldown(); 
     }, 5000);
 };
@@ -467,16 +470,16 @@ async function checkWheelCooldown() {
         document.getElementById("spinBtn").disabled = true; 
         const timer = document.getElementById("wheelTimer");
         const intv = setInterval(() => {
-            const nowDiff = (24 * 60 * 60 * 1000) - (Date.now() - lastSpin);
-            if(nowDiff <= 0) { clearInterval(intv); checkWheelCooldown(); return; }
-            const h = Math.floor(nowDiff / 3600000); 
-            const m = Math.floor((nowDiff % 3600000) / 60000); 
-            const s = Math.floor((nowDiff % 60000) / 1000);
-            timer.innerText = `Kalan Süre: ${h}:${m}:${s}`;
+            const currentDiff = (24 * 60 * 60 * 1000) - (Date.now() - lastSpin);
+            if(currentDiff <= 0) { clearInterval(intv); timer.innerText = "HAZIR!"; document.getElementById("spinBtn").disabled = false; return; }
+            const h = Math.floor(currentDiff / 3600000); 
+            const m = Math.floor((currentDiff % 3600000) / 60000); 
+            const s = Math.floor((currentDiff % 60000) / 1000);
+            timer.innerText = `${h}:${m}:${s}`;
         }, 1000);
     } else { 
         document.getElementById("spinBtn").disabled = false; 
-        document.getElementById("wheelTimer").innerText = "Şimdi Çevirebilirsin!"; 
+        document.getElementById("wheelTimer").innerText = "HAZIR!"; 
     }
 }
 
@@ -484,19 +487,31 @@ window.updateProfile = async () => {
     const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
     const userData = userDoc.data();
     const newName = document.getElementById("profUser").value;
-    let updates = { fullName: document.getElementById("profNameSurname").value, phone: document.getElementById("profPhone").value, avatar: selectedAvatar || userData.avatar };
+    let updates = { fullName: document.getElementById("profNameSurname").value, avatar: selectedAvatar || userData.avatar };
     if(newName !== userData.username && userData.nameChanges < 1) { updates.username = newName; updates.nameChanges = 1; }
     await updateDoc(doc(db, "users", auth.currentUser.uid), updates); 
-    alert("Profil Güncellendi!"); 
+    alert("Profil başarıyla güncellendi!"); 
     closeModal('profileModal');
 };
 
-// --- KAR EFEKTİ ---
+// Kar Efekti (Neon Parçacıklar)
 const canvas = document.getElementById("snow"); const ctx = canvas.getContext("2d"); let particles = [];
 function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
 window.onresize = resize; resize();
-for(let i=0; i<60; i++) particles.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, r:Math.random()*1+0.5, d:Math.random()*0.5+0.2});
-function drawSnow() { ctx.clearRect(0,0,canvas.width, canvas.height); ctx.fillStyle = "rgba(0, 210, 255, 0.2)"; ctx.beginPath(); particles.forEach(p => { ctx.moveTo(p.x, p.y); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); p.y += p.d; if(p.y > canvas.height) p.y = -5; }); ctx.fill(); requestAnimationFrame(drawSnow); }
+for(let i=0; i<70; i++) particles.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, r:Math.random()*1.5, d:Math.random()*0.5 + 0.2});
+function drawSnow() { 
+    ctx.clearRect(0,0,canvas.width, canvas.height); 
+    ctx.fillStyle = "#00e5ff"; 
+    ctx.beginPath(); 
+    particles.forEach(p => { 
+        ctx.moveTo(p.x, p.y); 
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); 
+        p.y += p.d; 
+        if(p.y > canvas.height) p.y = -5; 
+    }); 
+    ctx.fill(); 
+    requestAnimationFrame(drawSnow); 
+}
 drawSnow();
 
 window.checkLogin = (url) => { if(!auth.currentUser) document.getElementById("authOverlay").style.display="flex"; else location.href = url; };
