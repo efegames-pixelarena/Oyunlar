@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Neon Conquest | Elite V22</title>
+    <title>Neon Conquest | Elite V20</title>
     <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -18,10 +18,7 @@
             font-family: 'Rajdhani', sans-serif; 
             -webkit-tap-highlight-color: transparent; 
             touch-action: manipulation; 
-            -webkit-user-select: none; user-select: none;
         }
-        input { -webkit-user-select: auto; user-select: auto; }
-
         body { background: var(--bg); color: #e0e0e0; height: 100vh; overflow: hidden; display: flex; flex-direction: column; position: relative; }
 
         #bg-canvas { position: fixed; inset: 0; z-index: -1; background: #000; }
@@ -50,10 +47,17 @@
         .room-card { 
             background: var(--glass); border: 1px solid rgba(255, 204, 0, 0.2); border-left: 5px solid var(--border); 
             padding: 18px; display: flex; justify-content: space-between; align-items: center; 
-            margin-bottom: 12px; border-radius: 0 8px 8px 0;
+            margin-bottom: 12px; border-radius: 0 8px 8px 0; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
             animation: slideIn 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
         }
         @keyframes slideIn { from { opacity:0; transform: translateY(20px); } to { opacity:1; transform: translateY(0); } }
+
+        .how-to-btn {
+            position: fixed; bottom: 20px; right: 20px; padding: 10px 20px;
+            background: var(--border); color: #000; border-radius: 30px;
+            font-weight: 900; font-size: 0.8rem; cursor: pointer; z-index: 100;
+            box-shadow: 0 0 20px rgba(255,204,0,0.3); border: none; font-family: 'Black Ops One';
+        }
 
         #game-view { display: none; flex: 1; flex-direction: column; z-index: 10; }
         .game-hud { height: 90px; flex-shrink: 0; display: flex; justify-content: space-around; align-items: center; background: rgba(0,0,0,0.8); }
@@ -66,10 +70,17 @@
         .cell.p2 { background: var(--p2); box-shadow: 0 0 15px var(--p2); }
 
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); backdrop-filter: blur(15px); display: none; align-items: center; justify-content: center; z-index: 9000; padding: 20px; }
-        .modal-box { background: #0d1117; border: 2px solid var(--border); padding: 30px; width: 100%; max-width: 360px; text-align: center; }
+        .modal-box { background: #0d1117; border: 2px solid var(--border); padding: 30px; width: 100%; max-width: 360px; text-align: center; position: relative; box-shadow: 0 0 50px rgba(255,204,0,0.1); }
+        .modal-box h3 { font-family: 'Black Ops One'; color: var(--border); margin-bottom: 20px; font-size: 1.4rem; letter-spacing: 1px; }
+        .modal-input { width: 100%; background: #161b22; border: 1px solid #30363d; padding: 14px; color: #fff; margin-bottom: 15px; text-align: center; outline: none; font-size: 1rem; }
         
         .error-text { color: var(--danger); font-size: 0.8rem; font-weight: 700; margin-top: -10px; margin-bottom: 15px; display: none; }
+
         .result-header { font-size: 3.5rem; font-family: 'Black Ops One'; text-transform: uppercase; margin-bottom: 10px; }
+        .win-text { color: var(--btn-sec); text-shadow: 0 0 20px var(--btn-sec); }
+        .lose-text { color: var(--danger); text-shadow: 0 0 20px var(--danger); }
+        .final-score { font-size: 2.5rem; margin: 20px 0; display: flex; justify-content: center; gap: 20px; align-items: center; }
+        .score-box { background: rgba(255,255,255,0.05); padding: 10px 20px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); }
     </style>
 </head>
 <body onclick="window.unlockAudio()">
@@ -83,12 +94,16 @@
     </div>
 
     <div id="lobby">
-        <input type="text" id="roomSearch" class="search-input" placeholder="ARENA ARA..." oninput="window.filterRooms()">
+        <div class="search-container">
+            <input type="text" id="roomSearch" class="search-input" placeholder="ARENA ARA..." oninput="window.filterRooms()">
+        </div>
         <button class="btn-neon" id="createRoomBtn" disabled onclick="window.toggleModal('roomTypeModal', true)">ARENA OLUŞTUR</button>
         <button class="btn-neon btn-sec" id="quickJoinBtn" disabled onclick="window.quickJoin()">HIZLI SAVAŞ</button>
         <div id="emptyLobbyMsg" style="text-align: center; margin-top: 50px; opacity: 0.3; font-family: 'Black Ops One'; letter-spacing: 5px;">LOBİ BOŞ</div>
         <div id="roomList"></div>
     </div>
+
+    <button class="how-to-btn" onclick="window.toggleModal('helpModal', true)">Nasıl Oynanılır ?</button>
 
     <div id="game-view">
         <div class="game-hud">
@@ -99,33 +114,99 @@
         <div class="grid" id="grid"></div>
     </div>
 
-    <div id="roomTypeModal" class="modal"><div class="modal-box"><h3>ARENA TİPİ</h3><button class="btn-neon" style="width:100%; margin-bottom:12px;" onclick="window.createArena(false)">AÇIK ARENA</button><button class="btn-neon btn-sec" style="width:100%" onclick="window.showPrivateSettings()">KİLİTLİ ARENA</button><p onclick="window.toggleModal('roomTypeModal', false)" style="margin-top:20px; cursor:pointer;">İPTAL</p></div></div>
-    <div id="privateSettingsModal" class="modal"><div class="modal-box"><h3>ARENA KURULUMU</h3><input type="number" id="customRoomCode" class="modal-input" placeholder="ODA NO"><input type="number" id="customRoomPass" class="modal-input" placeholder="ŞİFRE"><div id="createError" class="error-text">GEÇERSİZ GİRİŞ!</div><button class="btn-neon" style="width:100%" onclick="window.createArena(true)">OLUŞTUR</button></div></div>
-    <div id="passwordEntryModal" class="modal"><div class="modal-box"><h3>ŞİFRE GEREKLİ</h3><input type="number" id="joinRoomPassInput" class="modal-input" placeholder="ŞİFREYİ GİRİN"><div id="passError" class="error-text">ŞİFRE YANLIŞ!</div><button class="btn-neon" id="confirmJoinPass" style="width:100%">GİRİŞ YAP</button></div></div>
-    <div id="alertModal" class="modal"><div class="modal-box"><h3 id="alertTitle">UYARI</h3><p id="alertMsg" style="color:#aaa; margin-bottom:20px;"></p><button class="btn-neon" style="width:100%" onclick="window.toggleModal('alertModal', false)">TAMAM</button></div></div>
-    <div id="resultModal" class="modal"><div class="modal-box"><div id="winnerLabel" class="result-header">ZAFER</div><div id="finalScore" style="font-size:2rem; margin-bottom:20px;"></div><button class="btn-neon" style="width:100%" onclick="window.leaveToHome()">LOBİYE DÖN</button></div></div>
+    <div id="roomTypeModal" class="modal">
+        <div class="modal-box">
+            <h3>ARENA TİPİ</h3>
+            <button class="btn-neon" style="width:100%; margin-bottom:12px;" onclick="window.createArena(false)">AÇIK ARENA</button>
+            <button class="btn-neon btn-sec" style="width:100%" onclick="window.showPrivateSettings()">KİLİTLİ ARENA</button>
+            <p onclick="window.toggleModal('roomTypeModal', false)" style="margin-top:20px; cursor:pointer; color:#666;">İPTAL</p>
+        </div>
+    </div>
+
+    <div id="privateSettingsModal" class="modal">
+        <div class="modal-box">
+            <h3>ARENA KURULUMU</h3>
+            <input type="number" id="customRoomCode" class="modal-input" placeholder="ODA NO (Min 3 Sayı)">
+            <input type="number" id="customRoomPass" class="modal-input" placeholder="ŞİFRE (Min 5 Sayı)">
+            <div id="createError" class="error-text">HATA: SAYI KURALLARINA UYUN!</div>
+            <button class="btn-neon" style="width:100%" onclick="window.createArena(true)">OLUŞTUR</button>
+            <p onclick="window.toggleModal('privateSettingsModal', false)" style="margin-top:20px; cursor:pointer; color:#666;">GERİ</p>
+        </div>
+    </div>
+
+    <div id="passwordEntryModal" class="modal">
+        <div class="modal-box">
+            <h3>ŞİFRE GEREKLİ</h3>
+            <input type="number" id="joinRoomPassInput" class="modal-input" placeholder="ŞİFREYİ GİRİN">
+            <div id="passError" class="error-text">HATA: ŞİFRE YANLIŞ!</div>
+            <button class="btn-neon" id="confirmJoinPass" style="width:100%">GİRİŞ YAP</button>
+            <button class="btn-neon btn-sec" style="width:100%; margin-top:10px;" onclick="window.toggleModal('passwordEntryModal', false)">İPTAL</button>
+        </div>
+    </div>
+
+    <div id="alertModal" class="modal">
+        <div class="modal-box">
+            <h3 id="alertTitle">UYARI</h3>
+            <p id="alertMsg" style="color:#aaa; margin-bottom:20px;"></p>
+            <button class="btn-neon" style="width:100%" onclick="window.toggleModal('alertModal', false)">TAMAM</button>
+        </div>
+    </div>
+
+    <div id="helpModal" class="modal">
+        <div class="modal-box">
+            <h3>OYUN REHBERİ</h3>
+            <p style="color:#aaa; font-size:0.95rem; line-height:1.7; text-align:left; border-left: 2px solid var(--border); padding-left: 15px;">
+                • Dokunduğun kare senin rengine döner.<br>
+                • Rakibin karesine dokunarak onu ele geçir.<br>
+                • 60 saniye sonunda alanı domine eden kazanır.
+            </p>
+            <button class="btn-neon" style="width:100%; margin-top:25px;" onclick="window.toggleModal('helpModal', false)">ANLADIM</button>
+        </div>
+    </div>
+
+    <div id="resultModal" class="modal">
+        <div class="modal-box">
+            <div id="winnerLabel" class="result-header">ZAFER</div>
+            <div class="final-score">
+                <div class="score-box" id="finalS1">0</div>
+                <div style="font-family:'Black Ops One'">VS</div>
+                <div class="score-box" id="finalS2">0</div>
+            </div>
+            <button class="btn-neon" style="width:100%" onclick="window.leaveToHome()">LOBİYE DÖN</button>
+        </div>
+    </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getFirestore, doc, setDoc, updateDoc, onSnapshot, collection, deleteDoc, getDoc, query, where, increment, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
     import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-    const firebaseConfig = { apiKey: "AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA", authDomain: "emirhan-site.firebaseapp.com", projectId: "emirhan-site", storageBucket: "emirhan-site.firebasestorage.app", messagingSenderId: "668871888390", appId: "1:668871888390:web:76568bda84cb1641f7bd87" };
+    const firebaseConfig = {
+        apiKey: "AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
+        authDomain: "emirhan-site.firebaseapp.com",
+        projectId: "emirhan-site",
+        storageBucket: "emirhan-site.firebasestorage.app",
+        messagingSenderId: "668871888390",
+        appId: "1:668871888390:web:76568bda84cb1641f7bd87"
+    };
+
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const auth = getAuth(app);
 
+    // 1-2-3- ÖZEL LOBİ VE OYUN SESLERİ (İOS UYUMLU)
     const sfx = {
         lobby: new Audio('https://codeskulptor-demos.commondatastorage.googleapis.com/GalaxyInvaders/theme.mp3'),
         game: new Audio('https://codeskulptor-demos.commondatastorage.googleapis.com/descent/background%20music.mp3'),
         tap: new Audio('https://cdn.pixabay.com/audio/2022/03/15/audio_78396032a7.mp3')
     };
     sfx.lobby.loop = true; sfx.game.loop = true;
+    sfx.lobby.volume = 0.5; sfx.game.volume = 0.6;
 
     let uid, username, curRoomId = null, myRole, isFin = false, canPlay = false, timerInt = null;
     let unsubLobby = null, unsubGame = null;
 
-    // --- CANVAS ARKA PLAN ---
+    // CANVAS ARKA PLAN
     const canvas = document.getElementById('bg-canvas');
     const ctx = canvas.getContext('2d');
     let particles = [];
@@ -137,30 +218,21 @@
     function drawBg() {
         ctx.fillStyle = '#03050a'; ctx.fillRect(0,0,canvas.width, canvas.height);
         ctx.fillStyle = 'rgba(0, 242, 255, 0.2)';
-        particles.forEach(p => { p.y -= p.s; if(p.y < 0) p.y = canvas.height; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill(); });
+        particles.forEach(p => {
+            p.y -= p.s; if(p.y < 0) p.y = canvas.height;
+            ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill();
+        });
         requestAnimationFrame(drawBg);
     }
     initParticles(); drawBg();
 
-    // --- YARDIMCI FONKSİYONLAR ---
-    window.toggleModal = (id, show) => { document.getElementById(id).style.display = show ? 'flex' : 'none'; };
-    
-    // HATA 1-2 ÇÖZÜMÜ: Lobiye dönerken veya sayfa kapanırken unsub ve status güncelleme
-    window.leaveToHome = async () => {
-        if (curRoomId && !isFin) {
-            try { await updateDoc(doc(db, "conquest_rooms", curRoomId), { status: 'terminated' }); } catch(e) {}
-        }
-        window.location.reload(); // En güvenli temizlik yolu
+    window.toggleModal = (id, show) => { 
+        document.getElementById(id).style.display = show ? 'flex' : 'none'; 
+        if(!show && id === 'passwordEntryModal') document.getElementById('passError').style.display = 'none';
     };
 
-    window.filterRooms = () => {
-        const term = document.getElementById('roomSearch').value.toUpperCase();
-        document.querySelectorAll('.room-card').forEach(card => {
-            card.style.display = card.innerText.toUpperCase().includes(term) ? 'flex' : 'none';
-        });
-    };
+    window.leaveToHome = () => { window.location.href = "index.html"; };
 
-    // --- FIREBASE AKIŞI ---
     onAuthStateChanged(auth, async user => {
         if(!user) { signInAnonymously(auth); return; }
         uid = user.uid;
@@ -174,7 +246,6 @@
 
     function listenLobby() {
         if(unsubLobby) unsubLobby();
-        // Sadece bekleyen ve oynanan odaları çek
         const q = query(collection(db, "conquest_rooms"), where("status", "in", ["waiting", "playing"]));
         unsubLobby = onSnapshot(q, snap => {
             const list = document.getElementById('roomList');
@@ -186,22 +257,29 @@
                 count++;
                 const card = document.createElement('div');
                 card.className = "room-card";
-                card.innerHTML = `<div><small style="color:var(--border)">BÖLGE: ${d.id}</small><br><b>${r.p1Name} ${r.pass ? '🔒' : '🔓'}</b></div>
+                card.innerHTML = `
+                    <div><small style="color:var(--border)">BÖLGE: ${d.id}</small><br><b>${r.p1Name} ${r.pass ? '🔒' : '🔓'}</b></div>
                     <button class="btn-neon" style="padding:10px 15px; font-size:0.7rem; background:${r.status==='playing'?'#222':'var(--btn-sec)'}" 
-                    onclick="${r.status==='playing'?'':'window.joinHandler(\''+d.id+'\', \''+(r.pass||'')+'\')'}">${r.status==='playing'?'MEŞGUL':'GİRİŞ'}</button>`;
+                        onclick="${r.status==='playing'?'':'window.joinHandler(\''+d.id+'\', \''+(r.pass||'')+'\')'}">
+                        ${r.status==='playing'?'MEŞGUL':'GİRİŞ'}
+                    </button>`;
                 list.appendChild(card);
             });
             document.getElementById('emptyLobbyMsg').style.display = (count === 0) ? 'block' : 'none';
         });
     }
 
+    // 5- MODAL UYARILI HIZLI SAVAŞ
     window.quickJoin = () => {
-        const rooms = Array.from(document.querySelectorAll('.room-card'));
-        const target = rooms.find(c => c.innerHTML.includes('🔓') && !c.innerHTML.includes('MEŞGUL'));
+        const rooms = document.querySelectorAll('.room-card');
+        let target = null;
+        rooms.forEach(card => {
+            if(card.innerText.includes('🔓') && !card.innerText.includes('MEŞGUL')) target = card;
+        });
         if(target) target.querySelector('button').click();
         else {
             document.getElementById('alertTitle').innerText = "ARENA YOK";
-            document.getElementById('alertMsg').innerText = "Uygun boş arena bulunamadı.";
+            document.getElementById('alertMsg').innerText = "Şu an şifresiz uygun arena bulunamadı. Kendi arenanı kurmaya ne dersin?";
             window.toggleModal('alertModal', true);
         }
     };
@@ -211,24 +289,39 @@
     window.createArena = async (isPrivate) => {
         let id = Math.floor(100 + Math.random() * 900).toString();
         let pass = "";
+        const err = document.getElementById('createError');
+        err.style.display = 'none';
+
         if(isPrivate) {
             const inputId = document.getElementById('customRoomCode').value;
             const inputPass = document.getElementById('customRoomPass').value;
-            if(inputId.length < 3 || inputPass.length < 5) { document.getElementById('createError').style.display = 'block'; return; }
+            if(inputId.length < 3 || inputPass.length < 5) {
+                err.style.display = 'block'; return;
+            }
             id = inputId; pass = inputPass;
         }
+
         curRoomId = id; myRole = 'p1';
-        await setDoc(doc(db, "conquest_rooms", id), { p1: uid, p1Name: username, p2: null, cells: {}, timer: 60, status: 'waiting', pass: pass, createdAt: serverTimestamp() });
+        await setDoc(doc(db, "conquest_rooms", id), {
+            p1: uid, p1Name: username, p2: null, cells: {}, 
+            timer: 60, status: 'waiting', pass: pass, createdAt: serverTimestamp()
+        });
         window.toggleModal('roomTypeModal', false); window.toggleModal('privateSettingsModal', false);
         enterGame(id);
     };
 
+    // 6- ŞİFRE HATASINI KIRMIZI YAZIYLA GÖSTERME
     window.joinHandler = (id, pass) => {
         if(pass) {
             window.toggleModal('passwordEntryModal', true);
+            const passErr = document.getElementById('passError');
+            passErr.style.display = 'none';
             document.getElementById('confirmJoinPass').onclick = async () => {
-                if(document.getElementById('joinRoomPassInput').value === pass) { window.toggleModal('passwordEntryModal', false); completeJoin(id); }
-                else { document.getElementById('passError').style.display = 'block'; }
+                if(document.getElementById('joinRoomPassInput').value === pass) {
+                    window.toggleModal('passwordEntryModal', false); completeJoin(id);
+                } else {
+                    passErr.style.display = 'block';
+                }
             };
         } else completeJoin(id);
     };
@@ -241,26 +334,29 @@
 
     function enterGame(id) {
         if(unsubLobby) unsubLobby();
-        sfx.lobby.pause(); sfx.game.currentTime = 0; sfx.game.play();
+        sfx.lobby.pause(); 
+        sfx.game.currentTime = 0;
+        sfx.game.play(); // 3- Savaşçı oyun sesi başlar
+        
         document.getElementById('lobby').style.display = 'none';
         document.getElementById('game-view').style.display = 'flex';
         
         const g = document.getElementById('grid'); g.innerHTML = "";
         for(let i=0; i<36; i++) {
             const c = document.createElement('div'); c.className = 'cell';
-            c.onclick = () => { if(canPlay && !isFin) { updateDoc(doc(db, "conquest_rooms", id), { [`cells.${i}`]: myRole }); sfx.tap.currentTime=0; sfx.tap.play(); } };
+            c.onclick = () => { 
+                if(canPlay && !isFin) { 
+                    updateDoc(doc(db, "conquest_rooms", id), { [`cells.${i}`]: myRole }); 
+                    sfx.tap.currentTime=0; sfx.tap.play(); 
+                }
+            };
             g.appendChild(c);
         }
 
         unsubGame = onSnapshot(doc(db, "conquest_rooms", id), snap => {
             if(!snap.exists()) { if(!isFin) window.leaveToHome(); return; }
             const d = snap.data();
-            // HATA 1 ÇÖZÜMÜ: Terminated durumunu izle
-            if(d.status === 'terminated' && !isFin) { 
-                alert("Rakip bağlantısı kesildi!");
-                window.leaveToHome(); 
-                return;
-            }
+            if(d.status === 'terminated' && !isFin) window.leaveToHome();
 
             document.getElementById('n1').innerText = d.p1Name;
             document.getElementById('n2').innerText = d.p2Name || "BEKLENİYOR...";
@@ -281,34 +377,29 @@
             });
             document.getElementById('s1').innerText = s1; document.getElementById('s2').innerText = s2;
 
+            if(d.status === 'playing' && (s1 === 36 || s2 === 36)) {
+                clearInterval(timerInt);
+                updateDoc(doc(db, "conquest_rooms", id), { status: 'finished' });
+            }
             if(d.status === 'finished' && !isFin) finish(id, s1, s2);
         });
     }
 
     async function finish(id, s1, s2) {
-        isFin = true; if(timerInt) clearInterval(timerInt);
+        isFin = true; clearInterval(timerInt);
         const win = (myRole === 'p1' && s1 > s2) || (myRole === 'p2' && s2 > s1);
-        document.getElementById('winnerLabel').innerText = s1===s2 ? "BERABERE" : (win ? "ZAFER" : "BOZGUN");
-        document.getElementById('finalScore').innerText = `${s1} - ${s2}`;
+        const draw = s1 === s2;
+        const label = document.getElementById('winnerLabel');
+        label.innerText = draw ? "BERABERE" : (win ? "ZAFER" : "BOZGUN");
+        label.className = "result-header " + (win ? "win-text" : "lose-text");
+        document.getElementById('finalS1').innerText = s1;
+        document.getElementById('finalS2').innerText = s2;
         window.toggleModal('resultModal', true);
-
-        // HATA 3 ÇÖZÜMÜ: Oda silme yetkisi her iki oyuncuda da var (Gecikmeli)
-        // İlk silecek olan genellikle p1'dir, ama o çıkarsa p2 temizliği yapar.
-        setTimeout(async () => {
-            try { await deleteDoc(doc(db, "conquest_rooms", id)); } catch(e) {}
-        }, 10000);
+        if(myRole === 'p1') setTimeout(() => deleteDoc(doc(db, "conquest_rooms", id)), 8000);
     }
 
     window.unlockAudio = () => { 
-        Object.values(sfx).forEach(a => { a.play().then(()=>a.pause()); }); // iOS kilit açma
         if(document.getElementById('lobby').style.display !== 'none') sfx.lobby.play(); 
-    };
-
-    // HATA 4 ÇÖZÜMÜ: Sekme kapanırken oda durumunu boz
-    window.onbeforeunload = () => {
-        if(curRoomId && !isFin) {
-            updateDoc(doc(db, "conquest_rooms", curRoomId), { status: 'terminated' });
-        }
     };
 </script>
 </body>
