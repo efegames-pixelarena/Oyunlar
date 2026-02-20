@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Neon Conquest | Pro Edition V9.5</title>
+    <title>Neon Conquest | Pro Edition V9.6</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@500;800&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -11,37 +11,25 @@
             --glass: rgba(10, 15, 25, 0.9); --border: rgba(0, 242, 255, 0.3);
             --danger: #ff4444;
         }
-
         * { margin:0; padding:0; box-sizing:border-box; font-family: 'JetBrains Mono', monospace; -webkit-tap-highlight-color: transparent; }
-        
         body { background: var(--bg); color: white; height: 100vh; overflow: hidden; display: flex; flex-direction: column; position: relative; }
-
-        /* --- DAHA BELİRGİN LOBBY ARKA PLANI --- */
         #lobby-bg { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at 50% 50%, #0a1c2f 0%, #020408 100%); }
         .grid-layer {
             position: absolute; width: 200%; height: 200%; top: -50%; left: -50%;
-            background-image: 
-                linear-gradient(to right, rgba(0, 255, 65, 0.15) 2px, transparent 2px), 
-                linear-gradient(to bottom, rgba(0, 255, 65, 0.15) 2px, transparent 2px);
+            background-image: linear-gradient(to right, rgba(0, 255, 65, 0.15) 2px, transparent 2px), linear-gradient(to bottom, rgba(0, 255, 65, 0.15) 2px, transparent 2px);
             background-size: 60px 60px; transform: perspective(800px) rotateX(60deg); 
-            animation: gridMove 15s linear infinite;
-            filter: drop-shadow(0 0 5px var(--p1));
+            animation: gridMove 15s linear infinite; filter: drop-shadow(0 0 5px var(--p1));
         }
         @keyframes gridMove { from { transform: perspective(800px) rotateX(60deg) translateY(0); } to { transform: perspective(800px) rotateX(60deg) translateY(60px); } }
-
         #game-bg { position: fixed; inset: 0; z-index: -2; display: none; background: #000; overflow: hidden; }
         .star { position: absolute; background: #fff; border-radius: 50%; opacity: 0.5; animation: starTravel linear infinite; }
         @keyframes starTravel { from { transform: translateY(-10vh); opacity: 0; } 50% { opacity: 1; } to { transform: translateY(110vh); opacity: 0; } }
-
         .header { height: 70px; padding: 0 15px; display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.85); border-bottom: 1px solid var(--border); backdrop-filter: blur(15px); z-index: 100; }
         .logo { font-family: 'Orbitron'; font-weight: 900; font-size: 0.9rem; text-shadow: 0 0 10px var(--p1); }
         .user-badge { font-size: 0.65rem; color: var(--p1); border: 1px solid var(--p1); padding: 5px 10px; border-radius: 4px; }
-
         #lobby { flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto; z-index: 10; }
-        .room-card { background: var(--glass); border: 1px solid var(--border); padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; transition: 0.3s; margin-bottom: 5px; }
-        .room-info b { font-size: 0.9rem; color: #fff; }
+        .room-card { background: var(--glass); border: 1px solid var(--border); padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
         .room-stats { font-size: 0.6rem; color: var(--p1); margin-top: 4px; display: block; }
-
         #game-view { display: none; flex: 1; flex-direction: column; z-index: 10; }
         .game-hud { display: grid; grid-template-columns: 1fr auto 1fr; padding: 20px; align-items: center; background: rgba(0,0,0,0.7); }
         .score { font-family: 'Orbitron'; font-size: 2rem; font-weight: 900; }
@@ -49,15 +37,10 @@
         .cell { aspect-ratio: 1/1; background: rgba(255,255,255,0.05); border-radius: 4px; border: 1px solid var(--border); transition: 0.1s; }
         .cell.p1 { background: var(--p1); box-shadow: 0 0 15px var(--p1); border: none; }
         .cell.p2 { background: var(--p2); box-shadow: 0 0 15px var(--p2); border: none; }
-
         .btn-neon { background: var(--p1); color: #000; border: none; padding: 12px; border-radius: 10px; font-family: 'Orbitron'; font-weight: 900; cursor: pointer; text-transform: uppercase; font-size: 0.8rem; box-shadow: 0 0 15px rgba(0,255,65,0.3); }
-        .floating-create { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 220px; z-index: 100; }
-
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); backdrop-filter: blur(10px); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 20px; }
         .modal-box { background: #0a0f18; border: 2px solid var(--p1); padding: 30px; border-radius: 20px; width: 100%; max-width: 340px; text-align: center; }
-        .modal-box.danger { border-color: var(--danger); box-shadow: 0 0 40px rgba(255,68,68,0.3); }
         .modal-input { width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border); padding: 12px; border-radius: 10px; color: #fff; margin-bottom: 15px; text-align: center; outline: none; }
-        
         .empty-arena { text-align: center; padding: 40px 20px; color: #888; border: 1px dashed var(--border); border-radius: 15px; }
     </style>
 </head>
@@ -69,7 +52,7 @@
     <div class="header">
         <div class="user-badge" id="meName">GİRİŞ...</div>
         <div class="logo">NEON CONQUEST</div>
-        <button id="mainExitBtn" onclick="window.showExitConfirm()" style="background:none; border:1px solid #ff4444; color:#ff4444; padding:5px 10px; border-radius:5px; font-size:0.6rem; cursor:pointer;">GERİ</button>
+        <button onclick="window.showExitConfirm()" style="background:none; border:1px solid #ff4444; color:#ff4444; padding:5px 10px; border-radius:5px; font-size:0.6rem; cursor:pointer;">GERİ</button>
     </div>
 
     <div id="lobby">
@@ -80,210 +63,119 @@
     <div id="game-view">
         <div class="game-hud">
             <div style="color:var(--p1)"><small id="n1">...</small><div class="score" id="s1">0</div></div>
-            <div id="timer-box" style="border:3px solid var(--p1); border-radius:50%; width:60px; height:60px; display:flex; align-items:center; justify-content:center; font-weight:900; font-family:'Orbitron';">60</div>
+            <div id="timer-box" style="border:3px solid var(--p1); border-radius:50%; width:60px; height:60px; display:flex; align-items:center; justify-content:center; font-weight:900;">60</div>
             <div style="color:var(--p2); text-align:right;"><small id="n2">...</small><div class="score" id="s2">0</div></div>
         </div>
-        <div id="statusInfo" style="text-align:center; padding:10px; color:var(--p1); font-size:0.7rem; letter-spacing: 2px;">SİSTEMLER AKTİF...</div>
+        <div id="statusInfo" style="text-align:center; padding:10px; color:var(--p1); font-size:0.7rem;">SAVAŞ PROTOKOLÜ AKTİF...</div>
         <div class="grid" id="grid"></div>
     </div>
 
     <div id="confirmExitModal" class="modal">
-        <div class="modal-box danger">
-            <h3 style="color:var(--danger); font-family:'Orbitron';">UYARI!</h3>
-            <p style="margin:20px 0; font-size:0.8rem; line-height:1.5;">SAVAŞTAN ÇEKİLMEK İSTEDİĞİNE EMİN MİSİN? BU İŞLEM KAYIP OLARAK SAYILIR.</p>
+        <div class="modal-box" style="border-color:var(--danger)">
+            <h3 style="color:var(--danger)">UYARI!</h3>
+            <p style="margin:20px 0; font-size:0.8rem;">SAVAŞTAN ÇEKİLMEK İSTEDİĞİNE EMİN MİSİN?</p>
             <div style="display:flex; gap:10px;">
-                <button onclick="window.finalizeExit()" class="btn-neon" style="background:var(--danger); color:white; flex:1;">EVET, ÇEKİL</button>
+                <button onclick="window.finalizeExit()" class="btn-neon" style="background:var(--danger); color:white; flex:1;">EVET</button>
                 <button onclick="window.toggleModal('confirmExitModal', false)" class="btn-neon" style="background:#444; color:white; flex:1;">İPTAL</button>
             </div>
         </div>
     </div>
 
-    <div id="quickModal" class="modal">
-        <div class="modal-box">
-            <h3 id="quickStatus">TARANIYOR...</h3>
-            <div style="margin:20px 0; color:var(--p1); font-size:0.8rem;">Uygun boş arena aranıyor...</div>
-            <button onclick="window.toggleModal('quickModal', false)" class="btn-neon" style="background:var(--danger); color:white; width:100%">İPTAL</button>
-        </div>
-    </div>
-
-    <div id="escapeModal" class="modal">
-        <div class="modal-box danger">
-            <h2 style="color:var(--danger); font-family:'Orbitron';">RAKİP KAÇTI!</h2>
-            <p style="margin: 20px 0; font-size: 0.85rem; color: #ccc;">Rakip pilot bağlantıyı kesti veya savaştan çekildi. Hükmen galipsin!</p>
-            <button class="btn-neon" style="width:100%" onclick="location.reload()">LOBİYE DÖN</button>
-        </div>
-    </div>
-
+    <div id="quickModal" class="modal"><div class="modal-box"><h3 id="quickStatus">TARANIYOR...</h3><button onclick="window.toggleModal('quickModal', false)" class="btn-neon" style="background:var(--danger); color:white; width:100%; margin-top:20px;">İPTAL</button></div></div>
     <div id="createModal" class="modal">
         <div class="modal-box"><h3>ARENA KUR</h3><input type="password" id="createPass" class="modal-input" placeholder="ŞİFRE (OPSİYONEL)"><button class="btn-neon" style="width:100%" id="confirmCreate">OLUŞTUR</button><button onclick="window.toggleModal('createModal', false)" style="background:none; color:#888; border:none; margin-top:15px; cursor:pointer;">İPTAL</button></div>
     </div>
-
-    <div id="resultModal" class="modal">
-        <div class="modal-box"><h2 id="winnerLabel" style="font-family:'Orbitron';">ZAFER!</h2><div id="scoreLabel" style="font-size:2.5rem; color:var(--p1); margin:15px 0;">0 - 0</div><button class="btn-neon" style="width:100%" onclick="location.reload()">TAMAM</button></div>
-    </div>
+    <div id="escapeModal" class="modal"><div class="modal-box" style="border-color:var(--danger)"><h2 style="color:var(--danger)">RAKİP KAÇTI!</h2><button class="btn-neon" style="width:100%; margin-top:20px;" onclick="location.reload()">LOBİYE DÖN</button></div></div>
+    <div id="resultModal" class="modal"><div class="modal-box"><h2 id="winnerLabel">ZAFER!</h2><div id="scoreLabel" style="font-size:2.5rem; color:var(--p1); margin:15px 0;">0 - 0</div><button class="btn-neon" style="width:100%" onclick="location.reload()">TAMAM</button></div></div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getFirestore, doc, setDoc, updateDoc, onSnapshot, collection, deleteDoc, getDoc, query, where, getDocs, increment } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
     import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-    const firebaseConfig = {
-        apiKey: "AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
-        authDomain: "emirhan-site.firebaseapp.com",
-        projectId: "emirhan-site",
-        storageBucket: "emirhan-site.firebasestorage.app",
-        messagingSenderId: "668871888390",
-        appId: "1:668871888390:web:76568bda84cb1641f7bd87"
-    };
+    const firebaseConfig = { apiKey: "AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA", authDomain: "emirhan-site.firebaseapp.com", projectId: "emirhan-site", storageBucket: "emirhan-site.firebasestorage.app", messagingSenderId: "668871888390", appId: "1:668871888390:web:76568bda84cb1641f7bd87" };
+    const app = initializeApp(firebaseConfig); const db = getFirestore(app); const auth = getAuth(app);
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const auth = getAuth(app);
-
-    const sfx = {
-        box: new Audio('https://cdn.pixabay.com/audio/2022/03/15/audio_78396032a7.mp3'),
-        win: new Audio('https://cdn.pixabay.com/audio/2021/08/04/audio_0625c1539c.mp3'),
-        lose: new Audio('https://cdn.pixabay.com/audio/2021/08/04/audio_c36357602e.mp3'),
-        alert: new Audio('https://cdn.pixabay.com/audio/2021/08/04/audio_1949f53e34.mp3'),
-        start: new Audio('https://cdn.pixabay.com/audio/2022/01/18/audio_d0a13f69d2.mp3')
+    const sfx = { 
+        box: new Audio('https://cdn.pixabay.com/audio/2022/03/15/audio_78396032a7.mp3'), 
+        win: new Audio('https://cdn.pixabay.com/audio/2021/08/04/audio_0625c1539c.mp3'), 
+        lose: new Audio('https://cdn.pixabay.com/audio/2021/08/04/audio_c36357602e.mp3'), 
+        alert: new Audio('https://cdn.pixabay.com/audio/2021/08/04/audio_1949f53e34.mp3'), 
+        start: new Audio('https://cdn.pixabay.com/audio/2022/01/18/audio_d0a13f69d2.mp3') 
     };
 
     let audioReady = false, uid, username, curRoomId = null, myRole, isFin = false, canPlay = false, timerInt = null, lastCellsCount = 0;
+    let unsubLobby = null, unsubGame = null;
 
-    function initWarp() {
-        const bg = document.getElementById('game-bg');
-        for(let i=0; i<60; i++) {
-            const star = document.createElement('div');
-            star.className = 'star';
-            star.style.left = Math.random() * 100 + 'vw';
-            star.style.width = Math.random() * 2 + 'px';
-            star.style.height = (Math.random() * 20 + 5) + 'px';
-            star.style.animationDuration = (Math.random() * 1 + 0.5) + 's';
-            star.style.animationDelay = Math.random() * 2 + 's';
-            bg.appendChild(star);
-        }
-    }
+    // Mobil Geri Tuşu Koruması
+    history.pushState(null, null, location.href);
+    window.onpopstate = () => { history.pushState(null, null, location.href); window.showExitConfirm(); };
 
     window.toggleModal = (id, show) => { document.getElementById(id).style.display = show ? 'flex' : 'none'; };
 
-    // --- EXIT CONTROLLER (MODAL VERSION) ---
-    window.showExitConfirm = () => {
-        if (!curRoomId) { location.reload(); return; }
-        window.toggleModal('confirmExitModal', true);
-    };
+    window.showExitConfirm = () => { if(curRoomId) window.toggleModal('confirmExitModal', true); else location.reload(); };
 
     window.finalizeExit = async () => {
-        if (curRoomId) {
-            await updateDoc(doc(db, "conquest_rooms", curRoomId), { status: 'escaped' });
-        }
+        if (curRoomId) await updateDoc(doc(db, "conquest_rooms", curRoomId), { status: 'escaped' });
         location.reload();
-    };
-
-    // --- HIZLI KATIL / ODA KUR MANTIĞI ---
-    window.openQuickModal = async () => {
-        window.toggleModal('quickModal', true);
-        document.getElementById('quickStatus').innerText = "TARANIYOR...";
-        
-        try {
-            const q = query(collection(db, "conquest_rooms"), where("status", "==", "waiting"));
-            const snap = await getDocs(q);
-            let found = null;
-            
-            snap.forEach(d => {
-                const r = d.data();
-                if(r.p1 !== uid) found = d.id;
-            });
-
-            if(found) {
-                document.getElementById('quickStatus').innerText = "ODA BULUNDU!";
-                setTimeout(() => {
-                    window.toggleModal('quickModal', false);
-                    window.finalizeJoin(found);
-                }, 1000);
-            } else {
-                document.getElementById('quickStatus').innerText = "ODA BULUNAMADI!";
-                setTimeout(() => {
-                    window.toggleModal('quickModal', false);
-                    window.toggleModal('createModal', true); // Boş oda yoksa kurdur
-                }, 1200);
-            }
-        } catch(e) {
-            window.toggleModal('quickModal', false);
-        }
-    };
-
-    window.onbeforeunload = function() {
-        if(curRoomId && !isFin) {
-            updateDoc(doc(db, "conquest_rooms", curRoomId), { status: 'escaped' });
-        }
     };
 
     onAuthStateChanged(auth, async user => {
         if(!user) { signInAnonymously(auth); return; }
         uid = user.uid;
-        const uSnap = await getDoc(doc(db, "users", uid));
-        username = uSnap.exists() ? uSnap.data().username : "PILOT_" + uid.slice(0,3);
+        username = "PILOT_" + uid.slice(0,3);
         document.getElementById('meName').innerText = username;
         listenLobby();
         initWarp();
     });
 
     function listenLobby() {
-        onSnapshot(collection(db, "conquest_rooms"), snap => {
+        if(unsubLobby) unsubLobby();
+        const q = query(collection(db, "conquest_rooms"), where("status", "==", "waiting"));
+        unsubLobby = onSnapshot(q, snap => {
             const list = document.getElementById('roomList');
-            list.innerHTML = "";
-            
-            if (snap.empty) {
-                list.innerHTML = `
-                    <div class="empty-arena">
-                        <p style="color:var(--p1); font-weight:bold; margin-bottom:10px;">ARENA ŞUAN SESSİZ...</p>
-                        <p style="font-size:0.7rem;">İLK SAVAŞI SEN BAŞLATMAK İSTER MİSİN?</p>
-                    </div>`;
-                return;
-            }
-
+            list.innerHTML = snap.empty ? `<div class="empty-arena"><p style="color:var(--p1)">ARENA ŞUAN SESSİZ...</p></div>` : "";
             snap.forEach(d => {
-                const r = d.data();
-                if(r.status === 'finished' || r.p1 === uid) return;
-                
-                // Skor hesapla
-                const c = r.cells || {};
-                let s1=0, s2=0; Object.values(c).forEach(v => v === 'p1' ? s1++ : s2++);
-
-                const card = document.createElement('div');
-                card.className = "room-card";
-                card.innerHTML = `
-                    <div class="room-info">
-                        <b>${r.p1Name} ${r.pass ? '🔒' : ''}</b>
-                        <span class="room-stats">SKOR: ${s1} - ${s2} | DURUM: ${r.status === 'playing' ? 'SAVAŞTA' : 'BEKLİYOR'}</span>
-                    </div>
-                    <button class="btn-neon" style="padding:8px 15px; font-size:0.6rem;" onclick="window.finalizeJoin('${d.id}')">
-                        ${r.status === 'playing' ? 'İZLE/KATIL' : 'KATIL'}
-                    </button>`;
+                const r = d.data(); if(r.p1 === uid) return;
+                const card = document.createElement('div'); card.className = "room-card";
+                card.innerHTML = `<div><b>${r.p1Name} ${r.pass ? '🔒' : ''}</b><span class="room-stats">DURUM: BEKLİYOR</span></div>
+                <button class="btn-neon" style="padding:8px 15px; font-size:0.6rem;" onclick="window.finalizeJoin('${d.id}', '${r.pass||''}')">KATIL</button>`;
                 list.appendChild(card);
             });
         });
     }
 
+    window.openQuickModal = async () => {
+        window.toggleModal('quickModal', true);
+        const q = query(collection(db, "conquest_rooms"), where("status", "==", "waiting"));
+        const snap = await getDocs(q);
+        let found = null; snap.forEach(d => { if(d.data().p1 !== uid && !d.data().pass) found = d.id; });
+        if(found) { window.toggleModal('quickModal', false); window.finalizeJoin(found, ""); }
+        else { window.toggleModal('quickModal', false); window.toggleModal('createModal', true); }
+    };
+
     document.getElementById('confirmCreate').onclick = async () => {
         const pass = document.getElementById('createPass').value;
         const id = Math.random().toString(36).substring(2,7);
         curRoomId = id; myRole = 'p1';
-        await setDoc(doc(db, "conquest_rooms", id), {
-            p1: uid, p1Name: username, p2: null, p2Name: "...", cells: {}, timer: 60, status: 'waiting', pass: pass
-        });
+        await setDoc(doc(db, "conquest_rooms", id), { p1: uid, p1Name: username, p2: null, p2Name: "...", cells: {}, timer: 60, status: 'waiting', pass: pass });
         enterGame(id);
     };
 
-    window.finalizeJoin = async (id) => {
+    window.finalizeJoin = async (id, correctPass) => {
+        if(correctPass && prompt("ODA ŞİFRESİ:") !== correctPass) return alert("HATALI ŞİFRE!");
+        const roomRef = doc(db, "conquest_rooms", id);
+        const snap = await getDoc(roomRef);
+        if(!snap.exists() || snap.data().status !== 'waiting') return alert("ODA ARTIK MÜSAİT DEĞİL!");
+        
         curRoomId = id; myRole = 'p2';
-        await updateDoc(doc(db, "conquest_rooms", id), { p2: uid, p2Name: username, status: 'playing' });
+        await updateDoc(roomRef, { p2: uid, p2Name: username, status: 'playing' });
         enterGame(id);
     };
 
     function enterGame(id) {
+        if(unsubLobby) unsubLobby();
         document.getElementById('lobby').style.display = 'none';
-        document.getElementById('lobby-bg').style.display = 'none';
         document.getElementById('game-view').style.display = 'flex';
         document.getElementById('game-bg').style.display = 'block';
         window.toggleModal('createModal', false);
@@ -295,43 +187,64 @@
             g.appendChild(c);
         }
 
-        onSnapshot(doc(db, "conquest_rooms", id), snap => {
+        unsubGame = onSnapshot(doc(db, "conquest_rooms", id), snap => {
             if(!snap.exists() && !isFin) { location.reload(); return; }
             const d = snap.data();
-            if(d.status === 'escaped' && !isFin) {
-                isFin = true; clearInterval(timerInt);
-                playSfx('alert');
-                window.toggleModal('escapeModal', true);
-                return;
-            }
+            if(d.status === 'escaped' && !isFin) { finishGame(id, 'escape'); return; }
+            
             const cells = d.cells || {};
             if(Object.keys(cells).length > lastCellsCount) { playSfx('box'); lastCellsCount = Object.keys(cells).length; }
+            
             document.getElementById('n1').innerText = d.p1Name;
             document.getElementById('n2').innerText = d.p2Name;
             document.getElementById('timer-box').innerText = d.timer;
+
             if(d.status === 'playing' && !canPlay) { playSfx('start'); canPlay = true; }
+            
             if(myRole === 'p1' && d.status === 'playing' && !timerInt) {
                 timerInt = setInterval(() => {
                     if(d.timer > 0) updateDoc(doc(db, "conquest_rooms", id), { timer: increment(-1) });
                     else { clearInterval(timerInt); updateDoc(doc(db, "conquest_rooms", id), { status: 'finished' }); }
                 }, 1000);
             }
+
             let s1=0, s2=0;
             document.querySelectorAll('.cell').forEach((c, i) => {
                 if(cells[i]) { c.className = 'cell ' + cells[i]; cells[i] === 'p1' ? s1++ : s2++; }
             });
             document.getElementById('s1').innerText = s1; document.getElementById('s2').innerText = s2;
-            if((d.timer <= 0 || Object.keys(cells).length === 36 || d.status === 'finished') && !isFin) finish(s1, s2);
+            
+            if((d.timer <= 0 || Object.keys(cells).length === 36 || d.status === 'finished') && !isFin) {
+                finishGame(id, 'normal', s1, s2);
+            }
         });
     }
 
-    function finish(s1, s2) {
+    async function finishGame(id, type, s1=0, s2=0) {
         isFin = true; clearInterval(timerInt);
-        const win = (myRole === 'p1' && s1 > s2) || (myRole === 'p2' && s2 > s1);
-        playSfx(win ? 'win' : 'lose');
-        document.getElementById('winnerLabel').innerText = win ? "ZAFER!" : "KAYBETTİN";
-        document.getElementById('scoreLabel').innerText = `${s1} - ${s2}`;
-        window.toggleModal('resultModal', true);
+        if(unsubGame) unsubGame();
+        
+        if(type === 'escape') {
+            playSfx('alert'); window.toggleModal('escapeModal', true);
+        } else {
+            const win = (myRole === 'p1' && s1 > s2) || (myRole === 'p2' && s2 > s1);
+            playSfx(win ? 'win' : 'lose');
+            document.getElementById('winnerLabel').innerText = win ? "ZAFER!" : "KAYBETTİN";
+            document.getElementById('scoreLabel').innerText = `${s1} - ${s2}`;
+            window.toggleModal('resultModal', true);
+        }
+        // Zombi Oda Temizliği: 1 saniye sonra odayı sil
+        setTimeout(() => deleteDoc(doc(db, "conquest_rooms", id)), 1000);
+    }
+
+    function initWarp() {
+        const bg = document.getElementById('game-bg');
+        for(let i=0; i<40; i++) {
+            const star = document.createElement('div'); star.className = 'star';
+            star.style.left = Math.random() * 100 + 'vw'; star.style.width = '2px';
+            star.style.height = (Math.random() * 15 + 5) + 'px'; star.style.animationDuration = (Math.random() * 1 + 0.5) + 's';
+            bg.appendChild(star);
+        }
     }
 
     window.unlockAudio = () => { if(audioReady) return; Object.values(sfx).forEach(s => { s.play().then(()=> {s.pause(); s.currentTime=0;}); }); audioReady = true; };
