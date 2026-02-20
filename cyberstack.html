@@ -3,17 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Cyber-Stack Elite | Pixel Arena</title>
+    <title>Cyber-Stack Neon | Pixel Arena</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Montserrat:wght@900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
             --primary: #4fd1ff;
-            --primary-glow: rgba(79, 209, 255, 0.4);
             --bg: #03050a;
-            --glass: rgba(15, 22, 36, 0.85);
+            --glass: rgba(10, 15, 25, 0.8);
             --border: rgba(255, 255, 255, 0.1);
-            --accent: #ff8a00;
             --danger: #ff4d4d;
         }
 
@@ -25,19 +23,14 @@
             font-family: 'Inter', sans-serif; 
             overflow: hidden;
             height: 100vh;
-            display: flex;
-            flex-direction: column;
         }
 
-        /* --- ARKA PLAN ANİMASYONU --- */
-        #bg-canvas {
+        /* --- NEON ANİMASYONLU ARKA PLAN --- */
+        #neon-bg {
             position: fixed;
-            top: 65px;
-            left: 0;
-            width: 100%;
-            height: calc(100% - 65px);
-            z-index: 1;
-            opacity: 0.4;
+            inset: 0;
+            z-index: -1;
+            background: radial-gradient(circle at center, #111827 0%, #03050a 100%);
         }
 
         /* --- ÜST BAR --- */
@@ -48,8 +41,9 @@
             justify-content: space-between;
             padding: 0 15px;
             background: var(--glass);
-            backdrop-filter: blur(20px);
+            backdrop-filter: blur(25px);
             border-bottom: 1px solid var(--border);
+            position: relative;
             z-index: 1000;
         }
 
@@ -57,19 +51,16 @@
             font-family: 'Montserrat', sans-serif;
             font-size: 16px;
             font-weight: 900;
-            background: linear-gradient(90deg, var(--primary), #fff, var(--primary));
-            background-size: 200% auto;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            animation: shine 4s linear infinite;
+            letter-spacing: 1px;
+            color: var(--primary);
+            text-shadow: 0 0 10px var(--primary);
         }
-        @keyframes shine { to { background-position: 200% center; } }
 
-        .stat-group { display: flex; gap: 8px; align-items: center; }
+        .stat-group { display: flex; gap: 10px; align-items: center; }
 
         .stat-pill {
-            background: rgba(255,255,255,0.05);
-            padding: 5px 12px;
+            background: rgba(255,255,255,0.03);
+            padding: 6px 12px;
             border-radius: 10px;
             border: 1px solid var(--border);
             font-size: 12px;
@@ -78,37 +69,35 @@
             align-items: center;
             gap: 6px;
         }
-        .stat-pill i { color: var(--primary); font-size: 10px; }
 
         .exit-btn {
-            background: rgba(255, 77, 77, 0.1);
+            background: rgba(255, 77, 77, 0.15);
             border: 1px solid var(--danger);
             color: var(--danger);
-            padding: 6px 12px;
+            padding: 6px 14px;
             border-radius: 8px;
             font-size: 11px;
             font-weight: 900;
             cursor: pointer;
-            transition: 0.3s;
             text-decoration: none;
         }
-        .exit-btn:hover { background: var(--danger); color: white; }
 
         /* --- OYUN ALANI --- */
-        #game-wrapper {
-            flex: 1;
+        #game-container {
+            width: 100%;
+            height: calc(100vh - 65px);
             position: relative;
-            z-index: 10;
         }
 
-        canvas#stackCanvas { width: 100%; height: 100%; display: block; }
+        canvas { width: 100%; height: 100%; display: block; }
 
         /* --- UI MODALS --- */
-        .game-ui {
+        .game-overlay {
             position: absolute;
             inset: 0;
             pointer-events: none;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             z-index: 100;
@@ -116,115 +105,119 @@
 
         .modal {
             background: var(--glass);
-            padding: 35px;
-            border-radius: 25px;
+            padding: 40px 30px;
+            border-radius: 30px;
             border: 1px solid var(--border);
             text-align: center;
-            backdrop-filter: blur(15px);
+            backdrop-filter: blur(20px);
             pointer-events: auto;
             width: 85%;
-            max-width: 320px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            max-width: 340px;
+            box-shadow: 0 0 40px rgba(0,0,0,0.6);
         }
-
-        .modal h2 { font-family: 'Montserrat', sans-serif; margin-bottom: 10px; color: var(--primary); }
-        .modal p { color: #94a3b8; font-size: 13px; margin-bottom: 20px; }
 
         .btn-action {
             width: 100%;
-            padding: 14px;
-            border-radius: 12px;
+            padding: 16px;
+            border-radius: 15px;
             border: none;
             background: var(--primary);
             color: #000;
             font-weight: 900;
             cursor: pointer;
             text-transform: uppercase;
+            box-shadow: 0 0 20px rgba(79, 209, 255, 0.4);
         }
 
-        #big-score {
+        #score-display {
             position: absolute;
             top: 20px;
-            font-size: 100px;
+            font-size: 110px;
             font-weight: 900;
             color: white;
-            opacity: 0.1;
+            opacity: 0.08;
         }
     </style>
 </head>
 <body onclick="gameInput()">
 
-    <canvas id="bg-canvas"></canvas>
+    <canvas id="neon-bg"></canvas>
 
     <div class="top-bar">
         <div class="brand">PIXELARENA</div>
         <div class="stat-group">
             <div class="stat-pill"><i class="fa-solid fa-trophy"></i> <span id="highScore">0</span></div>
             <div class="stat-pill"><i class="fa-solid fa-layer-group"></i> <span id="currentScore">0</span></div>
-            <a href="index.html" class="exit-btn"><i class="fa-solid fa-xmark"></i> ÇIKIŞ</a>
+            <a href="index.html" class="exit-btn">ÇIKIŞ</a>
         </div>
     </div>
 
-    <div id="game-wrapper">
+    <div id="game-container">
         <canvas id="stackCanvas"></canvas>
-        <div class="game-ui">
-            <div id="big-score">0</div>
+        <div class="game-overlay">
+            <div id="score-display">0</div>
 
             <div id="start-ui" class="modal">
-                <h2>CYBER STACK</h2>
-                <p>Blokları mükemmel diz, renkleri yakala ve rekorunu kır!</p>
+                <h2 style="font-family:'Montserrat'; margin-bottom:15px; color:var(--primary)">CYBER STACK</h2>
+                <p style="color:#94a3b8; font-size:14px; margin-bottom:25px;">Kuleyi yükselt, neon dünyayı aydınlat!</p>
                 <button class="btn-action" onclick="startGame(event)">BAŞLAT</button>
             </div>
 
             <div id="game-over-ui" class="modal" style="display:none;">
-                <h2 style="color:var(--danger)">SİSTEM HATASI</h2>
-                <p>Kule devrildi. Ulaşılan katman: <b id="finalScore" style="color:white">0</b></p>
-                <button class="btn-action" onclick="restartGame(event)">TEKRAR YÜKLE</button>
+                <h2 style="font-family:'Montserrat'; margin-bottom:15px; color:var(--danger)">BAĞLANTI KESİLDİ</h2>
+                <p style="color:#94a3b8; font-size:14px; margin-bottom:25px;">Kule devrildi. Skorun: <b id="finalScore" style="color:white">0</b></p>
+                <button class="btn-action" onclick="restartGame(event)">SİSTEMİ ONAR</button>
             </div>
         </div>
     </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
-    // --- SES EFEKTLERİ ---
-    const sfx = {
-        drop: new Audio('https://cdn.pixabay.com/audio/2022/03/15/audio_78396032a7.mp3'),
-        fail: new Audio('https://cdn.pixabay.com/audio/2021/08/04/audio_c36357602e.mp3'),
-        start: new Audio('https://cdn.pixabay.com/audio/2022/01/18/audio_d0a13f69d2.mp3')
+    // --- YENİ SESLER ---
+    const sounds = {
+        place: new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3'), // Dijital tık
+        fail: new Audio('https://assets.mixkit.co/active_storage/sfx/253/253-preview.mp3'),   // Tok düşüş
+        start: new Audio('https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3') // Enerji dolumu
     };
-    Object.values(sfx).forEach(a => { a.volume = 0.4; a.preload = 'auto'; });
+    Object.values(sounds).forEach(s => s.volume = 0.5);
 
     let scene, camera, renderer, stack = [];
     let gameStarted = false, gameOver = false;
     let score = 0, highScore = localStorage.getItem('stack_highscore') || 0;
-    let speed = 0.12;
+    let speed = 0.12, bgHue = 200;
 
-    // --- ARKA PLAN GRİD ANİMASYONU ---
-    const bgCanvas = document.getElementById('bg-canvas');
+    // --- NEON ARKA PLAN ANİMASYONU ---
+    const bgCanvas = document.getElementById('neon-bg');
     const bgCtx = bgCanvas.getContext('2d');
-    function drawGrid() {
+    function animateBG() {
         bgCanvas.width = window.innerWidth;
         bgCanvas.height = window.innerHeight;
-        bgCtx.strokeStyle = '#4fd1ff22';
-        bgCtx.lineWidth = 1;
-        const size = 50;
-        const offset = (Date.now() / 50) % size;
+        bgCtx.clearRect(0,0,bgCanvas.width, bgCanvas.height);
         
-        bgCtx.beginPath();
-        for(let x=0; x<=bgCanvas.width+size; x+=size) {
-            bgCtx.moveTo(x - offset, 0);
-            bgCtx.lineTo(x - offset, bgCanvas.height);
-        }
-        for(let y=0; y<=bgCanvas.height+size; y+=size) {
-            bgCtx.moveTo(0, y);
-            bgCtx.lineTo(bgCanvas.width, y);
-        }
-        bgCtx.stroke();
-        requestAnimationFrame(drawGrid);
-    }
-    drawGrid();
+        let grad = bgCtx.createRadialGradient(bgCanvas.width/2, bgCanvas.height/2, 0, bgCanvas.width/2, bgCanvas.height/2, bgCanvas.height);
+        grad.addColorStop(0, `hsla(${bgHue}, 70%, 10%, 1)`);
+        grad.addColorStop(1, '#03050a');
+        
+        bgCtx.fillStyle = grad;
+        bgCtx.fillRect(0,0,bgCanvas.width, bgCanvas.height);
 
-    // --- OYUN MANTIĞI ---
+        // Kayan Çizgiler
+        bgCtx.strokeStyle = `hsla(${bgHue}, 100%, 50%, 0.15)`;
+        bgCtx.lineWidth = 2;
+        let time = Date.now() * 0.001;
+        for(let i=0; i<10; i++) {
+            let x = (Math.sin(time + i) * 50) + (i * bgCanvas.width/10);
+            bgCtx.beginPath();
+            bgCtx.moveTo(x, 0);
+            bgCtx.lineTo(x + 100, bgCanvas.height);
+            bgCtx.stroke();
+        }
+        if(gameStarted) bgHue += 0.2; // Renk yavaşça döner
+        requestAnimationFrame(animateBG);
+    }
+    animateBG();
+
+    // --- OYUN MOTORU ---
     function init() {
         document.getElementById('highScore').innerText = highScore;
         scene = new THREE.Scene();
@@ -238,32 +231,33 @@
         renderer.setSize(window.innerWidth, window.innerHeight - 65);
         
         scene.add(new THREE.AmbientLight(0xffffff, 0.8));
-        const light = new THREE.DirectionalLight(0xffffff, 0.4);
+        const light = new THREE.DirectionalLight(0xffffff, 0.5);
         light.position.set(10, 20, 5);
         scene.add(light);
 
-        resetStack();
+        resetGame();
         animate();
     }
 
-    function resetStack() {
+    function resetGame() {
         stack.forEach(b => scene.remove(b.mesh));
         stack = [];
         score = 0;
         speed = 0.12;
+        bgHue = 200;
         updateUI();
-        addBlock(0, 0, 3, 3, null); // Base
-        addBlock(0, 0, 3, 3, 'x'); // First mover
+        addBlock(0, 0, 3, 3, null); // Zemin
+        addBlock(0, 0, 3, 3, 'x'); // İlk hareketli
     }
 
     function addBlock(x, z, w, d, dir) {
         const y = stack.length;
-        // RENKLİ KULELER: HSL kullanarak her katta renk değişimi
-        const color = new THREE.Color().setHSL((stack.length * 0.1) % 1, 0.8, 0.5);
+        // RENKLİ KULE: Gökkuşağı efekti
+        const color = new THREE.Color().setHSL((stack.length * 0.05) % 1, 0.9, 0.6);
         
         const mesh = new THREE.Mesh(
             new THREE.BoxGeometry(w, 1, d),
-            new THREE.MeshPhongMaterial({ color, emissive: color, emissiveIntensity: 0.1 })
+            new THREE.MeshPhongMaterial({ color, emissive: color, emissiveIntensity: 0.2 })
         );
         mesh.position.set(x, y, z);
         scene.add(mesh);
@@ -282,7 +276,9 @@
         const overlap = size - Math.abs(delta);
 
         if (overlap > 0) {
-            sfx.drop.currentTime = 0; sfx.drop.play();
+            sounds.place.currentTime = 0;
+            sounds.place.play(); // Yerleştirme sesi
+
             const newW = dir === 'x' ? overlap : top.width;
             const newD = dir === 'z' ? overlap : top.depth;
             const newX = dir === 'x' ? prev.mesh.position.x + delta/2 : top.mesh.position.x;
@@ -295,12 +291,12 @@
             score++;
             if(score > highScore) { highScore = score; localStorage.setItem('stack_highscore', highScore); }
             updateUI();
-            speed += 0.005;
+            speed += 0.006;
 
             addBlock(newX, newZ, newW, newD, dir === 'x' ? 'z' : 'x');
             camera.position.y += 1;
         } else {
-            sfx.fail.play();
+            sounds.fail.play(); // Kaybetme sesi
             gameOver = true;
             document.getElementById('game-over-ui').style.display = 'block';
             document.getElementById('finalScore').innerText = score;
@@ -309,7 +305,7 @@
 
     function updateUI() {
         document.getElementById('currentScore').innerText = score;
-        document.getElementById('big-score').innerText = score;
+        document.getElementById('score-display').innerText = score;
         document.getElementById('highScore').innerText = highScore;
     }
 
@@ -318,13 +314,25 @@
         if (gameStarted && !gameOver) {
             const top = stack[stack.length - 1];
             top.mesh.position[top.direction] += speed;
-            if (Math.abs(top.mesh.position[top.direction]) > 5) speed *= -1;
+            if (Math.abs(top.mesh.position[top.direction]) > 5.5) speed *= -1;
         }
         renderer.render(scene, camera);
     }
 
-    window.startGame = (e) => { e.stopPropagation(); sfx.start.play(); gameStarted = true; document.getElementById('start-ui').style.display = 'none'; };
-    window.restartGame = (e) => { e.stopPropagation(); gameOver = false; camera.position.set(4, 4, 4); document.getElementById('game-over-ui').style.display = 'none'; resetStack(); };
+    window.startGame = (e) => { 
+        e.stopPropagation(); 
+        sounds.start.play();
+        gameStarted = true; 
+        document.getElementById('start-ui').style.display = 'none'; 
+    };
+
+    window.restartGame = (e) => { 
+        e.stopPropagation(); 
+        gameOver = false; 
+        camera.position.set(4, 4, 4); 
+        document.getElementById('game-over-ui').style.display = 'none'; 
+        resetGame(); 
+    };
 
     window.addEventListener('resize', () => {
         renderer.setSize(window.innerWidth, window.innerHeight - 65);
