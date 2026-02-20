@@ -3,255 +3,289 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Nexus Arena | Evolution</title>
+    <title>Nexus Arctic Arena</title>
 
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=Outfit:wght@200;500;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;500;800&family=Bebas+Neue&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
     <style>
         :root {
-            --accent: #00f2ff;
-            --storm-blue: #0a1128;
-            --deep-black: #020205;
-            --glass: rgba(255, 255, 255, 0.03);
-            --border: rgba(0, 242, 255, 0.2);
+            --accent-cold: #00d2ff;
+            --arctic-white: #e0f7fa;
+            --deep-night: #02040a;
+            --glass-base: rgba(10, 15, 25, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --danger: #ff3b3b;
+            --success: #00e676;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
-        body { background: var(--deep-black); color: white; overflow: hidden; height: 100vh; width: 100vw; }
-
-        /* --- SİNEMATİK FIRTINA ARKA PLANI --- */
-        #storm-canvas { position: fixed; inset: 0; z-index: 1; filter: blur(1px); }
-        .lightning-bolt { position: fixed; inset: 0; background: white; opacity: 0; z-index: 2; pointer-events: none; }
-
-        /* --- KONSOL TARZI ÜST BAR (HİÇBİR KOŞULDA TAŞMAZ) --- */
-        .top-nav {
-            position: fixed; top: 0; left: 0; width: 100%; height: 80px;
-            display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
-            padding: 0 40px; z-index: 100; background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
-        }
-
-        .brand-nexus { font-family: 'Orbitron'; font-weight: 900; letter-spacing: 5px; font-size: 22px; color: var(--accent); text-shadow: 0 0 20px var(--accent); }
-
-        .user-status-area {
-            display: flex; align-items: center; gap: 20px; justify-self: end;
-            background: rgba(255,255,255,0.05); padding: 5px 5px 5px 20px;
-            border-radius: 100px; border: 1px solid var(--border); backdrop-filter: blur(10px);
-            max-width: 350px; /* Bakiye ne olursa olsun alanı sınırlar */
-        }
-        .balance-wrap { display: flex; flex-direction: column; align-items: flex-end; min-width: 80px; }
-        .balance-wrap small { font-size: 10px; color: var(--accent); font-weight: 800; text-transform: uppercase; }
-        .balance-wrap b { font-size: 16px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px; }
-
-        .avatar-box {
-            width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--accent);
-            cursor: pointer; overflow: hidden; transition: 0.3s;
-        }
-        .avatar-box img { width: 100%; height: 100%; object-fit: cover; }
-
-        /* --- YATAY OYUN ŞERİDİ (KART DEĞİL, SİNEMATİK PANEL) --- */
-        .nexus-viewport {
-            position: relative; height: 100vh; width: 100vw;
-            display: flex; align-items: center; padding-left: 10%;
-            z-index: 10; overflow-x: auto; scroll-snap-type: x mandatory;
-            gap: 40px; scrollbar-width: none;
-        }
-        .nexus-viewport::-webkit-scrollbar { display: none; }
-
-        .game-panel {
-            min-width: 450px; height: 60vh; border-radius: 40px;
-            background: rgba(255,255,255,0.02); border: 1px solid var(--border);
-            position: relative; overflow: hidden; scroll-snap-align: center;
-            transition: 0.5s cubic-bezier(0.2, 1, 0.2, 1);
-            display: flex; flex-direction: column; justify-content: flex-end; padding: 40px;
-        }
-        .game-panel:hover { transform: scale(1.05); background: rgba(255,255,255,0.07); border-color: #fff; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
         
-        .game-panel i { font-size: 120px; position: absolute; top: -20px; right: -20px; opacity: 0.1; transform: rotate(-15deg); transition: 0.5s; }
-        .game-panel:hover i { opacity: 0.3; transform: rotate(0deg) scale(1.2); }
-
-        .game-info h2 { font-family: 'Orbitron'; font-size: 32px; text-transform: uppercase; margin-bottom: 10px; letter-spacing: 2px; }
-        .game-info p { color: rgba(255,255,255,0.5); font-size: 14px; margin-bottom: 20px; }
-        
-        .play-btn {
-            width: fit-content; padding: 12px 40px; border-radius: 100px;
-            background: var(--accent); color: #000; font-weight: 800;
-            text-decoration: none; text-transform: uppercase; letter-spacing: 1px;
-            box-shadow: 0 0 30px rgba(0, 242, 255, 0.4);
+        body { 
+            background: var(--deep-night); 
+            color: white; 
+            overflow-x: hidden;
+            background-image: radial-gradient(circle at top right, #0a1931, transparent);
         }
 
-        /* --- PROFİL MODAL (PROFESYONEL AYARLAR) --- */
+        /* --- SİNEMATİK HAVA DURUMU SİMÜLASYONU --- */
+        #weather-canvas { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
+        .lightning-flash { position: fixed; inset: 0; background: white; opacity: 0; z-index: 2; pointer-events: none; }
+
+        /* --- ÜST BAR: TAŞMAYA KARŞI ZIRHLI TASARIM --- */
+        .header-nexus {
+            position: fixed; top: 0; width: 100%; height: 75px;
+            display: grid; grid-template-columns: auto 1fr auto; align-items: center;
+            padding: 0 40px; background: var(--glass-base);
+            backdrop-filter: blur(25px); border-bottom: 1px solid var(--glass-border);
+            z-index: 1000;
+        }
+
+        .logo { font-family: 'Bebas Neue', cursive; font-size: 28px; letter-spacing: 2px; color: var(--arctic-white); }
+        .logo span { color: var(--accent-cold); }
+
+        .auth-zone { justify-self: end; display: flex; align-items: center; gap: 15px; }
+
+        /* Bakiye kutusu: Ne kadar uzun olursa olsun tasarımı bozmaz */
+        .balance-box {
+            background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border);
+            padding: 8px 15px; border-radius: 12px; display: flex; flex-direction: column;
+            align-items: flex-end; max-width: 180px; overflow: hidden;
+        }
+        .balance-box small { font-size: 9px; text-transform: uppercase; color: var(--accent-cold); font-weight: 800; }
+        .balance-box b { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; text-align: right; }
+
+        .pfp-wrap {
+            width: 45px; height: 45px; border-radius: 12px; border: 2px solid var(--accent-cold);
+            overflow: hidden; cursor: pointer; transition: 0.3s;
+        }
+        .pfp-wrap img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* --- PROFESYONEL OYUN KARTLARI --- */
+        .container { padding: 120px 5% 50px; position: relative; z-index: 10; }
+        .grid-header { font-size: 14px; font-weight: 800; color: var(--accent-cold); margin: 40px 0 20px; text-transform: uppercase; letter-spacing: 3px; border-left: 4px solid var(--accent-cold); padding-left: 15px; }
+
+        .games-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px; }
+
+        .game-card {
+            background: linear-gradient(145deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01));
+            border-radius: 24px; padding: 30px; border: 1px solid var(--glass-border);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative; overflow: hidden; cursor: pointer;
+        }
+        .game-card:hover { transform: translateY(-10px); background: rgba(255,255,255,0.08); border-color: var(--accent-cold); }
+        
+        .game-card i { font-size: 45px; margin-bottom: 20px; display: block; color: var(--arctic-white); text-shadow: 0 0 20px rgba(0,210,255,0.4); }
+        .game-card h3 { font-size: 20px; margin-bottom: 10px; font-weight: 800; }
+        .game-card p { font-size: 13px; color: rgba(255,255,255,0.5); margin-bottom: 20px; line-height: 1.6; }
+        
+        .play-link {
+            font-size: 11px; font-weight: 800; text-transform: uppercase;
+            color: var(--accent-cold); display: flex; align-items: center; gap: 8px;
+        }
+
+        /* --- MODERN MODALLAR --- */
         .modal-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.95);
-            backdrop-filter: blur(20px); z-index: 1000; display: none;
-            align-items: center; justify-content: center;
+            position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(20px); z-index: 2000; display: none;
+            align-items: center; justify-content: center; padding: 20px;
         }
-        .modal-box {
-            width: 90%; max-width: 500px; background: #0a0a0f; 
-            border: 1px solid var(--border); border-radius: 40px; padding: 40px;
+        .modal-card {
+            width: 100%; max-width: 480px; background: #0c0f16;
+            border: 1px solid var(--glass-border); border-radius: 32px;
+            padding: 40px; position: relative;
         }
 
-        .input-row { margin-bottom: 20px; }
-        .input-row label { display: block; font-size: 11px; color: var(--accent); margin-bottom: 8px; text-transform: uppercase; font-weight: 800; }
-        .input-row input {
-            width: 100%; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1);
-            padding: 15px; border-radius: 15px; color: #fff; outline: none; transition: 0.3s;
+        .input-group { margin-bottom: 20px; text-align: left; }
+        .input-group label { display: block; font-size: 10px; color: var(--accent-cold); font-weight: 800; margin-bottom: 8px; text-transform: uppercase; }
+        .input-group input {
+            width: 100%; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border);
+            padding: 15px; border-radius: 12px; color: white; outline: none; transition: 0.3s;
         }
-        .input-row input:focus { border-color: var(--accent); box-shadow: 0 0 15px rgba(0, 242, 255, 0.1); }
-        .input-row input:disabled { opacity: 0.3; cursor: not-allowed; }
+        .input-group input:focus { border-color: var(--accent-cold); background: rgba(255,255,255,0.06); }
+        .input-group input:disabled { opacity: 0.4; cursor: not-allowed; border-style: dashed; }
 
-        /* --- GERÇEK ÇARK (SİNEMATİK) --- */
-        .wheel-wrap { position: relative; width: 320px; height: 320px; margin: 0 auto 30px; }
-        #wheel-svg { width: 100%; height: 100%; transition: 5s cubic-bezier(0.1, 0, 0.1, 1); filter: drop-shadow(0 0 30px var(--accent)); }
+        /* PROMO HATA MESAJI */
+        #promo-error { color: var(--danger); font-size: 12px; font-weight: 700; margin-top: 8px; display: none; animation: shake 0.4s; }
+        @keyframes shake { 0%,100%{transform: translateX(0);} 25%{transform: translateX(-5px);} 75%{transform: translateX(5px);} }
 
-        /* --- PROMO KOD HATASI --- */
-        #promo-err { color: #ff4d4d; font-size: 12px; margin-top: 5px; display: none; font-weight: 600; }
+        /* GERÇEK ÇARK SİSTEMİ */
+        .wheel-container { position: relative; width: 300px; height: 300px; margin: 0 auto 30px; }
+        #nexus-wheel { width: 100%; height: 100%; transition: 5s cubic-bezier(0.1, 0, 0.1, 1); filter: drop-shadow(0 0 20px var(--accent-cold)); }
+        .wheel-pointer { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 30px; z-index: 5; }
 
-        /* --- AVATAR GRID --- */
-        .av-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 15px; }
-        .av-opt { aspect-ratio: 1; border-radius: 12px; border: 2px solid transparent; cursor: pointer; overflow: hidden; }
-        .av-opt.active { border-color: var(--accent); transform: scale(0.9); }
-        .av-opt img { width: 100%; height: 100%; object-fit: cover; }
+        /* AVATAR GRID */
+        .avatar-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 10px; }
+        .avatar-opt { aspect-ratio: 1; border-radius: 10px; cursor: pointer; border: 2px solid transparent; overflow: hidden; transition: 0.2s; }
+        .avatar-opt.active { border-color: var(--accent-cold); transform: scale(0.9); }
+        .avatar-opt img { width: 100%; height: 100%; object-fit: cover; }
+
+        .btn-action {
+            width: 100%; padding: 16px; border-radius: 14px; border: none;
+            background: var(--accent-cold); color: #000; font-weight: 800;
+            cursor: pointer; text-transform: uppercase; letter-spacing: 1px;
+        }
+
+        /* --- DROPDOWN --- */
+        #profile-menu {
+            position: absolute; top: 85px; right: 40px; width: 240px;
+            background: #0c0f16; border: 1px solid var(--glass-border);
+            border-radius: 20px; display: none; flex-direction: column; overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+        .menu-item { padding: 15px 20px; color: white; text-decoration: none; font-size: 14px; display: flex; align-items: center; gap: 12px; transition: 0.2s; }
+        .menu-item:hover { background: rgba(255,255,255,0.05); color: var(--accent-cold); }
 
         @media (max-width: 768px) {
-            .nexus-viewport { padding-left: 20px; }
-            .game-panel { min-width: 85vw; height: 50vh; }
-            .top-nav { padding: 0 20px; }
-            .brand-nexus { font-size: 16px; }
+            .header-nexus { padding: 0 20px; }
+            .logo { font-size: 22px; }
+            .balance-box { display: none; }
         }
     </style>
 </head>
 <body>
 
-<canvas id="storm-canvas"></canvas>
-<div class="lightning-bolt" id="l-bolt"></div>
+<canvas id="weather-canvas"></canvas>
+<div class="lightning-flash" id="flash-ef"></div>
 
-<nav class="top-nav">
-    <div class="brand-nexus">NEXUS ARENA</div>
-    <div></div> <div class="user-status-area" id="auth-ui" style="display:none;">
-        <div class="balance-wrap">
-            <small>Kredi Bakiyesi</small>
-            <b id="u-bal">0.00 ₺</b>
+<header class="header-nexus">
+    <div class="logo">NEXUS<span>ARCTIC</span></div>
+    <div></div>
+    <div class="auth-zone" id="auth-check-ui">
+        <div id="guest-ui">
+            <button onclick="openAuth(true)" class="btn-action" style="padding: 10px 25px; font-size: 12px;">SİSTEME GİRİŞ</button>
         </div>
-        <div class="avatar-box" onclick="toggleMenu()">
-            <img src="" id="u-av">
-        </div>
-        
-        <div id="drop-menu" style="display:none; position:absolute; top:85px; right:40px; background:#0a0a0f; border:1px solid var(--border); border-radius:20px; width:220px; flex-direction:column; overflow:hidden;">
-            <div style="padding:15px; border-bottom:1px solid rgba(255,255,255,0.05); font-weight:800; font-size:12px; color:var(--accent);" id="u-name-top">Kullanıcı</div>
-            <a href="#" onclick="openModal('p-modal')" style="padding:15px; color:#fff; text-decoration:none; font-size:14px;"><i class="fa-solid fa-gear"></i> Ayarlar</a>
-            <a href="#" onclick="openModal('w-modal')" style="padding:15px; color:#fff; text-decoration:none; font-size:14px;"><i class="fa-solid fa-star"></i> Günlük Şans</a>
-            <a href="#" onclick="openModal('k-modal')" style="padding:15px; color:#fff; text-decoration:none; font-size:14px;"><i class="fa-solid fa-ticket"></i> Promo Kod</a>
-            <a href="#" id="out-btn" style="padding:15px; color:#ff4d4d; text-decoration:none; font-size:14px; border-top:1px solid rgba(255,255,255,0.05);"><i class="fa-solid fa-power-off"></i> Çıkış</a>
-        </div>
-    </div>
-    <div id="guest-ui">
-        <button onclick="openAuth()" class="play-btn" style="padding:8px 25px; font-size:12px;">Sisteme Katıl</button>
-    </div>
-</nav>
-
-<section class="nexus-viewport">
-    <div class="game-panel" onclick="play('duel.html')">
-        <i class="fa-solid fa-bolt-lightning"></i>
-        <div class="game-info">
-            <h2>Reflex Duel</h2>
-            <p>Gerçek zamanlı rakiplerle hızını test et. İlk vuran kazanır.</p>
-            <span class="play-btn">Savaşa Gir</span>
+        <div id="user-ui" style="display: none; align-items: center; gap: 15px;">
+            <div class="balance-box">
+                <small>MEVCUT KREDİ</small>
+                <b id="top-bal">0.00 ₺</b>
+            </div>
+            <div class="pfp-wrap" onclick="toggleDrop()">
+                <img src="" id="top-pfp">
+            </div>
         </div>
     </div>
 
-    <div class="game-panel" onclick="play('grid.html')">
-        <i class="fa-solid fa-microchip"></i>
-        <div class="game-info">
-            <h2>Neon Grid</h2>
-            <p>Stratejik alan fethi. Gridleri ele geçir, arenayı domine et.</p>
-            <span class="play-btn">Fethet</span>
+    <div id="profile-menu">
+        <div style="padding: 15px 20px; border-bottom: 1px solid var(--glass-border); font-size: 11px; font-weight: 800; color: var(--accent-cold);" id="top-username">KULLANICI</div>
+        <a href="javascript:void(0)" onclick="openModal('modal-profile')" class="menu-item"><i class="fa-solid fa-user-gear"></i> Profil Ayarları</a>
+        <a href="javascript:void(0)" onclick="openModal('modal-wheel')" class="menu-item"><i class="fa-solid fa-dharmachakra"></i> Şans Çarkı</a>
+        <a href="javascript:void(0)" onclick="openModal('modal-promo')" class="menu-item"><i class="fa-solid fa-ticket"></i> Promo Kod</a>
+        <a href="javascript:void(0)" id="logout-trigger" class="menu-item" style="color: var(--danger);"><i class="fa-solid fa-power-off"></i> Güvenli Çıkış</a>
+    </div>
+</header>
+
+<div class="container">
+    <div class="grid-header">Savaş Arenası (Multiplayer)</div>
+    <div class="games-grid">
+        <div class="game-card" onclick="goGame('duel.html')">
+            <i class="fa-solid fa-hand-fist"></i>
+            <h3>Reflex Duel</h3>
+            <p>Rakiplerinle anlık hız yarışına gir. Saniyeler içinde kazan ya da kaybet.</p>
+            <div class="play-link">SAVAŞI BAŞLAT <i class="fa-solid fa-chevron-right"></i></div>
+        </div>
+        <div class="game-card" onclick="goGame('grid.html')">
+            <i class="fa-solid fa-border-all"></i>
+            <h3>Grid Conquest</h3>
+            <p>Stratejik alan fethi. Kareleri ele geçir, rakiplerini arenadan sil.</p>
+            <div class="play-link">FETİHE ÇIK <i class="fa-solid fa-chevron-right"></i></div>
         </div>
     </div>
 
-    <div class="game-panel" onclick="play('skycrash.html')">
-        <i class="fa-solid fa-rocket"></i>
-        <div class="game-info">
-            <h2>SkyCrash</h2>
-            <p>Yükseklik korkun var mı? Çarpan patlamadan paranı çek.</p>
-            <span class="play-btn">Uçuşa Geç</span>
+    <div class="grid-header">Premium Sınıf</div>
+    <div class="games-grid">
+        <div class="game-card" onclick="goGame('skycrash.html')">
+            <i class="fa-solid fa-jet-fighter-up"></i>
+            <h3>SkyCrash</h3>
+            <p>Yükseklik arttıkça kazanç katlanır. Patlamadan önce paranı çekmeyi unutma.</p>
+            <div class="play-link">UÇUŞA GEÇ <i class="fa-solid fa-chevron-right"></i></div>
+        </div>
+        <div class="game-card" onclick="goGame('mines.html')">
+            <i class="fa-solid fa-land-mine-on"></i>
+            <h3>Mines Arena</h3>
+            <p>Mayınsız bölgeleri keşfet. Her başarılı adımda ödülünü katla.</p>
+            <div class="play-link">KEŞFET <i class="fa-solid fa-chevron-right"></i></div>
         </div>
     </div>
 
-    <div class="game-panel" onclick="play('mines.html')">
-        <i class="fa-solid fa-bomb"></i>
-        <div class="game-info">
-            <h2>Mines</h2>
-            <p>Mayınsız tarlada hazineyi bul. Risk arttıkça kazanç katlanır.</p>
-            <span class="play-btn">Keşfet</span>
+    <div class="grid-header">Klasik Oyunlar</div>
+    <div class="games-grid">
+        <div class="game-card" onclick="location.href='snakepro.html'">
+            <i class="fa-solid fa-worm"></i>
+            <h3>Snake Evolution</h3>
+            <p>Klasik yılan oyunu, yeni nesil grafikler ve zorluk seviyeleri ile burada.</p>
+            <div class="play-link">ÜCRETSİZ OYNA <i class="fa-solid fa-chevron-right"></i></div>
         </div>
     </div>
+</div>
 
-    <div class="game-panel" onclick="location.href='snakepro.html'">
-        <i class="fa-solid fa-snake"></i>
-        <div class="game-info">
-            <h2>Snake Pro</h2>
-            <p>Klasik yılan oyunu, yeni nesil mekaniklerle geri döndü.</p>
-            <span class="play-btn" style="background:#fff">Ücretsiz Oyna</span>
+<div class="modal-overlay" id="modal-profile">
+    <div class="modal-card">
+        <h2 style="margin-bottom: 30px; font-family: 'Bebas Neue'; letter-spacing: 2px;">KİMLİK YÖNETİMİ</h2>
+        <div class="input-group">
+            <label>E-Posta Adresi (Sabit)</label>
+            <input type="text" id="p-email" disabled>
         </div>
-    </div>
-</section>
-
-<div class="modal-overlay" id="p-modal">
-    <div class="modal-box">
-        <h3 style="font-family:'Orbitron'; margin-bottom:25px; color:var(--accent);">KİMLİK AYARLARI</h3>
-        <div class="input-row">
-            <label>E-Posta Adresi</label>
-            <input type="text" id="m-email" disabled>
-        </div>
-        <div class="input-row">
+        <div class="input-group">
             <label>Ad Soyad (Bir Kez Girilebilir)</label>
-            <input type="text" id="m-fullname" placeholder="Adınızı girin...">
+            <input type="text" id="p-fullname" placeholder="Adınızı girin">
         </div>
-        <div class="input-row">
-            <label>Kullanıcı Adı (1 Değişim Hakkı)</label>
-            <input type="text" id="m-nick">
+        <div class="input-group">
+            <label>Kullanıcı Adı (1 Hak)</label>
+            <input type="text" id="p-username">
         </div>
-        <label style="font-size:11px; color:var(--accent); font-weight:800;">AVATAR SEÇİMİ (3 HAK)</label>
-        <div class="av-grid" id="av-list"></div>
-        <button class="play-btn" style="width:100%; margin-top:30px;" onclick="saveProfile()">VERİLERİ GÜNCELLE</button>
-        <p onclick="closeModal('p-modal')" style="text-align:center; margin-top:20px; cursor:pointer; opacity:0.5; font-size:12px;">VAZGEÇ</p>
+        <div class="input-group">
+            <label>Avatar Seçimi (Kalan Hak: <span id="av-hak">0</span>)</label>
+            <div class="avatar-grid" id="avatar-list"></div>
+        </div>
+        <button class="btn-action" onclick="saveProfile()">DEĞİŞİKLİKLERİ KAYDET</button>
+        <p onclick="closeModal('modal-profile')" style="margin-top: 20px; cursor: pointer; opacity: 0.5; font-size: 12px; text-align: center;">KAPAT</p>
     </div>
 </div>
 
-<div class="modal-overlay" id="w-modal">
-    <div class="modal-box" style="text-align:center;">
-        <h3 style="font-family:'Orbitron'; margin-bottom:25px; color:var(--accent);">NEXUS SPIN</h3>
-        <div class="wheel-wrap">
-            <img src="https://i.ibb.co/mRT80Pz/wheel.png" id="wheel-svg">
-            <div style="position:absolute; top:-15px; left:50%; transform:translateX(-50%); width:40px; height:40px; background:var(--accent); clip-path: polygon(100% 0, 0 0, 50% 100%);"></div>
+<div class="modal-overlay" id="modal-wheel">
+    <div class="modal-card" style="text-align: center;">
+        <h2 style="margin-bottom: 25px; font-family: 'Bebas Neue'; letter-spacing: 2px;">GÜNLÜK ŞANS</h2>
+        <div class="wheel-container">
+            <img src="https://i.ibb.co/9H6S4xy/pointer.png" class="wheel-pointer">
+            <img src="https://i.ibb.co/mRT80Pz/wheel.png" id="nexus-wheel">
         </div>
-        <button class="play-btn" id="spin-go" onclick="runWheel()">ÇEVİREYİM</button>
-        <p id="w-timer" style="margin-top:20px; color:var(--accent); font-weight:800;"></p>
-        <p onclick="closeModal('w-modal')" style="margin-top:20px; cursor:pointer; opacity:0.5;">KAPAT</p>
+        <button class="btn-action" id="spin-btn" onclick="spinNexus()">ÇARKTI ÇEVİR</button>
+        <p id="wheel-timer" style="margin-top: 15px; font-weight: 800; color: var(--accent-cold);"></p>
+        <p onclick="closeModal('modal-wheel')" style="margin-top: 20px; cursor: pointer; opacity: 0.5; font-size: 12px;">KAPAT</p>
     </div>
 </div>
 
-<div class="modal-overlay" id="k-modal">
-    <div class="modal-box">
-        <h3 style="font-family:'Orbitron'; margin-bottom:25px; color:var(--accent);">PROMO KOD AKTİVASYONU</h3>
-        <div class="input-row">
-            <input type="text" id="promo-in" placeholder="KODU BURAYA YAZIN" style="text-align:center; font-weight:900; letter-spacing:3px;">
-            <p id="promo-err">Kod geçersiz veya kullanılmış!</p>
+<div class="modal-overlay" id="modal-promo">
+    <div class="modal-card">
+        <h2 style="margin-bottom: 25px; font-family: 'Bebas Neue'; letter-spacing: 2px;">PROMO AKTİVASYON</h2>
+        <div class="input-group">
+            <label>PROMOSYON KODU</label>
+            <input type="text" id="promo-input" placeholder="KODU BURAYA YAZIN" style="text-align: center; font-weight: 800; letter-spacing: 5px;">
+            <p id="promo-error">Geçersiz veya kullanılmış kod girdiniz!</p>
         </div>
-        <button class="play-btn" style="width:100%;" onclick="checkPromo()">AKTİF ET</button>
-        <p onclick="closeModal('k-modal')" style="text-align:center; margin-top:20px; cursor:pointer; opacity:0.5;">İPTAL</p>
+        <button class="btn-action" onclick="claimPromo()">KODU KULLAN</button>
+        <p onclick="closeModal('modal-promo')" style="margin-top: 20px; cursor: pointer; opacity: 0.5; font-size: 12px; text-align: center;">VAZGEÇ</p>
     </div>
 </div>
 
-<div class="modal-overlay" id="a-modal">
-    <div class="modal-box">
-        <h3 id="a-title" style="font-family:'Orbitron'; margin-bottom:25px; color:var(--accent);">SİSTEME GİRİŞ</h3>
-        <div class="input-row"><input type="email" id="a-email" placeholder="E-Posta"></div>
-        <div class="input-row"><input type="password" id="a-pass" placeholder="Şifre"></div>
-        <div class="input-row" id="a-nick-row" style="display:none;"><input type="text" id="a-nick" placeholder="Kullanıcı Adı"></div>
-        <button class="play-btn" style="width:100%;" id="a-btn">BAĞLAN</button>
-        <p onclick="swapAuth()" id="a-swap" style="text-align:center; margin-top:20px; cursor:pointer; font-size:13px;">Henüz hesabın yok mu? <b style="color:var(--accent)">Kayıt Ol</b></p>
+<div class="modal-overlay" id="modal-auth">
+    <div class="modal-card">
+        <h2 id="auth-title" style="margin-bottom: 25px; font-family: 'Bebas Neue'; letter-spacing: 2px;">GİRİŞ YAP</h2>
+        <div class="input-group">
+            <label>E-POSTA</label>
+            <input type="email" id="a-email">
+        </div>
+        <div class="input-group">
+            <label>ŞİFRE</label>
+            <input type="password" id="a-pass">
+        </div>
+        <div class="input-group" id="nick-area" style="display: none;">
+            <label>KULLANICI ADI</label>
+            <input type="text" id="a-nick">
+        </div>
+        <button class="btn-action" id="auth-main-btn">SİSTEME BAĞLAN</button>
+        <p id="auth-swap" style="margin-top: 20px; cursor: pointer; font-size: 13px; text-align: center;">Hesabın yok mu? <b style="color: var(--accent-cold)">Kayıt Ol</b></p>
     </div>
 </div>
 
@@ -260,7 +294,7 @@
     import { getAuth, onAuthStateChanged, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
     import { getFirestore, doc, onSnapshot, setDoc, updateDoc, getDoc, increment, collection, query, where, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-    const config = {
+    const firebaseConfig = {
         apiKey:"AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
         authDomain:"emirhan-site.firebaseapp.com",
         projectId:"emirhan-site",
@@ -269,229 +303,259 @@
         appId:"1:668871888390:web:76568bda84cb1641f7bd87"
     };
 
-    const app = initializeApp(config);
+    const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    let userLocal = null;
-    let selectedAvatarUrl = "";
-
-    const AVATARS = [
+    let uData = null;
+    let tempAvatar = "";
+    const AVATAR_POOL = [
         "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix",
-        "https://api.dicebear.com/7.x/avataaars/svg?seed=Aria",
-        "https://api.dicebear.com/7.x/avataaars/svg?seed=Jack",
-        "https://api.dicebear.com/7.x/avataaars/svg?seed=Luna",
-        "https://api.dicebear.com/7.x/avataaars/svg?seed=Zane",
-        "https://api.dicebear.com/7.x/avataaars/svg?seed=Nova",
-        "https://api.dicebear.com/7.x/avataaars/svg?seed=Milo",
-        "https://api.dicebear.com/7.x/avataaars/svg?seed=Kira"
+        "https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka",
+        "https://api.dicebear.com/7.x/avataaars/svg?seed=Buster",
+        "https://api.dicebear.com/7.x/avataaars/svg?seed=Caspian",
+        "https://api.dicebear.com/7.x/avataaars/svg?seed=Dahlia",
+        "https://api.dicebear.com/7.x/avataaars/svg?seed=Elias",
+        "https://api.dicebear.com/7.x/avataaars/svg?seed=Fiona",
+        "https://api.dicebear.com/7.x/avataaars/svg?seed=Gideon"
     ];
 
-    // --- STORM & SNOW EFFECT ---
-    const canvas = document.getElementById('storm-canvas');
+    // --- WEATHER SYSTEM (RAIN + SNOW + LIGHTNING) ---
+    const canvas = document.getElementById('weather-canvas');
     const ctx = canvas.getContext('2d');
-    let drops = [];
+    let particles = [];
 
-    function initStorm() {
+    function initWeather() {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
-        drops = [];
-        for(let i=0; i<200; i++) drops.push({x: Math.random()*canvas.width, y: Math.random()*canvas.height, l: Math.random()*20+10, v: Math.random()*10+5});
+        particles = [];
+        for(let i=0; i<150; i++) {
+            particles.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                size: Math.random() * 3,
+                speed: Math.random() * 5 + 2,
+                opacity: Math.random()
+            });
+        }
     }
 
-    function drawStorm() {
-        ctx.clearRect(0,0,canvas.width, canvas.height);
-        ctx.strokeStyle = 'rgba(0, 242, 255, 0.15)';
-        ctx.lineWidth = 1;
-        drops.forEach(d => {
+    function drawWeather() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
+        particles.forEach(p => {
             ctx.beginPath();
-            ctx.moveTo(d.x, d.y);
-            ctx.lineTo(d.x + 2, d.y + d.l);
-            ctx.stroke();
-            d.y += d.v;
-            if(d.y > canvas.height) d.y = -20;
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fill();
+            p.y += p.speed;
+            p.x += 1;
+            if (p.y > canvas.height) p.y = -10;
+            if (p.x > canvas.width) p.x = 0;
         });
 
-        if(Math.random() > 0.98) {
-            document.getElementById('l-bolt').style.opacity = "0.4";
-            setTimeout(() => document.getElementById('l-bolt').style.opacity = "0", 50);
+        if(Math.random() > 0.992) {
+            document.getElementById('flash-ef').style.opacity = "0.3";
+            setTimeout(() => document.getElementById('flash-ef').style.opacity = "0", 60);
         }
-        requestAnimationFrame(drawStorm);
+        requestAnimationFrame(drawWeather);
     }
-    window.addEventListener('resize', initStorm);
-    initStorm(); drawStorm();
+    window.addEventListener('resize', initWeather);
+    initWeather(); drawWeather();
 
-    // --- NAVIGATION ---
-    window.toggleMenu = () => {
-        const m = document.getElementById('drop-menu');
+    // --- CORE NAVIGATION ---
+    window.toggleDrop = () => {
+        const m = document.getElementById('profile-menu');
         m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
     };
-    window.openModal = (id) => { 
+
+    window.openModal = (id) => {
         document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none');
         document.getElementById(id).style.display = 'flex';
-        if(id === 'p-modal') loadAvatarOptions();
-        if(id === 'w-modal') updateWheelUI();
+        if(id === 'modal-profile') buildAvatarList();
+        if(id === 'modal-wheel') refreshWheelStatus();
     };
+
     window.closeModal = (id) => document.getElementById(id).style.display = 'none';
 
     // --- AUTH LOGIC ---
-    let authIsReg = false;
-    window.openAuth = () => { authIsReg = false; openModal('a-modal'); };
-    window.swapAuth = () => {
-        authIsReg = !authIsReg;
-        document.getElementById('a-title').innerText = authIsReg ? "KAYIT OL" : "SİSTEME GİRİŞ";
-        document.getElementById('a-nick-row').style.display = authIsReg ? "block" : "none";
-        document.getElementById('a-swap').innerHTML = authIsReg ? "Zaten üye misin? <b style='color:var(--accent)'>Giriş Yap</b>" : "Henüz hesabın yok mu? <b style='color:var(--accent)'>Kayıt Ol</b>";
+    let isReg = false;
+    window.openAuth = (mode) => {
+        isReg = !mode;
+        swapAuthUI();
+        openModal('modal-auth');
     };
 
-    document.getElementById('a-btn').onclick = async () => {
-        const e = document.getElementById('a-email').value;
-        const p = document.getElementById('a-pass').value;
+    document.getElementById('auth-swap').onclick = () => {
+        isReg = !isReg;
+        swapAuthUI();
+    };
+
+    function swapAuthUI() {
+        document.getElementById('auth-title').innerText = isReg ? "KAYIT OL" : "GİRİŞ YAP";
+        document.getElementById('nick-area').style.display = isReg ? "block" : "none";
+        document.getElementById('auth-swap').innerHTML = isReg ? "Zaten üye misin? <b style='color:var(--accent-cold)'>Giriş Yap</b>" : "Hesabın yok mu? <b style='color:var(--accent-cold)'>Kayıt Ol</b>";
+    }
+
+    document.getElementById('auth-main-btn').onclick = async () => {
+        const email = document.getElementById('a-email').value;
+        const pass = document.getElementById('a-pass').value;
         try {
-            if(authIsReg) {
-                const n = document.getElementById('a-nick').value;
-                const r = await createUserWithEmailAndPassword(auth, e, p);
-                await setDoc(doc(db, "users", r.user.uid), {
-                    username: n, fullName: "", balance: 1000, 
-                    avatar: AVATARS[0], nickHak: 1, avHak: 3, lastSpin: 0
+            if(isReg) {
+                const nick = document.getElementById('a-nick').value;
+                const res = await createUserWithEmailAndPassword(auth, email, pass);
+                await setDoc(doc(db, "users", res.user.uid), {
+                    username: nick, balance: 1000, avatar: AVATAR_POOL[0],
+                    fullName: "", nickHak: 1, avHak: 3, lastSpin: 0
                 });
             } else {
-                await signInWithEmailAndPassword(auth, e, p);
+                await signInWithEmailAndPassword(auth, email, pass);
             }
-            closeModal('a-modal');
-        } catch(err) { alert(err.message); }
+            closeModal('modal-auth');
+        } catch(e) { alert("Hata: " + e.message); }
     };
 
     onAuthStateChanged(auth, user => {
         if(user) {
             document.getElementById('guest-ui').style.display = 'none';
-            document.getElementById('auth-ui').style.display = 'flex';
+            document.getElementById('user-ui').style.display = 'flex';
             onSnapshot(doc(db, "users", user.uid), s => {
-                if(s.exists()){
-                    userLocal = s.data();
-                    document.getElementById('u-bal').innerText = userLocal.balance.toLocaleString('tr-TR', {minimumFractionDigits: 2}) + " ₺";
-                    document.getElementById('u-av').src = userLocal.avatar;
-                    document.getElementById('u-name-top').innerText = userLocal.username;
-                    // Modal alanlarını doldur
-                    document.getElementById('m-email').value = user.email;
-                    document.getElementById('m-fullname').value = userLocal.fullName;
-                    document.getElementById('m-nick').value = userLocal.username;
-                    if(userLocal.fullName) document.getElementById('m-fullname').disabled = true;
-                    if(userLocal.nickHak <= 0) document.getElementById('m-nick').disabled = true;
+                if(s.exists()) {
+                    uData = s.data();
+                    document.getElementById('top-bal').innerText = uData.balance.toLocaleString('tr-TR', {minimumFractionDigits: 2}) + " ₺";
+                    document.getElementById('top-pfp').src = uData.avatar;
+                    document.getElementById('top-username').innerText = uData.username;
+                    
+                    // Profile fields
+                    document.getElementById('p-email').value = user.email;
+                    document.getElementById('p-fullname').value = uData.fullName;
+                    document.getElementById('p-username').value = uData.username;
+                    document.getElementById('av-hak').innerText = uData.avHak;
+
+                    if(uData.fullName) document.getElementById('p-fullname').disabled = true;
+                    if(uData.nickHak <= 0) document.getElementById('p-username').disabled = true;
                 }
             });
         } else {
             document.getElementById('guest-ui').style.display = 'block';
-            document.getElementById('auth-ui').style.display = 'none';
+            document.getElementById('user-ui').style.display = 'none';
+            document.getElementById('profile-menu').style.display = 'none';
         }
     });
 
-    document.getElementById('out-btn').onclick = () => signOut(auth);
+    document.getElementById('logout-trigger').onclick = () => signOut(auth);
 
-    // --- PROFILE SYSTEM ---
-    function loadAvatarOptions() {
-        const container = document.getElementById('av-list');
+    // --- PROFILE MANAGEMENT ---
+    function buildAvatarList() {
+        const container = document.getElementById('avatar-list');
         container.innerHTML = "";
-        AVATARS.forEach(url => {
+        AVATAR_POOL.forEach(url => {
             const div = document.createElement('div');
-            div.className = `av-opt ${url === userLocal.avatar ? 'active' : ''}`;
+            div.className = `avatar-opt ${url === uData.avatar ? 'active' : ''}`;
             div.innerHTML = `<img src="${url}">`;
             div.onclick = () => {
-                if(userLocal.avHak > 0) {
-                    document.querySelectorAll('.av-opt').forEach(x => x.classList.remove('active'));
+                if(uData.avHak > 0) {
+                    document.querySelectorAll('.avatar-opt').forEach(x => x.classList.remove('active'));
                     div.classList.add('active');
-                    selectedAvatarUrl = url;
-                } else { alert("Avatar değiştirme hakkınız kalmadı."); }
+                    tempAvatar = url;
+                } else { alert("Avatar değişim hakkınız tükenmiş."); }
             };
             container.appendChild(div);
         });
     }
 
     window.saveProfile = async () => {
-        const updates = {};
-        const nick = document.getElementById('m-nick').value;
-        const fname = document.getElementById('m-fullname').value;
+        const upd = {};
+        const newNick = document.getElementById('p-username').value;
+        const newFull = document.getElementById('p-fullname').value;
 
-        if(nick !== userLocal.username && userLocal.nickHak > 0) {
-            updates.username = nick;
-            updates.nickHak = 0;
+        if(newNick !== uData.username && uData.nickHak > 0) {
+            upd.username = newNick;
+            upd.nickHak = 0;
         }
-        if(fname && !userLocal.fullName) {
-            updates.fullName = fname;
+        if(newFull && !uData.fullName) {
+            upd.fullName = newFull;
         }
-        if(selectedAvatarUrl && selectedAvatarUrl !== userLocal.avatar && userLocal.avHak > 0) {
-            updates.avatar = selectedAvatarUrl;
-            updates.avHak = increment(-1);
+        if(tempAvatar && tempAvatar !== uData.avatar && uData.avHak > 0) {
+            upd.avatar = tempAvatar;
+            upd.avHak = increment(-1);
         }
 
-        if(Object.keys(updates).length > 0) {
-            await updateDoc(doc(db, "users", auth.currentUser.uid), updates);
-            alert("Profil başarıyla güncellendi.");
-            closeModal('p-modal');
+        if(Object.keys(upd).length > 0) {
+            await updateDoc(doc(db, "users", auth.currentUser.uid), upd);
+            alert("Profil güncellendi.");
+            closeModal('modal-profile');
         }
     };
 
-    // --- CINEMATIC WHEEL ---
-    window.runWheel = async () => {
-        if(Date.now() - (userLocal.lastSpin || 0) < 86400000) return;
-        
-        const btn = document.getElementById('spin-go');
-        btn.disabled = true;
-        const wheel = document.getElementById('wheel-svg');
-        const deg = Math.floor(Math.random() * 360) + 7200; // 20 tur + random
-        wheel.style.transform = `rotate(${deg}deg)`;
-
-        setTimeout(async () => {
-            const prizes = [5000, 1000, 2500, 100, 10000, 0, 500, 2000];
-            const finalDeg = deg % 360;
-            const idx = Math.floor(finalDeg / (360/8));
-            const prize = prizes[idx];
-
-            await updateDoc(doc(db, "users", auth.currentUser.uid), {
-                balance: increment(prize),
-                lastSpin: Date.now()
-            });
-            alert(prize > 0 ? `TEBRİKLER! ${prize} ₺ kazandınız.` : "Bugün şansın yokmuş...");
-            btn.disabled = false;
-            updateWheelUI();
-        }, 5100);
-    };
-
-    function updateWheelUI() {
-        const timer = document.getElementById('w-timer');
-        const diff = Date.now() - (userLocal.lastSpin || 0);
-        if(diff < 86400000) {
-            document.getElementById('spin-go').style.display = "none";
-            timer.innerText = "YENİ HAK: " + new Date((userLocal.lastSpin + 86400000)).toLocaleTimeString();
-        } else {
-            document.getElementById('spin-go').style.display = "inline-block";
-            timer.innerText = "ŞANSLISIN, ÇEVİRME HAKKIN VAR!";
-        }
-    }
-
-    // --- PROMO CODE ---
-    window.checkPromo = async () => {
-        const code = document.getElementById('promo-in').value.trim().toUpperCase();
-        const err = document.getElementById('promo-err');
+    // --- PROMO CODE LOGIC ---
+    window.claimPromo = async () => {
+        const code = document.getElementById('promo-input').value.trim().toUpperCase();
+        const err = document.getElementById('promo-error');
         err.style.display = "none";
+
+        if(!code) return;
 
         const q = query(collection(db, "promos"), where("code", "==", code));
         const snap = await getDocs(q);
 
         if(!snap.empty) {
-            const pDoc = snap.docs[0];
-            const pData = pDoc.data();
+            const docRef = snap.docs[0];
+            const pData = docRef.data();
             await updateDoc(doc(db, "users", auth.currentUser.uid), { balance: increment(pData.amount) });
-            await deleteDoc(doc(db, "promos", pDoc.id));
-            alert(`${pData.amount} ₺ hesabına tanımlandı!`);
-            closeModal('k-modal');
+            await deleteDoc(doc(db, "promos", docRef.id));
+            alert(`Tebrikler! ${pData.amount} ₺ hesabınıza eklendi.`);
+            closeModal('modal-promo');
         } else {
             err.style.display = "block";
         }
     };
 
-    window.play = (url) => {
-        if(!auth.currentUser) openAuth();
+    // --- WHEEL SYSTEM ---
+    window.spinNexus = async () => {
+        if(Date.now() - (uData.lastSpin || 0) < 86400000) return;
+
+        const btn = document.getElementById('spin-btn');
+        btn.disabled = true;
+        const wheel = document.getElementById('nexus-wheel');
+        const deg = Math.floor(Math.random() * 360) + 3600; // 10 tur + rastgele
+        wheel.style.transform = `rotate(${deg}deg)`;
+
+        setTimeout(async () => {
+            const prizes = [1000, 5000, 250, 10000, 0, 500, 2500, 100];
+            const final = deg % 360;
+            const segment = Math.floor(final / 45);
+            const win = prizes[segment];
+
+            await updateDoc(doc(db, "users", auth.currentUser.uid), {
+                balance: increment(win),
+                lastSpin: Date.now()
+            });
+
+            alert(win > 0 ? `Büyük Şans! ${win} ₺ kazandınız.` : "Şansını yarın tekrar dene...");
+            refreshWheelStatus();
+        }, 5100);
+    };
+
+    function refreshWheelStatus() {
+        const timer = document.getElementById('wheel-timer');
+        const btn = document.getElementById('spin-btn');
+        const diff = Date.now() - (uData.lastSpin || 0);
+
+        if(diff < 86400000) {
+            btn.style.display = "none";
+            const rem = 86400000 - diff;
+            const h = Math.floor(rem / 3600000);
+            const m = Math.floor((rem % 3600000) / 60000);
+            timer.innerText = `YENİ HAK: ${h}s ${m}d kaldı`;
+        } else {
+            btn.style.display = "block";
+            btn.disabled = false;
+            timer.innerText = "Şansın Hazır, Çevirmeye Başla!";
+        }
+    }
+
+    window.goGame = (url) => {
+        if(!auth.currentUser) openAuth(true);
         else location.href = url;
     };
 </script>
