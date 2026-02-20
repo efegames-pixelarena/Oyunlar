@@ -3,140 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Cyber-Stack Neon | Pixel Arena</title>
+    <title>Cyber-Stack Elite | Pixel Arena</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Montserrat:wght@900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
             --primary: #4fd1ff;
             --bg: #03050a;
-            --glass: rgba(10, 15, 25, 0.8);
+            --glass: rgba(10, 15, 25, 0.9);
             --border: rgba(255, 255, 255, 0.1);
             --danger: #ff4d4d;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         
-        body { 
-            background: var(--bg); 
-            color: white; 
-            font-family: 'Inter', sans-serif; 
-            overflow: hidden;
-            height: 100vh;
-        }
+        body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; overflow: hidden; height: 100vh; }
 
-        /* --- NEON ANİMASYONLU ARKA PLAN --- */
-        #neon-bg {
-            position: fixed;
-            inset: 0;
-            z-index: -1;
-            background: radial-gradient(circle at center, #111827 0%, #03050a 100%);
-        }
+        /* --- NEON BG --- */
+        #neon-bg { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at center, #0a1120 0%, #03050a 100%); }
 
-        /* --- ÜST BAR --- */
+        /* --- TOP BAR --- */
         .top-bar {
-            height: 65px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 15px;
-            background: var(--glass);
-            backdrop-filter: blur(25px);
-            border-bottom: 1px solid var(--border);
-            position: relative;
-            z-index: 1000;
+            height: 65px; display: flex; align-items: center; justify-content: space-between;
+            padding: 0 15px; background: var(--glass); backdrop-filter: blur(25px);
+            border-bottom: 1px solid var(--border); position: relative; z-index: 1000;
         }
 
-        .brand {
-            font-family: 'Montserrat', sans-serif;
-            font-size: 16px;
-            font-weight: 900;
-            letter-spacing: 1px;
-            color: var(--primary);
-            text-shadow: 0 0 10px var(--primary);
-        }
-
+        .brand { font-family: 'Montserrat', sans-serif; font-size: 16px; font-weight: 900; color: var(--primary); text-shadow: 0 0 10px var(--primary); }
         .stat-group { display: flex; gap: 10px; align-items: center; }
+        .stat-pill { background: rgba(255,255,255,0.03); padding: 6px 12px; border-radius: 10px; border: 1px solid var(--border); font-size: 12px; font-weight: 800; display: flex; align-items: center; gap: 6px; }
+        .exit-btn { background: rgba(255, 77, 77, 0.15); border: 1px solid var(--danger); color: var(--danger); padding: 6px 14px; border-radius: 8px; font-size: 11px; font-weight: 900; cursor: pointer; text-decoration: none; }
 
-        .stat-pill {
-            background: rgba(255,255,255,0.03);
-            padding: 6px 12px;
-            border-radius: 10px;
-            border: 1px solid var(--border);
-            font-size: 12px;
-            font-weight: 800;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .exit-btn {
-            background: rgba(255, 77, 77, 0.15);
-            border: 1px solid var(--danger);
-            color: var(--danger);
-            padding: 6px 14px;
-            border-radius: 8px;
-            font-size: 11px;
-            font-weight: 900;
-            cursor: pointer;
-            text-decoration: none;
-        }
-
-        /* --- OYUN ALANI --- */
-        #game-container {
-            width: 100%;
-            height: calc(100vh - 65px);
-            position: relative;
-        }
-
+        /* --- GAME --- */
+        #game-container { width: 100%; height: calc(100vh - 65px); position: relative; }
         canvas { width: 100%; height: 100%; display: block; }
 
-        /* --- UI MODALS --- */
-        .game-overlay {
-            position: absolute;
-            inset: 0;
-            pointer-events: none;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-        }
-
-        .modal {
-            background: var(--glass);
-            padding: 40px 30px;
-            border-radius: 30px;
-            border: 1px solid var(--border);
-            text-align: center;
-            backdrop-filter: blur(20px);
-            pointer-events: auto;
-            width: 85%;
-            max-width: 340px;
-            box-shadow: 0 0 40px rgba(0,0,0,0.6);
-        }
-
-        .btn-action {
-            width: 100%;
-            padding: 16px;
-            border-radius: 15px;
-            border: none;
-            background: var(--primary);
-            color: #000;
-            font-weight: 900;
-            cursor: pointer;
-            text-transform: uppercase;
-            box-shadow: 0 0 20px rgba(79, 209, 255, 0.4);
-        }
-
-        #score-display {
-            position: absolute;
-            top: 20px;
-            font-size: 110px;
-            font-weight: 900;
-            color: white;
-            opacity: 0.08;
-        }
+        .game-overlay { position: absolute; inset: 0; pointer-events: none; display: flex; align-items: center; justify-content: center; z-index: 100; }
+        .modal { background: var(--glass); padding: 40px 30px; border-radius: 30px; border: 1px solid var(--border); text-align: center; backdrop-filter: blur(20px); pointer-events: auto; width: 85%; max-width: 340px; }
+        .btn-action { width: 100%; padding: 16px; border-radius: 15px; border: none; background: var(--primary); color: #000; font-weight: 900; cursor: pointer; text-transform: uppercase; box-shadow: 0 0 20px rgba(79, 209, 255, 0.4); }
+        #score-display { position: absolute; top: 20px; font-size: 110px; font-weight: 900; color: white; opacity: 0.08; }
     </style>
 </head>
 <body onclick="gameInput()">
@@ -156,84 +61,47 @@
         <canvas id="stackCanvas"></canvas>
         <div class="game-overlay">
             <div id="score-display">0</div>
-
             <div id="start-ui" class="modal">
                 <h2 style="font-family:'Montserrat'; margin-bottom:15px; color:var(--primary)">CYBER STACK</h2>
-                <p style="color:#94a3b8; font-size:14px; margin-bottom:25px;">Kuleyi yükselt, neon dünyayı aydınlat!</p>
+                <p style="color:#94a3b8; font-size:14px; margin-bottom:25px;">Tam zamanında tıkla, kuleyi inşa et!</p>
                 <button class="btn-action" onclick="startGame(event)">BAŞLAT</button>
             </div>
-
             <div id="game-over-ui" class="modal" style="display:none;">
-                <h2 style="font-family:'Montserrat'; margin-bottom:15px; color:var(--danger)">BAĞLANTI KESİLDİ</h2>
-                <p style="color:#94a3b8; font-size:14px; margin-bottom:25px;">Kule devrildi. Skorun: <b id="finalScore" style="color:white">0</b></p>
-                <button class="btn-action" onclick="restartGame(event)">SİSTEMİ ONAR</button>
+                <h2 style="font-family:'Montserrat'; margin-bottom:15px; color:var(--danger)">SİSTEM ÇÖKTÜ</h2>
+                <p style="color:#94a3b8; font-size:14px; margin-bottom:25px;">Hizalama hatası. Skorun: <b id="finalScore" style="color:white">0</b></p>
+                <button class="btn-action" onclick="restartGame(event)">YENİDEN DENE</button>
             </div>
         </div>
     </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
-    // --- YENİ SESLER ---
+    // --- SESLER ---
     const sounds = {
-        place: new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3'), // Dijital tık
-        fail: new Audio('https://assets.mixkit.co/active_storage/sfx/253/253-preview.mp3'),   // Tok düşüş
-        start: new Audio('https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3') // Enerji dolumu
+        drop: new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3'), // Bırakma
+        fail: new Audio('https://assets.mixkit.co/active_storage/sfx/253/253-preview.mp3'),   // Kaybetme
+        start: new Audio('https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3') // Başlama
     };
-    Object.values(sounds).forEach(s => s.volume = 0.5);
+    Object.values(sounds).forEach(s => s.volume = 0.4);
 
-    let scene, camera, renderer, stack = [];
+    let scene, camera, renderer, stack = [], debris = [];
     let gameStarted = false, gameOver = false;
     let score = 0, highScore = localStorage.getItem('stack_highscore') || 0;
-    let speed = 0.12, bgHue = 200;
+    let speed = 0.12, bgHue = 210;
 
-    // --- NEON ARKA PLAN ANİMASYONU ---
-    const bgCanvas = document.getElementById('neon-bg');
-    const bgCtx = bgCanvas.getContext('2d');
-    function animateBG() {
-        bgCanvas.width = window.innerWidth;
-        bgCanvas.height = window.innerHeight;
-        bgCtx.clearRect(0,0,bgCanvas.width, bgCanvas.height);
-        
-        let grad = bgCtx.createRadialGradient(bgCanvas.width/2, bgCanvas.height/2, 0, bgCanvas.width/2, bgCanvas.height/2, bgCanvas.height);
-        grad.addColorStop(0, `hsla(${bgHue}, 70%, 10%, 1)`);
-        grad.addColorStop(1, '#03050a');
-        
-        bgCtx.fillStyle = grad;
-        bgCtx.fillRect(0,0,bgCanvas.width, bgCanvas.height);
-
-        // Kayan Çizgiler
-        bgCtx.strokeStyle = `hsla(${bgHue}, 100%, 50%, 0.15)`;
-        bgCtx.lineWidth = 2;
-        let time = Date.now() * 0.001;
-        for(let i=0; i<10; i++) {
-            let x = (Math.sin(time + i) * 50) + (i * bgCanvas.width/10);
-            bgCtx.beginPath();
-            bgCtx.moveTo(x, 0);
-            bgCtx.lineTo(x + 100, bgCanvas.height);
-            bgCtx.stroke();
-        }
-        if(gameStarted) bgHue += 0.2; // Renk yavaşça döner
-        requestAnimationFrame(animateBG);
-    }
-    animateBG();
-
-    // --- OYUN MOTORU ---
     function init() {
         document.getElementById('highScore').innerText = highScore;
         scene = new THREE.Scene();
-
         const aspect = window.innerWidth / (window.innerHeight - 65);
         camera = new THREE.OrthographicCamera(-5*aspect, 5*aspect, 5, -5, 0.1, 1000);
-        camera.position.set(4, 4, 4);
-        camera.lookAt(0, 0, 0);
+        camera.position.set(4, 4, 4); camera.lookAt(0, 0, 0);
 
         renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('stackCanvas'), antialias: true, alpha: true });
         renderer.setSize(window.innerWidth, window.innerHeight - 65);
         
         scene.add(new THREE.AmbientLight(0xffffff, 0.8));
         const light = new THREE.DirectionalLight(0xffffff, 0.5);
-        light.position.set(10, 20, 5);
-        scene.add(light);
+        light.position.set(10, 20, 5); scene.add(light);
 
         resetGame();
         animate();
@@ -241,27 +109,36 @@
 
     function resetGame() {
         stack.forEach(b => scene.remove(b.mesh));
-        stack = [];
-        score = 0;
-        speed = 0.12;
-        bgHue = 200;
+        debris.forEach(d => scene.remove(d.mesh));
+        stack = []; debris = [];
+        score = 0; speed = 0.12;
         updateUI();
         addBlock(0, 0, 3, 3, null); // Zemin
-        addBlock(0, 0, 3, 3, 'x'); // İlk hareketli
+        addBlock(0, 0, 3, 3, 'x'); // Hareketli
     }
 
     function addBlock(x, z, w, d, dir) {
         const y = stack.length;
-        // RENKLİ KULE: Gökkuşağı efekti
-        const color = new THREE.Color().setHSL((stack.length * 0.05) % 1, 0.9, 0.6);
-        
+        // RENK MANTIĞI: (Skor * 30) derece döndürerek her katın farklı renk olmasını sağlar
+        const color = new THREE.Color().setHSL((stack.length * 0.15) % 1, 0.8, 0.5);
         const mesh = new THREE.Mesh(
             new THREE.BoxGeometry(w, 1, d),
-            new THREE.MeshPhongMaterial({ color, emissive: color, emissiveIntensity: 0.2 })
+            new THREE.MeshPhongMaterial({ color, emissive: color, emissiveIntensity: 0.15 })
         );
         mesh.position.set(x, y, z);
         scene.add(mesh);
         stack.push({ mesh, width: w, depth: d, direction: dir });
+    }
+
+    function addDebris(x, y, z, w, d) {
+        const color = stack[stack.length - 1].mesh.material.color;
+        const mesh = new THREE.Mesh(
+            new THREE.BoxGeometry(w, 1, d),
+            new THREE.MeshPhongMaterial({ color, transparent: true, opacity: 0.8 })
+        );
+        mesh.position.set(x, y, z);
+        scene.add(mesh);
+        debris.push({ mesh, velocity: -0.1 });
     }
 
     function gameInput() {
@@ -276,14 +153,21 @@
         const overlap = size - Math.abs(delta);
 
         if (overlap > 0) {
-            sounds.place.currentTime = 0;
-            sounds.place.play(); // Yerleştirme sesi
-
+            sounds.drop.currentTime = 0; sounds.drop.play();
+            
             const newW = dir === 'x' ? overlap : top.width;
             const newD = dir === 'z' ? overlap : top.depth;
             const newX = dir === 'x' ? prev.mesh.position.x + delta/2 : top.mesh.position.x;
             const newZ = dir === 'z' ? prev.mesh.position.z + delta/2 : top.mesh.position.z;
 
+            // Kesilen Parçayı Düşür (Asılı Kalmaması İçin)
+            const debrisSize = size - overlap;
+            let debrisX = newX, debrisZ = newZ;
+            if(dir === 'x') debrisX += (delta > 0 ? overlap/2 + debrisSize/2 : -overlap/2 - debrisSize/2);
+            else debrisZ += (delta > 0 ? overlap/2 + debrisSize/2 : -overlap/2 - debrisSize/2);
+            addDebris(debrisX, top.mesh.position.y, debrisZ, dir === 'x' ? debrisSize : newW, dir === 'z' ? debrisSize : newD);
+
+            // Bloğu Güncelle
             top.mesh.scale[dir] = overlap / size;
             top.mesh.position.set(newX, top.mesh.position.y, newZ);
             top.width = newW; top.depth = newD;
@@ -291,22 +175,19 @@
             score++;
             if(score > highScore) { highScore = score; localStorage.setItem('stack_highscore', highScore); }
             updateUI();
-            speed += 0.006;
+            speed += 0.005;
 
             addBlock(newX, newZ, newW, newD, dir === 'x' ? 'z' : 'x');
             camera.position.y += 1;
         } else {
-            sounds.fail.play(); // Kaybetme sesi
+            // Tamamen Kaçırdıysa Bloğu Düşür
+            addDebris(top.mesh.position.x, top.mesh.position.y, top.mesh.position.z, top.width, top.depth);
+            scene.remove(top.mesh);
+            sounds.fail.play();
             gameOver = true;
             document.getElementById('game-over-ui').style.display = 'block';
             document.getElementById('finalScore').innerText = score;
         }
-    }
-
-    function updateUI() {
-        document.getElementById('currentScore').innerText = score;
-        document.getElementById('score-display').innerText = score;
-        document.getElementById('highScore').innerText = highScore;
     }
 
     function animate() {
@@ -316,29 +197,27 @@
             top.mesh.position[top.direction] += speed;
             if (Math.abs(top.mesh.position[top.direction]) > 5.5) speed *= -1;
         }
+        // Düşen Parçaları Hareket Ettir
+        debris.forEach((d, index) => {
+            d.velocity -= 0.01;
+            d.mesh.position.y += d.velocity;
+            d.mesh.rotation.x += 0.05;
+            if (d.mesh.position.y < -10) {
+                scene.remove(d.mesh);
+                debris.splice(index, 1);
+            }
+        });
         renderer.render(scene, camera);
     }
 
-    window.startGame = (e) => { 
-        e.stopPropagation(); 
-        sounds.start.play();
-        gameStarted = true; 
-        document.getElementById('start-ui').style.display = 'none'; 
-    };
+    function updateUI() {
+        document.getElementById('currentScore').innerText = score;
+        document.getElementById('score-display').innerText = score;
+        document.getElementById('highScore').innerText = highScore;
+    }
 
-    window.restartGame = (e) => { 
-        e.stopPropagation(); 
-        gameOver = false; 
-        camera.position.set(4, 4, 4); 
-        document.getElementById('game-over-ui').style.display = 'none'; 
-        resetGame(); 
-    };
-
-    window.addEventListener('resize', () => {
-        renderer.setSize(window.innerWidth, window.innerHeight - 65);
-        camera.aspect = window.innerWidth / (window.innerHeight - 65);
-        camera.updateProjectionMatrix();
-    });
+    window.startGame = (e) => { e.stopPropagation(); sounds.start.play(); gameStarted = true; document.getElementById('start-ui').style.display = 'none'; };
+    window.restartGame = (e) => { e.stopPropagation(); gameOver = false; camera.position.set(4, 4, 4); document.getElementById('game-over-ui').style.display = 'none'; resetGame(); };
 
     init();
 </script>
