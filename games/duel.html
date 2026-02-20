@@ -1,1 +1,583 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>PixelArena Duel</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root { 
+    --p: #00f2ff; --a: #ff0055; --bg: #05070a; --b: #161b22; 
+    --gold: #ffcc00; --glass: rgba(10, 15, 25, 0.85); --success: #00ff88;
+}
 
+* { 
+    margin:0; padding:0; box-sizing:border-box; 
+    font-family: 'Rajdhani', sans-serif; 
+    -webkit-tap-highlight-color:transparent; 
+    touch-action: manipulation; 
+    user-select: none; 
+}
+
+body { 
+    background: var(--bg); color: white; height: 100vh; overflow: hidden; 
+    display: flex; flex-direction: column; position: fixed; width: 100%;
+}
+
+body::before {
+    content: ""; position: absolute; inset: 0;
+    background-image: 
+        linear-gradient(rgba(0, 242, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 242, 255, 0.03) 1px, transparent 1px);
+    background-size: 30px 30px;
+    mask-image: radial-gradient(circle at center, black, transparent 80%);
+    z-index: -1;
+}
+
+.top-bar { 
+    height: 70px; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); 
+    border-bottom: 2px solid var(--p); display: flex; align-items: center; 
+    justify-content: space-between; padding: 0 15px; z-index: 1000;
+}
+.brand { 
+    font-family: 'Orbitron', sans-serif; font-weight: 900; font-size: 1.1rem;
+    background: linear-gradient(to bottom, #fff, var(--p)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+
+#userBox {
+    font-weight: 700; color: var(--p); font-size: 0.8rem;
+    max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+#lobby { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
+.lobby-controls { display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
+.search-bar { display: flex; gap: 8px; }
+.search-bar input {
+    flex: 1; background: var(--b); border: 1px solid #333; border-radius: 8px;
+    padding: 12px; color: white; font-family: 'Orbitron'; font-size: 0.75rem;
+    outline: none; transition: 0.3s; border: 1px solid transparent;
+}
+.search-bar input:focus { border-color: var(--p); }
+
+.action-buttons { display: flex; gap: 8px; }
+.btn {
+    border: none; border-radius: 8px; font-weight: 900; font-family: 'Orbitron'; 
+    font-size: 0.65rem; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center;
+}
+.btn:disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(1); }
+.create-btn { flex: 1; padding: 15px; background: var(--p); color: #000; }
+.quick-btn { flex: 1; padding: 15px; background: var(--success); color: #000; }
+
+.room-card { 
+    background: var(--glass); border: 1px solid var(--b); padding: 15px; border-radius: 15px;
+    display: flex; justify-content: space-between; align-items: center;
+    border-left: 4px solid var(--p); animation: slideIn 0.3s ease-out; margin-bottom: 5px;
+}
+.room-details { display: flex; flex-direction: column; gap: 4px; }
+.room-host { font-family: 'Orbitron'; font-weight: 900; font-size: 0.9rem; color: #fff; }
+.room-meta { font-size: 0.65rem; color: #888; display: flex; align-items: center; gap: 8px; }
+.badge { padding: 3px 8px; border-radius: 4px; font-size: 0.55rem; font-weight: 900; text-transform: uppercase; }
+.badge-live { background: var(--a); color: white; animation: pulse 1s infinite; }
+.badge-wait { background: var(--success); color: black; }
+
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+@keyframes slideIn { from { transform: translateX(-20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+.modal {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px);
+    display: none; justify-content: center; align-items: center; z-index: 2000; padding: 20px;
+}
+.modal-content {
+    background: var(--b); width: 100%; max-width: 350px; padding: 25px; border-radius: 20px;
+    border: 1px solid var(--p); display: flex; flex-direction: column; gap: 15px;
+    text-align: center; animation: modalPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+@keyframes modalPop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+.modal-content input {
+    background: #000; border: 1px solid #333; padding: 12px; color: var(--p);
+    border-radius: 8px; font-family: 'Orbitron'; font-size: 0.8rem; text-align: center; outline: none;
+}
+
+#game-view { display: none; flex: 1; flex-direction: column; }
+.scoreboard { 
+    padding: 20px; display: grid; grid-template-columns: 1fr auto 1fr; 
+    align-items: center; background: rgba(0,0,0,0.5); border-bottom: 1px solid var(--b);
+}
+.arena { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; position: relative; touch-action: none; }
+#bigText { font-family: 'Orbitron'; font-size: 60px; font-weight: 900; text-align: center; transition: 0.1s; }
+#subText { font-family: 'Orbitron'; font-size: 0.9rem; letter-spacing: 3px; color: #555; margin-top: 15px; text-align: center;}
+.flash { background: #fff !important; }
+.flash #bigText, .flash #subText { color: #000 !important; }
+
+/* Tutorial & Error Icons */
+.tut-icon { font-size: 50px; margin-bottom: 10px; animation: float 2s infinite ease-in-out; }
+.err-icon { font-size: 50px; margin-bottom: 10px; color: var(--a); text-shadow: 0 0 15px var(--a); }
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+.winner-screen { position: fixed; inset: 0; background: #000; z-index: 5000; display: none; flex-direction: column; justify-content: center; align-items: center; }
+.back-btn { background: var(--a); color: white; border: none; padding: 8px 12px; border-radius: 6px; font-weight: 800; font-size: 0.7rem; font-family: 'Orbitron'; }
+.exit-btn { background: #333; color: #ff4444; border: 1px solid #444; padding: 6px 10px; border-radius: 6px; font-weight: 800; font-size: 0.65rem; font-family: 'Orbitron'; }
+.penalty { color: var(--a) !important; animation: shake 0.3s infinite; }
+@keyframes shake { 0%,100%{transform: scale(1);} 50%{transform: scale(1.1);} }
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+    <div class="brand">REFLEX DUEL</div>
+    <div style="display:flex; gap:10px; align-items:center;">
+        <div id="userBox">...</div>
+        <button id="lobbyExitBtn" class="exit-btn" onclick="window.location.href='index.html'">ÇIKIŞ</button>
+        <button id="leaveBtn" class="back-btn" style="display:none;">AYRIL</button>
+    </div>
+</div>
+
+<div id="errorModal" class="modal">
+    <div class="modal-content" style="border-color: var(--a);">
+        <div class="err-icon">⚠️</div>
+        <h2 id="errorTitle" style="font-family:'Orbitron'; color:var(--a); font-size:1.1rem;">BAĞLANTI HATASI</h2>
+        <p id="errorDesc" style="font-size: 0.85rem; color: #aaa; line-height: 1.4;">Sistemde uygun arena bulunamadı.</p>
+        <button onclick="closeModal('errorModal')" style="padding:15px; border-radius:8px; background:var(--a); border:none; color:white; font-weight:900; font-family:'Orbitron'; font-size:0.75rem; cursor:pointer;">TAMAM</button>
+    </div>
+</div>
+
+<div id="tutorialModal" class="modal">
+    <div class="modal-content">
+        <div class="tut-icon">🥊</div>
+        <h2 style="font-family:'Orbitron'; color:var(--p); font-size:1.1rem;">NASIL OYNANIR?</h2>
+        <p style="font-size: 0.85rem; color: #aaa; line-height: 1.4;">
+            Ekran <b style="color:var(--gold)">BEKLE</b> aşamasındayken basma! 
+            Beyaz <b style="color:#fff">FLASH</b> patladığı anda rakibinden önce dokun. 
+            Erken basarsan rakibin puan kazanır. 11 puana ulaşan kazanır!
+        </p>
+        <button id="tutConfirmBtn" style="padding:15px; border-radius:8px; background:var(--p); border:none; color:black; font-weight:900; font-family:'Orbitron'; font-size:0.75rem; cursor:pointer;">ANLADIM, ARENAYA GİR!</button>
+    </div>
+</div>
+
+<div id="createModal" class="modal">
+    <div class="modal-content">
+        <h2 style="font-family:'Orbitron'; color:var(--p); font-size:1.1rem;">ARENA OLUŞTUR</h2>
+        <input type="text" id="roomPassInput" placeholder="ŞİFRE (İSTEĞE BAĞLI)" maxlength="10">
+        <div style="display:flex; gap:10px;">
+            <button onclick="closeModal('createModal')" style="flex:1; padding:12px; border-radius:8px; background:#222; border:none; color:white; font-family:'Orbitron'; font-size:0.7rem;">İPTAL</button>
+            <button id="confirmCreateBtn" style="flex:1; padding:12px; border-radius:8px; background:var(--p); border:none; color:black; font-weight:900; font-family:'Orbitron'; font-size:0.7rem;">OLUŞTUR</button>
+        </div>
+    </div>
+</div>
+
+<div id="passwordModal" class="modal">
+    <div class="modal-content">
+        <h2 style="font-family:'Orbitron'; color:var(--gold); font-size:1.1rem;">ŞİFRE GEREKLİ</h2>
+        <input type="password" id="joinPassInput" placeholder="ŞİFRE" maxlength="10">
+        <div style="display:flex; gap:10px;">
+            <button onclick="closeModal('passwordModal')" style="flex:1; padding:12px; border-radius:8px; background:#222; border:none; color:white; font-family:'Orbitron'; font-size:0.7rem;">İPTAL</button>
+            <button id="confirmJoinPassBtn" style="flex:1; padding:12px; border-radius:8px; background:var(--gold); border:none; color:black; font-weight:900; font-family:'Orbitron'; font-size:0.7rem;">KATIL</button>
+        </div>
+    </div>
+</div>
+
+<div id="lobby">
+    <div class="lobby-controls">
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="ARENA ARA...">
+        </div>
+        <div class="action-buttons">
+            <button class="btn create-btn" id="createRoomBtn" onclick="openModal('createModal')">ODA KUR</button>
+            <button class="btn quick-btn" id="quickJoinBtn">HIZLI KATIL</button>
+        </div>
+    </div>
+    <div id="roomList"></div>
+</div>
+
+<div id="game-view">
+    <div class="scoreboard">
+        <div class="p-info" style="text-align:center;">
+            <div class="name" id="p1Name" style="font-size:0.7rem; color:#aaa;">---</div>
+            <div class="score" id="p1Score">0</div>
+        </div>
+        <div id="roundNum" style="padding: 10px; font-weight: 900; color: var(--gold); font-size:0.8rem;">RD 1</div>
+        <div class="p-info" style="text-align:center;">
+            <div class="name" id="p2Name" style="font-size:0.7rem; color:#aaa;">---</div>
+            <div class="score" id="p2Score">0</div>
+        </div>
+    </div>
+    <div class="arena" id="arena">
+        <div id="bigText">READY</div>
+        <div id="subText">BEKLE...</div>
+    </div>
+</div>
+
+<div id="winnerScreen" class="winner-screen">
+    <p style="font-family:'Orbitron'; color:var(--p);">ARENA ŞAMPİYONU</p>
+    <h1 id="championName" style="font-family:'Orbitron'; font-size:2.5rem; color:var(--gold); margin:15px 0;">PLAYER</h1>
+    <div style="color:#555">Lobiye dönülüyor...</div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, doc, setDoc, updateDoc, onSnapshot, collection, query, where, getDoc, deleteDoc, serverTimestamp, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
+    authDomain: "emirhan-site.firebaseapp.com",
+    projectId: "emirhan-site",
+    storageBucket: "emirhan-site.firebasestorage.app",
+    messagingSenderId: "668871888390",
+    appId: "1:668871888390:web:76568bda84cb1641f7bd87"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+let uid, username, currentRoomId = null, unsubRoom = null, unsubLobby = null;
+let roomData = null, tapLock = false, countdownInterval = null, lastState = "", lastBigText = "";
+let allRooms = [], serverOffset = 0, offsetCalculated = false, pendingRoomId = null;
+let isTutorialRead = false;
+
+const getServerTime = () => Date.now() + serverOffset;
+
+let audioCtx = null;
+const initAudio = () => {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+};
+
+function playBeep(freq, type, duration) {
+    if(!audioCtx || audioCtx.state !== 'running') return;
+    try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + duration);
+    } catch(e) {}
+}
+
+const sounds = {
+    ready: () => playBeep(300, 'sine', 0.15),
+    wait: () => playBeep(350, 'sine', 0.15),
+    go: () => playBeep(800, 'square', 0.2),
+    win: () => {
+        playBeep(523, 'sine', 0.2);
+        setTimeout(()=>playBeep(659, 'sine', 0.2), 150);
+        setTimeout(()=>playBeep(783, 'sine', 0.5), 300);
+    }
+};
+
+window.openModal = (id) => { initAudio(); document.getElementById(id).style.display = "flex"; };
+window.closeModal = (id) => { document.getElementById(id).style.display = "none"; };
+
+// ÖZEL HATA GÖSTERİMİ
+function showError(title, desc) {
+    initAudio();
+    document.getElementById("errorTitle").innerText = title;
+    document.getElementById("errorDesc").innerText = desc;
+    openModal("errorModal");
+}
+
+onAuthStateChanged(auth, async (user) => {
+    if (!user) { signInAnonymously(auth); return; }
+    uid = user.uid;
+    const userRef = doc(db, "users", uid);
+    const snap = await getDoc(userRef);
+    if(!snap.exists()) {
+        username = "Warrior_" + uid.slice(0,4);
+        await setDoc(userRef, { username: username });
+    } else {
+        username = snap.data().username || "Warrior";
+    }
+    document.getElementById("userBox").innerText = username.toUpperCase();
+    listenLobby();
+});
+
+function listenLobby() {
+    if(unsubLobby) unsubLobby(); 
+    const q = query(collection(db, "rooms"), where("state", "in", ["waiting", "matched", "countdown", "active", "result", "finished"]));
+    unsubLobby = onSnapshot(q, (snap) => {
+        allRooms = snap.docs.map(d => ({id: d.id, ...d.data()}));
+        renderRooms();
+    });
+}
+
+function renderRooms() {
+    const list = document.getElementById("roomList");
+    const searchTerm = document.getElementById("searchInput").value.toLowerCase();
+    list.innerHTML = "";
+    const filtered = allRooms.filter(r => (r.player1Name || "").toLowerCase().includes(searchTerm) || r.id.toLowerCase().includes(searchTerm));
+    
+    if (filtered.length === 0) {
+        list.innerHTML = `<div style="text-align:center; padding:40px; color:#444; font-size:0.8rem; font-family:'Orbitron';">ARENA BULUNAMADI</div>`;
+        return;
+    }
+
+    filtered.forEach(data => {
+        const isFull = data.player1 && data.player2;
+        const isInGame = ["countdown", "active", "result"].includes(data.state);
+        const div = document.createElement("div");
+        div.className = "room-card";
+        div.innerHTML = `
+            <div class="room-details">
+                <div class="room-host">${(data.player1Name || "???").toUpperCase()}</div>
+                <div class="room-meta">
+                    <span class="badge ${isInGame ? 'badge-live' : 'badge-wait'}">${isInGame ? 'CANLI' : 'AÇIK'}</span>
+                    <span>#${data.id.slice(0,4).toUpperCase()}</span>
+                </div>
+            </div>
+            <button class="btn" style="padding:10px 18px; background:${isFull ? '#222' : 'var(--p)'}; color:${isFull ? '#555' : '#000'};" 
+            ${isFull ? 'disabled' : ''} onclick="joinRoom('${data.id}', ${data.password ? 'true' : 'false'})">
+                ${isFull ? 'DOLU' : 'GİR'}
+            </button>
+        `;
+        list.appendChild(div);
+    });
+}
+
+document.getElementById("searchInput").oninput = renderRooms;
+
+document.getElementById("quickJoinBtn").onclick = async function() {
+    initAudio();
+    if(this.disabled) return;
+    this.disabled = true;
+    const available = allRooms.find(r => r.state === "waiting" && !r.player2 && !r.password && r.player1 !== uid);
+    if (available) {
+        await executeJoin(available.id);
+    } else {
+        showError("ARENA YOK", "Şu an boş ve şifresiz arena bulunamadı. Kendi arenanı kurabilirsin!");
+    }
+    this.disabled = false;
+};
+
+document.getElementById("confirmCreateBtn").onclick = async () => {
+    initAudio();
+    const btn = document.getElementById("confirmCreateBtn");
+    btn.disabled = true;
+    const pass = document.getElementById("roomPassInput").value.trim();
+    const newRoomRef = doc(collection(db, "rooms"));
+    currentRoomId = newRoomRef.id;
+    try {
+        await setDoc(newRoomRef, {
+            player1: uid, player1Name: username, player2: null, player2Name: null,
+            score1: 0, score2: 0, round: 1, state: "waiting", host: uid, 
+            password: pass, createdAt: serverTimestamp(), penalty: false,
+            displayBig: "READY", displaySub: "BEKLE...",
+            p1Ready: false, p2Ready: false
+        });
+        closeModal("createModal"); 
+        openTutorial();
+    } catch(e) { btn.disabled = false; }
+};
+
+window.joinRoom = async (id, isLocked) => {
+    initAudio();
+    if (isLocked) {
+        pendingRoomId = id;
+        document.getElementById("joinPassInput").value = "";
+        openModal("passwordModal");
+        return;
+    }
+    await executeJoin(id);
+};
+
+document.getElementById("confirmJoinPassBtn").onclick = async () => {
+    const pass = document.getElementById("joinPassInput").value.trim();
+    const snap = await getDoc(doc(db, "rooms", pendingRoomId));
+    if (snap.exists() && snap.data().password === pass) {
+        closeModal("passwordModal");
+        await executeJoin(pendingRoomId);
+    } else { 
+        showError("ŞİFRE HATASI", "Girdiğin arena şifresi yanlış.");
+    }
+};
+
+async function executeJoin(id) {
+    const roomRef = doc(db, "rooms", id);
+    try {
+        await runTransaction(db, async (t) => {
+            const snap = await t.get(roomRef);
+            if (!snap.exists()) throw "Oda silinmiş!";
+            if (snap.data().player2) throw "Arena dolmuş!";
+            t.update(roomRef, { 
+                player2: uid, 
+                player2Name: username, 
+                state: "matched"
+            });
+            currentRoomId = id;
+        });
+        openTutorial();
+    } catch (e) { showError("HATA", e); }
+}
+
+function openTutorial() {
+    initAudio();
+    document.getElementById("tutorialModal").style.display = "flex";
+}
+
+document.getElementById("tutConfirmBtn").onclick = async () => {
+    initAudio();
+    isTutorialRead = true;
+    closeModal("tutorialModal");
+    enterRoom();
+    const isP1 = uid === roomData.player1;
+    await updateDoc(doc(db, "rooms", currentRoomId), {
+        [isP1 ? "p1Ready" : "p2Ready"]: true
+    });
+};
+
+function enterRoom() {
+    if(unsubLobby) unsubLobby(); 
+    document.getElementById("lobby").style.display = "none";
+    document.getElementById("game-view").style.display = "flex";
+    document.getElementById("leaveBtn").style.display = "block";
+    document.getElementById("lobbyExitBtn").style.display = "none";
+    
+    unsubRoom = onSnapshot(doc(db, "rooms", currentRoomId), (snap) => {
+        if (!snap.exists()) { quitGame(); return; }
+        const d = snap.data();
+        roomData = d;
+        document.getElementById("p1Name").innerText = (d.player1Name || "---").toUpperCase();
+        document.getElementById("p1Score").innerText = d.score1 || 0;
+        document.getElementById("p2Name").innerText = (d.player2Name || "BEKLENİYOR").toUpperCase();
+        document.getElementById("p2Score").innerText = d.score2 || 0;
+        document.getElementById("roundNum").innerText = `RD ${d.round}`;
+        const bigText = document.getElementById("bigText");
+        const subText = document.getElementById("subText");
+        const arena = document.getElementById("arena");
+        bigText.innerText = d.displayBig || "";
+        subText.innerText = d.displaySub || "";
+        if (d.displayBig !== lastBigText) {
+            arena.classList.remove("flash");
+            subText.classList.remove("penalty");
+            bigText.style.color = "white";
+            if (d.displayBig === "HAZIR") { bigText.style.color = "var(--p)"; sounds.ready(); }
+            if (d.displayBig === "BEKLE") { bigText.style.color = "var(--gold)"; sounds.wait(); }
+            if (d.displayBig === "GO!") { bigText.style.color = "black"; arena.classList.add("flash"); sounds.go(); }
+            if (d.penalty) { subText.classList.add("penalty"); }
+            lastBigText = d.displayBig;
+        }
+        if (d.state !== lastState) {
+            if (countdownInterval) clearInterval(countdownInterval);
+            if (d.state === "matched" && uid === d.host && d.p1Ready && d.p2Ready) {
+                setTimeout(() => {
+                    updateDoc(doc(db, "rooms", currentRoomId), { 
+                        state: "countdown", 
+                        displayBig: "HAZIR", displaySub: "ODAKLAN",
+                        startTime: getServerTime() + 2500 
+                    });
+                }, 500);
+            }
+            if (d.state === "countdown" && uid === d.host) {
+                let currentStage = 0;
+                countdownInterval = setInterval(() => {
+                    const now = getServerTime();
+                    const diff = d.startTime - now;
+                    if (diff > 1200 && currentStage === 0) {
+                        updateDoc(doc(db, "rooms", currentRoomId), { displayBig: "HAZIR", displaySub: "ODAKLAN" });
+                        currentStage = 1;
+                    } else if (diff <= 1200 && diff > 0 && currentStage === 1) {
+                        updateDoc(doc(db, "rooms", currentRoomId), { displayBig: "BEKLE", displaySub: "SAKIN BASMA!" });
+                        currentStage = 2;
+                    } else if (diff <= 0) {
+                        clearInterval(countdownInterval);
+                        updateDoc(doc(db, "rooms", currentRoomId), { 
+                            state: "active", 
+                            roundStart: getServerTime(),
+                            displayBig: "GO!", displaySub: "ŞİMDİ VUR!" 
+                        });
+                    }
+                }, 50);
+            }
+            if (d.state === "result" && uid === d.host) {
+                setTimeout(() => {
+                    if(!currentRoomId) return;
+                    const isFinal = (d.score1 >= 11 || d.score2 >= 11);
+                    updateDoc(doc(db, "rooms", currentRoomId), { 
+                        state: isFinal ? "finished" : "countdown",
+                        startTime: getServerTime() + 2500,
+                        round: isFinal ? d.round : d.round + 1,
+                        penalty: false,
+                        displayBig: "HAZIR", displaySub: "ODAKLAN"
+                    });
+                }, 2500);
+            }
+            if (d.state === "finished") {
+                document.getElementById("winnerScreen").style.display = "flex";
+                document.getElementById("championName").innerText = (d.score1 >= 11 ? d.player1Name : d.player2Name).toUpperCase();
+                sounds.win();
+                setTimeout(quitGame, 5000);
+            }
+            lastState = d.state;
+        }
+    });
+}
+
+document.getElementById("arena").addEventListener('pointerdown', async (e) => {
+    e.preventDefault();
+    initAudio();
+    if (tapLock || !currentRoomId || !roomData) return;
+    const now = getServerTime();
+    const d = roomData;
+    const roomRef = doc(db, "rooms", currentRoomId);
+    if (d.state === "countdown" || (d.state === "matched" && d.player2)) {
+        tapLock = true;
+        const isP1 = uid === d.player1;
+        await updateDoc(roomRef, { 
+            state: "result", 
+            penalty: true, penaltyUser: uid,
+            [isP1 ? "score2" : "score1"]: (isP1 ? (d.score2 || 0) + 1 : (d.score1 || 0) + 1),
+            lastWinner: isP1 ? d.player2Name : d.player1Name,
+            displayBig: "HATA!", displaySub: (uid === d.player1 ? d.player1Name : d.player2Name).toUpperCase() + " ERKEN BASTI!"
+        });
+        setTimeout(() => tapLock = false, 1000);
+    } 
+    else if (d.state === "active") {
+        tapLock = true;
+        const reaction = now - d.roundStart;
+        try {
+            await runTransaction(db, async (t) => {
+                const s = await t.get(roomRef);
+                if (s.data().state !== "active") return;
+                const isP1 = uid === s.data().player1;
+                t.update(roomRef, { 
+                    state: "result", 
+                    [isP1 ? "score1" : "score2"]: (isP1 ? (s.data().score1 || 0) + 1 : (s.data().score2 || 0) + 1), 
+                    lastWinner: username, 
+                    displayBig: reaction + "ms",
+                    displaySub: username.toUpperCase() + " KAZANDI"
+                });
+            });
+        } catch(e) {}
+        setTimeout(() => tapLock = false, 1000);
+    }
+});
+
+async function quitGame() {
+    if (unsubRoom) { unsubRoom(); unsubRoom = null; }
+    if (countdownInterval) clearInterval(countdownInterval);
+    if (currentRoomId) {
+        const rId = currentRoomId;
+        currentRoomId = null;
+        try {
+            const ref = doc(db, "rooms", rId);
+            const snap = await getDoc(ref);
+            if (snap.exists()) {
+                const d = snap.data();
+                if (d.host === uid || !d.player2) {
+                    await deleteDoc(ref);
+                } else {
+                    await updateDoc(ref, { state: "finished" });
+                }
+            }
+        } catch(e) {}
+    }
+    location.reload();
+}
+document.getElementById("leaveBtn").onclick = quitGame;
+</script>
+</body>
+</html>
