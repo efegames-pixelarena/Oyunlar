@@ -91,37 +91,16 @@
     </div>
 
     <div id="createModal" class="modal">
-        <div class="modal-box">
-            <h3>ARENA OLUŞTUR</h3>
-            <input type="password" id="createPass" class="modal-input" placeholder="ŞİFRE (OPSİYONEL)">
-            <button class="btn-neon" style="width:100%" id="confirmCreate">BAŞLAT</button>
-            <button onclick="window.toggleModal('createModal', false)" style="background:none; color:#888; border:none; margin-top:15px; cursor:pointer;">İPTAL</button>
-        </div>
+        <div class="modal-box"><h3>ARENA OLUŞTUR</h3><input type="password" id="createPass" class="modal-input" placeholder="ŞİFRE (OPSİYONEL)"><button class="btn-neon" style="width:100%" id="confirmCreate">BAŞLAT</button><button onclick="window.toggleModal('createModal', false)" style="background:none; color:#888; border:none; margin-top:15px; cursor:pointer;">İPTAL</button></div>
     </div>
-
     <div id="passModal" class="modal">
-        <div class="modal-box">
-            <h3>KİLİTLİ ODA</h3>
-            <input type="password" id="joinPassInput" class="modal-input" placeholder="ŞİFREYİ YAZ">
-            <button class="btn-neon" style="width:100%" id="confirmJoin">GİRİŞ YAP</button>
-            <button onclick="window.toggleModal('passModal', false)" style="background:none; color:#888; border:none; margin-top:15px; cursor:pointer;">VAZGEÇ</button>
-        </div>
+        <div class="modal-box"><h3>KİLİTLİ ODA</h3><input type="password" id="joinPassInput" class="modal-input" placeholder="ŞİFREYİ YAZ"><button class="btn-neon" style="width:100%" id="confirmJoin">GİRİŞ YAP</button><button onclick="window.toggleModal('passModal', false)" style="background:none; color:#888; border:none; margin-top:15px; cursor:pointer;">VAZGEÇ</button></div>
     </div>
-
     <div id="quickModal" class="modal">
-        <div class="modal-box" style="border-color:#fff">
-            <h3 id="quickStatus">TARANIYOR...</h3>
-            <div id="quickSub" style="margin:20px 0; color:var(--p1); font-size:0.7rem;">Uygun boş oda aranıyor...</div>
-            <button id="quickBtn" onclick="window.closeQuick()" class="btn-neon" style="background:#ff4444; width:100%">DURDUR</button>
-        </div>
+        <div class="modal-box" style="border-color:#fff"><h3 id="quickStatus">TARANIYOR...</h3><div id="quickSub" style="margin:20px 0; color:var(--p1); font-size:0.7rem;">Uygun boş oda aranıyor...</div><button id="quickBtn" onclick="window.closeQuick()" class="btn-neon" style="background:#ff4444; width:100%">DURDUR</button></div>
     </div>
-
     <div id="resultModal" class="modal">
-        <div class="modal-box" id="resultBox">
-            <h2 id="winnerLabel" style="font-family:'Orbitron'; margin-bottom:10px;">ZAFER!</h2>
-            <div id="scoreLabel" style="font-size:2.5rem; color:var(--p1); margin-bottom:20px;">0 - 0</div>
-            <button class="btn-neon" style="width:100%" onclick="location.reload()">LOBİYE DÖN</button>
-        </div>
+        <div class="modal-box" id="resultBox"><h2 id="winnerLabel" style="font-family:'Orbitron'; margin-bottom:10px;">ZAFER!</h2><div id="scoreLabel" style="font-size:2.5rem; color:var(--p1); margin-bottom:20px;">0 - 0</div><button class="btn-neon" style="width:100%" onclick="location.reload()">LOBİYE DÖN</button></div>
     </div>
 
 <script type="module">
@@ -142,36 +121,35 @@
     const db = getFirestore(app);
     const auth = getAuth(app);
 
+    // YENİ SESLER
     const sfx = {
-        box: new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3'),
-        win: new Audio('https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3'),
-        lose: new Audio('https://assets.mixkit.co/active_storage/sfx/2518/2518-preview.mp3'),
-        start: new Audio('https://assets.mixkit.co/active_storage/sfx/2017/2017-preview.mp3')
+        box: new Audio('https://cdn.pixabay.com/audio/2022/03/15/audio_78396032a7.mp3'),
+        win: new Audio('https://cdn.pixabay.com/audio/2021/08/04/audio_0625c1539c.mp3'),
+        lose: new Audio('https://cdn.pixabay.com/audio/2021/08/04/audio_c36357602e.mp3'),
+        start: new Audio('https://cdn.pixabay.com/audio/2022/01/18/audio_d0a13f69d2.mp3')
     };
 
     let audioReady = false, uid, username, curRoomId = null, myRole, isFin = false, canPlay = false, timerInt = null;
-    let pRoom = "", pPass = "", quickSearching = false;
+    let pRoom = "", pPass = "", quickSearching = false, lastCellsCount = 0;
 
     window.toggleModal = (id, show) => { document.getElementById(id).style.display = show ? 'flex' : 'none'; };
 
-    // --- BUTON KONTROLCÜSÜ (TEMİZLİK GARANTİLİ) ---
+    // --- EXIT CONTROLLER (FIXED: ASYNC CLEANUP) ---
     window.exitController = async () => {
         const exitBtn = document.getElementById('mainExitBtn');
         exitBtn.disabled = true;
         exitBtn.innerText = "...";
 
-        if (!curRoomId) {
-            window.location.href = "index.html";
-        } else {
+        if (curRoomId) {
             try {
                 if (myRole === 'p1') {
                     await deleteDoc(doc(db, "conquest_rooms", curRoomId));
                 } else {
                     await updateDoc(doc(db, "conquest_rooms", curRoomId), { p2: null, status: 'waiting' });
                 }
-            } catch (e) { console.error("Çıkış hatası:", e); }
-            location.reload();
+            } catch (e) { console.warn("Cleanup error:", e); }
         }
+        location.reload();
     };
 
     onAuthStateChanged(auth, async user => {
@@ -185,21 +163,11 @@
     });
 
     async function cleanOldRooms() {
+        // Bug Fix: Sadece 'waiting' olanları temizle, oyun devam ediyorsa temizleme
         const q = query(collection(db, "conquest_rooms"), where("p1", "==", uid), where("status", "==", "waiting"));
         const snap = await getDocs(q);
-        const batch = [];
-        snap.forEach(d => batch.push(deleteDoc(d.ref)));
-        await Promise.all(batch);
+        snap.forEach(async (d) => await deleteDoc(d.ref));
     }
-
-    // --- ARAMA KUTUSU VE LOBİ DİNLEME ---
-    document.getElementById('searchInput').addEventListener('input', (e) => {
-        const term = e.target.value.toLowerCase();
-        document.querySelectorAll('.room-card').forEach(card => {
-            const name = card.getAttribute('data-name').toLowerCase();
-            card.style.display = name.includes(term) ? 'flex' : 'none';
-        });
-    });
 
     function listenLobby() {
         onSnapshot(collection(db, "conquest_rooms"), snap => {
@@ -208,10 +176,7 @@
             list.innerHTML = "";
             snap.forEach(d => {
                 const r = d.data();
-                if(r.status === 'finished') return;
-                
-                let s1=0, s2=0;
-                if(r.cells) Object.values(r.cells).forEach(v => v === 'p1' ? s1++ : s2++);
+                if(r.status === 'finished' || (r.p1 === uid && curRoomId !== d.id)) return;
                 
                 const card = document.createElement('div');
                 card.className = "room-card";
@@ -223,7 +188,6 @@
                         <b>${r.p1Name} ${r.pass ? '🔒' : ''}</b>
                         <div class="room-stats">
                             <span class="tag ${r.p2 ? 'tag-playing' : 'tag-waiting'}">${r.p2 ? 'DOLU' : 'BEKLEYOR'}</span>
-                            <span>Skor: ${s1}-${s2}</span>
                         </div>
                     </div>
                     <button class="btn-neon" style="padding:6px 15px; font-size:0.6rem;" 
@@ -240,48 +204,20 @@
         curRoomId = id; myRole = 'p1';
         await setDoc(doc(db, "conquest_rooms", id), {
             p1: uid, p1Name: username, p2: null, p2Name: "...",
-            cells: {}, timer: 60, status: 'waiting', pass: pass
+            cells: {}, timer: 60, status: 'waiting', pass: pass, lastUpdate: Date.now()
         });
         window.toggleModal('createModal', false);
         enterGame(id);
     };
 
-    // --- GELİŞTİRİLMİŞ HIZLI KATIL ---
     window.openQuickModal = async () => {
         window.toggleModal('quickModal', true);
-        document.getElementById('quickStatus').innerText = "TARANIYOR...";
-        document.getElementById('quickBtn').innerText = "DURDUR";
-        document.getElementById('quickBtn').style.background = "#ff4444";
         quickSearching = true;
-
         const q = query(collection(db, "conquest_rooms"), where("status", "==", "waiting"));
         const snap = await getDocs(q);
-        let foundId = null;
-
-        for (let d of snap.docs) {
-            const r = d.data();
-            if(!r.pass && r.p1 !== uid && quickSearching) {
-                foundId = d.id;
-                break;
-            }
-        }
-
-        if(foundId && quickSearching) {
-            setTimeout(() => { 
-                if(quickSearching) {
-                    window.toggleModal('quickModal', false); 
-                    finalizeJoin(foundId); 
-                }
-            }, 1000);
-        } else {
-            setTimeout(() => { 
-                if(quickSearching) {
-                    document.getElementById('quickStatus').innerText = "ODA BULUNAMADI";
-                    document.getElementById('quickBtn').innerText = "KAPAT";
-                    document.getElementById('quickBtn').style.background = "#444";
-                }
-            }, 2000);
-        }
+        let found = snap.docs.find(d => !d.data().pass && d.data().p1 !== uid);
+        if(found && quickSearching) finalizeJoin(found.id);
+        else setTimeout(() => { if(quickSearching) { document.getElementById('quickStatus').innerText="ODA YOK"; } }, 2000);
     };
 
     window.closeQuick = () => { quickSearching = false; window.toggleModal('quickModal', false); };
@@ -296,87 +232,64 @@
         if(document.getElementById('joinPassInput').value === pPass) {
             window.toggleModal('passModal', false);
             finalizeJoin(pRoom);
-        } else alert("Hatalı Şifre!");
+        } else alert("Hatalı!");
     };
 
     async function finalizeJoin(id) {
         curRoomId = id; myRole = 'p2';
         await updateDoc(doc(db, "conquest_rooms", id), { p2: uid, p2Name: username, status: 'playing' });
+        window.toggleModal('quickModal', false);
         enterGame(id);
     }
 
     function enterGame(id) {
-        document.getElementById('mainExitBtn').innerText = "LOBİ";
-        document.getElementById('mainExitBtn').style.borderColor = "#00f2ff";
-        document.getElementById('mainExitBtn').style.color = "#00f2ff";
-        document.getElementById('mainExitBtn').disabled = false;
-        
         document.getElementById('lobby').style.display = 'none';
         document.getElementById('game-view').style.display = 'flex';
         const g = document.getElementById('grid');
         g.innerHTML = "";
-        
-        let currentCells = {};
-
         for(let i=0; i<36; i++) {
             const c = document.createElement('div');
             c.className = 'cell';
-            c.onclick = () => { 
-                if(canPlay && !isFin && !currentCells[i]) { 
-                    playSfx('box'); 
-                    updateDoc(doc(db, "conquest_rooms", id), { [`cells.${i}`]: myRole }); 
-                }
-            };
+            c.onclick = () => { if(canPlay && !isFin) updateDoc(doc(db, "conquest_rooms", id), { [`cells.${i}`]: myRole }); };
             g.appendChild(c);
         }
 
         onSnapshot(doc(db, "conquest_rooms", id), snap => {
             if(!snap.exists()) { if(!isFin) location.reload(); return; }
             const d = snap.data();
-            currentCells = d.cells || {};
             
+            // SES SENKRONİZASYONU (Her yeni hücrede ses çal)
+            const cells = d.cells || {};
+            const cellsCount = Object.keys(cells).length;
+            if(cellsCount > lastCellsCount) { playSfx('box'); lastCellsCount = cellsCount; }
+
             document.getElementById('n1').innerText = d.p1Name;
             document.getElementById('n2').innerText = d.p2Name;
             document.getElementById('timer-box').innerText = d.timer;
 
-            if(d.status === 'playing') {
-                if(!canPlay) { playSfx('start'); canPlay = true; document.getElementById('statusInfo').style.display='none'; }
-                
-                if(myRole === 'p1' && !timerInt && !isFin) {
-                    let localTimer = d.timer;
-                    timerInt = setInterval(() => {
-                        if(!isFin && localTimer > 0) {
-                            localTimer--;
-                            document.getElementById('timer-box').innerText = localTimer;
-                            if(localTimer % 2 === 0 || localTimer === 0) {
-                                updateDoc(doc(db, "conquest_rooms", id), { timer: localTimer });
-                            }
-                        } else if(localTimer <= 0) {
-                            clearInterval(timerInt);
-                            updateDoc(doc(db, "conquest_rooms", id), { status: 'finished' });
-                        }
-                    }, 1000);
-                }
+            if(d.status === 'playing' && !canPlay) { playSfx('start'); canPlay = true; document.getElementById('statusInfo').style.display='none'; }
+
+            // TIMER SYNC (Fixed)
+            if(myRole === 'p1' && d.status === 'playing' && !timerInt) {
+                timerInt = setInterval(() => {
+                    if(d.timer > 0) updateDoc(doc(db, "conquest_rooms", id), { timer: increment(-1) });
+                    else { clearInterval(timerInt); updateDoc(doc(db, "conquest_rooms", id), { status: 'finished' }); }
+                }, 1000);
             }
 
             let s1=0, s2=0;
             document.querySelectorAll('.cell').forEach((c, i) => {
-                if(currentCells[i]) {
-                    c.className = 'cell ' + currentCells[i];
-                    currentCells[i] === 'p1' ? s1++ : s2++;
-                }
+                if(cells[i]) { c.className = 'cell ' + cells[i]; cells[i] === 'p1' ? s1++ : s2++; }
             });
             document.getElementById('s1').innerText = s1;
             document.getElementById('s2').innerText = s2;
 
-            if((d.timer <= 0 || Object.keys(currentCells).length === 36 || d.status === 'finished') && !isFin) finish(s1, s2);
+            if((d.timer <= 0 || cellsCount === 36 || d.status === 'finished') && !isFin) finish(s1, s2);
         });
     }
 
     function finish(s1, s2) {
-        if(isFin) return; 
-        isFin = true; 
-        clearInterval(timerInt);
+        isFin = true; clearInterval(timerInt);
         const win = (myRole === 'p1' && s1 > s2) || (myRole === 'p2' && s2 > s1);
         const draw = s1 === s2;
         playSfx(draw ? 'lose' : (win ? 'win' : 'lose'));
@@ -385,23 +298,16 @@
         window.toggleModal('resultModal', true);
     }
 
-    // --- GELİŞTİRİLMİŞ SES SİSTEMİ (iOS/SAFARI UYUMLU) ---
     window.unlockAudio = () => { 
         if(audioReady) return; 
-        Object.values(sfx).forEach(s => { 
-            s.play().then(() => { s.pause(); s.currentTime = 0; }).catch(e => console.log("Audio warm-up skip"));
-        }); 
+        Object.values(sfx).forEach(s => { s.play().then(()=> {s.pause(); s.currentTime=0;}); });
         audioReady = true; 
     };
 
-    function playSfx(key) {
-        if(!audioReady) return;
-        const sound = sfx[key];
-        if(sound) {
-            sound.currentTime = 0;
-            sound.play().catch(e => console.log("Playback blocked"));
-        }
-    }
+    function playSfx(key) { if(audioReady && sfx[key]) { sfx[key].currentTime=0; sfx[key].play(); } }
+
+    // Firebase Increment Helper
+    const increment = (val) => { return { __web_increment__: val }; };
 </script>
 </body>
 </html>
