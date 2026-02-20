@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Neon Conquest | Pro Edition V10</title>
+    <title>Neon Conquest | Pro Edition V10.1</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@500;800&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -145,7 +145,6 @@
     let audioReady = false, uid, username, curRoomId = null, myRole, isFin = false, canPlay = false, timerInt = null, lastCellsCount = 0;
     let unsubLobby = null, unsubGame = null;
 
-    // --- MOBİL GERİ TUŞU KONTROLÜ ---
     window.history.pushState(null, null, window.location.href);
     window.onpopstate = function() {
         window.history.pushState(null, null, window.location.href);
@@ -169,16 +168,23 @@
     onAuthStateChanged(auth, async user => {
         if(!user) { signInAnonymously(auth); return; }
         uid = user.uid;
-        // KULLANICI ADINI FIREBASE'DEN ÇEKME
-        const uSnap = await getDoc(doc(db, "users", uid));
-        username = uSnap.exists() ? uSnap.data().username : "PILOT_" + uid.slice(0,4);
+        
+        // --- FIX: KULLANICI ADI ÇEKME GARANTİSİ ---
+        try {
+            const uSnap = await getDoc(doc(db, "users", uid));
+            const userData = uSnap.exists() ? uSnap.data() : null;
+            username = userData && userData.username ? userData.username : "PILOT_" + uid.slice(0,4);
+        } catch(e) {
+            username = "PILOT_" + uid.slice(0,4);
+        }
+        
         document.getElementById('meName').innerText = username;
         listenLobby();
         initWarp();
     });
 
     function listenLobby() {
-        if(unsubLobby) unsubLobby(); // Bellek sızıntısı önleme
+        if(unsubLobby) unsubLobby();
         unsubLobby = onSnapshot(collection(db, "conquest_rooms"), snap => {
             const list = document.getElementById('roomList');
             list.innerHTML = "";
@@ -241,15 +247,17 @@
     window.finalizeJoin = async (id) => {
         const roomRef = doc(db, "conquest_rooms", id);
         const snap = await getDoc(roomRef);
-        if(!snap.exists() || snap.data().status !== 'waiting') { alert("ARENA DOLU VEYA KAPANDI!"); return; } // Race condition fix
+        if(!snap.exists() || snap.data().status !== 'waiting') { alert("ARENA DOLU VEYA KAPANDI!"); return; }
         
         curRoomId = id; myRole = 'p2';
+        // --- FIX: P2 İÇİN ANLIK UI GÜNCELLEMESİ ---
+        document.getElementById('n2').innerText = username; 
         await updateDoc(roomRef, { p2: uid, p2Name: username, status: 'playing' });
         enterGame(id);
     };
 
     function enterGame(id) {
-        if(unsubLobby) unsubLobby();
+        if(unsubLobby) { unsubLobby(); unsubLobby = null; }
         document.getElementById('lobby').style.display = 'none';
         document.getElementById('game-view').style.display = 'flex';
         document.getElementById('game-bg').style.display = 'block';
@@ -267,9 +275,11 @@
             const d = snap.data();
             
             if(d.status === 'escaped' && !isFin) {
-                isFin = true; clearInterval(timerInt);
+                isFin = true; 
+                if(timerInt) { clearInterval(timerInt); timerInt = null; }
                 playSfx('alert'); window.toggleModal('escapeModal', true);
-                setTimeout(() => deleteDoc(doc(db, "conquest_rooms", id)), 2000); // Hayalet oda temizliği
+                // --- FIX: ÇAKIŞMAYI ÖNLEYEN SİLME ---
+                setTimeout(() => { try { deleteDoc(doc(db, "conquest_rooms", id)); } catch(e){} }, 2000);
                 return;
             }
 
@@ -282,12 +292,20 @@
 
             if(d.status === 'playing' && !canPlay) { playSfx('start'); canPlay = true; }
             
-            // Zamanlayıcı Çakışması Engelleme (Sadece P1 yönetir)
-            if(myRole === 'p1' && d.status === 'playing' && !timerInt) {
-                timerInt = setInterval(() => {
-                    if(d.timer > 0) updateDoc(doc(db, "conquest_rooms", id), { timer: increment(-1) });
-                    else { clearInterval(timerInt); updateDoc(doc(db, "conquest_rooms", id), { status: 'finished' }); }
-                }, 1000);
+            // --- FIX: ZAMANLAYICI ÇAKIŞMASI KESİN ÇÖZÜM ---
+            if(myRole === 'p1' && d.status === 'playing') {
+                if(!timerInt) {
+                    timerInt = setInterval(() => {
+                        const currentTimer = parseInt(document.getElementById('timer-box').innerText);
+                        if(currentTimer > 0) {
+                            updateDoc(doc(db, "conquest_rooms", id), { timer: increment(-1) });
+                        } else {
+                            clearInterval(timerInt);
+                            timerInt = null;
+                            updateDoc(doc(db, "conquest_rooms", id), { status: 'finished' });
+                        }
+                    }, 1000);
+                }
             }
 
             let s1=0, s2=0;
@@ -303,7 +321,10 @@
     }
 
     async function finish(id, s1, s2) {
-        isFin = true; clearInterval(timerInt);
+        if(isFin) return;
+        isFin = true; 
+        if(timerInt) { clearInterval(timerInt); timerInt = null; }
+        
         const win = (myRole === 'p1' && s1 > s2) || (myRole === 'p2' && s2 > s1);
         playSfx(win ? 'win' : 'lose');
                 
@@ -311,14 +332,15 @@
         document.getElementById('scoreLabel').innerText = `${s1} - ${s2}`;
         window.toggleModal('resultModal', true);
         
-        // Zombi Oda Temizliği (Oyun bitince 5 sn sonra siler)
         if(myRole === 'p1') {
-            setTimeout(() => deleteDoc(doc(db, "conquest_rooms", id)), 5000);
+            setTimeout(() => { try { deleteDoc(doc(db, "conquest_rooms", id)); } catch(e){} }, 5000);
         }
     }
 
     function initWarp() {
         const bg = document.getElementById('game-bg');
+        if(!bg) return;
+        bg.innerHTML = "";
         for(let i=0; i<40; i++) {
             const star = document.createElement('div');
             star.className = 'star';
@@ -329,8 +351,8 @@
         }
     }
 
-    window.unlockAudio = () => { if(audioReady) return; Object.values(sfx).forEach(s => { s.play().then(()=> {s.pause(); s.currentTime=0;}); }); audioReady = true; };
-    function playSfx(key) { if(audioReady && sfx[key]) { sfx[key].currentTime=0; sfx[key].play(); } }
+    window.unlockAudio = () => { if(audioReady) return; Object.values(sfx).forEach(s => { s.play().then(()=> {s.pause(); s.currentTime=0;}).catch(()=>{}); }); audioReady = true; };
+    function playSfx(key) { if(audioReady && sfx[key]) { sfx[key].currentTime=0; sfx[key].play().catch(()=>{}); } }
 </script>
 </body>
 </html>
