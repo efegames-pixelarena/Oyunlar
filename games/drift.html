@@ -2,242 +2,174 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Neon Drift | Sync Duel</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Neon Drift | Demo Edition</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
-:root { --p: #00f2ff; --a: #ff0055; --bg: #05070a; --glass: rgba(10, 15, 25, 0.9); --success: #00ff88; }
-* { margin:0; padding:0; box-sizing:border-box; font-family: 'Orbitron', sans-serif; user-select: none; -webkit-tap-highlight-color: transparent; }
+:root { --p: #00f2ff; --a: #ff0055; --bg: #030508; --success: #00ff88; }
+* { margin:0; padding:0; box-sizing:border-box; font-family: 'Orbitron', sans-serif; user-select: none; }
 
-body { background: var(--bg); color: white; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+body { background: var(--bg); color: white; height: 100vh; overflow: hidden; }
 
-/* Dinamik Arka Plan Animasyonu */
-body::before {
-    content: ""; position: absolute; inset: 0;
-    background: linear-gradient(0deg, rgba(0, 242, 255, 0.05) 1px, transparent 1px) 0 0 / 100% 50px;
-    z-index: -1; animation: roadFlow 1s linear infinite;
-    animation-play-state: paused;
+/* Dinamik Yol Animasyonu */
+#road {
+    position: absolute; inset: 0;
+    background: 
+        linear-gradient(90deg, transparent 49%, rgba(0, 242, 255, 0.1) 50%, transparent 51%),
+        linear-gradient(0deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 100% 100%, 100% 80px;
+    z-index: 1;
 }
-#road-active::before { animation-play-state: running; }
-@keyframes roadFlow { from { background-position: 0 0; } to { background-position: 0 50px; } }
 
-/* Lobi Tasarımı */
-#lobby { position: fixed; inset: 0; background: var(--bg); z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; padding: 20px; text-align: center;}
-.title { font-size: 2.5rem; font-weight: 900; background: linear-gradient(to right, var(--p), var(--a)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 5px; }
-
-.btn { 
-    padding: 18px 40px; border: none; border-radius: 12px; font-weight: 900; cursor: pointer; transition: 0.3s;
-    background: var(--p); color: #000; font-size: 1rem; width: 100%; max-width: 300px;
-    clip-path: polygon(5% 0, 100% 0, 95% 100%, 0 100%);
+/* UI Katmanı */
+.hud {
+    position: relative; z-index: 100; padding: 30px;
+    display: flex; justify-content: space-between; align-items: flex-start;
 }
-.btn:active { transform: scale(0.95); filter: brightness(1.2); }
+.speed-display { text-align: center; }
+.speed-num { font-size: 3rem; font-weight: 900; font-style: italic; line-height: 1; color: var(--p); }
+.label { font-size: 0.7rem; letter-spacing: 3px; color: #555; }
 
-/* Oyun Ekranı */
-#game-view { display: none; flex: 1; position: relative; flex-direction: column; }
-.hud { padding: 40px 20px; display: flex; justify-content: space-between; z-index: 100; pointer-events: none; }
-.speed-box { text-align: center; }
-.speed-val { font-size: 2.5rem; font-weight: 900; line-height: 1; }
-.kmh { font-size: 0.7rem; color: #555; }
-
-/* Pist ve Araçlar */
-.track-container { position: absolute; inset: 0; display: flex; justify-content: center; z-index: 10; }
-.car { 
-    position: absolute; bottom: 100px; width: 45px; height: 80px; border-radius: 6px; 
-    border: 2px solid white; transition: transform 0.1s linear, left 0.3s ease, right 0.3s ease;
-    box-shadow: 0 0 20px currentColor;
+/* Yarışmacılar */
+.car {
+    position: absolute; bottom: 80px; width: 50px; height: 90px;
+    border-radius: 8px; border: 2px solid #fff; z-index: 10;
+    transition: transform 0.1s;
 }
-#p1Car { left: 20%; color: var(--p); background: var(--p); }
-#p2Car { right: 20%; color: var(--a); background: var(--a); }
+#playerCar { left: 25%; background: var(--p); box-shadow: 0 0 30px var(--p); }
+#enemyCar { right: 25%; background: var(--a); box-shadow: 0 0 30px var(--a); opacity: 0.8; }
 
-/* Drift Bölgesi */
+/* Drift Zone (Senkronizasyon Hedefi) */
 #drift-zone {
-    position: absolute; width: 100%; height: 150px; left: 0; top: -200px;
-    background: linear-gradient(transparent, rgba(255, 255, 255, 0.1), transparent);
-    border-top: 2px solid #fff; border-bottom: 2px solid #fff;
+    position: absolute; width: 100%; height: 120px; left: 0; top: -150px;
+    background: linear-gradient(transparent, rgba(255,255,255,0.2), transparent);
+    border-top: 3px solid #fff; border-bottom: 3px solid #fff;
     display: flex; align-items: center; justify-content: center;
-    font-size: 1.5rem; font-weight: 900; color: #fff;
-    text-shadow: 0 0 10px #fff; pointer-events: none;
+    z-index: 5; font-weight: 900; letter-spacing: 10px;
 }
 
-#status-msg { position: absolute; top: 50%; width: 100%; text-align: center; font-size: 1.2rem; color: var(--success); font-weight: 900; opacity: 0; }
+#msg {
+    position: absolute; top: 50%; width: 100%; text-align: center;
+    font-size: 1.5rem; font-weight: 900; z-index: 100; opacity: 0; transition: 0.2s;
+}
+
+.tutorial {
+    position: fixed; bottom: 20px; width: 100%; text-align: center;
+    color: #444; font-size: 0.7rem; z-index: 100;
+}
 </style>
 </head>
-<body id="road-active">
+<body>
 
-<div id="lobby">
-    <h1 class="title">NEON DRIFT</h1>
-    <p style="color:#555; margin-bottom:20px;">SENKRONİZE DÜELLO</p>
-    <button class="btn" id="findMatchBtn">ARENA ARA</button>
-    <div id="lobbyStatus" style="color:var(--p); font-size:0.8rem; margin-top:15px;"></div>
-</div>
+<div id="road"></div>
 
-<div id="game-view">
-    <div class="hud">
-        <div class="speed-box" style="color:var(--p)">
-            <div id="p1Name" style="font-size:0.6rem; margin-bottom:5px;">PLAYER 1</div>
-            <div class="speed-val" id="p1Speed">0</div>
-            <div class="kmh">KM/H</div>
-        </div>
-        <div id="roundInfo" style="color:var(--success); font-size:0.8rem; padding-top:10px;">MATCHED</div>
-        <div class="speed-box" style="color:var(--a)">
-            <div id="p2Name" style="font-size:0.6rem; margin-bottom:5px;">PLAYER 2</div>
-            <div class="speed-val" id="p2Speed">0</div>
-            <div class="kmh">KM/H</div>
-        </div>
+<div class="hud">
+    <div class="speed-display">
+        <div class="label">SENİN HIZIN</div>
+        <div class="speed-num" id="pSpeed">0</div>
+        <div class="label">KM/H</div>
     </div>
-
-    <div id="drift-zone">DRIFT!</div>
-    <div id="p1Car" class="car"></div>
-    <div id="p2Car" class="car"></div>
-    <div id="status-msg">PERFECT!</div>
+    <div style="text-align: center;">
+        <div class="label">MESAFE</div>
+        <div id="dist" style="font-size: 1.2rem; font-weight: 900;">0m</div>
+    </div>
+    <div class="speed-display">
+        <div class="label">RAKİP HIZI</div>
+        <div class="speed-num" id="eSpeed" style="color: var(--a);">0</div>
+        <div class="label">KM/H</div>
+    </div>
 </div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, doc, setDoc, updateDoc, onSnapshot, collection, query, where, getDocs, runTransaction, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+<div id="drift-zone">DRIFT</div>
+<div id="playerCar" class="car"></div>
+<div id="enemyCar" class="car"></div>
+<div id="msg">PERFECT!</div>
 
-const firebaseConfig = {
-    apiKey: "AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
-    authDomain: "emirhan-site.firebaseapp.com",
-    projectId: "emirhan-site",
-    storageBucket: "emirhan-site.firebasestorage.app",
-    messagingSenderId: "668871888390",
-    appId: "1:668871888390:web:76568bda84cb1641f7bd87",
-    databaseURL: "https://emirhan-site-default-rtdb.firebaseio.com"
-};
+<div class="tutorial">ALAN ARABANIN ÜSTÜNDEYKEN EKRANA BASILI TUT!</div>
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const rdb = getDatabase(app);
-const auth = getAuth(app);
+<script>
+    let pSpeed = 0;
+    let eSpeed = 0;
+    let distance = 0;
+    let isPressing = false;
+    let driftActive = false;
+    let zonePos = -150;
+    let roadPos = 0;
 
-let uid, username, currentRoomId = null, serverOffset = 0, roomData = null;
-let velocity = 0, isPressing = false, driftActive = false;
+    const driftZone = document.getElementById('drift-zone');
+    const playerCar = document.getElementById('playerCar');
+    const msg = document.getElementById('msg');
 
-onValue(ref(rdb, ".info/serverTimeOffset"), s => serverOffset = s.val() || 0);
-const getServerTime = () => Date.now() + serverOffset;
+    function gameLoop() {
+        // 1. Yol ve Bölge Hareketi
+        zonePos += (pSpeed / 20) + 5;
+        if (zonePos > window.innerHeight) {
+            zonePos = -300; // Yeni bölge yukarıdan başlasın
+        }
+        driftZone.style.top = zonePos + 'px';
 
-onAuthStateChanged(auth, async (user) => {
-    if (!user) { signInAnonymously(auth); return; }
-    uid = user.uid;
-    username = "Pilot_" + uid.slice(0,4);
-    document.getElementById("findMatchBtn").onclick = startMatchmaking;
-});
-
-async function startMatchmaking() {
-    const btn = document.getElementById("findMatchBtn");
-    btn.disabled = true;
-    document.getElementById("lobbyStatus").innerText = "UYGUN PİLOT ARANIYOR...";
-
-    const q = query(collection(db, "drift_rooms"), where("state", "==", "waiting"));
-    const snap = await getDocs(q);
-    
-    if (snap.empty) {
-        currentRoomId = doc(collection(db, "drift_rooms")).id;
-        await setDoc(doc(db, "drift_rooms", currentRoomId), {
-            p1: uid, p1Name: username, p2: null, p2Name: null,
-            p1Speed: 0, p2Speed: 0, state: "waiting", targetTime: 0
-        });
-    } else {
-        currentRoomId = snap.docs[0].id;
-        await updateDoc(doc(db, "drift_rooms", currentRoomId), {
-            p2: uid, p2Name: username, state: "active", targetTime: getServerTime() + 3000
-        });
-    }
-    enterGame();
-}
-
-function enterGame() {
-    document.getElementById("lobby").style.display = "none";
-    document.getElementById("game-view").style.display = "flex";
-
-    onSnapshot(doc(db, "drift_rooms", currentRoomId), (snap) => {
-        if (!snap.exists()) return;
-        roomData = snap.data();
-        document.getElementById("p1Name").innerText = roomData.p1Name;
-        document.getElementById("p2Name").innerText = roomData.p2Name || "BEKLENİYOR";
-        document.getElementById("p2Speed").innerText = roomData.p2Speed;
-        if (uid === roomData.p2) document.getElementById("p1Speed").innerText = roomData.p1Speed;
-    });
-
-    requestAnimationFrame(gameLoop);
-}
-
-function gameLoop() {
-    if (!roomData || roomData.state !== "active") {
-        requestAnimationFrame(gameLoop);
-        return;
-    }
-
-    const now = getServerTime();
-    const driftZone = document.getElementById("drift-zone");
-    const diff = roomData.targetTime - now;
-
-    // Drift Bölgesi Senkronizasyonu
-    if (diff < 2000 && diff > -1000) {
-        // Bölge yukarıdan aşağıya iner
-        const topPos = ((2000 - diff) / 3000) * window.innerHeight - 200;
-        driftZone.style.top = topPos + "px";
-        
-        // Arabanın hizasına geldi mi?
-        if (topPos > window.innerHeight - 250 && topPos < window.innerHeight - 100) {
+        // 2. Drift Kontrolü (Arabanın konumu window.innerHeight - 170 civarı)
+        const carTop = window.innerHeight - 170;
+        if (zonePos > carTop - 100 && zonePos < carTop + 50) {
             driftActive = true;
-            driftZone.style.borderColor = varColor("--success");
+            driftZone.style.borderColor = 'var(--success)';
+            driftZone.style.color = 'var(--success)';
         } else {
             driftActive = false;
-            driftZone.style.borderColor = "#fff";
+            driftZone.style.borderColor = '#fff';
+            driftZone.style.color = '#fff';
         }
-    } else if (diff <= -1000) {
-        // Yeni tur ayarla (sadece p1/host yapar)
-        if (uid === roomData.p1) {
-            updateDoc(doc(db, "drift_rooms", currentRoomId), {
-                targetTime: getServerTime() + 4000,
-                p1Speed: Math.floor(velocity),
-                p2Speed: roomData.p2Speed // Bu normalde p2 tarafından güncellenir
-            });
+
+        // 3. Hız Mantığı
+        if (isPressing) {
+            if (driftActive) {
+                pSpeed += 1.5;
+                updateMsg('PERFECT DRIFT!', 'var(--success)');
+            } else {
+                pSpeed -= 2;
+                updateMsg('TOO EARLY!', 'var(--a)');
+            }
+        } else {
+            pSpeed -= 0.3;
         }
-        driftZone.style.top = "-200px";
+
+        // 4. Yapay Zeka Rakip (Basit senkronizasyon simülasyonu)
+        eSpeed += (Math.random() > 0.4 ? 0.8 : -0.5);
+        
+        // Sınırlandırmalar
+        pSpeed = Math.max(0, Math.min(pSpeed, 420));
+        eSpeed = Math.max(0, Math.min(eSpeed, 380));
+        distance += pSpeed / 100;
+
+        // 5. Görsel Güncellemeler
+        document.getElementById('pSpeed').innerText = Math.floor(pSpeed);
+        document.getElementById('eSpeed').innerText = Math.floor(eSpeed);
+        document.getElementById('dist').innerText = Math.floor(distance) + "m";
+        
+        // Yol kayma efekti
+        roadPos += pSpeed / 10;
+        document.getElementById('road').style.backgroundPosition = `50% 0, 0 ${roadPos}px`;
+        
+        // Araba titreme efekti
+        playerCar.style.transform = `translateX(${(Math.random()-0.5) * (pSpeed/50)}px) ${isPressing ? 'scale(1.1) skewX(-5deg)' : ''}`;
+
+        requestAnimationFrame(gameLoop);
     }
 
-    // Fizik ve Hız
-    if (isPressing && driftActive) {
-        velocity += 0.5;
-        showStatus("PERFECT DRIFT!", "var(--success)");
-    } else if (isPressing && !driftActive) {
-        velocity -= 0.8;
-        showStatus("TOO EARLY!", "var(--a)");
-    } else {
-        velocity -= 0.1;
+    function updateMsg(txt, color) {
+        msg.innerText = txt;
+        msg.style.color = color;
+        msg.style.opacity = isPressing ? 1 : 0;
     }
 
-    velocity = Math.max(0, Math.min(velocity, 350)); // Max 350 km/h
-    document.getElementById("p1Speed").innerText = Math.floor(velocity);
-    
-    // Görsel efektler
-    document.getElementById("p1Car").style.transform = isPressing ? "skewX(-10deg) scale(1.05)" : "none";
-    document.body.style.backgroundPositionY = (getServerTime() / 10) + "px";
+    // Giriş Kontrolleri
+    window.addEventListener('touchstart', (e) => { e.preventDefault(); isPressing = true; });
+    window.addEventListener('touchend', () => { isPressing = false; msg.style.opacity = 0; });
+    window.addEventListener('mousedown', () => isPressing = true);
+    window.addEventListener('mouseup', () => { isPressing = false; msg.style.opacity = 0; });
 
-    requestAnimationFrame(gameLoop);
-}
-
-function showStatus(txt, color) {
-    const el = document.getElementById("status-msg");
-    el.innerText = txt;
-    el.style.color = color;
-    el.style.opacity = "1";
-    setTimeout(() => el.style.opacity = "0", 500);
-}
-
-const varColor = (name) => getComputedStyle(document.documentElement).getPropertyValue(name);
-
-// Kontroller
-window.addEventListener("touchstart", (e) => { e.preventDefault(); isPressing = true; });
-window.addEventListener("touchend", () => { isPressing = false; });
-window.addEventListener("mousedown", () => isPressing = true);
-window.addEventListener("mouseup", () => isPressing = false);
-
+    // Başlat
+    gameLoop();
 </script>
 </body>
 </html>
