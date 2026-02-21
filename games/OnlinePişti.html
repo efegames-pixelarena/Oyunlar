@@ -27,12 +27,12 @@
             position: fixed; width: 100%; overscroll-behavior: none;
         }
 
-        /* MADDE 2: Lobi Arka Plan Neon Animasyon */
+        /* MADDE 2: Neon Geçişli Animasyonlu Arka Plan */
         #bg-canvas { 
             position: fixed; inset: 0; z-index: -1; 
-            background: linear-gradient(45deg, #0a1a1a, #03050a, #1a0a2e);
+            background: linear-gradient(45deg, #0a1a1a, #03050a, #1a0a2e, #0a1a1a);
             background-size: 400% 400%;
-            animation: neonGradient 10s ease infinite;
+            animation: neonGradient 12s ease infinite;
         }
         @keyframes neonGradient {
             0% { background-position: 0% 50%; }
@@ -59,7 +59,7 @@
         }
 
         .search-input { 
-            width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(79, 209, 255, 0.4); 
+            width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(79, 209, 255, 0.3); 
             padding: 12px 15px; color: #fff; border-radius: 4px; outline: none;
         }
         
@@ -76,36 +76,36 @@
             margin-bottom: 10px; border-radius: 0 8px 8px 0; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
-        .chips { display: flex; gap: 8px; justify-content: center; margin: 10px 0; }
+        .chips { display: flex; gap: 8px; justify-content: center; margin: 5px 0; }
         .chip { 
-            width:45px; height:45px; border-radius:50%; display:flex; align-items:center; justify-content:center; 
-            font-weight:900; cursor:pointer; border: 2px dashed rgba(255,255,255,0.4); font-size: 10px; background: #222;
+            width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center; 
+            font-weight:900; cursor:pointer; border: 2px dashed rgba(255,255,255,0.3); font-size: 9px; background: #222;
         }
 
         .player-heads {
             width: 100%; display: flex; justify-content: space-around; padding: 10px;
-            background: rgba(0,0,0,0.7); border-bottom: 2px solid #222; z-index: 100;
+            background: rgba(0,0,0,0.7); border-bottom: 2px solid #333; z-index: 100;
         }
         .p-head { text-align: center; flex: 1; transition: 0.3s; }
         .p-head.active { border-bottom: 3px solid var(--border); transform: scale(1.05); }
 
         #gameArea { display: none; flex: 1; flex-direction: column; align-items: center; z-index: 5; position: relative; }
         
-        /* MADDE 1: Masa Büyütüldü */
+        /* MADDE 1: Masa Boyutu Büyütüldü */
         .table {
-            width:96%; max-width:550px; height:380px; border-radius:190px; 
+            width:96%; max-width:540px; height:360px; border-radius:180px; 
             position: absolute; top: 52%; left: 50%; transform: translate(-50%, -50%);
-            background: radial-gradient(circle at center, #1e9e5a 0%, #0a4d23 80%);
-            box-shadow: inset 0 0 120px #000, 0 20px 50px rgba(0,0,0,0.9), 0 0 30px rgba(79, 209, 255, 0.4);
+            background: radial-gradient(circle at center, #1a8a4d 0%, #0a4d23 80%);
+            box-shadow: inset 0 0 120px #000, 0 20px 60px rgba(0,0,0,0.8), 0 0 25px var(--border);
             border: 10px solid #2d1f14;
         }
 
-        .table-cards { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:85px; height:120px; }
+        .table-cards { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:85px; height:115px; }
         
-        /* MADDE 1: Kart Görünümü İyileştirildi */
+        /* MADDE 1: Kart Görünümü İyileştirildi (Shadow & Border) */
         .stack-card { 
             width:85px; position:absolute; left:0; top:0; border-radius: 8px; 
-            box-shadow: 2px 2px 10px rgba(0,0,0,0.6); background:white;
+            box-shadow: 2px 2px 10px rgba(0,0,0,0.5); background:white;
             border: 1px solid #ddd;
         }
         
@@ -115,18 +115,24 @@
 
         .card { 
             width:75px; height: 105px; border-radius: 8px; cursor:pointer; transition: 0.3s; 
-            box-shadow: 0 8px 20px rgba(0,0,0,0.5); background:white; border: 1px solid #fff;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4); background:white;
+            border: 1px solid #fff;
         }
-        .card:hover { transform: translateY(-15px) scale(1.05); z-index: 100; }
-        .computer .card { width: 50px; height: 70px; opacity: 0.9; }
+        .card:hover { transform: translateY(-10px) rotate(-2deg); z-index: 100; }
+        .computer .card { width: 48px; height: 68px; opacity: 0.8; }
 
         .modal-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.95); backdrop-filter: blur(15px);
+            position: fixed; inset: 0; background: rgba(0,0,0,0.95); backdrop-filter: blur(12px);
             display: none; align-items: center; justify-content: center; z-index: 10000; padding: 20px;
         }
         .modal-box { 
-            background: #0d1117; border: 2px solid var(--border); padding: 30px; 
-            width: 100%; max-width: 360px; text-align: center; border-radius: 15px;
+            background: #0d1117; border: 2px solid var(--border); padding: 25px; 
+            width: 100%; max-width: 340px; text-align: center; border-radius: 15px;
+        }
+        .modal-input { 
+            width: 100%; background: #161b22; border: 1px solid #30363d; 
+            padding: 12px; color: #fff; margin-bottom: 15px; text-align: center; 
+            outline: none; border-radius: 8px; font-size: 1rem;
         }
 
         #pistiDisplay {
@@ -173,16 +179,16 @@
     <div id="gameArea">
         <div class="player-heads">
             <div class="p-head" id="head-opp">
-                <div class="name" style="font-size: 0.7rem; color: #aaa;">RAKİP</div>
-                <div class="score" id="cs" style="font-size: 1.5rem; color: var(--warning); font-family: 'Black Ops One';">0</div>
+                <div class="name">RAKİP</div>
+                <div class="score" id="cs">0</div>
             </div>
             <div class="p-head" id="head-me">
-                <div class="name" style="font-size: 0.7rem; color: #aaa;">SİZ</div>
-                <div class="score" id="ps" style="font-size: 1.5rem; color: var(--warning); font-family: 'Black Ops One';">0</div>
+                <div class="name">SİZ</div>
+                <div class="score" id="ps">0</div>
             </div>
         </div>
 
-        <div id="waitingStatus" style="position:fixed; top:140px; color:var(--border); background:rgba(0,0,0,0.8); padding:10px 20px; border-radius:8px; border:1px solid var(--border); display:none;">OYUNCU BEKLENİYOR...</div>
+        <div id="waitingStatus" style="position:fixed; top:140px; color:var(--border); background:rgba(0,0,0,0.8); padding:10px 20px; border-radius:10px; display:none; border:1px solid var(--border);">OYUNCU BEKLENİYOR...</div>
 
         <div class="table" id="tableArea">
             <div class="computer" id="computerHand"></div>
@@ -198,7 +204,7 @@
             <h3>MASA AYARLARI</h3><br>
             <input type="text" id="newRoomName" class="modal-input" placeholder="Masa Adı">
             
-            <select id="newRoomMode" class="modal-input" style="background:#161b22; color:white; width:100%; padding:12px; margin-bottom:15px; border-radius:6px; border:1px solid #30363d;">
+            <select id="newRoomType" class="modal-input" style="background:#161b22; color:white;">
                 <option value="2-52">2 Kişilik (52 Kart)</option>
                 <option value="2-104">2 Kişilik (104 Kart)</option>
                 <option value="4-104">4 Kişilik (104 Kart)</option>
@@ -260,14 +266,16 @@
         listenLobby();
     });
 
-    // MADDE 4: Bağlantı Kopması / Sayfa Yenileme / Odadan Ayrılma
-    const handleExit = async () => {
+    // MADDE 4: Bağlantı Kopması / Sayfa Yenileme / Odadan Ayrılma Mantığı
+    const handleDisconnection = async () => {
         if (inGame && roomRef) {
             await updateDoc(roomRef, { quitter: uid, status: "finished" });
         }
     };
-    window.addEventListener('beforeunload', handleExit);
-    window.addEventListener('popstate', handleExit);
+    window.addEventListener('beforeunload', handleDisconnection);
+    window.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden' && inGame) handleDisconnection();
+    });
 
     window.handleNavAction = () => {
         if (inGame) leaveRoom();
@@ -284,7 +292,7 @@
                 list.innerHTML += `
                     <div class="room-card">
                         <div>
-                            <small style="color:var(--border)">${data.name} (${data.mode.replace('-','K/')})</small><br>
+                            <small style="color:var(--border)">${data.name} (${data.type})</small><br>
                             <b style="font-size:1.1rem">${data.password ? '🔒 Şifreli' : '🔓 Açık'}</b><br>
                             <span style="color:var(--warning)">Bahis: ₺${data.bet.toLocaleString()}</span>
                         </div>
@@ -304,21 +312,20 @@
     window.confirmCreateRoom = async () => {
         if (currentBet < 100) return showInfoModal("Min 100₺ bahis!", "UYARI");
         const name = document.getElementById("newRoomName").value || "Arena";
-        const mode = document.getElementById("newRoomMode").value;
+        const type = document.getElementById("newRoomType").value;
         const pass = document.getElementById("newRoomPass").value || "";
         const roomId = "room_" + Date.now();
         roomRef = doc(db, "rooms", roomId);
         myRole = "p1";
         
-        // MADDE 3: Kart Sayısı Belirleme
-        let deckCount = mode.includes("104") ? 2 : 1;
-        let deck = [];
-        for(let i=0; i<deckCount; i++) deck = [...deck, ...createDeck()];
-        deck = deck.sort(() => Math.random() - 0.5);
+        // MADDE 3 & 6: Kart Sayısı Belirleme
+        const isDouble = type.includes("104");
+        const finalDeck = isDouble ? [...createDeck(), ...createDeck()] : createDeck();
+        const shuffledDeck = finalDeck.sort(() => Math.random() - 0.5);
 
         await setDoc(roomRef, {
-            p1: uid, p1_name: userName, bet: currentBet, status: "waiting", name, password: pass, mode,
-            deck, table: [], p1_score: 0, p2_score: 0,
+            p1: uid, p1_name: userName, bet: currentBet, status: "waiting", name, password: pass, type,
+            deck: shuffledDeck, table: [], p1_score: 0, p2_score: 0,
             p1_hand: [], p2_hand: [], turn: null, quitter: null
         });
         
@@ -352,9 +359,9 @@
             if(!snap.exists()) return;
             gameState = snap.data();
 
-            // MADDE 4: Odadan Ayrılma/Kopma Durumu (Bahis İade Mantığı)
+            // MADDE 4: Odadan Ayrılma/Kopma Durumu (İade Mantığı)
             if(gameState.quitter && gameState.quitter !== uid) {
-                balance += gameState.bet; // Rakip kaçtığı için bahis geri iade
+                balance += gameState.bet; // Mağdur olan tarafa bahis iade
                 await updateDoc(userRef, { balance });
                 showInfoModal("Rakip odadan ayrıldı! Bahis iade edildi.", "BİLGİ");
                 setTimeout(() => location.reload(), 3000);
@@ -364,7 +371,7 @@
             if (gameState.status === "playing") {
                 document.getElementById("waitingStatus").style.display = "none";
                 if (myRole === "p1" && gameState.p1_hand.length === 0 && gameState.p2_hand.length === 0) {
-                    distributeCards();
+                    refillHands();
                 }
                 render();
             }
@@ -372,7 +379,7 @@
         });
     }
 
-    async function distributeCards() {
+    async function refillHands() {
         const d = [...gameState.deck];
         if(d.length === 0) {
             await updateDoc(roomRef, { status: "finished" });
@@ -386,7 +393,7 @@
         await updateDoc(roomRef, updates);
     }
 
-    // MADDE 5: Hile Korumalı PlayCard (Server Transaction)
+    // MADDE 5: Hile Korumalı Hamle (Server-Side Logic Mimic)
     async function playCard(i) {
         if (gameState.turn !== uid) return;
         
@@ -395,11 +402,11 @@
                 const rSnap = await transaction.get(roomRef);
                 const data = rSnap.data();
                 
-                // Zirve Kademede Hile Kontrolü
-                if (data.turn !== uid) throw "Sıra Hatası";
+                // Zirve Hile Koruması: Sıra ve Kart Doğruluğu
+                if (data.turn !== uid) throw "Sıra sizde değil!";
                 
                 const handKey = myRole + "_hand";
-                let hand = [...data[handKey]];
+                const hand = [...data[handKey]];
                 const card = hand.splice(i, 1)[0];
                 let table = [...data.table];
                 let score = data[myRole + "_score"];
@@ -420,13 +427,13 @@
                 const next = myRole === "p1" ? data.p2 : data.p1;
                 transaction.update(roomRef, {
                     [handKey]: hand,
-                    table,
+                    table: table,
                     [myRole + "_score"]: score,
                     turn: next
                 });
             });
         } catch (e) {
-            console.error("Hile girişimi engellendi:", e);
+            console.error("İşlem reddedildi:", e);
         }
     }
 
@@ -512,8 +519,15 @@
         document.getElementById("infoModal").style.display = "flex"; 
     };
     window.handleJoin = (rid, pass, bet) => {
-        if(pass && prompt("Şifre:") !== pass) return;
+        if(pass && prompt("Şifre giriniz:") !== pass) return;
         joinRoom(rid, bet);
+    };
+    window.handleQuickJoin = async () => {
+        const q = query(collection(db, "rooms"), where("status", "==", "waiting"));
+        const snap = await getDocs(q);
+        let joined = false;
+        snap.forEach(d => { if(!joined && d.data().bet <= balance) { joinRoom(d.id, d.data().bet); joined = true; } });
+        if(!joined) showInfoModal("Uygun masa yok!", "ÜZGÜNÜZ");
     };
 </script>
 </body>
