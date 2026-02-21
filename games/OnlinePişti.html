@@ -22,8 +22,9 @@
         }
         body { background: var(--bg); color: #e0e0e0; height: 100vh; overflow: hidden; display: flex; flex-direction: column; position: relative; }
 
-        #bg-canvas { position: fixed; inset: 0; z-index: -1; background: #000; }
-
+        /* MADDE 3: Profesyonel Animasyonlu Masa ve Arka Plan */
+        #bg-canvas { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at center, #0a0f1a 0%, #03050a 100%); }
+        
         .top-bar { 
             height: 70px; flex-shrink: 0; padding: 0 15px; display: flex; align-items: center; justify-content: space-between; 
             background: rgba(0,0,0,0.95); border-bottom: 2px solid var(--border); z-index: 1000;
@@ -37,7 +38,7 @@
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 70px; max-width: 110px; text-align: center;
         }
 
-        #lobbyScreen { flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; z-index: 10; background: var(--bg); }
+        #lobbyScreen { flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; z-index: 10; background: transparent; }
         .search-input { 
             width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(79, 209, 255, 0.3); 
             padding: 12px 15px; color: #fff; border-radius: 4px; outline: none;
@@ -55,7 +56,6 @@
             background: var(--glass); border: 1px solid rgba(79, 209, 255, 0.2); border-left: 5px solid var(--border); 
             padding: 15px; display: flex; justify-content: space-between; align-items: center; 
             margin-bottom: 10px; border-radius: 0 8px 8px 0; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            animation: slideIn 0.3s ease-out;
         }
 
         .chips { display: flex; gap: 8px; justify-content: center; margin: 5px 0; }
@@ -69,29 +69,48 @@
         .c2000 { background: radial-gradient(#3498db, #2980b9); color:#fff; } 
         .c10000 { background: radial-gradient(#f1c40f, #f39c12); color:#fff; }
 
-        #gameArea { display: none; flex: 1; flex-direction: column; align-items: center; z-index: 5; }
-        h1 { margin-top:10px; font-size: 18px; letter-spacing: 1px; color: rgba(255,255,255,0.5); font-family: 'Black Ops One'; }
-        .score-board { margin: 8px 0; font-weight: bold; color: #ffcc00; font-size: 14px; background: rgba(0,0,0,0.5); padding: 5px 20px; border-radius: 20px; border: 1px solid #333; }
+        #gameArea { display: none; flex: 1; flex-direction: column; align-items: center; z-index: 5; justify-content: center; }
         
+        /* MADDE 3: Profesyonel Masa Görünümü */
         .table {
             width:92%; max-width:500px; height:360px; border-radius:180px; position:relative;
-            background:radial-gradient(circle at center,#1a8a4d,#0a4d23 80%);
-            box-shadow:inset 0 0 100px #000, 0 10px 40px rgba(0,0,0,0.5);
-            margin-top: 20px; border: 10px solid #2d1f14;
+            background: radial-gradient(circle at center, #1a8a4d 0%, #0d4d22 80%, #052611 100%);
+            box-shadow: inset 0 0 80px #000, 0 20px 50px rgba(0,0,0,0.8), 0 0 20px rgba(79, 209, 255, 0.2);
+            border: 12px solid #2d1f14;
+            overflow: visible;
         }
+        .table::after {
+            content: ''; position: absolute; inset: -5px; border-radius: 185px;
+            border: 2px solid rgba(79, 209, 255, 0.3); pointer-events: none;
+            animation: tableGlow 3s infinite alternate;
+        }
+        @keyframes tableGlow { from { opacity: 0.3; } to { opacity: 0.8; } }
+
         .table-cards { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:75px; height:105px; }
         .stack-card { width:75px; position:absolute; left:0; top:0; border-radius: 6px; box-shadow: 0 4px 8px rgba(0,0,0,0.4); background:white;}
-        .hand, .computer { position:absolute; left:50%; transform:translateX(-50%); display:flex; gap:6px; width: max-content; padding: 10px; min-height: 100px;}
-        .hand { bottom:-55px; }
-        .computer { top:-55px; }
+        .hand, .computer { position:absolute; left:50%; transform:translateX(-50%); display:flex; gap:6px; width: max-content; padding: 10px; min-height: 100px; z-index: 20;}
+        .hand { bottom:-70px; }
+        .computer { top:-70px; }
         .card { width:65px; border-radius: 6px; cursor:pointer; transition: transform 0.2s; box-shadow: 0 5px 15px rgba(0,0,0,0.3); background:white;}
 
+        /* MADDE 1 & 4: Modal Popup ve Şifre Kayma Çözümü */
         .modal-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.95); backdrop-filter: blur(15px);
-            display: none; align-items: center; justify-content: center; z-index: 10000; padding: 20px;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.92); backdrop-filter: blur(10px);
+            display: none; align-items: center; justify-content: center; z-index: 20000; padding: 20px;
         }
-        .modal-box { background: #0d1117; border: 2px solid var(--border); padding: 25px; width: 100%; max-width: 340px; text-align: center; position: relative; }
-        .modal-input { width: 100%; background: #161b22; border: 1px solid #30363d; padding: 12px; color: #fff; margin-bottom: 10px; text-align: center; outline: none; border-radius: 4px; }
+        .modal-box { 
+            background: #0d1117; border: 2px solid var(--border); padding: 25px; 
+            width: 100%; max-width: 340px; text-align: center; border-radius: 10px;
+            box-shadow: 0 0 30px rgba(79, 209, 255, 0.2);
+            animation: modalIn 0.3s ease-out;
+        }
+        @keyframes modalIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        .modal-input { 
+            width: 100%; background: #161b22; border: 1px solid #30363d; padding: 15px; 
+            color: #fff; margin-bottom: 15px; text-align: center; outline: none; border-radius: 6px; font-size: 1rem;
+        }
 
         .error-text { color: var(--danger); font-size: 0.9rem; font-weight: bold; margin-bottom: 10px; display: none; }
 
@@ -124,8 +143,6 @@
     </div>
 
     <div id="lobbyScreen">
-        <input type="text" id="roomSearch" class="search-input" placeholder="MASA ARA..." oninput="filterRooms()">
-        
         <div class="chips" id="chipsArea">
             <div class="chip c-cancel" onclick="cancelBet()">İPTAL</div>
             <div class="chip c100" onclick="addBet(100)">100</div>
@@ -136,7 +153,7 @@
 
         <div style="display:flex; gap:10px;">
             <button class="btn-neon" onclick="openCreateModal()">MASA KUR</button>
-            <button class="btn-neon btn-sec" onclick="showInfoModal('Hızlı Katıl özelliği yakında!', 'BİLGİ')">HIZLI KATIL</button>
+            <button class="btn-neon btn-sec" onclick="quickJoin()">HIZLI KATIL</button>
         </div>
 
         <div id="roomList" style="margin-top:10px"></div>
@@ -144,7 +161,6 @@
 
     <div id="gameArea">
         <div id="waitingStatus">RAKİP BEKLENİYOR...</div>
-        <h1>NEON PİŞTİ</h1>
         <div class="score-board">SİZ: <span id="ps">0</span> — RAKİP: <span id="cs">0</span></div>
 
         <div class="table" id="tableArea">
@@ -158,11 +174,8 @@
 
     <div id="createRoomModal" class="modal-overlay">
         <div class="modal-box">
-            <h3>MASA AYARLARI</h3>
+            <h3>MASA AYARLARI</h3><br>
             <input type="text" id="newRoomName" class="modal-input" placeholder="Masa Adı">
-            <select id="newRoomCapacity" class="modal-input" style="background: #161b22; color: #fff;">
-                <option value="2">2 Kişilik</option>
-            </select>
             <input type="text" id="newRoomPass" class="modal-input" placeholder="Şifre (Opsiyonel)">
             <button class="btn-neon" onclick="confirmCreateRoom()">OLUŞTUR</button>
             <button class="btn-neon btn-sec" style="margin-top:10px" onclick="closeModal('createRoomModal')">İPTAL</button>
@@ -171,7 +184,7 @@
 
     <div id="passEntryModal" class="modal-overlay">
         <div class="modal-box">
-            <h3>ŞİFRE GEREKLİ</h3>
+            <h3>ŞİFRE GEREKLİ</h3><br>
             <input type="password" id="passInput" class="modal-input" placeholder="Şifreyi Girin">
             <div id="passError" class="error-text">Şifre Yanlış!</div>
             <button class="btn-neon" id="passConfirmBtn">GİRİŞ</button>
@@ -181,16 +194,16 @@
 
     <div id="infoModal" class="modal-overlay">
         <div class="modal-box">
-            <h3 id="modalTitle">BİLGİ</h3>
+            <h3 id="modalTitle">BİLGİ</h3><br>
             <p id="modalMsg" style="color:#aaa; margin-bottom:20px; white-space: pre-line;"></p>
-            <button class="btn-neon" onclick="closeModal('infoModal')">TAMAM</button>
+            <button class="btn-neon" id="modalOkBtn" onclick="closeModal('infoModal')">TAMAM</button>
         </div>
     </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import { getFirestore, doc, onSnapshot, updateDoc, setDoc, collection, query, where, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getFirestore, doc, onSnapshot, updateDoc, setDoc, collection, query, where, getDocs, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
@@ -216,10 +229,11 @@
     let roomRef = null, myRole = null, gameState = null;
     let inGame = false;
 
-    // Canvas init
+    // MADDE 3: Canvas Animasyon
     const canvas = document.getElementById('bg-canvas');
     const ctx = canvas.getContext('2d');
-    function initCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; ctx.fillStyle = '#03050a'; ctx.fillRect(0,0,canvas.width, canvas.height); }
+    function initCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+    window.addEventListener('resize', initCanvas);
     initCanvas();
 
     onAuthStateChanged(auth, user => {
@@ -235,9 +249,13 @@
         listenLobby();
     });
 
+    // MADDE 5 & 6: Navigasyon Mantığı
     window.handleNavAction = () => {
-        if (inGame) leaveRoom();
-        else window.location.href = "index.html";
+        if (inGame) {
+            leaveRoom(); // MADDE 5: Oyun içindeyse lobiye atar (ceza ile)
+        } else {
+            window.location.href = "index.html"; // MADDE 6: Lobideyse index'e atar
+        }
     };
 
     function listenLobby() {
@@ -262,6 +280,29 @@
         });
     }
 
+    // MADDE 2: Hızlı Katıl Özelliği
+    window.quickJoin = async () => {
+        const q = query(collection(db, "rooms"), where("status", "==", "waiting"));
+        const snap = await getDocs(q);
+        let bestRoom = null;
+
+        snap.forEach(doc => {
+            const data = doc.data();
+            // Şifresiz ve bakiye + o anki bahis toplamına uygun odalar
+            if ((!data.password || data.password === "") && data.bet <= (balance + currentBet)) {
+                if (!bestRoom || data.bet > bestRoom.bet) {
+                    bestRoom = { id: doc.id, ...data };
+                }
+            }
+        });
+
+        if (bestRoom) {
+            joinRoom(bestRoom.id, bestRoom.bet);
+        } else {
+            showInfoModal("Bakiyenize uygun açık oda bulunamadı!", "HIZLI KATIL");
+        }
+    };
+
     window.addBet = (a) => { if(balance >= a) { balance -= a; currentBet += a; sfx.chip.play(); updateUI(); } };
     window.cancelBet = () => { balance += currentBet; currentBet = 0; sfx.chip.play(); updateUI(); };
     function updateUI() { document.getElementById("bet").innerText = currentBet.toLocaleString('tr-TR'); }
@@ -269,7 +310,7 @@
     window.openCreateModal = () => { document.getElementById('createRoomModal').style.display = 'flex'; };
 
     window.confirmCreateRoom = async () => {
-        if (currentBet < 100) return alert("Min 100₺ bahis gerekli!");
+        if (currentBet < 100) return showInfoModal("Min 100₺ bahis gerekli!", "UYARI");
         const name = document.getElementById("newRoomName").value || "Elite Arena";
         const pass = document.getElementById("newRoomPass").value || "";
         const roomId = "room_" + Date.now();
@@ -283,31 +324,33 @@
         });
         
         await updateDoc(userRef, { balance });
+        currentBet = 0; updateUI();
         closeModal('createRoomModal');
         enterGameView();
         listenRoom();
     };
 
     window.handleJoin = (rid, pass, bet) => {
-        const err = document.getElementById("passError");
-        err.style.display = "none";
         if(pass && pass !== "") {
             document.getElementById('passEntryModal').style.display = 'flex';
             document.getElementById('passConfirmBtn').onclick = () => {
                 if(document.getElementById('passInput').value === pass) {
                     closeModal('passEntryModal'); joinRoom(rid, bet);
-                } else { err.style.display = "block"; }
+                } else { document.getElementById("passError").style.display = "block"; }
             };
         } else { joinRoom(rid, bet); }
     };
 
     async function joinRoom(rid, bet) {
-        if (balance < bet) return alert("Yetersiz bakiye!");
-        balance -= bet;
+        const total = balance + currentBet;
+        if (total < bet) return showInfoModal("Yetersiz bakiye!", "UYARI");
+        
+        balance = total - bet;
+        currentBet = 0; updateUI();
         roomRef = doc(db, "rooms", rid);
         myRole = "p2";
 
-        await updateDoc(roomRef, { p2: uid, status: "playing", turn: uid }); // Katılan başlar
+        await updateDoc(roomRef, { p2: uid, status: "playing", turn: uid }); 
         await updateDoc(userRef, { balance });
         enterGameView();
         listenRoom();
@@ -321,16 +364,19 @@
         document.getElementById("waitingStatus").style.display = "block";
     }
 
+    // MADDE 7: Odadan Ayrılma / Kopma Durumu
     function listenRoom() {
         onSnapshot(roomRef, async (snap) => {
             if(!snap.exists()) return;
             gameState = snap.data();
 
+            // Eğer biri çıktıysa (quitter set edildiyse)
             if(gameState.quitter && gameState.quitter !== uid) {
+                // Mağdur olan tarafa sadece kendi koyduğu bahis iade edilir (kural gereği)
                 balance += gameState.bet;
                 await updateDoc(userRef, { balance });
-                showInfoModal("Rakip ayrıldı! Bahis iade edildi.", "BAĞLANTI KOPTU");
-                setTimeout(() => location.reload(), 3000);
+                showInfoModal("Rakip kaçtı! Bahis iade edildi.", "OYUN BİTTİ");
+                document.getElementById("modalOkBtn").onclick = () => location.reload();
                 return;
             }
 
@@ -346,7 +392,7 @@
                 }
                 render();
             }
-            if (gameState.status === "finished") handleEnd();
+            if (gameState.status === "finished" && !gameState.quitter) handleEnd();
         });
     }
 
@@ -380,6 +426,7 @@
             img.src = (i === gameState.table.length - 1) ? `https://deckofcardsapi.com/static/img/${c}.png` : "https://deckofcardsapi.com/static/img/back.png";
             img.className = "stack-card";
             img.style.zIndex = i;
+            img.style.transform = `rotate(${i * 2}deg)`;
             tc.appendChild(img);
         });
 
@@ -401,7 +448,13 @@
         if (table.length > 0) {
             const top = table[table.length - 1];
             if (card[0] === top[0] || card[0] === "J") {
-                score += (table.length === 1 && card[0] === top[0]) ? 10 : table.length + 1;
+                if(table.length === 1 && card[0] === top[0]) {
+                    score += 10;
+                    document.getElementById("pistiDisplay").style.display = "block";
+                    setTimeout(()=>document.getElementById("pistiDisplay").style.display="none", 1500);
+                } else {
+                    score += table.length + 1;
+                }
                 table = [];
             } else table.push(card);
         } else table.push(card);
@@ -423,25 +476,24 @@
     async function handleEnd() {
         const myScore = gameState[myRole + "_score"];
         const oppScore = myRole === "p1" ? gameState.p2_score : gameState.p1_score;
-        let msg = "";
-
+        
         if (myScore > oppScore) {
-            const winAmount = gameState.bet * 2;
-            balance += winAmount;
+            balance += gameState.bet * 2;
             sfx.win.play();
-            msg = `TEBRİKLER! ${winAmount}₺ kazandın.`;
+            showInfoModal(`KAZANDINIZ! ₺${gameState.bet * 2} bakiye eklendi.`, "OYUN SONUCU");
         } else {
             sfx.lose.play();
-            msg = "KAYBETTİNİZ!";
+            showInfoModal("KAYBETTİNİZ!", "OYUN SONUCU");
         }
         
         await updateDoc(userRef, { balance });
-        showInfoModal(msg, "OYUN SONUCU");
-        setTimeout(() => location.reload(), 4000);
+        document.getElementById("modalOkBtn").onclick = () => location.reload();
     }
 
+    // MADDE 7: Odadan Ayrılma (Ceza)
     window.leaveRoom = async () => {
         if(roomRef && gameState && gameState.status === "playing") {
+            // Çıkan oyuncu işaretlenir, bahis yanar (karşıya iade için tetiklenir)
             await updateDoc(roomRef, { quitter: uid, status: "finished" });
         }
         location.reload();
@@ -449,18 +501,23 @@
 
     window.closeModal = (id) => { 
         document.getElementById(id).style.display = "none";
-        if(id === 'passEntryModal') document.getElementById("passError").style.display = "none";
     };
+
     function createDeck() {
         const suits = ["H", "D", "C", "S"], vals = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "0", "J", "Q", "K"];
         let d = []; suits.forEach(s => vals.forEach(v => d.push(v + s)));
         return d.sort(() => Math.random() - 0.5);
     }
+
     window.showInfoModal = (m, t) => { 
         document.getElementById("modalTitle").innerText = t; 
         document.getElementById("modalMsg").innerText = m; 
         document.getElementById("infoModal").style.display = "flex"; 
     };
+
+    // Sayfa yenilenirse veya kapanırsa ayrılma tetikle
+    window.onbeforeunload = () => { if(inGame) leaveRoom(); };
+
 </script>
 </body>
 </html>
