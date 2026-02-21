@@ -87,8 +87,8 @@
             width: 100%; display: flex; justify-content: space-around; padding: 10px;
             background: rgba(0,0,0,0.7); border-bottom: 2px solid #333; z-index: 100;
         }
-        .p-head { text-align: center; flex: 1; transition: 0.3s; padding: 5px; opacity: 0.5; }
-        .p-head.active { border-bottom: 3px solid var(--border); background: rgba(79, 209, 255, 0.1); opacity: 1; }
+        .p-head { text-align: center; flex: 1; transition: 0.3s; padding: 5px; }
+        .p-head.active { border-bottom: 3px solid var(--border); background: rgba(79, 209, 255, 0.1); }
 
         #gameArea { display: none; flex: 1; flex-direction: column; align-items: center; z-index: 5; position: relative; }
         
@@ -108,7 +108,9 @@
             border: 1px solid #ccc;
         }
         
-        .hand { position:absolute; left:50%; transform:translateX(-50%); display:flex; gap:10px; width: max-content; padding: 15px; bottom: 10px; }
+        .hand, .computer { position:absolute; left:50%; transform:translateX(-50%); display:flex; gap:10px; width: max-content; padding: 15px; }
+        .hand { bottom: 10px; }
+        .computer { top: 10px; }
 
         .card { 
             width:60px; height: 85px; border-radius: 6px; cursor:pointer; transition: 0.3s; 
@@ -116,6 +118,7 @@
             border: 1px solid #fff;
         }
         .card:hover { transform: translateY(-15px); z-index: 100; }
+        .computer .card { opacity: 0.95; }
 
         .modal-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.95); backdrop-filter: blur(12px);
@@ -181,11 +184,21 @@
     </div>
 
     <div id="gameArea">
-        <div class="player-heads" id="playerHeads"></div>
+        <div class="player-heads">
+            <div class="p-head" id="head-opp">
+                <div class="name">RAKİP</div>
+                <div class="score" id="cs">0</div>
+            </div>
+            <div class="p-head" id="head-me">
+                <div class="name">SİZ</div>
+                <div class="score" id="ps">0</div>
+            </div>
+        </div>
 
         <div id="waitingStatus" style="position:fixed; top:140px; color:var(--border); background:rgba(0,0,0,0.8); padding:10px 20px; border-radius:10px; display:none; border:1px solid var(--border);">OYUNCU BEKLENİYOR...</div>
 
         <div class="table" id="tableArea">
+            <div class="computer" id="computerHand"></div>
             <div class="table-cards" id="tableCards"></div>
             <div class="hand" id="playerHand"></div>
         </div>
@@ -201,7 +214,6 @@
             <select id="newRoomType" class="modal-input" style="background:#161b22; color:white;">
                 <option value="2-52">2 Kişilik (52 Kart)</option>
                 <option value="2-104">2 Kişilik (104 Kart)</option>
-                <option value="4-52">4 Kişilik (52 Kart)</option>
                 <option value="4-104">4 Kişilik (104 Kart)</option>
             </select>
 
@@ -245,7 +257,7 @@
     };
 
     let balance = 0, currentBet = 0, userRef = null, uid = null, userName = "Oyuncu";
-    let roomRef = null, gameState = null, inGame = false;
+    let roomRef = null, myRole = null, gameState = null, inGame = false;
     let lobbyUnsub = null, roomUnsub = null, userUnsub = null;
 
     onAuthStateChanged(auth, user => {
@@ -253,6 +265,7 @@
         uid = user.uid;
         userRef = doc(db, "users", uid);
         
+        if(userUnsub) userUnsub();
         userUnsub = onSnapshot(userRef, snap => {
             if(snap.exists()) {
                 balance = snap.data().balance || 0;
@@ -266,8 +279,11 @@
     window.leaveRoom = async () => {
         if (roomRef) {
             try {
-                if (gameState?.status === "waiting") await deleteDoc(roomRef);
-                else if (inGame) await updateDoc(roomRef, { quitter: uid, status: "finished" });
+                if (gameState?.status === "waiting") {
+                    await deleteDoc(roomRef);
+                } else if (inGame) {
+                    await updateDoc(roomRef, { quitter: uid, status: "finished" });
+                }
             } catch(e) {}
         }
         location.reload();
@@ -286,12 +302,10 @@
             list.innerHTML = "";
             snap.forEach(roomDoc => {
                 const data = roomDoc.data();
-                const pCount = data.playerList.length;
-                const maxP = parseInt(data.type.split('-')[0]);
                 list.innerHTML += `
                     <div class="room-card">
                         <div>
-                            <small style="color:var(--border)">${data.name} (${pCount}/${maxP} - ${data.type.split('-')[1]} Kart)</small><br>
+                            <small style="color:var(--border)">${data.name} (${data.type})</small><br>
                             <b style="font-size:1.1rem">${data.password ? '🔒 Şifreli' : '🔓 Açık'}</b><br>
                             <span style="color:var(--warning)">Bahis: ₺${data.bet.toLocaleString()}</span>
                         </div>
@@ -311,21 +325,22 @@
     window.confirmCreateRoom = async () => {
         if (currentBet < 100) return showInfoModal("Min 100₺ bahis!", "UYARI");
         const name = document.getElementById("newRoomName").value || "Arena";
-        const type = document.getElementById("newRoomType").value; // 2-52, 4-104 vb.
-        const maxP = parseInt(type.split('-')[0]);
-        const isDouble = type.includes("104");
+        const type = document.getElementById("newRoomType").value;
         const pass = document.getElementById("newRoomPass").value || "";
         const roomId = "room_" + Date.now();
         roomRef = doc(db, "rooms", roomId);
+        myRole = "p1";
         
-        let deck = createDeck();
-        if(isDouble) deck = [...deck, ...createDeck()];
-        deck = deck.sort(() => Math.random() - 0.5);
+        const isDouble = type.includes("104");
+        const baseDeck = createDeck();
+        const finalDeck = isDouble ? [...baseDeck, ...createDeck()] : [...baseDeck];
+        const shuffledDeck = finalDeck.sort(() => Math.random() - 0.5);
 
         await setDoc(roomRef, {
-            playerList: [{uid, name: userName}],
-            bet: currentBet, status: "waiting", name, password: pass, type, maxP,
-            deck: deck, table: [], scores: {}, hands: {}, turnIdx: 0, quitter: null, lastCollector: null
+            p1: uid, p1_name: userName, bet: currentBet, status: "waiting", name, password: pass, type,
+            deck: shuffledDeck, table: [], p1_score: 0, p2_score: 0,
+            p1_hand: [], p2_hand: [], turn: null, quitter: null, 
+            lastRefill: Date.now(), lastCollector: null
         });
         
         await updateDoc(userRef, { balance });
@@ -334,26 +349,16 @@
         listenRoom();
     };
 
-    window.handleJoin = async (rid, pass, bet) => {
-        if(pass && prompt("Şifre giriniz:") !== pass) return;
+    async function joinRoom(rid, bet) {
         if (balance < bet) return showInfoModal("Yetersiz bakiye!", "HATA");
-        
+        balance -= bet;
         roomRef = doc(db, "rooms", rid);
-        await runTransaction(db, async (transaction) => {
-            const snap = await transaction.get(roomRef);
-            const data = snap.data();
-            if (data.playerList.length >= data.maxP) return;
-            
-            const newList = [...data.playerList, {uid, name: userName}];
-            transaction.update(roomRef, { 
-                playerList: newList,
-                status: newList.length === data.maxP ? "playing" : "waiting"
-            });
-            transaction.update(userRef, { balance: balance - bet });
-        });
+        myRole = "p2";
+        await updateDoc(roomRef, { p2: uid, p2_name: userName, status: "playing", turn: uid });
+        await updateDoc(userRef, { balance });
         enterGameView();
         listenRoom();
-    };
+    }
 
     function enterGameView() {
         inGame = true;
@@ -370,20 +375,17 @@
             gameState = snap.data();
 
             if(gameState.quitter && gameState.quitter !== uid) {
-                balance += (gameState.bet * gameState.maxP);
+                balance += gameState.bet * 2;
                 await updateDoc(userRef, { balance });
-                showInfoModal("Oyun bozuldu! Paranız iade edildi.", "BİLGİ");
+                showInfoModal("Rakip ayrıldı! Kazandınız.", "BİLGİ");
                 setTimeout(() => window.leaveRoom(), 3000);
                 return;
             }
 
             if (gameState.status === "playing") {
                 document.getElementById("waitingStatus").style.display = "none";
-                const myIdx = gameState.playerList.findIndex(p => p.uid === uid);
-                // Dağıtım kontrolü (Sadece ilk oyuncu/kurucu tetikler)
-                if (myIdx === 0) {
-                    const handsEmpty = gameState.playerList.every(p => !gameState.hands[p.uid] || gameState.hands[p.uid].length === 0);
-                    if (handsEmpty) refillHands();
+                if (myRole === "p1" && gameState.p1_hand.length === 0 && gameState.p2_hand.length === 0) {
+                    refillHands();
                 }
                 render();
             }
@@ -392,129 +394,83 @@
     }
 
     async function refillHands() {
-        await runTransaction(db, async (t) => {
-            const snap = await t.get(roomRef);
-            const data = snap.data();
-            const d = [...data.deck];
+        await runTransaction(db, async (transaction) => {
+            const freshSnap = await transaction.get(roomRef);
+            const data = freshSnap.data();
+            if (data.p1_hand?.length > 0 || data.p2_hand?.length > 0) return;
 
+            const d = [...data.deck];
             if(d.length === 0) {
-                let finalScores = {...data.scores};
+                let p1s = data.p1_score;
+                let p2s = data.p2_score;
                 if(data.table.length > 0 && data.lastCollector) {
-                    finalScores[data.lastCollector] = (finalScores[data.lastCollector] || 0) + data.table.length;
+                    if(data.lastCollector === data.p1) p1s += data.table.length;
+                    else p2s += data.table.length;
                 }
-                t.update(roomRef, { status: "finished", scores: finalScores, table: [] });
+                transaction.update(roomRef, { status: "finished", p1_score: p1s, p2_score: p2s, table: [] });
                 return;
             }
-
-            let newHands = {};
-            let table = [...data.table];
-            if(table.length === 0) table = d.splice(0, 4);
-            data.playerList.forEach(p => { newHands[p.uid] = d.splice(0, 4); });
-
-            t.update(roomRef, { hands: newHands, deck: d, table: table });
+            let updates = {};
+            if(data.table.length === 0) updates.table = d.splice(0, 4);
+            updates.p1_hand = d.splice(0, 4);
+            updates.p2_hand = d.splice(0, 4);
+            updates.deck = d;
+            transaction.update(roomRef, updates);
         });
     }
 
-    async function playCard(idx) {
-        if (gameState.playerList[gameState.turnIdx].uid !== uid) return;
+    async function playCard(i) {
+        if (gameState.turn !== uid) return;
         
-        await runTransaction(db, async (t) => {
-            const snap = await t.get(roomRef);
-            const data = snap.data();
-            
-            let hand = [...data.hands[uid]];
-            const card = hand.splice(idx, 1)[0];
-            let table = [...data.table];
-            let myScore = data.scores[uid] || 0;
-            let lastCol = data.lastCollector;
+        try {
+            await runTransaction(db, async (transaction) => {
+                const rSnap = await transaction.get(roomRef);
+                const data = rSnap.data();
+                
+                if (data.turn !== uid) throw "Sıra sizde değil!";
+                
+                const handKey = myRole + "_hand";
+                const hand = [...data[handKey]];
+                const card = hand.splice(i, 1)[0];
+                let table = [...data.table];
+                let score = data[myRole + "_score"];
+                let lastCollector = data.lastCollector;
 
-            const getVal = (c) => (c.startsWith('10') || c.startsWith('0')) ? '10' : c[0];
-            const cardVal = getVal(card);
+                const getVal = (c) => {
+                    if (!c) return "";
+                    let v = c.substring(0, c.length - 1);
+                    return (v === '0' || v === '10') ? '10' : v;
+                };
 
-            if (table.length > 0) {
-                const topVal = getVal(table[table.length - 1]);
-                if (cardVal === topVal || cardVal === "J") {
-                    if(table.length === 1) {
-                        myScore += (cardVal === "J" && topVal === "J") ? 20 : 10;
-                        showPistiAnim();
-                    } else myScore += table.length + 1;
-                    table = [];
-                    lastCol = uid;
+                const cardVal = getVal(card);
+
+                if (table.length > 0) {
+                    const top = table[table.length - 1];
+                    const topVal = getVal(top);
+
+                    if (cardVal === topVal || cardVal === "J") {
+                        if(table.length === 1) {
+                            score += (cardVal === "J" && topVal === "J") ? 20 : 10;
+                            showPistiAnim();
+                        } else {
+                            score += table.length + 1;
+                        }
+                        table = [];
+                        lastCollector = uid;
+                    } else table.push(card);
                 } else table.push(card);
-            } else table.push(card);
 
-            t.update(roomRef, {
-                [`hands.${uid}`]: hand,
-                table: table,
-                [`scores.${uid}`]: myScore,
-                turnIdx: (data.turnIdx + 1) % data.maxP,
-                lastCollector: lastCol
+                const next = myRole === "p1" ? data.p2 : data.p1;
+                transaction.update(roomRef, {
+                    [handKey]: hand,
+                    table: table,
+                    [myRole + "_score"]: score,
+                    turn: next,
+                    lastCollector: lastCollector
+                });
             });
-        });
-        sfx.cardThrow.play();
-    }
-
-    function render() {
-        if(!gameState) return;
-        const hContainer = document.getElementById("playerHeads");
-        const pHand = document.getElementById("playerHand");
-        const tCards = document.getElementById("tableCards");
-        
-        hContainer.innerHTML = ""; pHand.innerHTML = ""; tCards.innerHTML = "";
-
-        gameState.playerList.forEach((p, i) => {
-            const active = gameState.turnIdx === i;
-            hContainer.innerHTML += `
-                <div class="p-head ${active ? 'active' : ''}">
-                    <div class="name">${p.uid === uid ? "SİZ" : p.name}</div>
-                    <div class="score">${gameState.scores[p.uid] || 0}</div>
-                </div>
-            `;
-        });
-
-        const myHand = gameState.hands[uid] || [];
-        myHand.forEach((c, i) => {
-            let img = document.createElement("img");
-            const finalC = c.startsWith('10') ? '0' + c.substring(2) : c;
-            img.src = `https://deckofcardsapi.com/static/img/${finalC}.png`;
-            img.className = "card";
-            if(gameState.playerList[gameState.turnIdx].uid === uid) img.onclick = () => playCard(i);
-            pHand.appendChild(img);
-        });
-
-        gameState.table.forEach((c, i) => {
-            let img = document.createElement("img");
-            const isTop = (i === gameState.table.length - 1);
-            const finalC = c.startsWith('10') ? '0' + c.substring(2) : c;
-            img.src = isTop ? `https://deckofcardsapi.com/static/img/${finalC}.png` : "https://deckofcardsapi.com/static/img/back.png";
-            img.className = "stack-card";
-            img.style.zIndex = i;
-            tCards.appendChild(img);
-        });
-    }
-
-    async function handleEnd() {
-        if (!inGame) return;
-        const myScore = gameState.scores[uid] || 0;
-        const allScores = Object.values(gameState.scores);
-        const maxScore = Math.max(...allScores);
-        
-        let msg = (myScore === maxScore) ? `KAZANDIN! +${gameState.bet * gameState.maxP}₺` : "KAYBETTİN!";
-        if(myScore === maxScore) {
-            balance += (gameState.bet * gameState.maxP);
-            sfx.win.play();
-        }
-        
-        await updateDoc(userRef, { balance });
-        showInfoModal(msg, "BİTTİ");
-        inGame = false;
-        setTimeout(() => window.leaveRoom(), 4000);
-    }
-
-    function createDeck() {
-        const suits = ["H", "D", "C", "S"], vals = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "0", "J", "Q", "K"];
-        let d = []; suits.forEach(s => vals.forEach(v => d.push(v + s)));
-        return d;
+            sfx.cardThrow.play();
+        } catch (e) { console.warn("Hatalı hamle:", e); }
     }
 
     function showPistiAnim() {
@@ -524,11 +480,95 @@
         setTimeout(() => { pd.style.display = "none"; }, 1800);
     }
 
+    function render() {
+        if(!gameState) return;
+        const ph = document.getElementById("playerHand");
+        const ch = document.getElementById("computerHand");
+        const tc = document.getElementById("tableCards");
+        
+        ph.innerHTML = ""; ch.innerHTML = ""; tc.innerHTML = "";
+
+        const myHand = gameState[myRole + "_hand"] || [];
+        const oppHand = myRole === "p1" ? (gameState.p2_hand || []) : (gameState.p1_hand || []);
+
+        document.getElementById("ps").innerText = gameState[myRole + "_score"];
+        document.getElementById("cs").innerText = (myRole === "p1" ? gameState.p2_score : gameState.p1_score);
+        
+        const isMyTurn = gameState.turn === uid;
+        document.getElementById("head-me").classList.toggle("active", isMyTurn);
+        document.getElementById("head-opp").classList.toggle("active", !isMyTurn);
+
+        myHand.forEach((c, i) => {
+            let img = document.createElement("img");
+            const visualCard = c.startsWith('10') ? '0' + c.substring(2) : c;
+            img.src = `https://deckofcardsapi.com/static/img/${visualCard}.png`;
+            img.className = "card";
+            if(isMyTurn) img.onclick = () => playCard(i);
+            ph.appendChild(img);
+        });
+
+        oppHand.forEach(() => {
+            let img = document.createElement("img");
+            img.src = "https://deckofcardsapi.com/static/img/back.png";
+            img.className = "card";
+            ch.appendChild(img);
+        });
+
+        gameState.table.forEach((c, i) => {
+            let img = document.createElement("img");
+            const isTop = (i === gameState.table.length - 1);
+            const visualCard = c.startsWith('10') ? '0' + c.substring(2) : c;
+            img.src = isTop ? `https://deckofcardsapi.com/static/img/${visualCard}.png` : "https://deckofcardsapi.com/static/img/back.png";
+            img.className = "stack-card";
+            img.style.zIndex = i;
+            tc.appendChild(img);
+        });
+    }
+
+    async function handleEnd() {
+        if (!inGame) return;
+        const myScore = gameState[myRole + "_score"];
+        const oppScore = myRole === "p1" ? gameState.p2_score : gameState.p1_score;
+        let msg = "";
+
+        if (myScore > oppScore) {
+            const winAmount = gameState.bet * 2;
+            balance += winAmount;
+            sfx.win.play();
+            msg = `KAZANDIN! +${winAmount}₺`;
+        } else if(myScore < oppScore) {
+            msg = "KAYBETTİN!";
+        } else {
+            balance += gameState.bet;
+            msg = "BERABERE!";
+        }
+        
+        await updateDoc(userRef, { balance });
+        showInfoModal(msg, "BİTTİ");
+        inGame = false;
+        
+        setTimeout(async () => {
+            if(myRole === "p1") await deleteDoc(roomRef);
+            window.leaveRoom();
+        }, 4000);
+    }
+
+    function createDeck() {
+        const suits = ["H", "D", "C", "S"], vals = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "0", "J", "Q", "K"];
+        let d = []; 
+        suits.forEach(s => vals.forEach(v => { d.push(v + s); }));
+        return d;
+    }
+
     window.closeModal = (id) => { document.getElementById(id).style.display = "none"; };
     window.showInfoModal = (m, t) => { 
         document.getElementById("modalTitle").innerText = t; 
         document.getElementById("modalMsg").innerText = m; 
         document.getElementById("infoModal").style.display = "flex"; 
+    };
+    window.handleJoin = (rid, pass, bet) => {
+        if(pass && prompt("Şifre giriniz:") !== pass) return;
+        joinRoom(rid, bet);
     };
     window.handleQuickJoin = async () => {
         const q = query(collection(db, "rooms"), where("status", "==", "waiting"));
