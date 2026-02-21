@@ -260,6 +260,13 @@
     let roomRef = null, myRole = null, gameState = null, inGame = false;
     let lobbyUnsub = null, roomUnsub = null, userUnsub = null;
 
+    // Helper: Kart değerini temizler (10 vs 0 çakışmasını çözer)
+    const normalizeCardVal = (c) => {
+        if (!c) return "";
+        let v = c.substring(0, c.length - 1);
+        return (v === '0') ? '10' : v;
+    };
+
     onAuthStateChanged(auth, user => {
         if (!user) return;
         uid = user.uid;
@@ -277,6 +284,7 @@
     });
 
     window.leaveRoom = async () => {
+        if(roomUnsub) { roomUnsub(); roomUnsub = null; }
         if (roomRef) {
             try {
                 if (gameState?.status === "waiting") {
@@ -299,10 +307,10 @@
         const q = query(collection(db, "rooms"), where("status", "==", "waiting"));
         lobbyUnsub = onSnapshot(q, (snap) => {
             const list = document.getElementById("roomList");
-            list.innerHTML = "";
+            let html = "";
             snap.forEach(roomDoc => {
                 const data = roomDoc.data();
-                list.innerHTML += `
+                html += `
                     <div class="room-card">
                         <div>
                             <small style="color:var(--border)">${data.name} (${data.type})</small><br>
@@ -313,6 +321,7 @@
                     </div>
                 `;
             });
+            list.innerHTML = html;
         });
     }
 
@@ -375,10 +384,13 @@
             gameState = snap.data();
 
             if(gameState.quitter && gameState.quitter !== uid) {
-                balance += gameState.bet * 2;
-                await updateDoc(userRef, { balance });
-                showInfoModal("Rakip ayrıldı! Kazandınız.", "BİLGİ");
-                setTimeout(() => window.leaveRoom(), 3000);
+                if(inGame) {
+                    balance += gameState.bet * 2;
+                    await updateDoc(userRef, { balance });
+                    showInfoModal("Rakip ayrıldı! Kazandınız.", "BİLGİ");
+                    inGame = false;
+                    setTimeout(() => window.leaveRoom(), 3000);
+                }
                 return;
             }
 
@@ -396,6 +408,7 @@
     async function refillHands() {
         await runTransaction(db, async (transaction) => {
             const freshSnap = await transaction.get(roomRef);
+            if(!freshSnap.exists()) return;
             const data = freshSnap.data();
             if (data.p1_hand?.length > 0 || data.p2_hand?.length > 0) return;
 
@@ -420,33 +433,28 @@
     }
 
     async function playCard(i) {
-        if (gameState.turn !== uid) return;
+        if (gameState.turn !== uid || !inGame) return;
         
         try {
             await runTransaction(db, async (transaction) => {
                 const rSnap = await transaction.get(roomRef);
                 const data = rSnap.data();
-                
                 if (data.turn !== uid) throw "Sıra sizde değil!";
                 
                 const handKey = myRole + "_hand";
                 const hand = [...data[handKey]];
+                if(!hand[i]) return;
+                
                 const card = hand.splice(i, 1)[0];
                 let table = [...data.table];
                 let score = data[myRole + "_score"];
                 let lastCollector = data.lastCollector;
 
-                const getVal = (c) => {
-                    if (!c) return "";
-                    let v = c.substring(0, c.length - 1);
-                    return (v === '0' || v === '10') ? '10' : v;
-                };
-
-                const cardVal = getVal(card);
+                const cardVal = normalizeCardVal(card);
 
                 if (table.length > 0) {
                     const top = table[table.length - 1];
-                    const topVal = getVal(top);
+                    const topVal = normalizeCardVal(top);
 
                     if (cardVal === topVal || cardVal === "J") {
                         if(table.length === 1) {
@@ -470,7 +478,7 @@
                 });
             });
             sfx.cardThrow.play();
-        } catch (e) { console.warn("Hatalı hamle:", e); }
+        } catch (e) { console.warn("İşlem hatası:", e); }
     }
 
     function showPistiAnim() {
@@ -481,15 +489,16 @@
     }
 
     function render() {
-        if(!gameState) return;
+        if(!gameState || !inGame) return;
         const ph = document.getElementById("playerHand");
         const ch = document.getElementById("computerHand");
         const tc = document.getElementById("tableCards");
         
-        ph.innerHTML = ""; ch.innerHTML = ""; tc.innerHTML = "";
-
+        // Optimizasyon: Sadece değişim olduğunda render yapmak için içerik kontrolü
         const myHand = gameState[myRole + "_hand"] || [];
         const oppHand = myRole === "p1" ? (gameState.p2_hand || []) : (gameState.p1_hand || []);
+
+        ph.innerHTML = ""; ch.innerHTML = ""; tc.innerHTML = "";
 
         document.getElementById("ps").innerText = gameState[myRole + "_score"];
         document.getElementById("cs").innerText = (myRole === "p1" ? gameState.p2_score : gameState.p1_score);
@@ -500,6 +509,7 @@
 
         myHand.forEach((c, i) => {
             let img = document.createElement("img");
+            // API uyumu için visualCard ayarı (0 -> 10 görseli)
             const visualCard = c.startsWith('10') ? '0' + c.substring(2) : c;
             img.src = `https://deckofcardsapi.com/static/img/${visualCard}.png`;
             img.className = "card";
@@ -521,12 +531,14 @@
             img.src = isTop ? `https://deckofcardsapi.com/static/img/${visualCard}.png` : "https://deckofcardsapi.com/static/img/back.png";
             img.className = "stack-card";
             img.style.zIndex = i;
+            img.style.transform = `translate(${i*0.5}px, ${i*0.5}px)`;
             tc.appendChild(img);
         });
     }
 
     async function handleEnd() {
         if (!inGame) return;
+        inGame = false;
         const myScore = gameState[myRole + "_score"];
         const oppScore = myRole === "p1" ? gameState.p2_score : gameState.p1_score;
         let msg = "";
@@ -545,10 +557,11 @@
         
         await updateDoc(userRef, { balance });
         showInfoModal(msg, "BİTTİ");
-        inGame = false;
         
         setTimeout(async () => {
-            if(myRole === "p1") await deleteDoc(roomRef);
+            if(myRole === "p1") {
+                try { await deleteDoc(roomRef); } catch(e){}
+            }
             window.leaveRoom();
         }, 4000);
     }
