@@ -88,35 +88,48 @@
     .card { width:65px; border-radius: 6px; cursor:pointer; transition: transform 0.2s; box-shadow: 0 5px 15px rgba(0,0,0,0.3); background:white;}
     .hand .card:hover { transform: translateY(-15px); }
 
+    .deal-anim-card {
+        position: fixed; width: 65px; height: 91px; border-radius: 6px;
+        background-image: url('https://deckofcardsapi.com/static/img/back.png');
+        background-size: cover; z-index: 5000;
+        transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+        pointer-events: none; box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+    }
     .card-throw { position:absolute; width:65px; z-index:2000; transition:all 0.4s cubic-bezier(.25,.8,.25,1); border-radius: 6px; }
 
-    /* CHIP TASARIMI (GÖRSELDEKİ GİBİ) */
-    .chip-options { display: flex; gap: 12px; justify-content: center; margin: 20px 0; }
+    /* CHIP TASARIMI */
+    .chip-options { display: flex; gap: 8px; justify-content: center; margin-top: 15px; }
     .chip-btn { 
-        width: 50px; height: 50px; border-radius: 50%; border: 2px dashed rgba(255,255,255,0.4);
-        display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900;
-        cursor: pointer; transition: 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        width: 45px; height: 45px; border-radius: 50%; border: 3px dashed rgba(255,255,255,0.4);
+        display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 900;
+        cursor: pointer; transition: 0.2s;
     }
     .chip-btn:active { transform: scale(0.9); }
-    .c100 { background: #ffffff; color:#000; border-color: #ccc; } 
-    .c500 { background: #2ecc71; color:#fff; } 
-    .c2000 { background: #3498db; color:#fff; } 
-    .c10000 { background: #f1c40f; color:#fff; }
+    .c100 { background: radial-gradient(#fff, #ccc); color:#000; } 
+    .c500 { background: radial-gradient(#2ecc71, #27ae60); color:#fff; } 
+    .c2000 { background: radial-gradient(#3498db, #2980b9); color:#fff; } 
+    .c10000 { background: radial-gradient(#f1c40f, #f39c12); color:#fff; }
 
-    /* MODAL TASARIMI */
+    #pistiDisplay {
+        position: fixed; top: 45%; left: 50%; transform: translate(-50%,-50%);
+        font-size: 80px; font-weight: 900; color: #fff; text-align: center;
+        background: linear-gradient(to bottom, #fff, #ffcc00, #ff6600);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        filter: drop-shadow(0 0 15px rgba(255, 102, 0, 0.8));
+        display: none; z-index: 9999; pointer-events: none;
+    }
+
     .modal-overlay {
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(3, 5, 10, 0.85); display: none; align-items: center; justify-content: center; z-index: 10000;
-        backdrop-filter: blur(10px);
+        background: rgba(11, 16, 35, 0.9); display: none; align-items: center; justify-content: center; z-index: 10000;
+        backdrop-filter: blur(8px);
     }
     .modal-content {
-        background: #0b1437; color: white; padding: 30px; border-radius: 30px; width: 90%; max-width: 340px;
-        text-align: center; border: 2px solid #4fd1ff; box-shadow: 0 0 30px rgba(79, 209, 255, 0.2);
+        background: linear-gradient(135deg, #1a2a6c, #0b1023); color: white; padding: 25px; border-radius: 25px; width: 85%; max-width: 320px;
+        text-align: center; border: 2px solid #4fd1ff;
     }
-    .modal-title { font-size: 22px; font-weight: 900; color: #4fd1ff; margin-bottom: 10px; }
-    .modal-bet-val { font-size: 28px; font-weight: 900; margin-bottom: 20px; }
-    .modal-btn { background: #4fd1ff; color: #03050a; border: none; padding: 15px; border-radius: 15px; width: 100%; font-weight: 900; cursor: pointer; margin-top: 10px; font-size: 14px; }
-    .cancel-btn { background: #ff3b30; color: white; }
+    .modal-btn { background: #4fd1ff; color: #0b1023; border: none; padding: 12px; border-radius: 12px; width: 100%; font-weight: 800; cursor: pointer; margin-top: 10px;}
+    .cancel-btn { background: #ff3b30; color: white; margin-top: 5px; }
 </style>
 </head>
 <body>
@@ -125,21 +138,22 @@
     <div class="lobby-header">
         <div class="brand" style="font-size: 24px;">PISTI ONLINE</div>
         <div class="user-info">
-            <div id="lobbyName" style="font-weight: 900; font-size: 12px; color: #4fd1ff;">YÜKLENİYOR...</div>
+            <div id="lobbyName" style="font-weight: 900; font-size: 12px; color: #4fd1ff;">Giriş Yapılıyor...</div>
             <div id="lobbyBalance" style="font-weight: 700; font-size: 14px;">₺0</div>
         </div>
     </div>
 
     <div class="lobby-actions">
-        <button class="lobby-btn btn-create" onclick="window.openCreateModal()">ARENA KUR</button>
-        <button class="lobby-btn btn-quick" onclick="window.quickJoin()">HIZLI KATIL</button>
+        <button class="lobby-btn btn-create" onclick="openCreateModal()">ARENA KUR</button>
+        <button class="lobby-btn btn-quick" onclick="quickJoin()">HIZLI KATIL</button>
     </div>
 
     <div class="search-bar">
-        <input type="text" id="roomSearch" placeholder="Oda ID veya Sahibi Ara..." oninput="window.filterRooms()">
+        <input type="text" id="roomSearch" placeholder="Oda sahibi veya kodu ile ara..." oninput="filterRooms()">
     </div>
 
-    <div class="rooms-container" id="roomsList"></div>
+    <div class="rooms-container" id="roomsList">
+        </div>
 </div>
 
 <div class="game-ui" id="gameScreen">
@@ -150,7 +164,9 @@
             <div class="nav-box bet-box">B: ₺<span id="gameBet">0</span></div>
         </div>
     </div>
+
     <div class="score-board">RAKİP: <span id="cs">0</span> — SİZ: <span id="ps">0</span></div>
+
     <div class="table" id="tableArea">
         <div class="opponent" id="opponentHand"></div>
         <div class="table-cards" id="tableCards"></div>
@@ -158,19 +174,18 @@
     </div>
 </div>
 
-<div id="pistiDisplay" style="position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); font-size:70px; font-weight:900; color:#ffcc00; display:none; z-index:9999; text-shadow: 0 0 20px #000;">PİŞTİ!</div>
+<div id="pistiDisplay">PİŞTİ!</div>
 
 <div class="modal-overlay" id="modalOverlay">
     <div class="modal-content" id="modalContent">
-        <div id="modalBody">
-            </div>
+        <div id="modalBody"></div>
     </div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, doc, onSnapshot, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getDatabase, ref, set, push, onValue, update, remove, onDisconnect } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 const firebaseConfig = {
@@ -193,7 +208,9 @@ const sfx = {
     cardThrow: new Audio("https://cdn.freesound.org/previews/240/240776_4107740-lq.mp3"),
     cardCollect: new Audio("https://cdn.freesound.org/previews/202/202029_3325145-lq.mp3"),
     win: new Audio("https://cdn.freesound.org/previews/391/391539_5235550-lq.mp3"),
-    pisti: new Audio("https://cdn.freesound.org/previews/253/253177_4404552-lq.mp3")
+    lose: new Audio("https://cdn.freesound.org/previews/174/174499_1079313-lq.mp3"),
+    pisti: new Audio("https://cdn.freesound.org/previews/253/253177_4404552-lq.mp3"),
+    deal: new Audio("https://cdn.freesound.org/previews/240/240776_4107740-lq.mp3")
 };
 
 let user = null, userData = null, currentRoomId = null, allRooms = {}, selectedBet = 0;
@@ -203,18 +220,18 @@ onAuthStateChanged(auth, async u => {
     user = u;
     onSnapshot(doc(db, "users", u.uid), snap => {
         userData = snap.data();
-        if(userData) {
-            document.getElementById("lobbyName").innerText = userData.username.toUpperCase();
-            document.getElementById("lobbyBalance").innerText = "₺" + userData.balance.toLocaleString('tr-TR');
-            document.getElementById("gameBalance").innerText = userData.balance.toLocaleString('tr-TR');
-        }
+        document.getElementById("lobbyName").innerText = userData.username.toUpperCase();
+        document.getElementById("lobbyBalance").innerText = "₺" + userData.balance.toLocaleString();
+        document.getElementById("gameBalance").innerText = userData.balance.toLocaleString();
     });
     listenRooms();
 });
 
+// LOBİ MANTIĞI
 function listenRooms() {
-    onValue(ref(rdb, 'rooms'), (snap) => {
-        allRooms = snap.val() || {};
+    const roomsRef = ref(rdb, 'rooms');
+    onValue(roomsRef, (snapshot) => {
+        allRooms = snapshot.val() || {};
         renderRooms(allRooms);
     });
 }
@@ -228,12 +245,12 @@ function renderRooms(rooms) {
             card.className = "room-card";
             card.innerHTML = `
                 <div class="room-info">
-                    <h4>${room.ownerName}</h4>
-                    <p>#${id.substring(0,6)}</p>
+                    <h4>${room.ownerName} Arenası</h4>
+                    <p>ID: #${id.substring(0,6)}</p>
                 </div>
                 <div style="display:flex; align-items:center; gap:10px;">
-                    <div class="bet-tag">₺${room.bet.toLocaleString('tr-TR')}</div>
-                    <button class="lobby-btn btn-create" style="padding:8px 15px; font-size:12px;" onclick="window.joinRoom('${id}')">KATIL</button>
+                    <div class="bet-tag">₺${room.bet.toLocaleString()}</div>
+                    <button class="lobby-btn btn-create" style="padding:8px 15px; font-size:12px;" onclick="joinRoom('${id}')">KATIL</button>
                 </div>
             `;
             list.appendChild(card);
@@ -241,21 +258,30 @@ function renderRooms(rooms) {
     });
 }
 
-// GLOBAL ERİŞİM İÇİN PENCERE ATAMALARI
+window.filterRooms = () => {
+    const term = document.getElementById("roomSearch").value.toLowerCase();
+    const filtered = {};
+    Object.entries(allRooms).forEach(([id, room]) => {
+        if (id.includes(term) || room.ownerName.toLowerCase().includes(term)) filtered[id] = room;
+    });
+    renderRooms(filtered);
+};
+
+// ODA KURMA (CASİNO ÇİPLERİYLE)
 window.openCreateModal = () => {
     selectedBet = 0;
     const body = document.getElementById("modalBody");
     body.innerHTML = `
-        <div class="modal-title">BAHİS BELİRLE</div>
-        <div class="modal-bet-val" id="modalBetDisplay">₺0</div>
+        <h2 style="color:#4fd1ff">BAHİS BELİRLE</h2>
+        <div id="modalBetDisplay" style="font-size:24px; font-weight:900; margin:15px 0;">₺0</div>
         <div class="chip-options">
-            <div class="chip-btn c100" onclick="window.addModalBet(100)">100</div>
-            <div class="chip-btn c500" onclick="window.addModalBet(500)">500</div>
-            <div class="chip-btn c2000" onclick="window.addModalBet(2000)">2K</div>
-            <div class="chip-btn c10000" onclick="window.addModalBet(10000)">10K</div>
+            <div class="chip-btn c100" onclick="addModalBet(100)">100</div>
+            <div class="chip-btn c500" onclick="addModalBet(500)">500</div>
+            <div class="chip-btn c2000" onclick="addModalBet(2000)">2K</div>
+            <div class="chip-btn c10000" onclick="addModalBet(10000)">10K</div>
         </div>
-        <button class="modal-btn" onclick="window.confirmCreate()">ODA OLUŞTUR</button>
-        <button class="modal-btn cancel-btn" onclick="window.closeModal()">İPTAL</button>
+        <button class="modal-btn" onclick="confirmCreate()">ODA OLUŞTUR</button>
+        <button class="modal-btn cancel-btn" onclick="closeModal()">İPTAL</button>
     `;
     document.getElementById("modalOverlay").style.display = "flex";
 };
@@ -264,11 +290,11 @@ window.addModalBet = (val) => {
     if (userData.balance < selectedBet + val) return;
     selectedBet += val;
     sfx.chip.currentTime = 0; sfx.chip.play();
-    document.getElementById("modalBetDisplay").innerText = "₺" + selectedBet.toLocaleString('tr-TR');
+    document.getElementById("modalBetDisplay").innerText = "₺" + selectedBet.toLocaleString();
 };
 
 window.confirmCreate = async () => {
-    if (selectedBet < 100) return alert("Minimum bahis 100₺!");
+    if (selectedBet < 100) return alert("Min bahis 100₺!");
     const roomRef = push(ref(rdb, 'rooms'));
     const roomId = roomRef.key;
     const initialData = {
@@ -291,6 +317,7 @@ window.confirmCreate = async () => {
 window.joinRoom = async (roomId) => {
     const room = allRooms[roomId];
     if (userData.balance < room.bet) return alert("Bakiye yetersiz!");
+    
     const updates = {};
     updates[`rooms/${roomId}/players/${user.uid}`] = { name: userData.username, score: 0, hand: [] };
     updates[`rooms/${roomId}/status`] = "playing";
@@ -300,22 +327,11 @@ window.joinRoom = async (roomId) => {
 
 window.quickJoin = () => {
     const entry = Object.entries(allRooms).find(([id, r]) => r.status === "waiting" && r.bet <= userData.balance);
-    if (entry) window.joinRoom(entry[0]);
-    else alert("Uygun bakiye ile açık oda bulunamadı.");
+    if (entry) joinRoom(entry[0]);
+    else alert("Uygun oda bulunamadı.");
 };
 
-window.filterRooms = () => {
-    const term = document.getElementById("roomSearch").value.toLowerCase();
-    const filtered = {};
-    Object.entries(allRooms).forEach(([id, room]) => {
-        if (id.includes(term) || room.ownerName.toLowerCase().includes(term)) filtered[id] = room;
-    });
-    renderRooms(filtered);
-};
-
-window.closeModal = () => document.getElementById("modalOverlay").style.display = "none";
-
-// OYUN İÇİ MANTIK (Önceki kodun aynısı, işleyiş korunmuştur)
+// OYUN DÖNGÜSÜ
 async function enterRoom(roomId) {
     currentRoomId = roomId;
     document.getElementById("lobbyScreen").style.display = "none";
@@ -323,8 +339,8 @@ async function enterRoom(roomId) {
     document.getElementById("modalOverlay").style.display = "none";
     document.getElementById("currentRoomCode").innerText = "#" + roomId.substring(0,6);
 
-    onValue(ref(rdb, `rooms/${roomId}`), (snap) => {
-        const data = snap.val();
+    onValue(ref(rdb, `rooms/${roomId}`), (snapshot) => {
+        const data = snapshot.val();
         if (!data) { location.reload(); return; }
         syncGame(data);
     });
@@ -335,10 +351,11 @@ function syncGame(data) {
     const opponentId = Object.keys(data.players).find(id => id !== user.uid);
     const opponent = opponentId ? data.players[opponentId] : { name: "Bekleniyor...", score: 0, hand: [] };
 
-    document.getElementById("ps").innerText = me.score || 0;
-    document.getElementById("cs").innerText = opponent.score || 0;
-    document.getElementById("gameBet").innerText = data.bet.toLocaleString('tr-TR');
+    document.getElementById("ps").innerText = me.score;
+    document.getElementById("cs").innerText = opponent.score;
+    document.getElementById("gameBet").innerText = data.bet.toLocaleString();
 
+    // Masayı Çiz
     const tCards = document.getElementById("tableCards");
     tCards.innerHTML = "";
     (data.table || []).forEach((c, i) => {
@@ -349,6 +366,7 @@ function syncGame(data) {
         tCards.appendChild(img);
     });
 
+    // Kendi Elini Çiz
     const pHand = document.getElementById("playerHand");
     pHand.innerHTML = "";
     (me.hand || []).forEach((c, i) => {
@@ -359,17 +377,19 @@ function syncGame(data) {
         pHand.appendChild(img);
     });
 
+    // Rakip Elini Çiz (Arkalık)
     const oHand = document.getElementById("opponentHand");
     oHand.innerHTML = "";
-    const oppCount = opponent.hand ? (Array.isArray(opponent.hand) ? opponent.hand.length : Object.keys(opponent.hand).length) : 0;
-    for(let i=0; i < oppCount; i++) {
+    const oppHandCount = opponent.hand ? (Array.isArray(opponent.hand) ? opponent.hand.length : Object.keys(opponent.hand).length) : 0;
+    for(let i=0; i < oppHandCount; i++) {
         const img = document.createElement("img");
         img.src = `https://deckofcardsapi.com/static/img/back.png`;
         img.className = "card";
         oHand.appendChild(img);
     }
 
-    if (data.owner === user.uid && data.status === "playing" && (me.hand || []).length === 0 && oppCount === 0) {
+    // Oyun Başlatma (Sadece oda sahibi ve rakip geldiğinde)
+    if (data.owner === user.uid && data.status === "playing" && (me.hand || []).length === 0 && oppHandCount === 0) {
         if (data.deck && data.deck.length > 0) dealRound(data);
         else finalizeGame(data);
     }
@@ -379,24 +399,33 @@ async function playCard(card, index, data) {
     const newHand = data.players[user.uid].hand.filter((_, i) => i !== index);
     const newTable = [...(data.table || []), card];
     const opponentId = Object.keys(data.players).find(id => id !== user.uid);
+    
     let scorePlus = 0;
+    let isPisti = false;
 
     if (newTable.length >= 2) {
         const last = newTable[newTable.length - 1];
         const prev = newTable[newTable.length - 2];
         if (last[0] === prev[0] || last[0] === 'J') {
             scorePlus = newTable.length;
-            if (newTable.length === 2 && last[0] === prev[0]) { scorePlus = 10; sfx.pisti.play(); document.getElementById("pistiDisplay").style.display="block"; setTimeout(()=>document.getElementById("pistiDisplay").style.display="none", 1200); }
+            if (newTable.length === 2 && last[0] === prev[0]) { scorePlus = 10; isPisti = true; }
             sfx.cardCollect.play();
+            if(isPisti) {
+                sfx.pisti.play();
+                const pDisp = document.getElementById("pistiDisplay");
+                pDisp.style.display = "block";
+                setTimeout(() => pDisp.style.display = "none", 1500);
+            }
             const up = {};
             up[`rooms/${currentRoomId}/table`] = [];
-            up[`rooms/${currentRoomId}/players/${user.uid}/score`] = (data.players[user.uid].score || 0) + scorePlus;
+            up[`rooms/${currentRoomId}/players/${user.uid}/score`] = data.players[user.uid].score + scorePlus;
             up[`rooms/${currentRoomId}/players/${user.uid}/hand`] = newHand;
             up[`rooms/${currentRoomId}/turn`] = opponentId;
             await update(ref(rdb), up);
             return;
         }
     }
+
     sfx.cardThrow.play();
     const up = {};
     up[`rooms/${currentRoomId}/table`] = newTable;
@@ -406,14 +435,17 @@ async function playCard(card, index, data) {
 }
 
 async function dealRound(data) {
+    sfx.deal.play();
     const deck = [...data.deck];
     const p1Hand = deck.splice(0, 4);
     const p2Hand = deck.splice(0, 4);
     const opponentId = Object.keys(data.players).find(id => id !== user.uid);
+
     const up = {};
     up[`rooms/${currentRoomId}/deck`] = deck;
     up[`rooms/${currentRoomId}/players/${user.uid}/hand`] = p1Hand;
     up[`rooms/${currentRoomId}/players/${opponentId}/hand`] = p2Hand;
+    
     if ((data.table || []).length === 0) {
         up[`rooms/${currentRoomId}/table`] = deck.splice(0, 4);
         up[`rooms/${currentRoomId}/deck`] = deck;
@@ -424,20 +456,40 @@ async function dealRound(data) {
 async function finalizeGame(data) {
     const me = data.players[user.uid];
     const opp = data.players[Object.keys(data.players).find(id => id !== user.uid)];
-    let res = userData.balance;
-    if (me.score > opp.score) { res += data.bet; sfx.win.play(); } 
-    else if (me.score < opp.score) { res -= data.bet; }
-    await updateDoc(doc(db, "users", user.uid), { balance: res });
+    
+    let finalBalance = userData.balance;
+    let statusMsg = "";
+
+    if (me.score > opp.score) {
+        finalBalance += data.bet;
+        statusMsg = `TEBRİKLER!\n₺${(data.bet * 2).toLocaleString()} Kazandınız.`;
+        sfx.win.play();
+    } else if (me.score < opp.score) {
+        finalBalance -= data.bet;
+        statusMsg = "KAYBETTİNİZ!\nRakip kazandı.";
+        sfx.lose.play();
+    } else {
+        statusMsg = "BERABERE!\nBahisler iade edildi.";
+    }
+
+    await updateDoc(doc(db, "users", user.uid), { balance: finalBalance });
     await remove(ref(rdb, `rooms/${currentRoomId}`));
-    location.reload();
+    
+    const body = document.getElementById("modalBody");
+    body.innerHTML = `<h2>OYUN BİTTİ</h2><p style="margin:15px 0; font-weight:800;">${statusMsg}</p><button class="modal-btn" onclick="location.reload()">LOBİYE DÖN</button>`;
+    document.getElementById("modalOverlay").style.display = "flex";
 }
 
+// YARDIMCI FONKSİYONLAR
 function createDeck() {
     const suits = ["H", "D", "C", "S"], vals = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "0", "J", "Q", "K"];
     let d = [];
     suits.forEach(s => vals.forEach(v => d.push(v + s)));
     return d.sort(() => Math.random() - 0.5);
 }
+
+window.closeModal = () => document.getElementById("modalOverlay").style.display = "none";
+
 </script>
 </body>
 </html>
