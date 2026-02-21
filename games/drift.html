@@ -2,134 +2,241 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Neon Drift | Synchronized Racing</title>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Neon Drift | Sync Duel</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
-:root { --p: #00f2ff; --a: #ff0055; --bg: #05070a; --road: #161b22; }
-* { margin:0; padding:0; box-sizing:border-box; font-family: 'Orbitron', sans-serif; user-select: none; }
+:root { --p: #00f2ff; --a: #ff0055; --bg: #05070a; --glass: rgba(10, 15, 25, 0.9); --success: #00ff88; }
+* { margin:0; padding:0; box-sizing:border-box; font-family: 'Orbitron', sans-serif; user-select: none; -webkit-tap-highlight-color: transparent; }
 
-body { background: var(--bg); color: white; overflow: hidden; height: 100vh; }
+body { background: var(--bg); color: white; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
 
-/* Yarış Alanı Tasarımı */
-#game-container { position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; overflow: hidden; }
-
-/* Yol ve Şeritler */
-.track {
-    position: absolute; width: 100%; height: 200%; top: -100%;
-    background: 
-        linear-gradient(90deg, transparent 45%, var(--p) 50%, transparent 55%) 0 0 / 100% 100px;
-    opacity: 0.1;
-    animation: roadMove 1s linear infinite;
+/* Dinamik Arka Plan Animasyonu */
+body::before {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(0deg, rgba(0, 242, 255, 0.05) 1px, transparent 1px) 0 0 / 100% 50px;
+    z-index: -1; animation: roadFlow 1s linear infinite;
     animation-play-state: paused;
 }
+#road-active::before { animation-play-state: running; }
+@keyframes roadFlow { from { background-position: 0 0; } to { background-position: 0 50px; } }
 
-@keyframes roadMove { from { transform: translateY(0); } to { transform: translateY(100px); } }
+/* Lobi Tasarımı */
+#lobby { position: fixed; inset: 0; background: var(--bg); z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; padding: 20px; text-align: center;}
+.title { font-size: 2.5rem; font-weight: 900; background: linear-gradient(to right, var(--p), var(--a)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 5px; }
 
-/* Araçlar */
-.car {
-    position: absolute; bottom: 100px; width: 40px; height: 70px;
-    border-radius: 5px; transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    box-shadow: 0 0 20px currentColor; border: 2px solid white;
+.btn { 
+    padding: 18px 40px; border: none; border-radius: 12px; font-weight: 900; cursor: pointer; transition: 0.3s;
+    background: var(--p); color: #000; font-size: 1rem; width: 100%; max-width: 300px;
+    clip-path: polygon(5% 0, 100% 0, 95% 100%, 0 100%);
 }
-#p1Car { left: 25%; color: var(--p); background: var(--p); }
-#p2Car { right: 25%; color: var(--a); background: var(--a); }
+.btn:active { transform: scale(0.95); filter: brightness(1.2); }
 
-/* Viraj Göstergesi */
-#turn-zone {
-    position: absolute; top: -150px; left: 0; width: 100%; height: 120px;
-    background: rgba(255, 255, 255, 0.05);
-    border-top: 3px solid white; border-bottom: 3px solid white;
+/* Oyun Ekranı */
+#game-view { display: none; flex: 1; position: relative; flex-direction: column; }
+.hud { padding: 40px 20px; display: flex; justify-content: space-between; z-index: 100; pointer-events: none; }
+.speed-box { text-align: center; }
+.speed-val { font-size: 2.5rem; font-weight: 900; line-height: 1; }
+.kmh { font-size: 0.7rem; color: #555; }
+
+/* Pist ve Araçlar */
+.track-container { position: absolute; inset: 0; display: flex; justify-content: center; z-index: 10; }
+.car { 
+    position: absolute; bottom: 100px; width: 45px; height: 80px; border-radius: 6px; 
+    border: 2px solid white; transition: transform 0.1s linear, left 0.3s ease, right 0.3s ease;
+    box-shadow: 0 0 20px currentColor;
+}
+#p1Car { left: 20%; color: var(--p); background: var(--p); }
+#p2Car { right: 20%; color: var(--a); background: var(--a); }
+
+/* Drift Bölgesi */
+#drift-zone {
+    position: absolute; width: 100%; height: 150px; left: 0; top: -200px;
+    background: linear-gradient(transparent, rgba(255, 255, 255, 0.1), transparent);
+    border-top: 2px solid #fff; border-bottom: 2px solid #fff;
     display: flex; align-items: center; justify-content: center;
-    font-weight: 900; font-size: 1.5rem; text-shadow: 0 0 10px white;
+    font-size: 1.5rem; font-weight: 900; color: #fff;
+    text-shadow: 0 0 10px #fff; pointer-events: none;
 }
 
-/* UI Katmanı */
-.hud { position: absolute; top: 40px; width: 100%; display: flex; justify-content: space-around; z-index: 100; }
-.speedo { text-align: center; }
-.speed-val { font-size: 2rem; font-weight: 900; }
-.unit { font-size: 0.7rem; color: #555; }
-
-.flash-msg {
-    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    font-size: 3rem; font-weight: 900; pointer-events: none; opacity: 0;
-}
-
-#lobby {
-    position: fixed; inset: 0; background: var(--bg); z-index: 1000;
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px;
-}
-.btn {
-    padding: 20px 40px; background: var(--p); border: none; font-weight: 900;
-    cursor: pointer; clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%);
-}
+#status-msg { position: absolute; top: 50%; width: 100%; text-align: center; font-size: 1.2rem; color: var(--success); font-weight: 900; opacity: 0; }
 </style>
 </head>
-<body>
+<body id="road-active">
 
 <div id="lobby">
-    <h1 style="font-size: 2.5rem; letter-spacing: 10px;">NEON DRIFT</h1>
-    <button class="btn" id="startBtn">READY TO DRIFT</button>
+    <h1 class="title">NEON DRIFT</h1>
+    <p style="color:#555; margin-bottom:20px;">SENKRONİZE DÜELLO</p>
+    <button class="btn" id="findMatchBtn">ARENA ARA</button>
+    <div id="lobbyStatus" style="color:var(--p); font-size:0.8rem; margin-top:15px;"></div>
 </div>
 
-<div id="game-container">
-    <div class="track" id="track"></div>
-    
+<div id="game-view">
     <div class="hud">
-        <div class="speedo">
-            <div class="unit" id="p1Name">PLAYER 1</div>
+        <div class="speed-box" style="color:var(--p)">
+            <div id="p1Name" style="font-size:0.6rem; margin-bottom:5px;">PLAYER 1</div>
             <div class="speed-val" id="p1Speed">0</div>
-            <div class="unit">KM/H</div>
+            <div class="kmh">KM/H</div>
         </div>
-        <div id="dist">0m</div>
-        <div class="speedo">
-            <div class="unit" id="p2Name">PLAYER 2</div>
+        <div id="roundInfo" style="color:var(--success); font-size:0.8rem; padding-top:10px;">MATCHED</div>
+        <div class="speed-box" style="color:var(--a)">
+            <div id="p2Name" style="font-size:0.6rem; margin-bottom:5px;">PLAYER 2</div>
             <div class="speed-val" id="p2Speed">0</div>
-            <div class="unit">KM/H</div>
+            <div class="kmh">KM/H</div>
         </div>
     </div>
 
-    <div id="turn-zone">DRIFT!</div>
+    <div id="drift-zone">DRIFT!</div>
     <div id="p1Car" class="car"></div>
     <div id="p2Car" class="car"></div>
-    <div id="flash" class="flash-msg">PERFECT!</div>
+    <div id="status-msg">PERFECT!</div>
 </div>
 
 <script type="module">
-// Firebase modülleri burada PixelArena'daki gibi initialize edilecek.
-// Temel Mantık:
-let velocity = 0;
-let isDrifting = false;
-let currentTurnTime = 0;
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, doc, setDoc, updateDoc, onSnapshot, collection, query, where, getDocs, runTransaction, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-function gameLoop() {
-    const now = Date.now(); // + serverOffset
+const firebaseConfig = {
+    apiKey: "AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
+    authDomain: "emirhan-site.firebaseapp.com",
+    projectId: "emirhan-site",
+    storageBucket: "emirhan-site.firebasestorage.app",
+    messagingSenderId: "668871888390",
+    appId: "1:668871888390:web:76568bda84cb1641f7bd87",
+    databaseURL: "https://emirhan-site-default-rtdb.firebaseio.com"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const rdb = getDatabase(app);
+const auth = getAuth(app);
+
+let uid, username, currentRoomId = null, serverOffset = 0, roomData = null;
+let velocity = 0, isPressing = false, driftActive = false;
+
+onValue(ref(rdb, ".info/serverTimeOffset"), s => serverOffset = s.val() || 0);
+const getServerTime = () => Date.now() + serverOffset;
+
+onAuthStateChanged(auth, async (user) => {
+    if (!user) { signInAnonymously(auth); return; }
+    uid = user.uid;
+    username = "Pilot_" + uid.slice(0,4);
+    document.getElementById("findMatchBtn").onclick = startMatchmaking;
+});
+
+async function startMatchmaking() {
+    const btn = document.getElementById("findMatchBtn");
+    btn.disabled = true;
+    document.getElementById("lobbyStatus").innerText = "UYGUN PİLOT ARANIYOR...";
+
+    const q = query(collection(db, "drift_rooms"), where("state", "==", "waiting"));
+    const snap = await getDocs(q);
     
-    // 1. Virajın aşağı kayma hızı velocity'ye bağlıdır
-    // 2. Eğer virajın içindeysek (turnZone Y koordinatı ile araba Y koordinatı çakışıyorsa)
-    //    ve oyuncu ekrana basıyorsa: Hız artar.
-    // 3. Basmıyorsa veya yanlış zamanda basıyorsa: Hız düşer.
-    
-    updateUI();
+    if (snap.empty) {
+        currentRoomId = doc(collection(db, "drift_rooms")).id;
+        await setDoc(doc(db, "drift_rooms", currentRoomId), {
+            p1: uid, p1Name: username, p2: null, p2Name: null,
+            p1Speed: 0, p2Speed: 0, state: "waiting", targetTime: 0
+        });
+    } else {
+        currentRoomId = snap.docs[0].id;
+        await updateDoc(doc(db, "drift_rooms", currentRoomId), {
+            p2: uid, p2Name: username, state: "active", targetTime: getServerTime() + 3000
+        });
+    }
+    enterGame();
+}
+
+function enterGame() {
+    document.getElementById("lobby").style.display = "none";
+    document.getElementById("game-view").style.display = "flex";
+
+    onSnapshot(doc(db, "drift_rooms", currentRoomId), (snap) => {
+        if (!snap.exists()) return;
+        roomData = snap.data();
+        document.getElementById("p1Name").innerText = roomData.p1Name;
+        document.getElementById("p2Name").innerText = roomData.p2Name || "BEKLENİYOR";
+        document.getElementById("p2Speed").innerText = roomData.p2Speed;
+        if (uid === roomData.p2) document.getElementById("p1Speed").innerText = roomData.p1Speed;
+    });
+
     requestAnimationFrame(gameLoop);
 }
 
-function updateUI() {
-    // Şerit animasyon hızı
-    document.getElementById('track').style.animationDuration = (2 / (velocity + 0.1)) + "s";
-    document.getElementById('p1Speed').innerText = Math.floor(velocity * 100);
+function gameLoop() {
+    if (!roomData || roomData.state !== "active") {
+        requestAnimationFrame(gameLoop);
+        return;
+    }
+
+    const now = getServerTime();
+    const driftZone = document.getElementById("drift-zone");
+    const diff = roomData.targetTime - now;
+
+    // Drift Bölgesi Senkronizasyonu
+    if (diff < 2000 && diff > -1000) {
+        // Bölge yukarıdan aşağıya iner
+        const topPos = ((2000 - diff) / 3000) * window.innerHeight - 200;
+        driftZone.style.top = topPos + "px";
+        
+        // Arabanın hizasına geldi mi?
+        if (topPos > window.innerHeight - 250 && topPos < window.innerHeight - 100) {
+            driftActive = true;
+            driftZone.style.borderColor = varColor("--success");
+        } else {
+            driftActive = false;
+            driftZone.style.borderColor = "#fff";
+        }
+    } else if (diff <= -1000) {
+        // Yeni tur ayarla (sadece p1/host yapar)
+        if (uid === roomData.p1) {
+            updateDoc(doc(db, "drift_rooms", currentRoomId), {
+                targetTime: getServerTime() + 4000,
+                p1Speed: Math.floor(velocity),
+                p2Speed: roomData.p2Speed // Bu normalde p2 tarafından güncellenir
+            });
+        }
+        driftZone.style.top = "-200px";
+    }
+
+    // Fizik ve Hız
+    if (isPressing && driftActive) {
+        velocity += 0.5;
+        showStatus("PERFECT DRIFT!", "var(--success)");
+    } else if (isPressing && !driftActive) {
+        velocity -= 0.8;
+        showStatus("TOO EARLY!", "var(--a)");
+    } else {
+        velocity -= 0.1;
+    }
+
+    velocity = Math.max(0, Math.min(velocity, 350)); // Max 350 km/h
+    document.getElementById("p1Speed").innerText = Math.floor(velocity);
+    
+    // Görsel efektler
+    document.getElementById("p1Car").style.transform = isPressing ? "skewX(-10deg) scale(1.05)" : "none";
+    document.body.style.backgroundPositionY = (getServerTime() / 10) + "px";
+
+    requestAnimationFrame(gameLoop);
 }
 
-// Dokunmatik Kontroller
-window.addEventListener('touchstart', () => {
-    isDrifting = true;
-    document.getElementById('p1Car').style.transform = "skewX(-15deg) scale(1.1)";
-});
+function showStatus(txt, color) {
+    const el = document.getElementById("status-msg");
+    el.innerText = txt;
+    el.style.color = color;
+    el.style.opacity = "1";
+    setTimeout(() => el.style.opacity = "0", 500);
+}
 
-window.addEventListener('touchend', () => {
-    isDrifting = false;
-    document.getElementById('p1Car').style.transform = "skewX(0deg) scale(1)";
-});
+const varColor = (name) => getComputedStyle(document.documentElement).getPropertyValue(name);
+
+// Kontroller
+window.addEventListener("touchstart", (e) => { e.preventDefault(); isPressing = true; });
+window.addEventListener("touchend", () => { isPressing = false; });
+window.addEventListener("mousedown", () => isPressing = true);
+window.addEventListener("mouseup", () => isPressing = false);
 
 </script>
 </body>
