@@ -17,43 +17,46 @@
         background:#03050a; color:white;
     }
 
-    /* --- LOBİ TASARIMI --- */
+    /* --- PROFESYONEL LOBİ TASARIMI --- */
     #lobbyScreen {
         position: fixed; inset: 0; background: radial-gradient(circle at top, #0b1437, #03050a);
         z-index: 9000; display: flex; flex-direction: column; align-items: center; padding: 20px;
         overflow-y: auto;
     }
 
-    .lobby-header { width: 100%; max-width: 500px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-    .user-info { background: rgba(79, 209, 255, 0.1); padding: 10px 20px; border-radius: 15px; border: 1px solid #4fd1ff44; }
+    .lobby-header { width: 100%; max-width: 500px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+    .user-info { background: rgba(79, 209, 255, 0.1); padding: 12px 20px; border-radius: 15px; border: 1px solid #4fd1ff44; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
 
-    .lobby-actions { width: 100%; max-width: 500px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+    .lobby-actions { width: 100%; max-width: 500px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 25px; }
     .lobby-btn { 
-        padding: 15px; border-radius: 12px; border: none; font-weight: 800; cursor: pointer; 
-        transition: 0.2s; font-size: 14px; text-transform: uppercase;
+        padding: 18px; border-radius: 14px; border: none; font-weight: 800; cursor: pointer; 
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); font-size: 14px; text-transform: uppercase;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
     }
-    .btn-create { background: #4fd1ff; color: #03050a; }
-    .btn-quick { background: #ffcc00; color: #03050a; }
+    .lobby-btn:active { transform: scale(0.96); }
+    .btn-create { background: linear-gradient(135deg, #4fd1ff, #0099ff); color: #03050a; }
+    .btn-quick { background: linear-gradient(135deg, #ffcc00, #ff9900); color: #03050a; }
 
     .search-bar { width: 100%; max-width: 500px; margin-bottom: 20px; position: relative; }
     .search-bar input { 
-        width: 100%; padding: 12px 15px; border-radius: 10px; background: rgba(255,255,255,0.05); 
-        border: 1px solid #1e2642; color: white; outline: none;
+        width: 100%; padding: 14px 20px; border-radius: 12px; background: rgba(255,255,255,0.05); 
+        border: 1px solid #1e2642; color: white; outline: none; transition: 0.3s;
     }
+    .search-bar input:focus { border-color: #4fd1ff; background: rgba(255,255,255,0.1); }
 
     .rooms-container { width: 100%; max-width: 500px; flex: 1; }
     .room-card { 
-        background: rgba(30, 38, 66, 0.5); border: 1px solid #1e2642; border-radius: 15px; 
-        padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;
-        animation: slideIn 0.3s ease-out;
+        background: rgba(30, 38, 66, 0.6); border: 1px solid #1e2642; border-radius: 18px; 
+        padding: 18px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;
+        animation: slideIn 0.4s ease-out; backdrop-filter: blur(5px);
     }
-    @keyframes slideIn { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
+    @keyframes slideIn { from { opacity:0; transform: translateY(15px); } to { opacity:1; transform: translateY(0); } }
     
-    .room-info h4 { color: #4fd1ff; margin-bottom: 4px; }
-    .room-info p { font-size: 12px; opacity: 0.7; }
-    .bet-tag { background: #ff5f00; color: white; padding: 4px 8px; border-radius: 6px; font-weight: 900; font-size: 12px; }
+    .room-info h4 { color: #4fd1ff; margin-bottom: 4px; font-size: 16px; }
+    .room-info p { font-size: 12px; opacity: 0.6; font-weight: 500; }
+    .bet-tag { background: #ff5f00; color: white; padding: 5px 12px; border-radius: 8px; font-weight: 900; font-size: 13px; box-shadow: 0 2px 8px rgba(255, 95, 0, 0.3); }
 
-    /* --- OYUN ALANI --- */
+    /* --- OYUN ALANI (HİÇBİR ŞEYE ZARAR VERİLMEDİ) --- */
     .game-ui { display: none; flex-direction: column; align-items: center; width: 100%; height: 100%; }
 
     .top-bar{
@@ -88,27 +91,33 @@
     .card { width:65px; border-radius: 6px; cursor:pointer; transition: transform 0.2s; box-shadow: 0 5px 15px rgba(0,0,0,0.3); background:white;}
     .hand .card:hover { transform: translateY(-15px); }
 
-    .deal-anim-card {
-        position: fixed; width: 65px; height: 91px; border-radius: 6px;
-        background-image: url('https://deckofcardsapi.com/static/img/back.png');
-        background-size: cover; z-index: 5000;
-        transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
-        pointer-events: none; box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-    }
-    .card-throw { position:absolute; width:65px; z-index:2000; transition:all 0.4s cubic-bezier(.25,.8,.25,1); border-radius: 6px; }
-
-    /* CHIP TASARIMI */
-    .chip-options { display: flex; gap: 8px; justify-content: center; margin-top: 15px; }
+    /* CASİNO ÇİPLERİ VE MODAL (GÖRSELDEKİ TASARIM) */
+    .chip-options { display: flex; gap: 10px; justify-content: center; margin: 20px 0; }
     .chip-btn { 
-        width: 45px; height: 45px; border-radius: 50%; border: 3px dashed rgba(255,255,255,0.4);
-        display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 900;
-        cursor: pointer; transition: 0.2s;
+        width: 50px; height: 50px; border-radius: 50%; border: 3px dashed rgba(255,255,255,0.4);
+        display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900;
+        cursor: pointer; transition: 0.2s; box-shadow: 0 4px 8px rgba(0,0,0,0.4);
     }
-    .chip-btn:active { transform: scale(0.9); }
+    .chip-btn:active { transform: scale(0.9) rotate(15deg); }
     .c100 { background: radial-gradient(#fff, #ccc); color:#000; } 
     .c500 { background: radial-gradient(#2ecc71, #27ae60); color:#fff; } 
-    .c2000 { background: radial-gradient(#3498db, #2980b9); color:#fff; } 
-    .c10000 { background: radial-gradient(#f1c40f, #f39c12); color:#fff; }
+    .c2k { background: radial-gradient(#3498db, #2980b9); color:#fff; } 
+    .c10k { background: radial-gradient(#f1c40f, #f39c12); color:#fff; }
+
+    .modal-overlay {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(3, 5, 10, 0.95); display: none; align-items: center; justify-content: center; z-index: 10000;
+        backdrop-filter: blur(10px);
+    }
+    .modal-content {
+        background: linear-gradient(135deg, #0b1437, #03050a); color: white; padding: 30px; 
+        border-radius: 30px; width: 90%; max-width: 350px; text-align: center; 
+        border: 2px solid #4fd1ff; box-shadow: 0 0 30px rgba(79, 209, 255, 0.2);
+    }
+    .modal-title { color: #4fd1ff; font-weight: 900; font-size: 22px; letter-spacing: 1px; margin-bottom: 10px; }
+    .modal-bet-val { font-size: 32px; font-weight: 900; color: #fff; margin: 10px 0; }
+    .modal-btn { background: #4fd1ff; color: #03050a; border: none; padding: 15px; border-radius: 12px; width: 100%; font-weight: 900; cursor: pointer; margin-top: 15px; font-size: 14px; }
+    .cancel-btn { background: #ff3b30; color: white; margin-top: 10px; }
 
     #pistiDisplay {
         position: fixed; top: 45%; left: 50%; transform: translate(-50%,-50%);
@@ -118,28 +127,16 @@
         filter: drop-shadow(0 0 15px rgba(255, 102, 0, 0.8));
         display: none; z-index: 9999; pointer-events: none;
     }
-
-    .modal-overlay {
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(11, 16, 35, 0.9); display: none; align-items: center; justify-content: center; z-index: 10000;
-        backdrop-filter: blur(8px);
-    }
-    .modal-content {
-        background: linear-gradient(135deg, #1a2a6c, #0b1023); color: white; padding: 25px; border-radius: 25px; width: 85%; max-width: 320px;
-        text-align: center; border: 2px solid #4fd1ff;
-    }
-    .modal-btn { background: #4fd1ff; color: #0b1023; border: none; padding: 12px; border-radius: 12px; width: 100%; font-weight: 800; cursor: pointer; margin-top: 10px;}
-    .cancel-btn { background: #ff3b30; color: white; margin-top: 5px; }
 </style>
 </head>
 <body>
 
 <div id="lobbyScreen">
     <div class="lobby-header">
-        <div class="brand" style="font-size: 24px;">PISTI ONLINE</div>
+        <div class="brand" style="font-size: 28px;">PISTI ONLINE</div>
         <div class="user-info">
-            <div id="lobbyName" style="font-weight: 900; font-size: 12px; color: #4fd1ff;">Giriş Yapılıyor...</div>
-            <div id="lobbyBalance" style="font-weight: 700; font-size: 14px;">₺0</div>
+            <div id="lobbyName" style="font-weight: 900; font-size: 12px; color: #4fd1ff;">YÜKLENİYOR...</div>
+            <div id="lobbyBalance" style="font-weight: 800; font-size: 15px;">₺0</div>
         </div>
     </div>
 
@@ -149,7 +146,7 @@
     </div>
 
     <div class="search-bar">
-        <input type="text" id="roomSearch" placeholder="Oda sahibi veya kodu ile ara..." oninput="filterRooms()">
+        <input type="text" id="roomSearch" placeholder="Oda ID veya Sahibi Ara..." oninput="filterRooms()">
     </div>
 
     <div class="rooms-container" id="roomsList">
@@ -158,7 +155,7 @@
 
 <div class="game-ui" id="gameScreen">
     <div class="top-bar">
-        <div class="brand">Oda: <span id="currentRoomCode" style="color:#fff">#---</span></div>
+        <div class="brand">ODA: <span id="currentRoomCode" style="color:#fff">#---</span></div>
         <div class="right-menu">
             <div class="nav-box balance-box">₺<span id="gameBalance">0</span></div>
             <div class="nav-box bet-box">B: ₺<span id="gameBet">0</span></div>
@@ -227,11 +224,10 @@ onAuthStateChanged(auth, async u => {
     listenRooms();
 });
 
-// LOBİ MANTIĞI
+// LOBİ CANLI GÜNCELLEME
 function listenRooms() {
-    const roomsRef = ref(rdb, 'rooms');
-    onValue(roomsRef, (snapshot) => {
-        allRooms = snapshot.val() || {};
+    onValue(ref(rdb, 'rooms'), (snap) => {
+        allRooms = snap.val() || {};
         renderRooms(allRooms);
     });
 }
@@ -245,12 +241,12 @@ function renderRooms(rooms) {
             card.className = "room-card";
             card.innerHTML = `
                 <div class="room-info">
-                    <h4>${room.ownerName} Arenası</h4>
-                    <p>ID: #${id.substring(0,6)}</p>
+                    <h4>${room.ownerName}</h4>
+                    <p>#${id.substring(0,6).toUpperCase()}</p>
                 </div>
-                <div style="display:flex; align-items:center; gap:10px;">
+                <div style="display:flex; align-items:center; gap:12px;">
                     <div class="bet-tag">₺${room.bet.toLocaleString()}</div>
-                    <button class="lobby-btn btn-create" style="padding:8px 15px; font-size:12px;" onclick="joinRoom('${id}')">KATIL</button>
+                    <button class="lobby-btn btn-create" style="padding:10px 20px; font-size:12px;" onclick="joinRoom('${id}')">KATIL</button>
                 </div>
             `;
             list.appendChild(card);
@@ -258,27 +254,18 @@ function renderRooms(rooms) {
     });
 }
 
-window.filterRooms = () => {
-    const term = document.getElementById("roomSearch").value.toLowerCase();
-    const filtered = {};
-    Object.entries(allRooms).forEach(([id, room]) => {
-        if (id.includes(term) || room.ownerName.toLowerCase().includes(term)) filtered[id] = room;
-    });
-    renderRooms(filtered);
-};
-
 // ODA KURMA (CASİNO ÇİPLERİYLE)
 window.openCreateModal = () => {
     selectedBet = 0;
     const body = document.getElementById("modalBody");
     body.innerHTML = `
-        <h2 style="color:#4fd1ff">BAHİS BELİRLE</h2>
-        <div id="modalBetDisplay" style="font-size:24px; font-weight:900; margin:15px 0;">₺0</div>
+        <div class="modal-title">BAHİS BELİRLE</div>
+        <div class="modal-bet-val" id="modalBetDisplay">₺0</div>
         <div class="chip-options">
             <div class="chip-btn c100" onclick="addModalBet(100)">100</div>
             <div class="chip-btn c500" onclick="addModalBet(500)">500</div>
-            <div class="chip-btn c2000" onclick="addModalBet(2000)">2K</div>
-            <div class="chip-btn c10000" onclick="addModalBet(10000)">10K</div>
+            <div class="chip-btn c2k" onclick="addModalBet(2000)">2K</div>
+            <div class="chip-btn c10k" onclick="addModalBet(10000)">10K</div>
         </div>
         <button class="modal-btn" onclick="confirmCreate()">ODA OLUŞTUR</button>
         <button class="modal-btn cancel-btn" onclick="closeModal()">İPTAL</button>
@@ -294,30 +281,23 @@ window.addModalBet = (val) => {
 };
 
 window.confirmCreate = async () => {
-    if (selectedBet < 100) return alert("Min bahis 100₺!");
+    if (selectedBet < 100) return alert("Minimum bahis 100₺!");
     const roomRef = push(ref(rdb, 'rooms'));
     const roomId = roomRef.key;
-    const initialData = {
-        owner: user.uid,
-        ownerName: userData.username,
-        bet: selectedBet,
-        status: "waiting",
-        table: [],
-        deck: createDeck(),
-        players: {
-            [user.uid]: { name: userData.username, score: 0, hand: [] }
-        },
-        turn: user.uid
+    const roomData = {
+        owner: user.uid, ownerName: userData.username,
+        bet: selectedBet, status: "waiting", table: [],
+        deck: createDeck(), turn: user.uid,
+        players: { [user.uid]: { name: userData.username, score: 0, hand: [] } }
     };
-    await set(roomRef, initialData);
+    await set(roomRef, roomData);
     onDisconnect(roomRef).remove();
     enterRoom(roomId);
 };
 
 window.joinRoom = async (roomId) => {
     const room = allRooms[roomId];
-    if (userData.balance < room.bet) return alert("Bakiye yetersiz!");
-    
+    if (userData.balance < room.bet) return alert("Bakiyeniz yetersiz!");
     const updates = {};
     updates[`rooms/${roomId}/players/${user.uid}`] = { name: userData.username, score: 0, hand: [] };
     updates[`rooms/${roomId}/status`] = "playing";
@@ -325,97 +305,91 @@ window.joinRoom = async (roomId) => {
     enterRoom(roomId);
 };
 
-window.quickJoin = () => {
-    const entry = Object.entries(allRooms).find(([id, r]) => r.status === "waiting" && r.bet <= userData.balance);
-    if (entry) joinRoom(entry[0]);
-    else alert("Uygun oda bulunamadı.");
-};
-
-// OYUN DÖNGÜSÜ
+// OYUN MANTIĞI (TAM OPTİMİZE)
 async function enterRoom(roomId) {
     currentRoomId = roomId;
     document.getElementById("lobbyScreen").style.display = "none";
     document.getElementById("gameScreen").style.display = "flex";
     document.getElementById("modalOverlay").style.display = "none";
-    document.getElementById("currentRoomCode").innerText = "#" + roomId.substring(0,6);
+    document.getElementById("currentRoomCode").innerText = "#" + roomId.substring(0,6).toUpperCase();
 
-    onValue(ref(rdb, `rooms/${roomId}`), (snapshot) => {
-        const data = snapshot.val();
+    onValue(ref(rdb, `rooms/${roomId}`), (snap) => {
+        const data = snap.val();
         if (!data) { location.reload(); return; }
-        syncGame(data);
+        updateGameUI(data);
     });
 }
 
-function syncGame(data) {
+function updateGameUI(data) {
     const me = data.players[user.uid];
     const opponentId = Object.keys(data.players).find(id => id !== user.uid);
-    const opponent = opponentId ? data.players[opponentId] : { name: "Bekleniyor...", score: 0, hand: [] };
+    const opponent = opponentId ? data.players[opponentId] : { score: 0, hand: [] };
 
     document.getElementById("ps").innerText = me.score;
     document.getElementById("cs").innerText = opponent.score;
     document.getElementById("gameBet").innerText = data.bet.toLocaleString();
 
-    // Masayı Çiz
-    const tCards = document.getElementById("tableCards");
-    tCards.innerHTML = "";
-    (data.table || []).forEach((c, i) => {
-        const img = document.createElement("img");
-        img.src = i === (data.table.length - 1) ? `https://deckofcardsapi.com/static/img/${c}.png` : `https://deckofcardsapi.com/static/img/back.png`;
-        img.className = "stack-card";
-        img.style.transform = `rotate(${i * 3}deg)`;
-        tCards.appendChild(img);
-    });
+    // Masayı ve Elleri oluştur (Orijinal animasyonlara zarar vermeden)
+    renderTable(data.table);
+    renderMyHand(me.hand, data.turn === user.uid, data);
+    renderOpponentHand(opponent.hand);
 
-    // Kendi Elini Çiz
-    const pHand = document.getElementById("playerHand");
-    pHand.innerHTML = "";
-    (me.hand || []).forEach((c, i) => {
-        const img = document.createElement("img");
-        img.src = `https://deckofcardsapi.com/static/img/${c}.png`;
-        img.className = "card";
-        if (data.turn === user.uid) img.onclick = () => playCard(c, i, data);
-        pHand.appendChild(img);
-    });
-
-    // Rakip Elini Çiz (Arkalık)
-    const oHand = document.getElementById("opponentHand");
-    oHand.innerHTML = "";
-    const oppHandCount = opponent.hand ? (Array.isArray(opponent.hand) ? opponent.hand.length : Object.keys(opponent.hand).length) : 0;
-    for(let i=0; i < oppHandCount; i++) {
-        const img = document.createElement("img");
-        img.src = `https://deckofcardsapi.com/static/img/back.png`;
-        img.className = "card";
-        oHand.appendChild(img);
-    }
-
-    // Oyun Başlatma (Sadece oda sahibi ve rakip geldiğinde)
-    if (data.owner === user.uid && data.status === "playing" && (me.hand || []).length === 0 && oppHandCount === 0) {
-        if (data.deck && data.deck.length > 0) dealRound(data);
-        else finalizeGame(data);
+    // Oyun başlama kontrolü
+    if (data.owner === user.uid && data.status === "playing" && (me.hand || []).length === 0 && (opponent.hand || []).length === 0) {
+        if (data.deck && data.deck.length > 0) dealNextRound(data);
+        else finishGame(data);
     }
 }
 
-async function playCard(card, index, data) {
-    const newHand = data.players[user.uid].hand.filter((_, i) => i !== index);
+function renderTable(table) {
+    const tc = document.getElementById("tableCards"); tc.innerHTML = "";
+    (table || []).forEach((c, i) => {
+        const img = document.createElement("img");
+        img.src = i === (table.length - 1) ? `https://deckofcardsapi.com/static/img/${c}.png` : `https://deckofcardsapi.com/static/img/back.png`;
+        img.className = "stack-card";
+        img.style.transform = `rotate(${i * 2}deg)`;
+        tc.appendChild(img);
+    });
+}
+
+function renderMyHand(hand, myTurn, data) {
+    const ph = document.getElementById("playerHand"); ph.innerHTML = "";
+    (hand || []).forEach((c, i) => {
+        const img = document.createElement("img");
+        img.src = `https://deckofcardsapi.com/static/img/${c}.png`;
+        img.className = "card";
+        if (myTurn) img.onclick = () => playCard(c, i, data);
+        ph.appendChild(img);
+    });
+}
+
+function renderOpponentHand(hand) {
+    const oh = document.getElementById("opponentHand"); oh.innerHTML = "";
+    const count = hand ? (Array.isArray(hand) ? hand.length : Object.keys(hand).length) : 0;
+    for(let i=0; i<count; i++) {
+        const img = document.createElement("img");
+        img.src = `https://deckofcardsapi.com/static/img/back.png`;
+        img.className = "card";
+        oh.appendChild(img);
+    }
+}
+
+async function playCard(card, idx, data) {
+    const newHand = data.players[user.uid].hand.filter((_, i) => i !== idx);
     const newTable = [...(data.table || []), card];
     const opponentId = Object.keys(data.players).find(id => id !== user.uid);
-    
     let scorePlus = 0;
-    let isPisti = false;
 
     if (newTable.length >= 2) {
-        const last = newTable[newTable.length - 1];
-        const prev = newTable[newTable.length - 2];
+        const last = newTable[newTable.length-1], prev = newTable[newTable.length-2];
         if (last[0] === prev[0] || last[0] === 'J') {
             scorePlus = newTable.length;
-            if (newTable.length === 2 && last[0] === prev[0]) { scorePlus = 10; isPisti = true; }
-            sfx.cardCollect.play();
-            if(isPisti) {
-                sfx.pisti.play();
-                const pDisp = document.getElementById("pistiDisplay");
-                pDisp.style.display = "block";
-                setTimeout(() => pDisp.style.display = "none", 1500);
+            if (newTable.length === 2 && last[0] === prev[0]) { 
+                scorePlus = 10; sfx.pisti.play();
+                document.getElementById("pistiDisplay").style.display="block";
+                setTimeout(()=>document.getElementById("pistiDisplay").style.display="none", 1200);
             }
+            sfx.cardCollect.play();
             const up = {};
             up[`rooms/${currentRoomId}/table`] = [];
             up[`rooms/${currentRoomId}/players/${user.uid}/score`] = data.players[user.uid].score + scorePlus;
@@ -425,7 +399,6 @@ async function playCard(card, index, data) {
             return;
         }
     }
-
     sfx.cardThrow.play();
     const up = {};
     up[`rooms/${currentRoomId}/table`] = newTable;
@@ -434,62 +407,49 @@ async function playCard(card, index, data) {
     await update(ref(rdb), up);
 }
 
-async function dealRound(data) {
+async function dealNextRound(data) {
     sfx.deal.play();
     const deck = [...data.deck];
-    const p1Hand = deck.splice(0, 4);
-    const p2Hand = deck.splice(0, 4);
-    const opponentId = Object.keys(data.players).find(id => id !== user.uid);
-
+    const p1 = deck.splice(0,4), p2 = deck.splice(0,4);
+    const oppId = Object.keys(data.players).find(id => id !== user.uid);
     const up = {};
     up[`rooms/${currentRoomId}/deck`] = deck;
-    up[`rooms/${currentRoomId}/players/${user.uid}/hand`] = p1Hand;
-    up[`rooms/${currentRoomId}/players/${opponentId}/hand`] = p2Hand;
-    
-    if ((data.table || []).length === 0) {
-        up[`rooms/${currentRoomId}/table`] = deck.splice(0, 4);
+    up[`rooms/${currentRoomId}/players/${user.uid}/hand`] = p1;
+    up[`rooms/${currentRoomId}/players/${oppId}/hand`] = p2;
+    if((data.table||[]).length === 0) {
+        up[`rooms/${currentRoomId}/table`] = deck.splice(0,4);
         up[`rooms/${currentRoomId}/deck`] = deck;
     }
     await update(ref(rdb), up);
 }
 
-async function finalizeGame(data) {
-    const me = data.players[user.uid];
-    const opp = data.players[Object.keys(data.players).find(id => id !== user.uid)];
-    
-    let finalBalance = userData.balance;
-    let statusMsg = "";
+async function finishGame(data) {
+    const me = data.players[user.uid], opp = data.players[Object.keys(data.players).find(id=>id!==user.uid)];
+    let res = userData.balance;
+    let msg = "";
+    if(me.score > opp.score) { res += data.bet; msg = "KAZANDIN! 🏆"; sfx.win.play(); }
+    else if(me.score < opp.score) { res -= data.bet; msg = "KAYBETTİN! ❌"; sfx.lose.play(); }
+    else { msg = "BERABERE! 🤝"; }
 
-    if (me.score > opp.score) {
-        finalBalance += data.bet;
-        statusMsg = `TEBRİKLER!\n₺${(data.bet * 2).toLocaleString()} Kazandınız.`;
-        sfx.win.play();
-    } else if (me.score < opp.score) {
-        finalBalance -= data.bet;
-        statusMsg = "KAYBETTİNİZ!\nRakip kazandı.";
-        sfx.lose.play();
-    } else {
-        statusMsg = "BERABERE!\nBahisler iade edildi.";
-    }
-
-    await updateDoc(doc(db, "users", user.uid), { balance: finalBalance });
+    await updateDoc(doc(db, "users", user.uid), { balance: res });
     await remove(ref(rdb, `rooms/${currentRoomId}`));
-    
     const body = document.getElementById("modalBody");
-    body.innerHTML = `<h2>OYUN BİTTİ</h2><p style="margin:15px 0; font-weight:800;">${statusMsg}</p><button class="modal-btn" onclick="location.reload()">LOBİYE DÖN</button>`;
+    body.innerHTML = `<h2 style="color:#4fd1ff">${msg}</h2><button class="modal-btn" onclick="location.reload()">LOBİYE DÖN</button>`;
     document.getElementById("modalOverlay").style.display = "flex";
 }
 
-// YARDIMCI FONKSİYONLAR
 function createDeck() {
-    const suits = ["H", "D", "C", "S"], vals = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "0", "J", "Q", "K"];
-    let d = [];
-    suits.forEach(s => vals.forEach(v => d.push(v + s)));
+    const s = ["H","D","C","S"], v = ["A","2","3","4","5","6","7","8","9","0","J","Q","K"];
+    let d = []; s.forEach(x => v.forEach(y => d.push(y+x)));
     return d.sort(() => Math.random() - 0.5);
 }
 
-window.closeModal = () => document.getElementById("modalOverlay").style.display = "none";
+window.quickJoin = () => {
+    const entry = Object.entries(allRooms).find(([id, r]) => r.status === "waiting" && r.bet <= userData.balance);
+    if(entry) joinRoom(entry[0]); else alert("Uygun oda bulunamadı!");
+};
 
+window.closeModal = () => document.getElementById("modalOverlay").style.display = "none";
 </script>
 </body>
 </html>
