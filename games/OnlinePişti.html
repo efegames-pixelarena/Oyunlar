@@ -120,6 +120,9 @@
         .card:hover { transform: translateY(-15px); z-index: 100; }
         .computer .card { opacity: 0.95; }
 
+        /* Hile Karşıtı Önlem: Görünmez Katman */
+        .turn-blocker { position: fixed; inset: 0; z-index: 9999; display: none; }
+
         .modal-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.95); backdrop-filter: blur(12px);
             display: none; align-items: center; justify-content: center; z-index: 10000; padding: 20px;
@@ -154,6 +157,7 @@
 <body>
 
     <div id="bg-canvas"></div>
+    <div id="turnBlocker" class="turn-blocker"></div>
 
     <div class="top-bar">
         <div class="brand">PIXEL ARENA</div>
@@ -249,7 +253,6 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // MADDE 6: Ses Nesneleri Bellek Sızıntısı Koruması (Static reuse)
     const sfx = {
         chip: new Audio("https://cdn.freesound.org/previews/201/201491_3325145-lq.mp3"),
         cardThrow: new Audio("https://cdn.freesound.org/previews/240/240776_4107740-lq.mp3"),
@@ -277,7 +280,6 @@
         listenLobby();
     });
 
-    // MADDE 3: Hayalet Oda Koruması (Çıkarken Oda Durumunu Güncelle)
     window.leaveRoom = async () => {
         if (roomRef) {
             try {
@@ -318,7 +320,6 @@
         });
     }
 
-    // MADDE 5: Race Condition Koruması (Transaction tabanlı bakiye)
     window.addBet = (a) => { if(balance >= a) { balance -= a; currentBet += a; sfx.chip.play(); updateUI(); } };
     window.cancelBet = () => { balance += currentBet; currentBet = 0; sfx.chip.play(); updateUI(); };
     function updateUI() { document.getElementById("bet").innerText = currentBet.toLocaleString('tr-TR'); }
@@ -334,7 +335,6 @@
         roomRef = doc(db, "rooms", roomId);
         myRole = "p1";
         
-        // MADDE 8: Yedek Deste Mantığı (Hata durumunda devamlılık için çoklu deste)
         const isDouble = type.includes("104");
         const baseDeck = createDeck();
         const finalDeck = isDouble ? [...baseDeck, ...createDeck()] : [...baseDeck];
@@ -344,7 +344,7 @@
             p1: uid, p1_name: userName, bet: currentBet, status: "waiting", name, password: pass, type,
             deck: shuffledDeck, table: [], p1_score: 0, p2_score: 0,
             p1_hand: [], p2_hand: [], turn: null, quitter: null, 
-            lastRefill: Date.now(), lastCollector: null
+            lastRefill: Date.now(), lastCollector: uid // Madde 2: Başlangıçta dağıtan p1 son alan sayılır.
         });
         
         await updateDoc(userRef, { balance });
@@ -388,7 +388,6 @@
 
             if (gameState.status === "playing") {
                 document.getElementById("waitingStatus").style.display = "none";
-                // MADDE 4: Double Trigger Riski (Transaction ile engellendi)
                 if (myRole === "p1" && gameState.p1_hand.length === 0 && gameState.p2_hand.length === 0) {
                     refillHands();
                 }
@@ -406,7 +405,7 @@
 
             const d = [...data.deck];
             if(d.length === 0) {
-                // MADDE 2: Puanlama - Kalan Kartları Son Alana Ver
+                // MADDE 2: Son Alan Puanlaması (Yerde kalan kartlar son toplayana)
                 let p1s = data.p1_score;
                 let p2s = data.p2_score;
                 if(data.table.length > 0 && data.lastCollector) {
@@ -425,15 +424,19 @@
         });
     }
 
-    // MADDE 1 & 9: getVal Mantığı ve Kesin Sıra Kontrolü
+    // MADDE 4: Hile Karşıtı PlayCard (Hızlı tıklama ve sıra hilesi engelleme)
     async function playCard(i) {
-        if (gameState.turn !== uid) return; // MADDE 9: Sıra gelmeden atılamaz
+        if (gameState.turn !== uid) return;
         
+        // UI Engelleyiciyi Aktif Et (Multi-click koruması)
+        document.getElementById("turnBlocker").style.display = "block";
+
         try {
             await runTransaction(db, async (transaction) => {
                 const rSnap = await transaction.get(roomRef);
                 const data = rSnap.data();
                 
+                // Sunucu tarafında sıra kontrolü (Hile koruması)
                 if (data.turn !== uid) throw "Sıra sizde değil!";
                 
                 const handKey = myRole + "_hand";
@@ -443,12 +446,11 @@
                 let score = data[myRole + "_score"];
                 let lastCollector = data.lastCollector;
 
-                // MADDE 1: Double Card/10 Problemi Çözümü (Gelen veri 10S, 0S veya QH olabilir)
+                // MADDE 1: Kart Değeri Güvenli Okuma (10 ve J kontrolü)
                 const getVal = (c) => {
                     if (!c) return "";
-                    if (c.startsWith('10')) return '10';
-                    if (c.startsWith('0')) return '10'; // Bazı API'lerde 10, '0' olarak gelir
-                    return c[0]; // A, J, Q, K veya 2-9
+                    let v = c.substring(0, c.length - 1); // Suit'i at
+                    return (v === "0" || v === "10") ? "10" : v;
                 };
 
                 const cardVal = getVal(card);
@@ -480,7 +482,10 @@
             });
             sfx.cardThrow.play();
         } catch (e) {
-            console.warn("Hamle engellendi:", e);
+            console.warn("Hamle reddedildi:", e);
+        } finally {
+            // MADDE 3: UI Tepkiselliği (İşlem bitince engelleyiciyi kaldır)
+            document.getElementById("turnBlocker").style.display = "none";
         }
     }
 
@@ -491,7 +496,6 @@
         setTimeout(() => { pd.style.display = "none"; }, 1800);
     }
 
-    // MADDE 7: Latency Compensation (Gecikme Telafisi için Yerel Render)
     function render() {
         if(!gameState) return;
         const ph = document.getElementById("playerHand");
@@ -510,11 +514,15 @@
         document.getElementById("head-me").classList.toggle("active", isMyTurn);
         document.getElementById("head-opp").classList.toggle("active", !isMyTurn);
 
+        // MADDE 1: Güvenli Kart Görsel URL Oluşturucu
+        const getImgUrl = (c) => {
+            let code = c.startsWith('10') ? '0' + c.substring(2) : c;
+            return `https://deckofcardsapi.com/static/img/${code}.png`;
+        };
+
         myHand.forEach((c, i) => {
             let img = document.createElement("img");
-            // MADDE 8: Kart Görseli Hataları İçin Güvenli URL
-            const finalCard = c.startsWith('10') ? '0' + c.substring(2) : c;
-            img.src = `https://deckofcardsapi.com/static/img/${finalCard}.png`;
+            img.src = getImgUrl(c);
             img.className = "card";
             if(isMyTurn) img.onclick = () => playCard(i);
             ph.appendChild(img);
@@ -530,8 +538,7 @@
         gameState.table.forEach((c, i) => {
             let img = document.createElement("img");
             const isTop = (i === gameState.table.length - 1);
-            const finalCard = c.startsWith('10') ? '0' + c.substring(2) : c;
-            img.src = isTop ? `https://deckofcardsapi.com/static/img/${finalCard}.png` : "https://deckofcardsapi.com/static/img/back.png";
+            img.src = isTop ? getImgUrl(c) : "https://deckofcardsapi.com/static/img/back.png";
             img.className = "stack-card";
             img.style.zIndex = i;
             tc.appendChild(img);
@@ -560,7 +567,6 @@
         showInfoModal(msg, "BİTTİ");
         inGame = false;
         
-        // MADDE 3: Ghost Room Önleme (Odayı sil)
         setTimeout(async () => {
             if(myRole === "p1") await deleteDoc(roomRef);
             window.leaveRoom();
@@ -570,10 +576,7 @@
     function createDeck() {
         const suits = ["H", "D", "C", "S"], vals = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "0", "J", "Q", "K"];
         let d = []; 
-        suits.forEach(s => vals.forEach(v => {
-            // MADDE 1: Dahili destede 10 değeri '0' olarak tutulur (API uyumu)
-            d.push(v + s);
-        }));
+        suits.forEach(s => vals.forEach(v => { d.push(v + s); }));
         return d;
     }
 
