@@ -3,19 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>PixelArena Duel | Cyber Edition</title>
+<title>PixelArena Duel</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
 <style>
 :root { 
-    --p: #00f2ff; --a: #ff0055; --bg: #030508; --b: #0d1117; 
-    --gold: #ffcc00; --glass: rgba(13, 17, 23, 0.85); --success: #00ff88;
+    --p: #00f2ff; --a: #ff0055; --bg: #05070a; --b: #161b22; 
+    --gold: #ffcc00; --glass: rgba(10, 15, 25, 0.85); --success: #00ff88;
 }
 
 * { 
     margin:0; padding:0; box-sizing:border-box; 
     font-family: 'Rajdhani', sans-serif; 
     -webkit-tap-highlight-color:transparent; 
-    touch-action: none; 
+    touch-action: manipulation; 
     user-select: none; 
 }
 
@@ -24,155 +24,154 @@ body {
     display: flex; flex-direction: column; position: fixed; width: 100%;
 }
 
-/* Animasyonlu Arka Plan */
 body::before {
     content: ""; position: absolute; inset: 0;
-    background: 
-        linear-gradient(rgba(0, 242, 255, 0.05) 1px, transparent 1px) 0 0 / 40px 40px,
-        linear-gradient(90deg, rgba(0, 242, 255, 0.05) 1px, transparent 1px) 0 0 / 40px 40px;
-    z-index: -1;
-    animation: gridMove 20s linear infinite;
-}
-
-@keyframes gridMove {
-    from { background-position: 0 0; }
-    to { background-position: 40px 40px; }
-}
-
-body::after {
-    content: ""; position: absolute; inset: 0;
-    background: radial-gradient(circle at center, transparent 0%, var(--bg) 90%);
+    background-image: 
+        linear-gradient(rgba(0, 242, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 242, 255, 0.03) 1px, transparent 1px);
+    background-size: 30px 30px;
+    mask-image: radial-gradient(circle at center, black, transparent 80%);
     z-index: -1;
 }
 
 .top-bar { 
-    height: 70px; background: rgba(0,0,0,0.9); backdrop-filter: blur(15px); 
+    height: 70px; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); 
     border-bottom: 2px solid var(--p); display: flex; align-items: center; 
-    justify-content: space-between; padding: 0 20px; z-index: 1000;
-    box-shadow: 0 0 20px rgba(0,242,255,0.2);
+    justify-content: space-between; padding: 0 15px; z-index: 1000;
 }
-
 .brand { 
-    font-family: 'Orbitron', sans-serif; font-weight: 900; font-size: 1.2rem;
-    background: linear-gradient(to right, #fff, var(--p)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    letter-spacing: 2px;
+    font-family: 'Orbitron', sans-serif; font-weight: 900; font-size: 1.1rem;
+    background: linear-gradient(to bottom, #fff, var(--p)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
 }
 
 #userBox {
-    background: rgba(0, 242, 255, 0.1); padding: 5px 12px; border-radius: 20px;
-    border: 1px solid var(--p); color: var(--p); font-weight: 700; font-size: 0.8rem;
+    font-weight: 700; color: var(--p); font-size: 0.8rem;
+    max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 
-#lobby { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
-.lobby-controls { background: var(--glass); padding: 20px; border-radius: 20px; border: 1px solid #222; }
-
+#lobby { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
+.lobby-controls { display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
+.search-bar { display: flex; gap: 8px; }
 .search-bar input {
-    width: 100%; background: #000; border: 1px solid #333; border-radius: 12px;
-    padding: 15px; color: white; font-family: 'Orbitron'; font-size: 0.8rem;
-    outline: none; transition: 0.3s; margin-bottom: 15px;
+    flex: 1; background: var(--b); border: 1px solid #333; border-radius: 8px;
+    padding: 12px; color: white; font-family: 'Orbitron'; font-size: 0.75rem;
+    outline: none; transition: 0.3s; border: 1px solid transparent;
 }
-.search-bar input:focus { border-color: var(--p); box-shadow: 0 0 10px rgba(0,242,255,0.3); }
+.search-bar input:focus { border-color: var(--p); }
 
-.action-buttons { display: flex; gap: 10px; }
+.action-buttons { display: flex; gap: 8px; }
 .btn {
-    border: none; border-radius: 12px; font-weight: 900; font-family: 'Orbitron'; 
-    cursor: pointer; transition: 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border: none; border-radius: 8px; font-weight: 900; font-family: 'Orbitron'; 
+    font-size: 0.65rem; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center;
 }
-.btn:active { transform: scale(0.95); }
-.create-btn { flex: 1; padding: 18px; background: var(--p); color: #000; box-shadow: 0 0 15px rgba(0,242,255,0.4); }
-.quick-btn { flex: 1; padding: 18px; background: transparent; color: var(--success); border: 2px solid var(--success); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(1); }
+.create-btn { flex: 1; padding: 15px; background: var(--p); color: #000; }
+.quick-btn { flex: 1; padding: 15px; background: var(--success); color: #000; }
 
 .room-card { 
-    background: linear-gradient(135deg, var(--b), #1a222c); border-radius: 20px; padding: 20px;
+    background: var(--glass); border: 1px solid var(--b); padding: 15px; border-radius: 15px;
     display: flex; justify-content: space-between; align-items: center;
-    border: 1px solid #333; transition: 0.3s;
+    border-left: 4px solid var(--p); animation: slideIn 0.3s ease-out; margin-bottom: 5px;
 }
-.room-card:hover { border-color: var(--p); transform: translateY(-3px); }
+.room-details { display: flex; flex-direction: column; gap: 4px; }
+.room-host { font-family: 'Orbitron'; font-weight: 900; font-size: 0.9rem; color: #fff; }
+.room-meta { font-size: 0.65rem; color: #888; display: flex; align-items: center; gap: 8px; }
+.badge { padding: 3px 8px; border-radius: 4px; font-size: 0.55rem; font-weight: 900; text-transform: uppercase; }
+.badge-live { background: var(--a); color: white; animation: pulse 1s infinite; }
+.badge-wait { background: var(--success); color: black; }
 
-.room-host { font-family: 'Orbitron'; font-weight: 700; font-size: 1rem; color: #fff; margin-bottom: 5px; }
-.badge { padding: 4px 10px; border-radius: 6px; font-size: 0.6rem; font-weight: 900; }
-.badge-live { background: rgba(255, 0, 85, 0.2); color: var(--a); border: 1px solid var(--a); }
-.badge-wait { background: rgba(0, 255, 136, 0.1); color: var(--success); border: 1px solid var(--success); }
-
-/* Oyun Tasarımı */
-#game-view { display: none; flex: 1; flex-direction: column; background: radial-gradient(circle at center, #0a1018 0%, #030508 100%); }
-
-.scoreboard { 
-    padding: 30px 20px; display: grid; grid-template-columns: 1fr auto 1fr; 
-    align-items: center; background: transparent; gap: 15px;
-}
-.p-info .name { font-family: 'Orbitron'; font-size: 0.75rem; color: #666; margin-bottom: 5px; text-transform: uppercase; }
-.p-info .score { font-family: 'Orbitron'; font-size: 2.5rem; font-weight: 900; color: #fff; text-shadow: 0 0 15px rgba(255,255,255,0.2); }
-#roundNum { 
-    background: var(--p); color: #000; padding: 5px 15px; border-radius: 20px;
-    font-weight: 900; font-family: 'Orbitron'; font-size: 0.8rem; box-shadow: 0 0 15px var(--p);
-}
-
-.arena { 
-    flex: 1; margin: 0 20px 40px 20px; border-radius: 30px;
-    background: rgba(255,255,255,0.02); border: 2px dashed rgba(255,255,255,0.1);
-    display: flex; flex-direction: column; justify-content: center; align-items: center;
-    cursor: pointer; position: relative; overflow: hidden;
-}
-.arena * { pointer-events: none; } /* Metinlerin tıklamayı bozmasını engeller */
-
-#bigText { font-family: 'Orbitron'; font-size: 80px; font-weight: 900; transition: 0.05s; letter-spacing: -2px; }
-#subText { font-family: 'Orbitron'; font-size: 1rem; letter-spacing: 5px; color: #444; margin-top: 20px; text-transform: uppercase;}
-
-.flash { background: #fff !important; box-shadow: 0 0 100px #fff; }
-.flash #bigText, .flash #subText { color: #000 !important; text-shadow: none; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+@keyframes slideIn { from { transform: translateX(-20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
 .modal {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.95); backdrop-filter: blur(20px);
-    display: none; justify-content: center; align-items: center; z-index: 2000; padding: 25px;
+    position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px);
+    display: none; justify-content: center; align-items: center; z-index: 2000; padding: 20px;
 }
 .modal-content {
-    background: var(--b); width: 100%; max-width: 400px; padding: 35px; border-radius: 30px;
-    border: 1px solid var(--p); box-shadow: 0 0 30px rgba(0,242,255,0.2);
+    background: var(--b); width: 100%; max-width: 350px; padding: 25px; border-radius: 20px;
+    border: 1px solid var(--p); display: flex; flex-direction: column; gap: 15px;
+    text-align: center; animation: modalPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+@keyframes modalPop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+.modal-content input {
+    background: #000; border: 1px solid #333; padding: 12px; color: var(--p);
+    border-radius: 8px; font-family: 'Orbitron'; font-size: 0.8rem; text-align: center; outline: none;
 }
 
+#game-view { display: none; flex: 1; flex-direction: column; }
+.scoreboard { 
+    padding: 20px; display: grid; grid-template-columns: 1fr auto 1fr; 
+    align-items: center; background: rgba(0,0,0,0.5); border-bottom: 1px solid var(--b);
+}
+.arena { 
+    flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; 
+    cursor: pointer; position: relative; touch-action: none;
+    transition: background-color 0.05s linear;
+}
+#bigText { font-family: 'Orbitron'; font-size: 60px; font-weight: 900; text-align: center; transition: 0.1s; pointer-events: none; }
+#subText { font-family: 'Orbitron'; font-size: 0.9rem; letter-spacing: 3px; color: #555; margin-top: 15px; text-align: center; pointer-events: none;}
+.flash { background-color: #fff !important; }
+.flash #bigText, .flash #subText { color: #000 !important; }
+
 .winner-screen { position: fixed; inset: 0; background: #000; z-index: 5000; display: none; flex-direction: column; justify-content: center; align-items: center; }
-.penalty { color: var(--a) !important; text-shadow: 0 0 15px var(--a); animation: shake 0.3s infinite; }
-@keyframes shake { 0%,100%{transform: translateX(0);} 25%{transform: translateX(-5px);} 75%{transform: translateX(5px);} }
+.back-btn { background: var(--a); color: white; border: none; padding: 8px 12px; border-radius: 6px; font-weight: 800; font-size: 0.7rem; font-family: 'Orbitron'; }
+.exit-btn { background: #333; color: #ff4444; border: 1px solid #444; padding: 6px 10px; border-radius: 6px; font-weight: 800; font-size: 0.65rem; font-family: 'Orbitron'; }
+.penalty { color: var(--a) !important; animation: shake 0.3s infinite; }
+@keyframes shake { 0%,100%{transform: scale(1);} 50%{transform: scale(1.1);} }
 </style>
 </head>
 <body>
 
 <div class="top-bar">
-    <div class="brand">PIXEL ARENA</div>
-    <div style="display:flex; gap:12px; align-items:center;">
+    <div class="brand">REFLEX DUEL</div>
+    <div style="display:flex; gap:10px; align-items:center;">
         <div id="userBox">...</div>
-        <button id="lobbyExitBtn" class="exit-btn" onclick="window.location.href='index.html'" style="background:#222; color:#fff; border:none; padding:8px 15px; border-radius:8px; font-weight:800; font-size:0.7rem;">ÇIKIŞ</button>
-        <button id="leaveBtn" class="back-btn" style="display:none; background:var(--a); color:#fff; border:none; padding:8px 15px; border-radius:8px; font-weight:800; font-size:0.7rem;">AYRIL</button>
+        <button id="lobbyExitBtn" class="exit-btn" onclick="window.location.href='index.html'">ÇIKIŞ</button>
+        <button id="leaveBtn" class="back-btn" style="display:none;">AYRIL</button>
     </div>
 </div>
 
 <div id="errorModal" class="modal">
-    <div class="modal-content" style="border-color: var(--a); text-align:center;">
-        <h2 id="errorTitle" style="font-family:'Orbitron'; color:var(--a); margin-bottom:15px;">HATA</h2>
-        <p id="errorDesc" style="color:#888; margin-bottom:25px;">Bağlantı sorunu oluştu.</p>
-        <button onclick="closeModal('errorModal')" class="btn" style="width:100%; padding:15px; background:var(--a); color:#fff;">KAPAT</button>
+    <div class="modal-content" style="border-color: var(--a);">
+        <div class="err-icon">⚠️</div>
+        <h2 id="errorTitle" style="font-family:'Orbitron'; color:var(--a); font-size:1.1rem;">BAĞLANTI HATASI</h2>
+        <p id="errorDesc" style="font-size: 0.85rem; color: #aaa; line-height: 1.4;">Sistemde uygun arena bulunamadı.</p>
+        <button onclick="closeModal('errorModal')" style="padding:15px; border-radius:8px; background:var(--a); border:none; color:white; font-weight:900; font-family:'Orbitron'; font-size:0.75rem; cursor:pointer;">TAMAM</button>
+    </div>
+</div>
+
+<div id="tutorialModal" class="modal">
+    <div class="modal-content">
+        <div class="tut-icon">🥊</div>
+        <h2 style="font-family:'Orbitron'; color:var(--p); font-size:1.1rem;">NASIL OYNANIR?</h2>
+        <p style="font-size: 0.85rem; color: #aaa; line-height: 1.4;">
+            Ekran <b style="color:var(--gold)">BEKLE</b> aşamasındayken basma! 
+            Beyaz <b style="color:#fff">FLASH</b> patladığı anda rakibinden önce dokun. 
+            Erken basarsan rakibin puan kazanır. 11 puana ulaşan kazanır!
+        </p>
+        <button id="tutConfirmBtn" style="padding:15px; border-radius:8px; background:var(--p); border:none; color:black; font-weight:900; font-family:'Orbitron'; font-size:0.75rem; cursor:pointer;">ANLADIM, ARENAYA GİR!</button>
     </div>
 </div>
 
 <div id="createModal" class="modal">
     <div class="modal-content">
-        <h2 style="font-family:'Orbitron'; color:var(--p); margin-bottom:25px; text-align:center;">ARENA KUR</h2>
+        <h2 style="font-family:'Orbitron'; color:var(--p); font-size:1.1rem;">ARENA OLUŞTUR</h2>
         <input type="text" id="roomPassInput" placeholder="ŞİFRE (İSTEĞE BAĞLI)" maxlength="10">
         <div style="display:flex; gap:10px;">
-            <button onclick="closeModal('createModal')" class="btn" style="flex:1; padding:15px; background:#222; color:#fff;">İPTAL</button>
-            <button id="confirmCreateBtn" class="btn create-btn">OLUŞTUR</button>
+            <button onclick="closeModal('createModal')" style="flex:1; padding:12px; border-radius:8px; background:#222; border:none; color:white; font-family:'Orbitron'; font-size:0.7rem;">İPTAL</button>
+            <button id="confirmCreateBtn" style="flex:1; padding:12px; border-radius:8px; background:var(--p); border:none; color:black; font-weight:900; font-family:'Orbitron'; font-size:0.7rem;">OLUŞTUR</button>
         </div>
     </div>
 </div>
 
 <div id="passwordModal" class="modal">
     <div class="modal-content">
-        <h2 style="font-family:'Orbitron'; color:var(--gold); margin-bottom:25px; text-align:center;">ŞİFRE GEREKLİ</h2>
-        <input type="password" id="joinPassInput" placeholder="GİRİŞ ŞİFRESİ" maxlength="10">
+        <h2 style="font-family:'Orbitron'; color:var(--gold); font-size:1.1rem;">ŞİFRE GEREKLİ</h2>
+        <input type="password" id="joinPassInput" placeholder="ŞİFRE" maxlength="10">
         <div style="display:flex; gap:10px;">
-            <button onclick="closeModal('passwordModal')" class="btn" style="flex:1; padding:15px; background:#222; color:#fff;">GERİ</button>
-            <button id="confirmJoinPassBtn" class="btn" style="flex:1; padding:15px; background:var(--gold); color:#000;">KATIL</button>
+            <button onclick="closeModal('passwordModal')" style="flex:1; padding:12px; border-radius:8px; background:#222; border:none; color:white; font-family:'Orbitron'; font-size:0.7rem;">İPTAL</button>
+            <button id="confirmJoinPassBtn" style="flex:1; padding:12px; border-radius:8px; background:var(--gold); border:none; color:black; font-weight:900; font-family:'Orbitron'; font-size:0.7rem;">KATIL</button>
         </div>
     </div>
 </div>
@@ -180,10 +179,10 @@ body::after {
 <div id="lobby">
     <div class="lobby-controls">
         <div class="search-bar">
-            <input type="text" id="searchInput" placeholder="ARENA VEYA OYUNCU ARA...">
+            <input type="text" id="searchInput" placeholder="ARENA ARA...">
         </div>
         <div class="action-buttons">
-            <button class="btn create-btn" id="createRoomBtn" onclick="openModal('createModal')">ODA OLUŞTUR</button>
+            <button class="btn create-btn" id="createRoomBtn" onclick="openModal('createModal')">ODA KUR</button>
             <button class="btn quick-btn" id="quickJoinBtn">HIZLI KATIL</button>
         </div>
     </div>
@@ -192,33 +191,33 @@ body::after {
 
 <div id="game-view">
     <div class="scoreboard">
-        <div class="p-info" style="text-align:left;">
-            <div class="name" id="p1Name">---</div>
-            <div class="score" id="p1Score">00</div>
+        <div class="p-info" style="text-align:center;">
+            <div class="name" id="p1Name" style="font-size:0.7rem; color:#aaa;">---</div>
+            <div class="score" id="p1Score">0</div>
         </div>
-        <div id="roundNum">ROUND 1</div>
-        <div class="p-info" style="text-align:right;">
-            <div class="name" id="p2Name">---</div>
-            <div class="score" id="p2Score">00</div>
+        <div id="roundNum" style="padding: 10px; font-weight: 900; color: var(--gold); font-size:0.8rem;">RD 1</div>
+        <div class="p-info" style="text-align:center;">
+            <div class="name" id="p2Name" style="font-size:0.7rem; color:#aaa;">---</div>
+            <div class="score" id="p2Score">0</div>
         </div>
     </div>
     <div class="arena" id="arena">
         <div id="bigText">READY</div>
-        <div id="subText">BEKLEMEDE</div>
+        <div id="subText">BEKLE...</div>
     </div>
 </div>
 
 <div id="winnerScreen" class="winner-screen">
-    <p style="font-family:'Orbitron'; color:var(--p); letter-spacing:10px;">ŞAMPİYON</p>
-    <h1 id="championName" style="font-family:'Orbitron'; font-size:3.5rem; color:var(--gold); text-shadow: 0 0 30px var(--gold); margin:20px 0;">PLAYER</h1>
-    <div style="color:#444">Lobiye yönlendiriliyorsunuz...</div>
+    <p style="font-family:'Orbitron'; color:var(--p);">ARENA ŞAMPİYONU</p>
+    <h1 id="championName" style="font-family:'Orbitron'; font-size:2.5rem; color:var(--gold); margin:15px 0;">PLAYER</h1>
+    <div style="color:#555">Lobiye dönülüyor...</div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, doc, setDoc, updateDoc, onSnapshot, collection, query, where, getDoc, deleteDoc, serverTimestamp, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getDatabase, ref, onValue, set, onDisconnect, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { getDatabase, ref, onValue, set, onDisconnect, off, serverTimestamp as rdbTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
@@ -235,282 +234,393 @@ const db = getFirestore(app);
 const rdb = getDatabase(app);
 const auth = getAuth(app);
 
-let uid, username, currentRoomId = null, unsubRoom = null, unsubLobby = null, unsubOtherPresence = null;
-let roomData = null, tapLock = false, serverOffset = 0, pendingRoomId = null;
+let uid, username, currentRoomId = null, unsubRoom = null, unsubLobby = null;
+let roomData = null, tapLock = false, countdownInterval = null, lastState = "", localStep = "";
+let allRooms = [], serverOffset = 0, pendingRoomId = null;
+let unsubPresence = null;
 
-// Sunucu Saati Senkronizasyonu
-onValue(ref(rdb, ".info/serverTimeOffset"), (snap) => {
-    serverOffset = snap.val() || 0;
-});
+const offsetRef = ref(rdb, ".info/serverTimeOffset");
+onValue(offsetRef, (snap) => { serverOffset = snap.val() || 0; });
 const getServerTime = () => Date.now() + serverOffset;
 
-// Ses Sistemi
 let audioCtx = null;
-const initAudio = () => { if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); };
-function playBeep(f, t, d) {
-    if(!audioCtx) return;
-    const o = audioCtx.createOscillator();
-    const g = audioCtx.createGain();
-    o.type = t; o.frequency.setValueAtTime(f, audioCtx.currentTime);
-    g.gain.setValueAtTime(0.1, audioCtx.currentTime);
-    o.connect(g); g.connect(audioCtx.destination);
-    o.start(); o.stop(audioCtx.currentTime + d);
+const initAudio = () => {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+};
+
+function playBeep(freq, type, duration) {
+    if(!audioCtx || audioCtx.state !== 'running') return;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.start(); osc.stop(audioCtx.currentTime + duration);
 }
+
+const sounds = {
+    ready: () => playBeep(300, 'sine', 0.15),
+    wait: () => playBeep(350, 'sine', 0.15),
+    go: () => playBeep(800, 'square', 0.2),
+    win: () => {
+        playBeep(523, 'sine', 0.2);
+        setTimeout(()=>playBeep(659, 'sine', 0.2), 150);
+        setTimeout(()=>playBeep(783, 'sine', 0.5), 300);
+    }
+};
 
 window.openModal = (id) => { initAudio(); document.getElementById(id).style.display = "flex"; };
 window.closeModal = (id) => { document.getElementById(id).style.display = "none"; };
 
+function showError(title, desc) {
+    initAudio();
+    document.getElementById("errorTitle").innerText = title;
+    document.getElementById("errorDesc").innerText = desc;
+    openModal("errorModal");
+}
+
 onAuthStateChanged(auth, async (user) => {
     if (!user) { signInAnonymously(auth); return; }
     uid = user.uid;
-    const uRef = doc(db, "users", uid);
-    const snap = await getDoc(uRef);
-    username = snap.exists() ? snap.data().username : "Warrior_" + uid.slice(0,4);
-    if(!snap.exists()) await setDoc(uRef, { username });
+    const userRef = doc(db, "users", uid);
+    const snap = await getDoc(userRef);
+    if(!snap.exists()) {
+        username = "Warrior_" + uid.slice(0,4);
+        await setDoc(userRef, { username: username });
+    } else {
+        username = snap.data().username || "Warrior";
+    }
     document.getElementById("userBox").innerText = username.toUpperCase();
     listenLobby();
 });
 
 function listenLobby() {
-    if(unsubLobby) unsubLobby();
-    const q = query(collection(db, "rooms"), where("state", "in", ["waiting", "matched", "countdown", "active"]));
+    if(unsubLobby) unsubLobby(); 
+    const q = query(collection(db, "rooms"), where("state", "in", ["waiting", "matched", "countdown", "active", "result"]));
     unsubLobby = onSnapshot(q, (snap) => {
-        const list = document.getElementById("roomList");
-        list.innerHTML = "";
-        snap.docs.forEach(d => {
-            const data = d.data();
-            const isFull = data.player1 && data.player2;
-            const div = document.createElement("div");
-            div.className = "room-card";
-            div.innerHTML = `
-                <div>
-                    <div class="room-host">${data.player1Name.toUpperCase()}</div>
-                    <div class="room-meta">
-                        <span class="badge ${isFull ? 'badge-live' : 'badge-wait'}">${isFull ? 'DOLU' : 'AÇIK'}</span>
-                        <span>#${d.id.slice(0,5)}</span>
-                    </div>
-                </div>
-                <button class="btn" style="padding:12px 20px; background:${isFull ? '#222' : 'var(--p)'}; color:${isFull ? '#555' : '#000'};" 
-                ${isFull ? 'disabled' : ''} onclick="joinRoom('${d.id}', ${data.password ? 'true' : 'false'})">GİR</button>
-            `;
-            list.appendChild(div);
-        });
+        allRooms = snap.docs.map(d => ({id: d.id, ...d.data()}));
+        renderRooms();
     });
 }
 
-window.joinRoom = async (id, locked) => {
-    if(locked) { pendingRoomId = id; openModal("passwordModal"); return; }
+function renderRooms() {
+    const list = document.getElementById("roomList");
+    const searchTerm = document.getElementById("searchInput").value.toLowerCase();
+    list.innerHTML = "";
+    const filtered = allRooms.filter(r => (r.player1Name || "").toLowerCase().includes(searchTerm) || r.id.toLowerCase().includes(searchTerm));
+    
+    if (filtered.length === 0) {
+        list.innerHTML = `<div style="text-align:center; padding:40px; color:#444; font-size:0.8rem; font-family:'Orbitron';">ARENA BULUNAMADI</div>`;
+        return;
+    }
+
+    filtered.forEach(data => {
+        const isFull = data.player1 && data.player2;
+        const isInGame = ["countdown", "active", "result", "finished"].includes(data.state);
+        const div = document.createElement("div");
+        div.className = "room-card";
+        div.innerHTML = `
+            <div class="room-details">
+                <div class="room-host">${(data.player1Name || "???").toUpperCase()}</div>
+                <div class="room-meta">
+                    <span class="badge ${isInGame ? 'badge-live' : 'badge-wait'}">${isInGame ? 'CANLI' : 'AÇIK'}</span>
+                    <span>#${data.id.slice(0,4).toUpperCase()}</span>
+                </div>
+            </div>
+            <button class="btn" style="padding:10px 18px; background:${isFull ? '#222' : 'var(--p)'}; color:${isFull ? '#555' : '#000'};" 
+            ${isFull ? 'disabled' : ''} onclick="joinRoom('${data.id}', ${data.password ? 'true' : 'false'})">
+                ${isFull ? 'DOLU' : 'GİR'}
+            </button>
+        `;
+        list.appendChild(div);
+    });
+}
+
+document.getElementById("searchInput").oninput = renderRooms;
+
+document.getElementById("quickJoinBtn").onclick = async function() {
+    initAudio();
+    if(this.disabled) return;
+    this.disabled = true;
+    const available = allRooms.find(r => r.state === "waiting" && !r.player2 && !r.password && r.player1 !== uid);
+    if (available) { await executeJoin(available.id); } 
+    else { showError("ARENA YOK", "Boş arena bulunamadı. Kendi arenanı kur!"); }
+    this.disabled = false;
+};
+
+document.getElementById("confirmCreateBtn").onclick = async () => {
+    initAudio();
+    const btn = document.getElementById("confirmCreateBtn");
+    btn.disabled = true;
+    const pass = document.getElementById("roomPassInput").value.trim();
+    const newRoomRef = doc(collection(db, "rooms"));
+    currentRoomId = newRoomRef.id;
+    try {
+        await setDoc(newRoomRef, {
+            player1: uid, player1Name: username, player2: null, player2Name: null,
+            score1: 0, score2: 0, round: 1, state: "waiting", host: uid, 
+            password: pass, createdAt: serverTimestamp(), penalty: false,
+            p1Ready: false, p2Ready: false,
+            startTime: 0
+        });
+        closeModal("createModal"); 
+        openModal("tutorialModal");
+    } catch(e) { btn.disabled = false; }
+};
+
+window.joinRoom = async (id, isLocked) => {
+    initAudio();
+    if (isLocked) {
+        pendingRoomId = id;
+        document.getElementById("joinPassInput").value = "";
+        openModal("passwordModal");
+        return;
+    }
     await executeJoin(id);
 };
 
 document.getElementById("confirmJoinPassBtn").onclick = async () => {
-    const pass = document.getElementById("joinPassInput").value;
+    const pass = document.getElementById("joinPassInput").value.trim();
     const snap = await getDoc(doc(db, "rooms", pendingRoomId));
-    if(snap.exists() && snap.data().password === pass) {
+    if (snap.exists() && snap.data().password === pass) {
         closeModal("passwordModal");
         await executeJoin(pendingRoomId);
-    } else alert("Şifre Yanlış!");
+    } else { showError("ŞİFRE HATASI", "Arena şifresi yanlış."); }
 };
 
 async function executeJoin(id) {
+    const roomRef = doc(db, "rooms", id);
     try {
         await runTransaction(db, async (t) => {
-            const ref = doc(db, "rooms", id);
-            const snap = await t.get(ref);
-            if(snap.data().player2) throw "Oda Dolu";
-            t.update(ref, { player2: uid, player2Name: username, state: "matched", p1Ready: false, p2Ready: false });
+            const snap = await t.get(roomRef);
+            if (!snap.exists()) throw "Oda silinmiş!";
+            if (snap.data().player2) throw "Arena dolmuş!";
+            t.update(roomRef, { player2: uid, player2Name: username, state: "matched", p2Ready: false });
+            currentRoomId = id;
         });
-        currentRoomId = id;
-        enterRoom();
-    } catch(e) { alert(e); }
+        openModal("tutorialModal");
+    } catch (e) { showError("HATA", e); }
 }
 
-document.getElementById("confirmCreateBtn").onclick = async () => {
-    const id = doc(collection(db, "rooms")).id;
-    const pass = document.getElementById("roomPassInput").value;
-    await setDoc(doc(db, "rooms", id), {
-        player1: uid, player1Name: username, player2: null, player2Name: null,
-        score1: 0, score2: 0, round: 1, state: "waiting", host: uid, password: pass,
-        p1Ready: false, p2Ready: false, startTime: 0, penalty: false
-    });
-    currentRoomId = id;
-    closeModal("createModal");
+document.getElementById("tutConfirmBtn").onclick = async () => {
+    initAudio();
+    closeModal("tutorialModal");
     enterRoom();
+    await updateDoc(doc(db, "rooms", currentRoomId), {
+        [uid === roomData.player1 ? "p1Ready" : "p2Ready"]: true
+    });
 };
 
+function setArenaUI(big, sub, color, isFlash = false, isPenalty = false) {
+    const bt = document.getElementById("bigText");
+    const st = document.getElementById("subText");
+    const ar = document.getElementById("arena");
+    bt.innerText = big;
+    st.innerText = sub;
+    bt.style.color = color;
+    isFlash ? ar.classList.add("flash") : ar.classList.remove("flash");
+    isPenalty ? st.classList.add("penalty") : st.classList.remove("penalty");
+}
+
 function enterRoom() {
-    if(unsubLobby) unsubLobby();
+    if(unsubLobby) unsubLobby(); 
     document.getElementById("lobby").style.display = "none";
     document.getElementById("game-view").style.display = "flex";
     document.getElementById("leaveBtn").style.display = "block";
     document.getElementById("lobbyExitBtn").style.display = "none";
-
-    // Presence (Bağlantı Takibi)
-    const myPres = ref(rdb, `presence/${currentRoomId}/${uid}`);
-    set(myPres, true);
-    onDisconnect(myPres).remove();
+    
+    const userStatusRef = ref(rdb, `presence/${currentRoomId}/${uid}`);
+    set(userStatusRef, true);
+    onDisconnect(userStatusRef).remove();
 
     unsubRoom = onSnapshot(doc(db, "rooms", currentRoomId), (snap) => {
-        if(!snap.exists()) { quitGame(); return; }
-        roomData = snap.data();
-        const d = roomData;
-
-        // UI Güncelleme
-        document.getElementById("p1Name").innerText = d.player1Name;
-        document.getElementById("p2Name").innerText = d.player2Name || "BEKLENİYOR...";
-        document.getElementById("p1Score").innerText = String(d.score1).padStart(2, '0');
-        document.getElementById("p2Score").innerText = String(d.score2).padStart(2, '0');
-        document.getElementById("roundNum").innerText = "ROUND " + d.round;
-
-        // Rakip Bağlantı Kontrolü
-        if(d.player2 && !unsubOtherPresence) {
-            const other = uid === d.player1 ? d.player2 : d.player1;
-            unsubOtherPresence = onValue(ref(rdb, `presence/${currentRoomId}/${other}`), (s) => {
-                if(!s.exists() && d.state !== "finished") handleDisconnectWin(other);
+        if (!snap.exists()) { quitGame(); return; }
+        const d = snap.data();
+        roomData = d;
+        
+        if (d.player2 && !unsubPresence) {
+            const otherUid = (uid === d.player1) ? d.player2 : d.player1;
+            const otherPresenceRef = ref(rdb, `presence/${currentRoomId}/${otherUid}`);
+            unsubPresence = onValue(otherPresenceRef, (pSnap) => {
+                if (!pSnap.exists() && d.state !== "finished" && d.state !== "waiting") {
+                    handleDisconnectWin(otherUid);
+                }
             });
         }
 
-        // Oyun Mantığı
-        if(d.state === "matched") {
-            updateDoc(doc(db, "rooms", currentRoomId), { [uid === d.player1 ? "p1Ready" : "p2Ready"]: true });
-            if(d.p1Ready && d.p2Ready && uid === d.host) {
-                updateDoc(doc(db, "rooms", currentRoomId), { state: "countdown", startTime: getServerTime() + 4000 });
-            }
-        }
+        document.getElementById("p1Name").innerText = (d.player1Name || "---").toUpperCase();
+        document.getElementById("p1Score").innerText = d.score1 || 0;
+        document.getElementById("p2Name").innerText = (d.player2Name || "BEKLENİYOR").toUpperCase();
+        document.getElementById("p2Score").innerText = d.score2 || 0;
+        document.getElementById("roundNum").innerText = `RD ${d.round}`;
+        
+        if (d.state !== lastState) {
+            if (countdownInterval) clearInterval(countdownInterval);
+            localStep = "";
 
-        handleVisuals(d);
+            if (d.state === "matched" && uid === d.host && d.p1Ready && d.p2Ready) {
+                setTimeout(() => {
+                    updateDoc(doc(db, "rooms", currentRoomId), { 
+                        state: "countdown", 
+                        startTime: getServerTime() + 3500 
+                    });
+                }, 1000);
+            }
+
+            if (d.state === "countdown") {
+                countdownInterval = setInterval(() => {
+                    const now = getServerTime();
+                    const diff = d.startTime - now;
+                    
+                    if (diff > 1500 && localStep !== "ready") {
+                        localStep = "ready";
+                        setArenaUI("HAZIR", "ODAKLAN", "var(--p)");
+                        sounds.ready();
+                    } else if (diff <= 1500 && diff > 0 && localStep !== "wait") {
+                        localStep = "wait";
+                        setArenaUI("BEKLE", "SAKIN BASMA!", "var(--gold)");
+                        sounds.wait();
+                    } else if (diff <= 0) {
+                        clearInterval(countdownInterval);
+                        if(uid === d.host) {
+                            updateDoc(doc(db, "rooms", currentRoomId), { state: "active" });
+                        }
+                    }
+                }, 16);
+            }
+
+            if (d.state === "active") {
+                setArenaUI("GO!", "ŞİMDİ VUR!", "black", true);
+                sounds.go();
+            }
+
+            if (d.state === "result") {
+                const winnerName = (d.lastWinner === d.player1 ? d.player1Name : d.player2Name).toUpperCase();
+                if (d.penalty) {
+                    setArenaUI("HATA!", winnerName + " PUAN ALDI!", "var(--a)", false, true);
+                } else {
+                    setArenaUI(d.lastMs + "ms", winnerName + " KAZANDI", "white");
+                }
+                
+                if (uid === d.host) {
+                    setTimeout(() => {
+                        if (!currentRoomId) return;
+                        if (d.score1 >= 11 || d.score2 >= 11) {
+                            updateDoc(doc(db, "rooms", currentRoomId), { state: "finished" });
+                        } else {
+                            updateDoc(doc(db, "rooms", currentRoomId), { 
+                                state: "countdown",
+                                startTime: getServerTime() + 2500,
+                                round: d.round + 1,
+                                penalty: false
+                            });
+                        }
+                    }, 2000);
+                }
+            }
+
+            if (d.state === "finished") {
+                document.getElementById("winnerScreen").style.display = "flex";
+                document.getElementById("championName").innerText = (d.score1 >= 11 ? d.player1Name : d.player2Name).toUpperCase();
+                sounds.win();
+                setTimeout(quitGame, 5000);
+            }
+            lastState = d.state;
+        }
     });
 }
 
-function handleVisuals(d) {
-    const arena = document.getElementById("arena");
-    const bt = document.getElementById("bigText");
-    const st = document.getElementById("subText");
-
-    // Yerel loop ile görsel senkronu sağla (En kritik kısım)
-    const syncLoop = () => {
-        if(!currentRoomId || d.state !== "countdown") return;
-        const now = getServerTime();
-        const diff = d.startTime - now;
-
-        if(diff > 2000) {
-            bt.innerText = "READY"; bt.style.color = "var(--p)";
-            st.innerText = "ODAKLAN"; st.classList.remove("penalty");
-        } else if (diff > 0) {
-            bt.innerText = "WAIT"; bt.style.color = "var(--gold)";
-            st.innerText = "SAKIN BASMA!";
-        } else {
-            // GO anı sadece host tarafından tetiklenir ama her iki tarafta diff <= 0 olur
-            if(uid === d.host) updateDoc(doc(db, "rooms", currentRoomId), { state: "active" });
-            return;
-        }
-        requestAnimationFrame(syncLoop);
-    };
-
-    if(d.state === "countdown") {
-        arena.classList.remove("flash");
-        requestAnimationFrame(syncLoop);
-    } else if(d.state === "active") {
-        arena.classList.add("flash");
-        bt.innerText = "GO!";
-        st.innerText = "ŞİMDİ!";
-        playBeep(800, 'square', 0.1);
-    } else if(d.state === "result") {
-        arena.classList.remove("flash");
-        if(d.penalty) {
-            bt.innerText = "FOUL!"; bt.style.color = "var(--a)";
-            st.innerText = "ERKEN BASILDI!"; st.classList.add("penalty");
-        } else {
-            bt.innerText = d.lastReaction + "ms"; bt.style.color = "#fff";
-            st.innerText = "HIZLIYDIN!";
-        }
-        
-        if(uid === d.host && !tapLock) {
-            tapLock = true;
-            setTimeout(() => {
-                const finished = d.score1 >= 11 || d.score2 >= 11;
-                updateDoc(doc(db, "rooms", currentRoomId), {
-                    state: finished ? "finished" : "countdown",
-                    startTime: finished ? 0 : getServerTime() + 3000,
-                    round: finished ? d.round : d.round + 1,
-                    penalty: false
-                });
-                tapLock = false;
-            }, 2500);
-        }
-    } else if(d.state === "finished") {
-        document.getElementById("winnerScreen").style.display = "flex";
-        document.getElementById("championName").innerText = (d.score1 >= 11 ? d.player1Name : d.player2Name).toUpperCase();
-        setTimeout(quitGame, 5000);
-    }
+async function handleDisconnectWin(disconnectedUid) {
+    if (!currentRoomId || !roomData || roomData.state === "finished") return;
+    const roomRef = doc(db, "rooms", currentRoomId);
+    const isP1Lost = (disconnectedUid === roomData.player1);
+    try {
+        await updateDoc(roomRef, {
+            state: "finished",
+            score1: isP1Lost ? 0 : 11,
+            score2: isP1Lost ? 11 : 0
+        });
+    } catch(e) {}
 }
 
-document.getElementById("arena").onpointerdown = async (e) => {
+document.getElementById("arena").addEventListener('pointerdown', async (e) => {
     e.preventDefault();
-    if(!currentRoomId || !roomData || tapLock) return;
-    const d = roomData;
+    initAudio();
+    if (tapLock || !currentRoomId || !roomData) return;
     const now = getServerTime();
+    const d = roomData;
+    const roomRef = doc(db, "rooms", currentRoomId);
 
-    if(d.state === "countdown") {
+    if (d.state === "countdown" || d.state === "matched") {
         tapLock = true;
-        const isP1 = uid === d.player1;
+        const isP1 = (uid === d.player1);
         await runTransaction(db, async (t) => {
-            const snap = await t.get(doc(db, "rooms", currentRoomId));
-            if(snap.data().state !== "countdown") return;
-            t.update(doc(db, "rooms", currentRoomId), {
-                state: "result", penalty: true,
-                score1: isP1 ? snap.data().score1 : snap.data().score1 + 1,
-                score2: isP1 ? snap.data().score2 + 1 : snap.data().score2
+            const s = await t.get(roomRef);
+            if (s.data().state !== "countdown" && s.data().state !== "matched") return;
+            t.update(roomRef, { 
+                state: "result", 
+                penalty: true,
+                lastWinner: isP1 ? s.data().player2 : s.data().player1,
+                score1: isP1 ? s.data().score1 : (s.data().score1 + 1),
+                score2: isP1 ? (s.data().score2 + 1) : s.data().score2
             });
         });
-        setTimeout(() => tapLock = false, 500);
-    } else if(d.state === "active") {
+        setTimeout(() => tapLock = false, 1000);
+    } 
+    else if (d.state === "active") {
         tapLock = true;
         const reaction = now - d.startTime;
-        const isP1 = uid === d.player1;
-        await runTransaction(db, async (t) => {
-            const snap = await t.get(doc(db, "rooms", currentRoomId));
-            if(snap.data().state !== "active") return;
-            t.update(doc(db, "rooms", currentRoomId), {
-                state: "result", penalty: false, lastReaction: Math.floor(reaction),
-                score1: isP1 ? snap.data().score1 + 1 : snap.data().score1,
-                score2: isP1 ? snap.data().score2 : snap.data().score2 + 1
+        const isP1 = (uid === d.player1);
+        try {
+            await runTransaction(db, async (t) => {
+                const s = await t.get(roomRef);
+                if (s.data().state !== "active") return;
+                t.update(roomRef, { 
+                    state: "result", 
+                    penalty: false,
+                    lastMs: Math.floor(reaction),
+                    lastWinner: uid,
+                    score1: isP1 ? (s.data().score1 + 1) : s.data().score1, 
+                    score2: isP1 ? s.data().score2 : (s.data().score2 + 1)
+                });
             });
-        });
-        setTimeout(() => tapLock = false, 500);
+        } catch(e) { console.error(e); }
+        setTimeout(() => tapLock = false, 1000);
     }
-};
-
-async function handleDisconnectWin(otherUid) {
-    if(!currentRoomId) return;
-    await updateDoc(doc(db, "rooms", currentRoomId), {
-        state: "finished",
-        score1: otherUid === roomData.player1 ? 0 : 11,
-        score2: otherUid === roomData.player1 ? 11 : 0
-    });
-}
+});
 
 async function quitGame() {
-    if(unsubRoom) unsubRoom();
-    if(unsubOtherPresence) unsubOtherPresence();
-    if(currentRoomId) {
+    if (unsubRoom) { unsubRoom(); unsubRoom = null; }
+    if (unsubPresence) { off(ref(rdb, `presence/${currentRoomId}`)); unsubPresence = null; }
+    if (countdownInterval) clearInterval(countdownInterval);
+    
+    if (currentRoomId) {
         const rId = currentRoomId;
-        remove(ref(rdb, `presence/${rId}/${uid}`));
-        const snap = await getDoc(doc(db, "rooms", rId));
-        if(snap.exists() && (snap.data().host === uid || snap.data().state === "finished")) {
-            await deleteDoc(doc(db, "rooms", rId));
-        }
+        const rdbPresence = ref(rdb, `presence/${rId}/${uid}`);
+        set(rdbPresence, null);
+        
+        try {
+            const refDoc = doc(db, "rooms", rId);
+            const snap = await getDoc(refDoc);
+            if (snap.exists() && (snap.data().host === uid || snap.data().state === "finished")) {
+                await deleteDoc(refDoc);
+            }
+        } catch(e) {}
+        currentRoomId = null;
     }
     location.reload();
 }
 
 document.getElementById("leaveBtn").onclick = quitGame;
-document.getElementById("quickJoinBtn").onclick = async () => {
-    initAudio();
-    const available = (await getDoc(collection(db, "rooms"))).docs.find(d => d.data().state === "waiting" && !d.data().player2 && !d.data().password);
-    if(available) executeJoin(available.id);
-    else alert("Boş arena bulunamadı.");
-};
+
+window.addEventListener('beforeunload', () => {
+    if (currentRoomId) {
+        set(ref(rdb, `presence/${currentRoomId}/${uid}`), null);
+    }
+});
 </script>
 </body>
 </html>
