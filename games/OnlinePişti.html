@@ -22,21 +22,26 @@
         }
         body { background: var(--bg); color: #e0e0e0; height: 100vh; overflow: hidden; display: flex; flex-direction: column; position: relative; }
 
-        /* LOBİ ARKA PLAN */
         #bg-canvas { position: fixed; inset: 0; z-index: -1; background: #000; }
 
         .top-bar { 
-            height: 70px; flex-shrink: 0; padding: 0 20px; display: flex; align-items: center; justify-content: space-between; 
+            height: 70px; flex-shrink: 0; padding: 0 15px; display: flex; align-items: center; justify-content: space-between; 
             background: rgba(0,0,0,0.95); border-bottom: 2px solid var(--border); z-index: 1000;
         }
-        .brand { font-family: 'Black Ops One'; font-size: 1.2rem; color: var(--border); letter-spacing: 2px; }
-        .nav-box { font-weight: 700; color: #fff; font-size: 0.9rem; padding: 5px 10px; border-radius: 5px; background: rgba(79, 209, 255, 0.1); border: 1px solid var(--border); }
+        .brand { font-family: 'Black Ops One'; font-size: 1rem; color: var(--border); letter-spacing: 1px; flex-shrink: 0; }
+        
+        /* Bakiye Taşma Koruması */
+        .right-menu { display: flex; gap: 8px; align-items: center; overflow: hidden; }
+        .nav-box { 
+            font-weight: 700; color: #fff; font-size: 0.85rem; padding: 5px 8px; border-radius: 5px; 
+            background: rgba(79, 209, 255, 0.1); border: 1px solid var(--border);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 70px; max-width: 110px; text-align: center;
+        }
 
-        /* LOBİ EKRANI */
-        #lobbyScreen { flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto; z-index: 10; background: var(--bg); }
+        #lobbyScreen { flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; z-index: 10; background: var(--bg); }
         .search-input { 
             width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(79, 209, 255, 0.3); 
-            padding: 12px 15px; color: #fff; border-radius: 4px; outline: none; margin-bottom: 5px;
+            padding: 12px 15px; color: #fff; border-radius: 4px; outline: none;
         }
         
         .btn-neon { 
@@ -49,16 +54,16 @@
 
         .room-card { 
             background: var(--glass); border: 1px solid rgba(79, 209, 255, 0.2); border-left: 5px solid var(--border); 
-            padding: 18px; display: flex; justify-content: space-between; align-items: center; 
-            margin-bottom: 12px; border-radius: 0 8px 8px 0; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            animation: slideIn 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+            padding: 15px; display: flex; justify-content: space-between; align-items: center; 
+            margin-bottom: 10px; border-radius: 0 8px 8px 0; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            animation: slideIn 0.3s ease-out;
         }
-        @keyframes slideIn { from { opacity:0; transform: translateY(20px); } to { opacity:1; transform: translateY(0); } }
+        @keyframes slideIn { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
 
-        .chips { display: flex; gap: 8px; justify-content: center; margin: 10px 0; }
+        .chips { display: flex; gap: 8px; justify-content: center; margin: 5px 0; }
         .chip { 
-            width:45px; height:45px; border-radius:50%; display:flex; align-items:center; justify-content:center; 
-            font-weight:900; cursor:pointer; border: 2px dashed rgba(255,255,255,0.3); font-size: 10px; background: #222;
+            width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center; 
+            font-weight:900; cursor:pointer; border: 2px dashed rgba(255,255,255,0.3); font-size: 9px; background: #222;
         }
         .c-cancel { background: var(--danger); color: #fff; border-style: solid; }
         .c100 { background: radial-gradient(#fff, #ccc); color:#000; } 
@@ -66,7 +71,6 @@
         .c2000 { background: radial-gradient(#3498db, #2980b9); color:#fff; } 
         .c10000 { background: radial-gradient(#f1c40f, #f39c12); color:#fff; }
 
-        /* OYUN ALANI (PİŞTİ ORİJİNAL) */
         #gameArea { display: none; flex: 1; flex-direction: column; align-items: center; z-index: 5; }
         h1 { margin-top:10px; font-size: 18px; letter-spacing: 1px; color: rgba(255,255,255,0.5); font-family: 'Black Ops One'; }
         .score-board { margin: 8px 0; font-weight: bold; color: #ffcc00; font-size: 14px; background: rgba(0,0,0,0.5); padding: 5px 20px; border-radius: 20px; border: 1px solid #333; }
@@ -85,18 +89,17 @@
         .card { width:65px; border-radius: 6px; cursor:pointer; transition: transform 0.2s; box-shadow: 0 5px 15px rgba(0,0,0,0.3); background:white;}
         .hand .card:hover { transform: translateY(-15px); }
 
-        /* MODALLAR */
         .modal-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.95); backdrop-filter: blur(15px);
             display: none; align-items: center; justify-content: center; z-index: 10000; padding: 20px;
         }
         .modal-box { 
-            background: #0d1117; border: 2px solid var(--border); padding: 30px; 
-            width: 100%; max-width: 360px; text-align: center; position: relative; 
+            background: #0d1117; border: 2px solid var(--border); padding: 25px; 
+            width: 100%; max-width: 340px; text-align: center; position: relative; 
             box-shadow: 0 0 50px rgba(79, 209, 255, 0.1); 
         }
-        .modal-box h3 { font-family: 'Black Ops One'; color: var(--border); margin-bottom: 20px; font-size: 1.4rem; }
-        .modal-input { width: 100%; background: #161b22; border: 1px solid #30363d; padding: 14px; color: #fff; margin-bottom: 15px; text-align: center; outline: none; }
+        .modal-box h3 { font-family: 'Black Ops One'; color: var(--border); margin-bottom: 15px; font-size: 1.2rem; }
+        .modal-input { width: 100%; background: #161b22; border: 1px solid #30363d; padding: 12px; color: #fff; margin-bottom: 10px; text-align: center; outline: none; border-radius: 4px; }
 
         #waitingStatus {
             position: fixed; top: 80px; color: var(--border); font-weight: bold; font-size: 14px;
@@ -106,7 +109,7 @@
 
         #pistiDisplay {
             position: fixed; top: 45%; left: 50%; transform: translate(-50%,-50%);
-            font-size: 80px; font-weight: 900; color: #fff; text-align: center;
+            font-size: 70px; font-weight: 900; color: #fff; text-align: center;
             background: linear-gradient(to bottom, #fff, var(--warning), #ff6600);
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
             filter: drop-shadow(0 0 15px rgba(255, 102, 0, 0.8));
@@ -114,16 +117,16 @@
         }
     </style>
 </head>
-<body onclick="playBackgroundMusic()">
+<body>
 
     <canvas id="bg-canvas"></canvas>
 
     <div class="top-bar">
         <div class="brand">PIXEL ARENA</div>
-        <div class="right-menu" style="display:flex; gap:10px; align-items:center;">
+        <div class="right-menu">
             <div class="nav-box">₺<span id="balance">0</span></div>
             <div class="nav-box" style="color:var(--warning)">B: ₺<span id="bet">0</span></div>
-            <button onclick="leaveRoom()" style="background:var(--danger); border:none; color:white; padding:8px 12px; font-weight:900; font-size:0.7rem; clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%); cursor:pointer;">AYRIL</button>
+            <button onclick="leaveRoom()" style="background:var(--danger); border:none; color:white; padding:8px 10px; font-weight:900; font-size:0.65rem; clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%); cursor:pointer; flex-shrink: 0;">AYRIL</button>
         </div>
     </div>
 
@@ -138,11 +141,12 @@
             <div class="chip c10000" onclick="addBet(10000)">10K</div>
         </div>
 
-        <input type="text" id="roomNameInput" class="modal-input" style="margin-bottom:10px" placeholder="MASA ADI GİRİN">
-        <button class="btn-neon" onclick="createNewRoom()">MASA OLUŞTUR</button>
+        <div style="display:flex; gap:10px;">
+            <button class="btn-neon" onclick="openCreateModal()">MASA KUR</button>
+            <button class="btn-neon btn-sec" onclick="quickJoin()">HIZLI KATIL</button>
+        </div>
 
-        <div id="roomList" style="margin-top:20px">
-            </div>
+        <div id="roomList" style="margin-top:10px"></div>
     </div>
 
     <div id="gameArea">
@@ -159,18 +163,37 @@
 
     <div id="pistiDisplay">PİŞTİ!</div>
 
-    <div id="modalOverlay" class="modal-overlay">
+    <div id="createRoomModal" class="modal-overlay">
+        <div class="modal-box">
+            <h3>MASA AYARLARI</h3>
+            <input type="text" id="newRoomName" class="modal-input" placeholder="Masa Adı">
+            <input type="number" id="newRoomPass" class="modal-input" placeholder="Şifre (Opsiyonel)">
+            <button class="btn-neon" onclick="confirmCreateRoom()">OLUŞTUR</button>
+            <button class="btn-neon btn-sec" style="margin-top:10px" onclick="closeModal('createRoomModal')">İPTAL</button>
+        </div>
+    </div>
+
+    <div id="passEntryModal" class="modal-overlay">
+        <div class="modal-box">
+            <h3>ŞİFRE GEREKLİ</h3>
+            <input type="password" id="passInput" class="modal-input" placeholder="Şifreyi Girin">
+            <button class="btn-neon" id="passConfirmBtn">GİRİŞ</button>
+            <button class="btn-neon btn-sec" style="margin-top:10px" onclick="closeModal('passEntryModal')">İPTAL</button>
+        </div>
+    </div>
+
+    <div id="infoModal" class="modal-overlay">
         <div class="modal-box">
             <h3 id="modalTitle">BİLGİ</h3>
             <p id="modalMsg" style="color:#aaa; margin-bottom:20px; white-space: pre-line;"></p>
-            <button class="btn-neon" onclick="closeModal()">TAMAM</button>
+            <button class="btn-neon" onclick="closeModal('infoModal')">TAMAM</button>
         </div>
     </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import { getFirestore, doc, onSnapshot, updateDoc, setDoc, collection, query, where, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getFirestore, doc, onSnapshot, updateDoc, setDoc, collection, query, where, deleteDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
@@ -191,16 +214,13 @@
         cardCollect: new Audio("https://cdn.freesound.org/previews/202/202029_3325145-lq.mp3"),
         win: new Audio("https://cdn.freesound.org/previews/391/391539_5235550-lq.mp3"),
         lose: new Audio("https://cdn.freesound.org/previews/174/174499_1079313-lq.mp3"),
-        pisti: new Audio("https://cdn.freesound.org/previews/253/253177_4404552-lq.mp3"),
-        bg: new Audio("https://codeskulptor-demos.commondatastorage.googleapis.com/descent/background%20music.mp3")
+        pisti: new Audio("https://cdn.freesound.org/previews/253/253177_4404552-lq.mp3")
     };
-    sfx.bg.loop = true; sfx.bg.volume = 0.3;
 
     let balance = 0, currentBet = 0, userRef = null, uid = null;
     let roomRef = null, myRole = null, gameState = null;
     let lastMoveTime = 0;
 
-    // BACKGROUND CANVAS
     const canvas = document.getElementById('bg-canvas');
     const ctx = canvas.getContext('2d');
     function initCanvas() {
@@ -222,8 +242,6 @@
         listenLobby();
     });
 
-    window.playBackgroundMusic = () => { sfx.bg.play().catch(()=>{}); };
-
     function listenLobby() {
         const q = query(collection(db, "rooms"), where("status", "==", "waiting"));
         onSnapshot(q, (snap) => {
@@ -231,14 +249,15 @@
             list.innerHTML = "";
             snap.forEach(roomDoc => {
                 const data = roomDoc.data();
+                const isLocked = data.password && data.password !== "";
                 list.innerHTML += `
                     <div class="room-card">
                         <div>
-                            <small style="color:var(--border)">ARENA</small><br>
+                            <small style="color:var(--border)">ARENA ${isLocked ? '🔒' : '🔓'}</small><br>
                             <b style="font-size:1.1rem">${data.name || 'Hızlı Masa'}</b><br>
-                            <span style="color:var(--warning)">Bakiye: ₺${data.bet.toLocaleString()}</span>
+                            <span style="color:var(--warning)">Bahis: ₺${data.bet.toLocaleString()}</span>
                         </div>
-                        <button class="btn-neon" style="width:100px; padding:10px;" onclick="joinRoom('${roomDoc.id}', ${data.bet})">KATIL</button>
+                        <button class="btn-neon" style="width:80px; padding:10px;" onclick="handleJoin('${roomDoc.id}', '${data.password || ''}', ${data.bet})">KATIL</button>
                     </div>
                 `;
             });
@@ -257,27 +276,64 @@
     window.cancelBet = () => { balance += currentBet; currentBet = 0; sfx.chip.play(); updateUI(); };
     function updateUI() { document.getElementById("bet").innerText = currentBet.toLocaleString('tr-TR'); }
 
-    window.createNewRoom = async () => {
+    window.openCreateModal = () => { document.getElementById('createRoomModal').style.display = 'flex'; };
+
+    window.confirmCreateRoom = async () => {
         if (currentBet < 100) return alert("Min 100₺ bahis gerekli!");
-        const name = document.getElementById("roomNameInput").value;
+        const name = document.getElementById("newRoomName").value || "Elite Arena";
+        const pass = document.getElementById("newRoomPass").value || "";
         const roomId = "room_" + Date.now();
         roomRef = doc(db, "rooms", roomId);
         myRole = "p1";
         
         await setDoc(roomRef, {
-            p1: uid, p2: null, bet: currentBet, status: "waiting", name: name || "Elite Arena",
+            p1: uid, p2: null, bet: currentBet, status: "waiting", name: name, password: pass,
             deck: createDeck(), table: [], p1_score: 0, p2_score: 0,
             p1_hand: [], p2_hand: [], turn: null, createdAt: Date.now()
         });
         
         await updateDoc(userRef, { balance });
+        closeModal('createRoomModal');
         document.getElementById("lobbyScreen").style.display = "none";
         document.getElementById("gameArea").style.display = "flex";
         document.getElementById("waitingStatus").style.display = "block";
         listenRoom();
     };
 
-    window.joinRoom = async (rid, bet) => {
+    window.quickJoin = async () => {
+        if(currentBet < 100) return alert("Hızlı katıl için önce bahis miktarını seçin!");
+        const q = query(collection(db, "rooms"), 
+            where("status", "==", "waiting"), 
+            where("bet", "==", currentBet),
+            where("password", "==", ""));
+        
+        const snap = await getDocs(q);
+        if(!snap.empty) {
+            const firstRoom = snap.docs[0];
+            joinRoom(firstRoom.id, currentBet);
+        } else {
+            alert("Bu bahis miktarında uygun açık oda bulunamadı!");
+        }
+    };
+
+    window.handleJoin = (rid, pass, bet) => {
+        if(pass && pass !== "") {
+            document.getElementById('passEntryModal').style.display = 'flex';
+            document.getElementById('passConfirmBtn').onclick = () => {
+                const input = document.getElementById('passInput').value;
+                if(input === pass) {
+                    closeModal('passEntryModal');
+                    joinRoom(rid, bet);
+                } else {
+                    alert("Şifre Yanlış!");
+                }
+            };
+        } else {
+            joinRoom(rid, bet);
+        }
+    };
+
+    async function joinRoom(rid, bet) {
         if (balance < bet) return alert("Yetersiz bakiye!");
         balance -= bet;
         currentBet = bet;
@@ -289,7 +345,7 @@
         document.getElementById("lobbyScreen").style.display = "none";
         document.getElementById("gameArea").style.display = "flex";
         listenRoom();
-    };
+    }
 
     function listenRoom() {
         onSnapshot(roomRef, async (snap) => {
@@ -299,11 +355,12 @@
 
             if (data.status === "playing") {
                 document.getElementById("waitingStatus").style.display = "none";
+                // Kart Dağıtımı Düzeltmesi (Eksik kart kalmaması için)
                 if (myRole === "p1" && data.p1_hand.length === 0 && data.deck.length === 52) {
                     const d = [...data.deck];
+                    const t = [d.shift(), d.shift(), d.shift(), d.shift()]; // İlk 4 kart yere
                     const p1h = d.splice(0, 4);
                     const p2h = d.splice(0, 4);
-                    const t = ["BACK", "BACK", "BACK", d.shift()];
                     await updateDoc(roomRef, { deck: d, p1_hand: p1h, p2_hand: p2h, table: t, turn: uid });
                 }
                 render();
@@ -338,7 +395,9 @@
 
         gameState.table.forEach((c, i) => {
             let img = document.createElement("img");
-            img.src = c === "BACK" ? "https://deckofcardsapi.com/static/img/back.png" : `https://deckofcardsapi.com/static/img/${c}.png`;
+            // Sadece en üstteki kart açık, diğerleri kapalı (Orijinal kural)
+            const isTop = i === gameState.table.length - 1;
+            img.src = isTop ? `https://deckofcardsapi.com/static/img/${c}.png` : "https://deckofcardsapi.com/static/img/back.png";
             img.className = "stack-card";
             img.style.transform = `rotate(${i * 2}deg)`;
             img.style.zIndex = i;
@@ -364,7 +423,7 @@
 
         if (table.length > 0) {
             const top = table[table.length - 1];
-            if (top !== "BACK" && (card[0] === top[0] || card[0] === "J")) {
+            if (card[0] === top[0] || card[0] === "J") {
                 let pts = table.length + 1;
                 if (table.length === 1 && card[0] === top[0]) { 
                     pts = 10; 
@@ -379,6 +438,7 @@
         const nextTurn = myRole === "p1" ? gameState.p2 : gameState.p1;
         let updates = { [handKey]: hand, table: table, [myRole + "_score"]: score, turn: nextTurn };
 
+        // Yeni el dağıtımı (48 kart / 8 = 6 el)
         if (hand.length === 0 && gameState[(myRole === "p1" ? "p2" : "p1") + "_hand"].length === 0) {
             if (gameState.deck.length > 0) {
                 const d = [...gameState.deck];
@@ -407,19 +467,21 @@
             balance += gameState.bet; msg = "BERABERE!"; 
         }
         await updateDoc(userRef, { balance });
-        showModal(msg, s1 > s2 ? "ZAFER" : "OYUN BİTTİ");
+        showInfoModal(msg, s1 > s2 ? "ZAFER" : "OYUN BİTTİ");
         setTimeout(() => { location.reload(); }, 4000);
     }
 
     window.leaveRoom = async () => { if(roomRef) { await deleteDoc(roomRef); location.reload(); } else { location.reload(); } };
-    window.showModal = (m, t = "BİLGİ") => { 
+    
+    window.showInfoModal = (m, t = "BİLGİ") => { 
         document.getElementById("modalTitle").innerText = t;
         document.getElementById("modalMsg").innerText = m; 
-        document.getElementById("modalOverlay").style.display = "flex"; 
+        document.getElementById("infoModal").style.display = "flex"; 
     };
-    window.closeModal = () => { document.getElementById("modalOverlay").style.display = "none"; };
-    function showPistiEffect() { sfx.pisti.play(); document.getElementById("pistiDisplay").style.display="block"; setTimeout(()=>document.getElementById("pistiDisplay").style.display="none", 1500); }
 
+    window.closeModal = (id) => { document.getElementById(id).style.display = "none"; };
+    
+    function showPistiEffect() { sfx.pisti.play(); document.getElementById("pistiDisplay").style.display="block"; setTimeout(()=>document.getElementById("pistiDisplay").style.display="none", 1500); }
 </script>
 </body>
 </html>
