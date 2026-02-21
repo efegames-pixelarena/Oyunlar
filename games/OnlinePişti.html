@@ -22,7 +22,7 @@
         }
         body { background: var(--bg); color: #e0e0e0; height: 100vh; overflow: hidden; display: flex; flex-direction: column; position: relative; }
 
-        /* MADDE 4: Profesyonel Arka Plan Katmanı */
+        /* MADDE 4: Profesyonel Arka Plan Animasyonu */
         #bg-canvas { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at center, #0a0f1a 0%, #03050a 100%); }
 
         .top-bar { 
@@ -38,12 +38,12 @@
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 70px; max-width: 110px; text-align: center;
         }
 
-        #lobbyScreen { flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; z-index: 10; position: relative; }
+        #lobbyScreen { flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; z-index: 10; background: transparent; }
         .search-input { 
             width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(79, 209, 255, 0.3); 
             padding: 12px 15px; color: #fff; border-radius: 4px; outline: none; transition: 0.3s;
         }
-        .search-input:focus { border-color: var(--border); box-shadow: 0 0 15px rgba(79, 209, 255, 0.2); }
+        .search-input:focus { border-color: var(--border); box-shadow: 0 0 15px rgba(79,209,255,0.2); }
         
         .btn-neon { 
             background: var(--btn-main); color: #000; border: none; padding: 15px; 
@@ -51,16 +51,13 @@
             clip-path: polygon(4% 0, 100% 0, 96% 100%, 0 100%); transition: 0.3s;
             text-align: center; width: 100%;
         }
-        .btn-neon:hover { filter: brightness(1.2); transform: scale(1.02); }
         .btn-sec { background: var(--btn-sec); }
 
         .room-card { 
             background: var(--glass); border: 1px solid rgba(79, 209, 255, 0.2); border-left: 5px solid var(--border); 
             padding: 15px; display: flex; justify-content: space-between; align-items: center; 
             margin-bottom: 10px; border-radius: 0 8px 8px 0; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            animation: slideIn 0.3s ease-out;
         }
-        @keyframes slideIn { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
 
         /* MADDE 8: Profesyonel Çipler */
         .chips { display: flex; gap: 12px; justify-content: center; margin: 10px 0; }
@@ -70,16 +67,17 @@
             border: 4px dashed rgba(255,255,255,0.4); box-shadow: 0 4px 0 #000, inset 0 0 10px rgba(0,0,0,0.5);
             transition: 0.2s;
         }
-        .chip:active { transform: translateY(3px); box-shadow: 0 1px 0 #000; }
+        .chip:active { transform: scale(0.9); }
         .c-cancel { background: var(--danger); color: #fff; border-style: solid; }
         .c100 { background: radial-gradient(circle, #fff, #999); color:#000; } 
         .c500 { background: radial-gradient(circle, #2ecc71, #1b5e20); color:#fff; } 
         .c2000 { background: radial-gradient(circle, #3498db, #0d47a1); color:#fff; } 
         .c10000 { background: radial-gradient(circle, #f1c40f, #e65100); color:#fff; }
 
+        /* MADDE 1 & 9: Hata Yazıları */
+        .error-msg { color: var(--danger); font-weight: bold; font-size: 0.8rem; margin-top: 5px; display: none; text-shadow: 0 0 5px rgba(255,0,0,0.5); }
+
         #gameArea { display: none; flex: 1; flex-direction: column; align-items: center; z-index: 5; }
-        .score-board { margin: 8px 0; font-weight: bold; color: #ffcc00; font-size: 14px; background: rgba(0,0,0,0.5); padding: 5px 20px; border-radius: 20px; border: 1px solid #333; }
-        
         .table {
             width:92%; max-width:500px; height:360px; border-radius:180px; position:relative;
             background:radial-gradient(circle at center,#1a8a4d,#0a4d23 80%);
@@ -92,7 +90,6 @@
         .hand { bottom:-55px; }
         .computer { top:-55px; }
         .card { width:65px; border-radius: 6px; cursor:pointer; transition: transform 0.2s; box-shadow: 0 5px 15px rgba(0,0,0,0.3); background:white;}
-        .hand .card:hover { transform: translateY(-15px); }
 
         .modal-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.95); backdrop-filter: blur(15px);
@@ -104,15 +101,6 @@
             box-shadow: 0 0 50px rgba(79, 209, 255, 0.1); 
         }
         .modal-input { width: 100%; background: #161b22; border: 1px solid #30363d; padding: 12px; color: #fff; margin-bottom: 5px; text-align: center; outline: none; border-radius: 4px; }
-        
-        /* MADDE 1 & 9: Hata Yazısı Stili */
-        .error-text { color: var(--danger); font-size: 0.85rem; font-weight: bold; margin-bottom: 10px; display: none; }
-
-        #waitingStatus {
-            position: fixed; top: 80px; color: var(--border); font-weight: bold; font-size: 14px;
-            background: rgba(0,0,0,0.8); padding: 8px 20px; border-radius: 10px; display: none; z-index: 3000;
-            font-family: 'Black Ops One'; border: 1px solid var(--border);
-        }
 
         #pistiDisplay {
             position: fixed; top: 45%; left: 50%; transform: translate(-50%,-50%);
@@ -133,7 +121,7 @@
         <div class="right-menu">
             <div class="nav-box">₺<span id="balance">0</span></div>
             <div class="nav-box" style="color:var(--warning)">B: ₺<span id="bet">0</span></div>
-            <button id="exitBtn" onclick="mainExitAction()" style="background:var(--danger); border:none; color:white; padding:8px 10px; font-weight:900; font-size:0.65rem; clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%); cursor:pointer; flex-shrink: 0;">ÇIKIŞ</button>
+            <button id="mainActionBtn" onclick="handleExitButton()" style="background:var(--danger); border:none; color:white; padding:8px 10px; font-weight:900; font-size:0.65rem; clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%); cursor:pointer; flex-shrink: 0;">ÇIKIŞ</button>
         </div>
     </div>
 
@@ -157,7 +145,7 @@
     </div>
 
     <div id="gameArea">
-        <div id="waitingStatus">RAKİP BEKLENİYOR...</div>
+        <div id="waitingStatus" style="position: fixed; top: 80px; color: var(--border); font-weight: bold; font-size: 14px; background: rgba(0,0,0,0.8); padding: 8px 20px; border-radius: 10px; display: none; z-index: 3000; font-family: 'Black Ops One'; border: 1px solid var(--border);">RAKİP BEKLENİYOR...</div>
         <h1 style="margin-top:10px; font-size: 18px; letter-spacing: 1px; color: rgba(255,255,255,0.5); font-family: 'Black Ops One';">NEON PİŞTİ</h1>
         <div class="score-board">SİZ: <span id="ps">0</span> — RAKİP: <span id="cs">0</span></div>
 
@@ -174,12 +162,12 @@
         <div class="modal-box">
             <h3>MASA AYARLARI</h3>
             <input type="text" id="newRoomName" class="modal-input" placeholder="Masa Adı">
-            <select id="roomCapacity" class="modal-input">
+            <select id="newRoomCapacity" class="modal-input">
                 <option value="2">2 Kişilik</option>
                 <option value="4">4 Kişilik</option>
             </select>
             <input type="number" id="newRoomPass" class="modal-input" placeholder="Şifre (Opsiyonel)">
-            <div id="betError" class="error-text">Min 100₺ bahis gerekli!</div>
+            <div id="betError" class="error-msg">Min 100₺ bahis gerekli!</div>
             <button class="btn-neon" onclick="confirmCreateRoom()">OLUŞTUR</button>
             <button class="btn-neon btn-sec" style="margin-top:10px" onclick="closeModal('createRoomModal')">İPTAL</button>
         </div>
@@ -189,7 +177,7 @@
         <div class="modal-box">
             <h3>ŞİFRE GEREKLİ</h3>
             <input type="password" id="passInput" class="modal-input" placeholder="Şifreyi Girin">
-            <div id="passError" class="error-text">Şifre Yanlış!</div>
+            <div id="passError" class="error-msg">Şifre Yanlış!</div>
             <button class="btn-neon" id="passConfirmBtn">GİRİŞ</button>
             <button class="btn-neon btn-sec" style="margin-top:10px" onclick="closeModal('passEntryModal')">İPTAL</button>
         </div>
@@ -231,42 +219,27 @@
     };
 
     let balance = 0, currentBet = 0, userRef = null, uid = null;
-    let roomRef = null, myRole = null, gameState = null;
-    let lastMoveTime = 0;
-    let isGameActive = false;
+    let roomRef = null, myRole = null, gameState = null, inGame = false;
 
-    // MADDE 4: Profesyonel Arka Plan Animasyonu (Canvas Particles)
+    // MADDE 4: Profesyonel Parçacık Animasyonu
     const canvas = document.getElementById('bg-canvas');
     const ctx = canvas.getContext('2d');
     let particles = [];
     function initCanvas() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
         particles = [];
-        for(let i=0; i<50; i++) {
-            particles.push({
-                x: Math.random() * canvas.width,
-                y: Math.random() * canvas.height,
-                size: Math.random() * 2 + 1,
-                speed: Math.random() * 0.5 + 0.1,
-                opacity: Math.random() * 0.5
-            });
-        }
+        for(let i=0; i<50; i++) particles.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, r:Math.random()*2, d:Math.random()*0.5});
     }
-    function animate() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = "rgba(79, 209, 255, 0.5)";
+    function drawParticles() {
+        ctx.clearRect(0,0,canvas.width, canvas.height);
+        ctx.fillStyle = "rgba(79, 209, 255, 0.3)";
         particles.forEach(p => {
-            ctx.globalAlpha = p.opacity;
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-            ctx.fill();
-            p.y -= p.speed;
-            if(p.y < -10) p.y = canvas.height + 10;
+            ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill();
+            p.y -= p.d; if(p.y < 0) p.y = canvas.height;
         });
-        requestAnimationFrame(animate);
+        requestAnimationFrame(drawParticles);
     }
-    initCanvas(); animate(); window.addEventListener('resize', initCanvas);
+    initCanvas(); drawParticles();
 
     onAuthStateChanged(auth, user => {
         if (!user) return;
@@ -281,23 +254,27 @@
         listenLobby();
     });
 
-    // MADDE 2 & 3: Çıkış/Ayrıl İşlemi
-    window.mainExitAction = () => {
-        if(isGameActive) {
-            if(confirm("Oyundan ayrılırsanız bahsinizi kaybedersiniz! Ayrılmak istiyor musunuz?")) {
-                handleSurrender();
+    // MADDE 2 & 3: Buton Yönetimi
+    window.handleExitButton = async () => {
+        if(inGame) {
+            // MADDE 5: Oyundan ayrılma durumu - Kaybetme tetiklenir
+            if(confirm("Odadan ayrılırsanız bahsiniz yanacaktır. Emin misiniz?")) {
+                await processLossOnExit();
+                location.reload(); 
             }
         } else {
             window.location.href = "index.html";
         }
     };
 
-    // MADDE 5: Odadan Çıkan Oyuncu Kaybetsin
-    async function handleSurrender() {
-        if(roomRef && myRole) {
-            await updateDoc(roomRef, { status: "finished", winner: (myRole === "p1" ? "p2" : "p1"), surrender: uid });
-            location.reload();
-        }
+    async function processLossOnExit() {
+        if(!roomRef || !myRole) return;
+        // MADDE 5: Odadan çıkan kaybeder, karşıya iade edilir
+        await updateDoc(roomRef, { 
+            status: "finished", 
+            winner: (myRole === "p1" ? "p2" : "p1"), 
+            exitReason: uid 
+        });
     }
 
     function listenLobby() {
@@ -322,50 +299,45 @@
         });
     }
 
-    window.filterRooms = () => {
-        const term = document.getElementById('roomSearch').value.toLowerCase();
-        document.querySelectorAll('.room-card').forEach(card => {
-            const name = card.querySelector('b').innerText.toLowerCase();
-            card.style.display = name.includes(term) ? 'flex' : 'none';
-        });
-    };
-
     window.addBet = (a) => { if(balance >= a) { balance -= a; currentBet += a; sfx.chip.play(); updateUI(); } };
     window.cancelBet = () => { balance += currentBet; currentBet = 0; sfx.chip.play(); updateUI(); };
     function updateUI() { 
-        document.getElementById("bet").innerText = currentBet.toLocaleString('tr-TR');
-        if(currentBet >= 100) document.getElementById('betError').style.display = 'none';
+        document.getElementById("bet").innerText = currentBet.toLocaleString('tr-TR'); 
+        document.getElementById("betError").style.display = "none";
     }
 
     window.openCreateModal = () => { document.getElementById('createRoomModal').style.display = 'flex'; };
 
     window.confirmCreateRoom = async () => {
-        // MADDE 9: Bahis Kontrolü
+        // MADDE 9: Minimum Bahis Kontrolü
         if (currentBet < 100) {
-            document.getElementById('betError').style.display = 'block';
+            document.getElementById("betError").style.display = "block";
             return;
         }
         const name = document.getElementById("newRoomName").value || "Elite Arena";
         const pass = document.getElementById("newRoomPass").value || "";
-        const capacity = parseInt(document.getElementById("roomCapacity").value);
+        const cap = document.getElementById("newRoomCapacity").value;
         const roomId = "room_" + Date.now();
         roomRef = doc(db, "rooms", roomId);
         myRole = "p1";
         
         await setDoc(roomRef, {
-            p1: uid, p2: null, bet: currentBet, status: "waiting", name: name, password: pass,
-            capacity: capacity, deck: createDeck(), table: [], p1_score: 0, p2_score: 0,
+            p1: uid, p2: null, bet: currentBet, status: "waiting", name: name, password: pass, capacity: cap,
+            deck: createDeck(), table: [], p1_score: 0, p2_score: 0,
             p1_hand: [], p2_hand: [], turn: null, createdAt: serverTimestamp()
         });
         
+        // MADDE 5 & 7: Bağlantı kesilmesi durumu için onDisconnect ayarı
+        onDisconnect(roomRef).update({ status: "finished", winner: "p2", exitReason: uid });
+
         await updateDoc(userRef, { balance });
         closeModal('createRoomModal');
-        enterGameView();
+        switchToGame();
         listenRoom();
     };
 
     window.handleJoin = (rid, pass, bet) => {
-        document.getElementById('passError').style.display = 'none';
+        document.getElementById("passError").style.display = "none";
         if(pass && pass !== "") {
             document.getElementById('passEntryModal').style.display = 'flex';
             document.getElementById('passConfirmBtn').onclick = () => {
@@ -375,7 +347,7 @@
                     joinRoom(rid, bet);
                 } else {
                     // MADDE 1: Şifre Yanlış Hatası
-                    document.getElementById('passError').style.display = 'block';
+                    document.getElementById("passError").style.display = "block";
                 }
             };
         } else {
@@ -390,28 +362,24 @@
         roomRef = doc(db, "rooms", rid);
         myRole = "p2";
         
+        // MADDE 5 & 7: Bağlantı kesilmesi durumu
+        onDisconnect(roomRef).update({ status: "finished", winner: "p1", exitReason: uid });
+
         await updateDoc(roomRef, { p2: uid, status: "playing", turn: rid.split("_")[1] });
         await updateDoc(userRef, { balance });
-        enterGameView();
+        switchToGame();
         listenRoom();
     }
 
-    function enterGameView() {
-        isGameActive = true;
-        document.getElementById("exitBtn").innerText = "AYRIL";
+    function switchToGame() {
+        inGame = true;
+        document.getElementById("mainActionBtn").innerText = "AYRIL";
         document.getElementById("lobbyScreen").style.display = "none";
         document.getElementById("gameArea").style.display = "flex";
         document.getElementById("waitingStatus").style.display = "block";
     }
 
     function listenRoom() {
-        // MADDE 7: Hile Engelleme & Bağlantı Kesilmesi (OnDisconnect)
-        onDisconnect(roomRef).update({ 
-            status: "finished", 
-            winner: (myRole === "p1" ? "p2" : "p1"), 
-            surrender: uid 
-        });
-
         onSnapshot(roomRef, async (snap) => {
             const data = snap.data();
             if (!data) return;
@@ -426,7 +394,7 @@
                 }
                 render();
             }
-            if (data.status === "finished") handleEnd(data);
+            if (data.status === "finished") handleEnd();
         });
     }
 
@@ -468,12 +436,10 @@
         document.getElementById("cs").innerText = gameState[(myRole === "p1" ? "p2" : "p1") + "_score"];
     }
 
+    // MADDE 7: Hile Engelleme (Sadece kendi sırasında ve elindeki kartla oynama)
     async function playCard(i) {
-        // MADDE 7: Tur Kontrolü (Hile engelleme için temel check)
         if (gameState.turn !== uid) return;
-        if (Date.now() - lastMoveTime < 800) return; 
-        lastMoveTime = Date.now();
-
+        
         const handKey = myRole + "_hand";
         const hand = [...gameState[handKey]];
         const card = hand.splice(i, 1)[0];
@@ -486,10 +452,7 @@
             const top = table[table.length - 1];
             if (card[0] === top[0] || card[0] === "J") {
                 let pts = table.length + 1;
-                if (table.length === 1 && card[0] === top[0]) { 
-                    pts = 10; 
-                    showPistiEffect(); 
-                }
+                if (table.length === 1 && card[0] === top[0]) { pts = 10; showPistiEffect(); }
                 score += pts;
                 table = [];
                 setTimeout(() => sfx.cardCollect.play(), 300);
@@ -505,7 +468,7 @@
                 updates.p1_hand = d.splice(0, 4);
                 updates.p2_hand = d.splice(0, 4);
                 updates.deck = d;
-            } else { updates.status = "finished"; updates.winner = score > gameState[(myRole === "p1" ? "p2" : "p1") + "_score"] ? myRole : (myRole === "p1" ? "p2" : "p1"); }
+            } else { updates.status = "finished"; }
         }
         await updateDoc(roomRef, updates);
     }
@@ -516,21 +479,18 @@
         return d.sort(() => Math.random() - 0.5);
     }
 
-    async function handleEnd(data) {
-        const winner = data.winner;
-        const surrenderUid = data.surrender;
+    async function handleEnd() {
+        const data = gameState;
         let msg = "";
-
-        // MADDE 5: İade ve Kazanma Senaryosu
-        if(surrenderUid) {
-            if(surrenderUid === uid) {
-                sfx.lose.play();
-                msg = "OYUNDAN AYRILDIĞINIZ İÇİN KAYBETTİNİZ!";
+        
+        // MADDE 5: Bağlantı kopması veya ayrılma kontrolü
+        if(data.exitReason) {
+            if(data.exitReason === uid) {
+                sfx.lose.play(); msg = "OYUNDAN AYRILDIĞINIZ İÇİN KAYBETTİNİZ!";
             } else {
-                // Rakip ayrıldı, bahsimiz iade (Zaten düşülmüştü, geri ekliyoruz)
+                // Rakip çıktı, bahsimiz iade edilir
                 balance += currentBet;
-                sfx.win.play();
-                msg = "RAKİP AYRILDI!\nBahsiniz iade edildi.";
+                sfx.win.play(); msg = "RAKİP AYRILDI!\nBahsiniz iade edildi.";
             }
         } else {
             const s1 = data[myRole + "_score"], s2 = data[(myRole === "p1" ? "p2" : "p1") + "_score"];
@@ -544,8 +504,7 @@
         }
 
         await updateDoc(userRef, { balance });
-        showInfoModal(msg, "OYUN BİTTİ");
-        isGameActive = false;
+        showInfoModal(msg, "OYUN SONUCU");
         setTimeout(() => { location.reload(); }, 4000);
     }
 
@@ -555,7 +514,11 @@
         document.getElementById("infoModal").style.display = "flex"; 
     };
 
-    window.closeModal = (id) => { document.getElementById(id).style.display = "none"; };
+    window.closeModal = (id) => { 
+        document.getElementById(id).style.display = "none";
+        document.getElementById("passError").style.display = "none";
+        document.getElementById("betError").style.display = "none";
+    };
     
     function showPistiEffect() { sfx.pisti.play(); document.getElementById("pistiDisplay").style.display="block"; setTimeout(()=>document.getElementById("pistiDisplay").style.display="none", 1500); }
 </script>
