@@ -288,7 +288,7 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
             <label style="font-size:11px; color:var(--text-dim);">Kullanıcı Adı (Hak: <span id="userChangeCount">3</span>)</label>
             <input type="text" id="profUser" placeholder="Kullanıcı Adı">
         </div>
-        <div class="cat-title" style="text-align: left; font-size: 12px; color: var(--primary); font-weight: 800; margin-bottom: 5px;">AVATAR SEÇİMİ</div>
+        <div class="cat-title" style="text-align: left; font-size: 12px; color: var(--primary); font-weight: 800; margin-bottom: 5px;">AVATAR SEÇİMİ (5x5)</div>
         <div class="avatar-grid" id="avatarLibrary"></div>
         <button class="modal-btn" onclick="updateProfile()">BİLGİLERİ KAYDET</button>
         <p onclick="closeModal('profileModal')" style="margin-top:15px;cursor:pointer;opacity:0.5; font-size: 13px;">Vazgeç</p>
@@ -352,7 +352,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// GÜNCEL AVATAR LİSTESİ (SADECE BELİRTİLENLER)
+// GÜNCELLENMİŞ AVATAR LİSTESİ (5x5)
 const avatarLinks = [
     // Birinci Sıra
     "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRQwyXlGFYmEebbJwy3udOoiY1aHks5DHDL-LjNe-O2rw&s=10",
@@ -437,11 +437,13 @@ window.spinWheel = async () => {
     const spinBtn = document.getElementById("spinBtn");
     const resultText = document.getElementById("wheelResultText");
     
+    // Ödül Havuzu ve Açıları
     const rewards = [250, 500, 1000, 5000, 100, 50, 2500, 10000];
     const segmentDeg = 360 / rewards.length;
     const randomIndex = Math.floor(Math.random() * rewards.length);
     const prize = rewards[randomIndex];
     
+    // Dönüş: 10 tam tur (3600 deg) + ödülün açısı
     const totalRotation = 3600 + (randomIndex * segmentDeg);
     
     wheel.style.transform = `rotate(${totalRotation}deg)`;
@@ -567,6 +569,7 @@ document.getElementById("authSubmit").onclick = async () => {
             const loginInput = document.getElementById("authEmail").value.trim();
             let finalEmail = loginInput;
 
+            // Kullanıcı adı ile giriş kontrolü
             if(!loginInput.includes("@")) {
                 const q = query(collection(db, "users"), where("username", "==", loginInput));
                 const qs = await getDocs(q);
@@ -581,6 +584,7 @@ document.getElementById("authSubmit").onclick = async () => {
             
             if(!userN || !email || !pass) throw new Error("Tüm alanları doldurun!");
 
+            // Aynı Kullanıcı Adı Kontrolü
             const q = query(collection(db, "users"), where("username", "==", userN));
             const qs = await getDocs(q);
             if(!qs.empty) throw new Error("Bu kullanıcı adı zaten alınmış!");
