@@ -181,7 +181,7 @@
     </div>
 
     <div id="gameArea">
-        <div class="player-heads" id="dynamicHeads"></div>
+        <div class="player-heads" id="playerHeads"></div>
 
         <div id="waitingStatus" style="position:fixed; top:140px; color:var(--border); background:rgba(0,0,0,0.8); padding:10px 20px; border-radius:10px; display:none; border:1px solid var(--border);">OYUNCU BEKLENİYOR...</div>
 
@@ -199,9 +199,10 @@
             <input type="text" id="newRoomName" class="modal-input" placeholder="Masa Adı">
             
             <select id="newRoomType" class="modal-input" style="background:#161b22; color:white;">
-                <option value="2">2 Kişilik</option>
-                <option value="3">3 Kişilik</option>
-                <option value="4">4 Kişilik</option>
+                <option value="2-52">2 Kişilik (52 Kart)</option>
+                <option value="2-104">2 Kişilik (104 Kart)</option>
+                <option value="4-52">4 Kişilik (52 Kart)</option>
+                <option value="4-104">4 Kişilik (104 Kart)</option>
             </select>
 
             <input type="password" id="newRoomPass" class="modal-input" placeholder="Şifre (Opsiyonel)">
@@ -221,7 +222,7 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import { getFirestore, doc, onSnapshot, updateDoc, setDoc, collection, query, where, getDocs, runTransaction, deleteDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getFirestore, doc, onSnapshot, updateDoc, setDoc, collection, query, where, getDocs, runTransaction, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
@@ -244,7 +245,7 @@
     };
 
     let balance = 0, currentBet = 0, userRef = null, uid = null, userName = "Oyuncu";
-    let roomRef = null, myIndex = -1, gameState = null, inGame = false;
+    let roomRef = null, gameState = null, inGame = false;
     let lobbyUnsub = null, roomUnsub = null, userUnsub = null;
 
     onAuthStateChanged(auth, user => {
@@ -265,11 +266,8 @@
     window.leaveRoom = async () => {
         if (roomRef) {
             try {
-                if (gameState?.status === "waiting") {
-                    await deleteDoc(roomRef);
-                } else if (inGame) {
-                    await updateDoc(roomRef, { quitter: uid, status: "finished" });
-                }
+                if (gameState?.status === "waiting") await deleteDoc(roomRef);
+                else if (inGame) await updateDoc(roomRef, { quitter: uid, status: "finished" });
             } catch(e) {}
         }
         location.reload();
@@ -288,10 +286,12 @@
             list.innerHTML = "";
             snap.forEach(roomDoc => {
                 const data = roomDoc.data();
+                const pCount = data.playerList.length;
+                const maxP = parseInt(data.type.split('-')[0]);
                 list.innerHTML += `
                     <div class="room-card">
                         <div>
-                            <small style="color:var(--border)">${data.name} (${data.playerList.length}/${data.maxP})</small><br>
+                            <small style="color:var(--border)">${data.name} (${pCount}/${maxP} - ${data.type.split('-')[1]} Kart)</small><br>
                             <b style="font-size:1.1rem">${data.password ? '🔒 Şifreli' : '🔓 Açık'}</b><br>
                             <span style="color:var(--warning)">Bahis: ₺${data.bet.toLocaleString()}</span>
                         </div>
@@ -311,19 +311,21 @@
     window.confirmCreateRoom = async () => {
         if (currentBet < 100) return showInfoModal("Min 100₺ bahis!", "UYARI");
         const name = document.getElementById("newRoomName").value || "Arena";
-        const maxP = parseInt(document.getElementById("newRoomType").value);
+        const type = document.getElementById("newRoomType").value; // 2-52, 4-104 vb.
+        const maxP = parseInt(type.split('-')[0]);
+        const isDouble = type.includes("104");
         const pass = document.getElementById("newRoomPass").value || "";
         const roomId = "room_" + Date.now();
         roomRef = doc(db, "rooms", roomId);
         
-        const deck = createDeck().sort(() => Math.random() - 0.5);
+        let deck = createDeck();
+        if(isDouble) deck = [...deck, ...createDeck()];
+        deck = deck.sort(() => Math.random() - 0.5);
 
         await setDoc(roomRef, {
-            name, password: pass, bet: currentBet, maxP,
             playerList: [{uid, name: userName}],
-            status: "waiting",
-            deck, table: [], turnIdx: 0, quitter: null, 
-            hands: {}, scores: {}, lastCollector: null
+            bet: currentBet, status: "waiting", name, password: pass, type, maxP,
+            deck: deck, table: [], scores: {}, hands: {}, turnIdx: 0, quitter: null, lastCollector: null
         });
         
         await updateDoc(userRef, { balance });
@@ -333,24 +335,22 @@
     };
 
     window.handleJoin = async (rid, pass, bet) => {
-        if (pass && prompt("Şifre giriniz:") !== pass) return;
+        if(pass && prompt("Şifre giriniz:") !== pass) return;
         if (balance < bet) return showInfoModal("Yetersiz bakiye!", "HATA");
         
         roomRef = doc(db, "rooms", rid);
-        
-        await runTransaction(db, async (t) => {
-            const snap = await t.get(roomRef);
+        await runTransaction(db, async (transaction) => {
+            const snap = await transaction.get(roomRef);
             const data = snap.data();
-            if (data.playerList.length >= data.maxP) throw "Masa dolu!";
+            if (data.playerList.length >= data.maxP) return;
             
             const newList = [...data.playerList, {uid, name: userName}];
-            t.update(roomRef, { 
+            transaction.update(roomRef, { 
                 playerList: newList,
                 status: newList.length === data.maxP ? "playing" : "waiting"
             });
-            t.update(userRef, { balance: balance - bet });
+            transaction.update(userRef, { balance: balance - bet });
         });
-
         enterGameView();
         listenRoom();
     };
@@ -368,19 +368,20 @@
         roomUnsub = onSnapshot(roomRef, async (snap) => {
             if(!snap.exists()) return;
             gameState = snap.data();
-            myIndex = gameState.playerList.findIndex(p => p.uid === uid);
 
             if(gameState.quitter && gameState.quitter !== uid) {
                 balance += (gameState.bet * gameState.maxP);
                 await updateDoc(userRef, { balance });
-                showInfoModal("Rakip ayrıldı! Kazandınız.", "BİLGİ");
+                showInfoModal("Oyun bozuldu! Paranız iade edildi.", "BİLGİ");
                 setTimeout(() => window.leaveRoom(), 3000);
                 return;
             }
 
             if (gameState.status === "playing") {
                 document.getElementById("waitingStatus").style.display = "none";
-                if (myIndex === 0) { // Sadece kurucu dağıtımı yönetir
+                const myIdx = gameState.playerList.findIndex(p => p.uid === uid);
+                // Dağıtım kontrolü (Sadece ilk oyuncu/kurucu tetikler)
+                if (myIdx === 0) {
                     const handsEmpty = gameState.playerList.every(p => !gameState.hands[p.uid] || gameState.hands[p.uid].length === 0);
                     if (handsEmpty) refillHands();
                 }
@@ -406,71 +407,64 @@
             }
 
             let newHands = {};
-            let newTable = [...data.table];
-            if(newTable.length === 0) newTable = d.splice(0, 4);
-            
-            data.playerList.forEach(p => {
-                newHands[p.uid] = d.splice(0, 4);
-            });
+            let table = [...data.table];
+            if(table.length === 0) table = d.splice(0, 4);
+            data.playerList.forEach(p => { newHands[p.uid] = d.splice(0, 4); });
 
-            t.update(roomRef, { hands: newHands, deck: d, table: newTable });
+            t.update(roomRef, { hands: newHands, deck: d, table: table });
         });
     }
 
     async function playCard(idx) {
         if (gameState.playerList[gameState.turnIdx].uid !== uid) return;
         
-        try {
-            await runTransaction(db, async (t) => {
-                const snap = await t.get(roomRef);
-                const data = snap.data();
-                
-                let myHand = [...data.hands[uid]];
-                const card = myHand.splice(idx, 1)[0];
-                let table = [...data.table];
-                let myScore = data.scores[uid] || 0;
-                let lastCol = data.lastCollector;
+        await runTransaction(db, async (t) => {
+            const snap = await t.get(roomRef);
+            const data = snap.data();
+            
+            let hand = [...data.hands[uid]];
+            const card = hand.splice(idx, 1)[0];
+            let table = [...data.table];
+            let myScore = data.scores[uid] || 0;
+            let lastCol = data.lastCollector;
 
-                const getVal = (c) => (c.startsWith('10') || c.startsWith('0')) ? '10' : c[0];
-                const cardVal = getVal(card);
+            const getVal = (c) => (c.startsWith('10') || c.startsWith('0')) ? '10' : c[0];
+            const cardVal = getVal(card);
 
-                if (table.length > 0) {
-                    const top = table[table.length - 1];
-                    const topVal = getVal(top);
-
-                    if (cardVal === topVal || cardVal === "J") {
-                        if(table.length === 1) {
-                            myScore += (cardVal === "J" && topVal === "J") ? 20 : 10;
-                            showPistiAnim();
-                        } else {
-                            myScore += table.length + 1;
-                        }
-                        table = [];
-                        lastCol = uid;
-                    } else table.push(card);
+            if (table.length > 0) {
+                const topVal = getVal(table[table.length - 1]);
+                if (cardVal === topVal || cardVal === "J") {
+                    if(table.length === 1) {
+                        myScore += (cardVal === "J" && topVal === "J") ? 20 : 10;
+                        showPistiAnim();
+                    } else myScore += table.length + 1;
+                    table = [];
+                    lastCol = uid;
                 } else table.push(card);
+            } else table.push(card);
 
-                const next = (data.turnIdx + 1) % data.maxP;
-                t.update(roomRef, {
-                    [`hands.${uid}`]: myHand,
-                    table,
-                    [`scores.${uid}`]: myScore,
-                    turnIdx: next,
-                    lastCollector: lastCol
-                });
+            t.update(roomRef, {
+                [`hands.${uid}`]: hand,
+                table: table,
+                [`scores.${uid}`]: myScore,
+                turnIdx: (data.turnIdx + 1) % data.maxP,
+                lastCollector: lastCol
             });
-            sfx.cardThrow.play();
-        } catch(e) {}
+        });
+        sfx.cardThrow.play();
     }
 
     function render() {
         if(!gameState) return;
+        const hContainer = document.getElementById("playerHeads");
+        const pHand = document.getElementById("playerHand");
+        const tCards = document.getElementById("tableCards");
         
-        const heads = document.getElementById("dynamicHeads");
-        heads.innerHTML = "";
+        hContainer.innerHTML = ""; pHand.innerHTML = ""; tCards.innerHTML = "";
+
         gameState.playerList.forEach((p, i) => {
             const active = gameState.turnIdx === i;
-            heads.innerHTML += `
+            hContainer.innerHTML += `
                 <div class="p-head ${active ? 'active' : ''}">
                     <div class="name">${p.uid === uid ? "SİZ" : p.name}</div>
                     <div class="score">${gameState.scores[p.uid] || 0}</div>
@@ -478,47 +472,37 @@
             `;
         });
 
-        const ph = document.getElementById("playerHand");
-        const tc = document.getElementById("tableCards");
-        ph.innerHTML = ""; tc.innerHTML = "";
-
         const myHand = gameState.hands[uid] || [];
-        const isMyTurn = gameState.playerList[gameState.turnIdx].uid === uid;
-
         myHand.forEach((c, i) => {
             let img = document.createElement("img");
-            const finalC = (c.startsWith('10')) ? '0' + c.substring(2) : c;
+            const finalC = c.startsWith('10') ? '0' + c.substring(2) : c;
             img.src = `https://deckofcardsapi.com/static/img/${finalC}.png`;
             img.className = "card";
-            if(isMyTurn) img.onclick = () => playCard(i);
-            ph.appendChild(img);
+            if(gameState.playerList[gameState.turnIdx].uid === uid) img.onclick = () => playCard(i);
+            pHand.appendChild(img);
         });
 
         gameState.table.forEach((c, i) => {
             let img = document.createElement("img");
             const isTop = (i === gameState.table.length - 1);
-            const finalC = (c.startsWith('10')) ? '0' + c.substring(2) : c;
+            const finalC = c.startsWith('10') ? '0' + c.substring(2) : c;
             img.src = isTop ? `https://deckofcardsapi.com/static/img/${finalC}.png` : "https://deckofcardsapi.com/static/img/back.png";
             img.className = "stack-card";
             img.style.zIndex = i;
-            tc.appendChild(img);
+            tCards.appendChild(img);
         });
     }
 
     async function handleEnd() {
         if (!inGame) return;
         const myScore = gameState.scores[uid] || 0;
-        const scores = Object.values(gameState.scores);
-        const maxScore = Math.max(...scores);
+        const allScores = Object.values(gameState.scores);
+        const maxScore = Math.max(...allScores);
         
-        let msg = "";
-        if (myScore === maxScore) {
-            const winTotal = gameState.bet * gameState.maxP;
-            balance += winTotal;
+        let msg = (myScore === maxScore) ? `KAZANDIN! +${gameState.bet * gameState.maxP}₺` : "KAYBETTİN!";
+        if(myScore === maxScore) {
+            balance += (gameState.bet * gameState.maxP);
             sfx.win.play();
-            msg = `KAZANDIN! +${winTotal}₺`;
-        } else {
-            msg = "KAYBETTİN!";
         }
         
         await updateDoc(userRef, { balance });
