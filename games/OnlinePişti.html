@@ -30,6 +30,7 @@
         }
         .brand { font-family: 'Black Ops One'; font-size: 1rem; color: var(--border); letter-spacing: 1px; flex-shrink: 0; }
         
+        /* Bakiye Taşma Koruması */
         .right-menu { display: flex; gap: 8px; align-items: center; overflow: hidden; }
         .nav-box { 
             font-weight: 700; color: #fff; font-size: 0.85rem; padding: 5px 8px; border-radius: 5px; 
@@ -57,27 +58,21 @@
             margin-bottom: 10px; border-radius: 0 8px 8px 0; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
             animation: slideIn 0.3s ease-out;
         }
+        @keyframes slideIn { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
 
-        /* MADDE 7: Profesyonel Çipler */
-        .chips { display: flex; gap: 10px; justify-content: center; margin: 10px 0; }
+        .chips { display: flex; gap: 8px; justify-content: center; margin: 5px 0; }
         .chip { 
-            width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center; 
-            font-weight:900; cursor:pointer; font-size: 11px; position: relative;
-            border: 4px dashed rgba(255,255,255,0.4); 
-            box-shadow: 0 4px 0px #000, inset 0 0 10px rgba(0,0,0,0.5);
-            transition: transform 0.1s;
+            width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center; 
+            font-weight:900; cursor:pointer; border: 2px dashed rgba(255,255,255,0.3); font-size: 9px; background: #222;
         }
-        .chip:active { transform: translateY(3px); box-shadow: 0 1px 0px #000; }
-        .c-cancel { background: #d63031; color: #fff; border-style: solid; }
-        .c100 { background: radial-gradient(circle, #fff 60%, #ccc); color:#000; } 
-        .c500 { background: radial-gradient(circle, #2ecc71 60%, #27ae60); color:#fff; } 
-        .c2000 { background: radial-gradient(circle, #3498db 60%, #2980b9); color:#fff; } 
-        .c10000 { background: radial-gradient(circle, #f1c40f 60%, #f39c12); color:#fff; }
-
-        /* MADDE 1 & 8: Hata Mesajları */
-        .error-text { color: var(--danger); font-size: 0.8rem; font-weight: bold; margin-top: 5px; display: none; text-align: center; }
+        .c-cancel { background: var(--danger); color: #fff; border-style: solid; }
+        .c100 { background: radial-gradient(#fff, #ccc); color:#000; } 
+        .c500 { background: radial-gradient(#2ecc71, #27ae60); color:#fff; } 
+        .c2000 { background: radial-gradient(#3498db, #2980b9); color:#fff; } 
+        .c10000 { background: radial-gradient(#f1c40f, #f39c12); color:#fff; }
 
         #gameArea { display: none; flex: 1; flex-direction: column; align-items: center; z-index: 5; }
+        h1 { margin-top:10px; font-size: 18px; letter-spacing: 1px; color: rgba(255,255,255,0.5); font-family: 'Black Ops One'; }
         .score-board { margin: 8px 0; font-weight: bold; color: #ffcc00; font-size: 14px; background: rgba(0,0,0,0.5); padding: 5px 20px; border-radius: 20px; border: 1px solid #333; }
         
         .table {
@@ -92,6 +87,7 @@
         .hand { bottom:-55px; }
         .computer { top:-55px; }
         .card { width:65px; border-radius: 6px; cursor:pointer; transition: transform 0.2s; box-shadow: 0 5px 15px rgba(0,0,0,0.3); background:white;}
+        .hand .card:hover { transform: translateY(-15px); }
 
         .modal-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.95); backdrop-filter: blur(15px);
@@ -100,14 +96,23 @@
         .modal-box { 
             background: #0d1117; border: 2px solid var(--border); padding: 25px; 
             width: 100%; max-width: 340px; text-align: center; position: relative; 
+            box-shadow: 0 0 50px rgba(79, 209, 255, 0.1); 
         }
-        .modal-input { width: 100%; background: #161b22; border: 1px solid #30363d; padding: 12px; color: #fff; margin-bottom: 5px; text-align: center; outline: none; border-radius: 4px; }
+        .modal-box h3 { font-family: 'Black Ops One'; color: var(--border); margin-bottom: 15px; font-size: 1.2rem; }
+        .modal-input { width: 100%; background: #161b22; border: 1px solid #30363d; padding: 12px; color: #fff; margin-bottom: 10px; text-align: center; outline: none; border-radius: 4px; }
+
+        #waitingStatus {
+            position: fixed; top: 80px; color: var(--border); font-weight: bold; font-size: 14px;
+            background: rgba(0,0,0,0.8); padding: 8px 20px; border-radius: 10px; display: none; z-index: 3000;
+            font-family: 'Black Ops One'; border: 1px solid var(--border);
+        }
 
         #pistiDisplay {
             position: fixed; top: 45%; left: 50%; transform: translate(-50%,-50%);
             font-size: 70px; font-weight: 900; color: #fff; text-align: center;
             background: linear-gradient(to bottom, #fff, var(--warning), #ff6600);
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 15px rgba(255, 102, 0, 0.8));
             display: none; z-index: 9999; pointer-events: none; font-family: 'Black Ops One';
         }
     </style>
@@ -121,7 +126,7 @@
         <div class="right-menu">
             <div class="nav-box">₺<span id="balance">0</span></div>
             <div class="nav-box" style="color:var(--warning)">B: ₺<span id="bet">0</span></div>
-            <button id="navExitBtn" onclick="handleNavigationExit()" style="background:var(--danger); border:none; color:white; padding:8px 10px; font-weight:900; font-size:0.65rem; clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%); cursor:pointer; flex-shrink: 0;">ÇIKIŞ</button>
+            <button onclick="leaveRoom()" style="background:var(--danger); border:none; color:white; padding:8px 10px; font-weight:900; font-size:0.65rem; clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%); cursor:pointer; flex-shrink: 0;">AYRIL</button>
         </div>
     </div>
 
@@ -145,7 +150,7 @@
     </div>
 
     <div id="gameArea">
-        <div id="waitingStatus" style="position: fixed; top: 80px; color: var(--border); font-weight: bold; font-size: 14px; background: rgba(0,0,0,0.8); padding: 8px 20px; border-radius: 10px; display: none; z-index: 3000; border: 1px solid var(--border);">RAKİP BEKLENİYOR...</div>
+        <div id="waitingStatus">RAKİP BEKLENİYOR...</div>
         <h1>NEON PİŞTİ</h1>
         <div class="score-board">SİZ: <span id="ps">0</span> — RAKİP: <span id="cs">0</span></div>
 
@@ -162,12 +167,7 @@
         <div class="modal-box">
             <h3>MASA AYARLARI</h3>
             <input type="text" id="newRoomName" class="modal-input" placeholder="Masa Adı">
-            <select id="newRoomCapacity" class="modal-input" style="background:#161b22; color:white;">
-                <option value="2">2 Kişilik</option>
-                <option value="4">4 Kişilik</option>
-            </select>
             <input type="number" id="newRoomPass" class="modal-input" placeholder="Şifre (Opsiyonel)">
-            <div id="createError" class="error-text">Min 100₺ bahis gerekli!</div>
             <button class="btn-neon" onclick="confirmCreateRoom()">OLUŞTUR</button>
             <button class="btn-neon btn-sec" style="margin-top:10px" onclick="closeModal('createRoomModal')">İPTAL</button>
         </div>
@@ -177,7 +177,6 @@
         <div class="modal-box">
             <h3>ŞİFRE GEREKLİ</h3>
             <input type="password" id="passInput" class="modal-input" placeholder="Şifreyi Girin">
-            <div id="passError" class="error-text">Şifre Yanlış!</div>
             <button class="btn-neon" id="passConfirmBtn">GİRİŞ</button>
             <button class="btn-neon btn-sec" style="margin-top:10px" onclick="closeModal('passEntryModal')">İPTAL</button>
         </div>
@@ -194,7 +193,7 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import { getFirestore, doc, onSnapshot, updateDoc, setDoc, collection, query, where, deleteDoc, getDocs, onDisconnect, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getFirestore, doc, onSnapshot, updateDoc, setDoc, collection, query, where, deleteDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
@@ -219,10 +218,17 @@
     };
 
     let balance = 0, currentBet = 0, userRef = null, uid = null;
-    let roomRef = null, myRole = null, gameState = null, isPlaying = false;
+    let roomRef = null, myRole = null, gameState = null;
     let lastMoveTime = 0;
 
-    // MADDE 3: Lobi için buton kontrolü
+    const canvas = document.getElementById('bg-canvas');
+    const ctx = canvas.getContext('2d');
+    function initCanvas() {
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+        ctx.fillStyle = '#03050a'; ctx.fillRect(0,0,canvas.width, canvas.height);
+    }
+    initCanvas();
+
     onAuthStateChanged(auth, user => {
         if (!user) return;
         uid = user.uid;
@@ -236,29 +242,6 @@
         listenLobby();
     });
 
-    // MADDE 2 & 3 & 4: Navigasyon ve Ayrılma Mantığı
-    window.handleNavigationExit = async () => {
-        if (isPlaying && roomRef) {
-            // MADDE 4: Odadan Ayrılma Durumu
-            if(confirm("Odadan ayrılırsanız bahsiniz yanacaktır! Emin misiniz?")) {
-                await processPlayerQuit();
-                location.reload(); 
-            }
-        } else {
-            window.location.href = "index.html";
-        }
-    };
-
-    async function processPlayerQuit() {
-        if (!roomRef) return;
-        // MADDE 4: Çıkan kaybeder, karşı taraf iade alır
-        await updateDoc(roomRef, { 
-            status: "finished", 
-            winner: myRole === "p1" ? "p2" : "p1",
-            quitBy: uid 
-        });
-    }
-
     function listenLobby() {
         const q = query(collection(db, "rooms"), where("status", "==", "waiting"));
         onSnapshot(q, (snap) => {
@@ -270,7 +253,7 @@
                 list.innerHTML += `
                     <div class="room-card">
                         <div>
-                            <small style="color:var(--border)">ARENA (${data.capacity || 2}P) ${isLocked ? '🔒' : '🔓'}</small><br>
+                            <small style="color:var(--border)">ARENA ${isLocked ? '🔒' : '🔓'}</small><br>
                             <b style="font-size:1.1rem">${data.name || 'Hızlı Masa'}</b><br>
                             <span style="color:var(--warning)">Bahis: ₺${data.bet.toLocaleString()}</span>
                         </div>
@@ -281,47 +264,59 @@
         });
     }
 
+    window.filterRooms = () => {
+        const term = document.getElementById('roomSearch').value.toLowerCase();
+        document.querySelectorAll('.room-card').forEach(card => {
+            const name = card.querySelector('b').innerText.toLowerCase();
+            card.style.display = name.includes(term) ? 'flex' : 'none';
+        });
+    };
+
     window.addBet = (a) => { if(balance >= a) { balance -= a; currentBet += a; sfx.chip.play(); updateUI(); } };
     window.cancelBet = () => { balance += currentBet; currentBet = 0; sfx.chip.play(); updateUI(); };
     function updateUI() { document.getElementById("bet").innerText = currentBet.toLocaleString('tr-TR'); }
 
-    window.openCreateModal = () => { 
-        document.getElementById("createError").style.display = "none";
-        document.getElementById('createRoomModal').style.display = 'flex'; 
-    };
+    window.openCreateModal = () => { document.getElementById('createRoomModal').style.display = 'flex'; };
 
     window.confirmCreateRoom = async () => {
-        // MADDE 8: Min Bahis Hatası
-        if (currentBet < 100) {
-            document.getElementById("createError").style.display = "block";
-            return;
-        }
+        if (currentBet < 100) return alert("Min 100₺ bahis gerekli!");
         const name = document.getElementById("newRoomName").value || "Elite Arena";
         const pass = document.getElementById("newRoomPass").value || "";
-        const cap = document.getElementById("newRoomCapacity").value;
         const roomId = "room_" + Date.now();
         roomRef = doc(db, "rooms", roomId);
         myRole = "p1";
-        isPlaying = true;
         
-        // MADDE 4 & 6: OnDisconnect (Bağlantı Kopma/Sekme Kapatma) Koruması
-        onDisconnect(roomRef).update({ status: "finished", winner: "p2", quitBy: uid });
-
         await setDoc(roomRef, {
             p1: uid, p2: null, bet: currentBet, status: "waiting", name: name, password: pass,
-            capacity: parseInt(cap),
             deck: createDeck(), table: [], p1_score: 0, p2_score: 0,
-            p1_hand: [], p2_hand: [], turn: null, createdAt: serverTimestamp()
+            p1_hand: [], p2_hand: [], turn: null, createdAt: Date.now()
         });
         
         await updateDoc(userRef, { balance });
         closeModal('createRoomModal');
-        switchToGame();
+        document.getElementById("lobbyScreen").style.display = "none";
+        document.getElementById("gameArea").style.display = "flex";
+        document.getElementById("waitingStatus").style.display = "block";
         listenRoom();
     };
 
+    window.quickJoin = async () => {
+        if(currentBet < 100) return alert("Hızlı katıl için önce bahis miktarını seçin!");
+        const q = query(collection(db, "rooms"), 
+            where("status", "==", "waiting"), 
+            where("bet", "==", currentBet),
+            where("password", "==", ""));
+        
+        const snap = await getDocs(q);
+        if(!snap.empty) {
+            const firstRoom = snap.docs[0];
+            joinRoom(firstRoom.id, currentBet);
+        } else {
+            alert("Bu bahis miktarında uygun açık oda bulunamadı!");
+        }
+    };
+
     window.handleJoin = (rid, pass, bet) => {
-        document.getElementById("passError").style.display = "none";
         if(pass && pass !== "") {
             document.getElementById('passEntryModal').style.display = 'flex';
             document.getElementById('passConfirmBtn').onclick = () => {
@@ -330,8 +325,7 @@
                     closeModal('passEntryModal');
                     joinRoom(rid, bet);
                 } else {
-                    // MADDE 1: Şifre Yanlış Hatası
-                    document.getElementById("passError").style.display = "block";
+                    alert("Şifre Yanlış!");
                 }
             };
         } else {
@@ -345,22 +339,12 @@
         currentBet = bet;
         roomRef = doc(db, "rooms", rid);
         myRole = "p2";
-        isPlaying = true;
-
-        // MADDE 4 & 6: OnDisconnect Koruması
-        onDisconnect(roomRef).update({ status: "finished", winner: "p1", quitBy: uid });
         
         await updateDoc(roomRef, { p2: uid, status: "playing", turn: rid.split("_")[1] });
         await updateDoc(userRef, { balance });
-        switchToGame();
-        listenRoom();
-    }
-
-    function switchToGame() {
-        document.getElementById("navExitBtn").innerText = "AYRIL";
         document.getElementById("lobbyScreen").style.display = "none";
         document.getElementById("gameArea").style.display = "flex";
-        document.getElementById("waitingStatus").style.display = "block";
+        listenRoom();
     }
 
     function listenRoom() {
@@ -371,10 +355,13 @@
 
             if (data.status === "playing") {
                 document.getElementById("waitingStatus").style.display = "none";
+                // Kart Dağıtımı Düzeltmesi (Eksik kart kalmaması için)
                 if (myRole === "p1" && data.p1_hand.length === 0 && data.deck.length === 52) {
                     const d = [...data.deck];
-                    const t = [d.shift(), d.shift(), d.shift(), d.shift()];
-                    await updateDoc(roomRef, { deck: d, p1_hand: d.splice(0, 4), p2_hand: d.splice(0, 4), table: t, turn: uid });
+                    const t = [d.shift(), d.shift(), d.shift(), d.shift()]; // İlk 4 kart yere
+                    const p1h = d.splice(0, 4);
+                    const p2h = d.splice(0, 4);
+                    await updateDoc(roomRef, { deck: d, p1_hand: p1h, p2_hand: p2h, table: t, turn: uid });
                 }
                 render();
             }
@@ -408,6 +395,7 @@
 
         gameState.table.forEach((c, i) => {
             let img = document.createElement("img");
+            // Sadece en üstteki kart açık, diğerleri kapalı (Orijinal kural)
             const isTop = i === gameState.table.length - 1;
             img.src = isTop ? `https://deckofcardsapi.com/static/img/${c}.png` : "https://deckofcardsapi.com/static/img/back.png";
             img.className = "stack-card";
@@ -420,10 +408,9 @@
         document.getElementById("cs").innerText = gameState[(myRole === "p1" ? "p2" : "p1") + "_score"];
     }
 
-    // MADDE 6: Hile Engelleme (Sıra ve Zaman Kontrolü)
     async function playCard(i) {
         if (gameState.turn !== uid) return;
-        if (Date.now() - lastMoveTime < 800) return; 
+        if (Date.now() - lastMoveTime < 1000) return; 
         lastMoveTime = Date.now();
 
         const handKey = myRole + "_hand";
@@ -438,7 +425,10 @@
             const top = table[table.length - 1];
             if (card[0] === top[0] || card[0] === "J") {
                 let pts = table.length + 1;
-                if (table.length === 1 && card[0] === top[0]) { pts = 10; showPistiEffect(); }
+                if (table.length === 1 && card[0] === top[0]) { 
+                    pts = 10; 
+                    showPistiEffect(); 
+                }
                 score += pts;
                 table = [];
                 setTimeout(() => sfx.cardCollect.play(), 300);
@@ -448,6 +438,7 @@
         const nextTurn = myRole === "p1" ? gameState.p2 : gameState.p1;
         let updates = { [handKey]: hand, table: table, [myRole + "_score"]: score, turn: nextTurn };
 
+        // Yeni el dağıtımı (48 kart / 8 = 6 el)
         if (hand.length === 0 && gameState[(myRole === "p1" ? "p2" : "p1") + "_hand"].length === 0) {
             if (gameState.deck.length > 0) {
                 const d = [...gameState.deck];
@@ -466,48 +457,30 @@
     }
 
     async function handleEnd() {
-        isPlaying = false;
+        const s1 = gameState[myRole + "_score"], s2 = gameState[(myRole === "p1" ? "p2" : "p1") + "_score"];
         let msg = "";
-        
-        // MADDE 4: Bağlantı kesilme durumu
-        if (gameState.quitBy) {
-            if (gameState.quitBy === uid) {
-                sfx.lose.play();
-                msg = "ODADAN AYRILDIĞINIZ İÇİN KAYBETTİNİZ!";
-            } else {
-                // Diğer oyuncu çıktı, bahis iadesi
-                balance += currentBet; 
-                sfx.win.play();
-                msg = "RAKİP AYRILDI!\nBahis tarafınıza iade edildi.";
-            }
-        } else {
-            const s1 = gameState[myRole + "_score"], s2 = gameState[(myRole === "p1" ? "p2" : "p1") + "_score"];
-            if (s1 > s2) { 
-                const win = currentBet * 2; balance += win; sfx.win.play(); msg = `ZAFER!\n${win}₺ kazandın.`; 
-            } else if (s1 < s2) { 
-                sfx.lose.play(); msg = "BOZGUN!"; 
-            } else { 
-                balance += currentBet; msg = "BERABERE!\nBahis iade edildi."; 
-            }
+        if (s1 > s2) { 
+            const win = gameState.bet * 2; balance += win; sfx.win.play(); msg = `ZAFER!\n${win}₺ kazandın.`; 
+        } else if (s1 < s2) { 
+            sfx.lose.play(); msg = "BOZGUN!"; 
+        } else { 
+            balance += gameState.bet; msg = "BERABERE!"; 
         }
-
         await updateDoc(userRef, { balance });
-        showInfoModal(msg, "OYUN SONU");
-        setTimeout(() => { location.reload(); }, 5000);
+        showInfoModal(msg, s1 > s2 ? "ZAFER" : "OYUN BİTTİ");
+        setTimeout(() => { location.reload(); }, 4000);
     }
 
-    window.closeModal = (id) => { 
-        document.getElementById(id).style.display = "none"; 
-        document.getElementById("passError").style.display = "none";
-        document.getElementById("createError").style.display = "none";
-    };
-
+    window.leaveRoom = async () => { if(roomRef) { await deleteDoc(roomRef); location.reload(); } else { location.reload(); } };
+    
     window.showInfoModal = (m, t = "BİLGİ") => { 
         document.getElementById("modalTitle").innerText = t;
         document.getElementById("modalMsg").innerText = m; 
         document.getElementById("infoModal").style.display = "flex"; 
     };
 
+    window.closeModal = (id) => { document.getElementById(id).style.display = "none"; };
+    
     function showPistiEffect() { sfx.pisti.play(); document.getElementById("pistiDisplay").style.display="block"; setTimeout(()=>document.getElementById("pistiDisplay").style.display="none", 1500); }
 </script>
 </body>
