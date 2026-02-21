@@ -27,17 +27,19 @@
             position: fixed; width: 100%; overscroll-behavior: none;
         }
 
-        /* MADDE 2: Neon Geçişli Animasyonlu Arka Plan */
+        /* MADDE 3: Ultra Profesyonel Lobi Arka Planı */
         #bg-canvas { 
             position: fixed; inset: 0; z-index: -1; 
-            background: linear-gradient(45deg, #0a1a1a, #03050a, #1a0a2e, #0a1a1a);
-            background-size: 400% 400%;
-            animation: neonGradient 12s ease infinite;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(79, 209, 255, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 80% 70%, rgba(125, 0, 255, 0.15) 0%, transparent 40%),
+                linear-gradient(135deg, #050a14 0%, #03050a 100%);
+            background-size: cover;
         }
-        @keyframes neonGradient {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+        #bg-canvas::after {
+            content: ""; position: absolute; inset: 0;
+            background-image: url('https://www.transparenttextures.com/patterns/carbon-fibre.png');
+            opacity: 0.2; pointer-events: none;
         }
         
         .top-bar { 
@@ -91,35 +93,35 @@
 
         #gameArea { display: none; flex: 1; flex-direction: column; align-items: center; z-index: 5; position: relative; }
         
-        /* MADDE 1: Masa Boyutu Büyütüldü */
+        /* MADDE 1: Masa Boyutu İyice Büyütüldü */
         .table {
-            width:96%; max-width:540px; height:360px; border-radius:180px; 
+            width:98%; max-width:620px; height:420px; border-radius:210px; 
             position: absolute; top: 52%; left: 50%; transform: translate(-50%, -50%);
-            background: radial-gradient(circle at center, #1a8a4d 0%, #0a4d23 80%);
-            box-shadow: inset 0 0 120px #000, 0 20px 60px rgba(0,0,0,0.8), 0 0 25px var(--border);
-            border: 10px solid #2d1f14;
+            background: radial-gradient(circle at center, #1e9d57 0%, #0a4d23 85%);
+            box-shadow: inset 0 0 150px #000, 0 25px 80px rgba(0,0,0,0.9), 0 0 35px var(--border);
+            border: 12px solid #2d1f14;
         }
 
-        .table-cards { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:85px; height:115px; }
+        .table-cards { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:90px; height:125px; }
         
-        /* MADDE 1: Kart Görünümü İyileştirildi (Shadow & Border) */
         .stack-card { 
-            width:85px; position:absolute; left:0; top:0; border-radius: 8px; 
-            box-shadow: 2px 2px 10px rgba(0,0,0,0.5); background:white;
-            border: 1px solid #ddd;
+            width:90px; position:absolute; left:0; top:0; border-radius: 8px; 
+            box-shadow: 3px 3px 12px rgba(0,0,0,0.6); background:white;
+            border: 1px solid #ccc;
         }
         
-        .hand, .computer { position:absolute; left:50%; transform:translateX(-50%); display:flex; gap:8px; width: max-content; padding: 10px; }
-        .hand { bottom: 15px; }
-        .computer { top: 15px; }
+        .hand, .computer { position:absolute; left:50%; transform:translateX(-50%); display:flex; gap:10px; width: max-content; padding: 15px; }
+        .hand { bottom: 10px; }
+        .computer { top: 10px; }
 
+        /* MADDE 1: Oyuncu ve Rakip Kartları Aynı Küçüklükte/Boyutta */
         .card { 
-            width:75px; height: 105px; border-radius: 8px; cursor:pointer; transition: 0.3s; 
-            box-shadow: 0 8px 20px rgba(0,0,0,0.4); background:white;
+            width:60px; height: 85px; border-radius: 6px; cursor:pointer; transition: 0.3s; 
+            box-shadow: 0 8px 20px rgba(0,0,0,0.5); background:white;
             border: 1px solid #fff;
         }
-        .card:hover { transform: translateY(-10px) rotate(-2deg); z-index: 100; }
-        .computer .card { width: 48px; height: 68px; opacity: 0.8; }
+        .card:hover { transform: translateY(-15px); z-index: 100; }
+        .computer .card { opacity: 0.95; }
 
         .modal-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.95); backdrop-filter: blur(12px);
@@ -135,12 +137,21 @@
             outline: none; border-radius: 8px; font-size: 1rem;
         }
 
+        /* MADDE 2: Profesyonel Pişti Animasyonu */
         #pistiDisplay {
             position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%) scale(0);
-            font-size: 90px; font-weight: 900; color: #fff; text-align: center;
-            text-shadow: 0 0 20px var(--border), 0 0 50px var(--accent);
+            font-size: 110px; font-weight: 900; color: #fff; text-align: center;
+            text-shadow: 0 0 30px var(--border), 0 0 60px var(--accent), 0 0 90px #fff;
             display: none; z-index: 9999; font-family: 'Black Ops One';
-            animation: pistiPop 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            letter-spacing: 5px;
+            animation: pistiTurbo 1.8s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+        }
+        @keyframes pistiTurbo {
+            0% { transform: translate(-50%,-50%) scale(0) rotate(-15deg); opacity: 0; filter: blur(10px); }
+            30% { transform: translate(-50%,-50%) scale(1.4) rotate(5deg); opacity: 1; filter: blur(0px); }
+            50% { transform: translate(-50%,-50%) scale(1.2) rotate(0deg); }
+            80% { transform: translate(-50%,-50%) scale(1.2) rotate(0deg); opacity: 1; }
+            100% { transform: translate(-50%,-50%) scale(3) rotate(0deg); opacity: 0; }
         }
     </style>
 </head>
@@ -266,17 +277,13 @@
         listenLobby();
     });
 
-    // MADDE 4: Bağlantı Kopması / Sayfa Yenileme / Odadan Ayrılma Mantığı
     const handleDisconnection = async () => {
         if (inGame && roomRef) {
             await updateDoc(roomRef, { quitter: uid, status: "finished" });
         }
     };
     window.addEventListener('beforeunload', handleDisconnection);
-    window.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'hidden' && inGame) handleDisconnection();
-    });
-
+    
     window.handleNavAction = () => {
         if (inGame) leaveRoom();
         else window.location.href = "index.html";
@@ -318,7 +325,6 @@
         roomRef = doc(db, "rooms", roomId);
         myRole = "p1";
         
-        // MADDE 3 & 6: Kart Sayısı Belirleme
         const isDouble = type.includes("104");
         const finalDeck = isDouble ? [...createDeck(), ...createDeck()] : createDeck();
         const shuffledDeck = finalDeck.sort(() => Math.random() - 0.5);
@@ -359,9 +365,8 @@
             if(!snap.exists()) return;
             gameState = snap.data();
 
-            // MADDE 4: Odadan Ayrılma/Kopma Durumu (İade Mantığı)
             if(gameState.quitter && gameState.quitter !== uid) {
-                balance += gameState.bet; // Mağdur olan tarafa bahis iade
+                balance += gameState.bet;
                 await updateDoc(userRef, { balance });
                 showInfoModal("Rakip odadan ayrıldı! Bahis iade edildi.", "BİLGİ");
                 setTimeout(() => location.reload(), 3000);
@@ -393,7 +398,7 @@
         await updateDoc(roomRef, updates);
     }
 
-    // MADDE 5: Hile Korumalı Hamle (Server-Side Logic Mimic)
+    // MADDE 4: Hile Korumalı Hamle (Transaction Tabanlı Zirve Koruma)
     async function playCard(i) {
         if (gameState.turn !== uid) return;
         
@@ -402,11 +407,15 @@
                 const rSnap = await transaction.get(roomRef);
                 const data = rSnap.data();
                 
-                // Zirve Hile Koruması: Sıra ve Kart Doğruluğu
-                if (data.turn !== uid) throw "Sıra sizde değil!";
+                // Zirve Hile Koruması: Sıra, Odadaki Oyuncu ve Kart Varlığı Kontrolü
+                if (data.turn !== uid || (myRole === "p1" && data.p1 !== uid) || (myRole === "p2" && data.p2 !== uid)) {
+                    throw "Yetkisiz veya zamansız hamle denemesi!";
+                }
                 
                 const handKey = myRole + "_hand";
                 const hand = [...data[handKey]];
+                if (!hand[i]) throw "Kart elinizde mevcut değil!";
+
                 const card = hand.splice(i, 1)[0];
                 let table = [...data.table];
                 let score = data[myRole + "_score"];
@@ -433,7 +442,7 @@
                 });
             });
         } catch (e) {
-            console.error("İşlem reddedildi:", e);
+            console.warn("Hile/Hata Engellendi:", e);
         }
     }
 
@@ -441,7 +450,7 @@
         sfx.pisti.play();
         const pd = document.getElementById("pistiDisplay");
         pd.style.display = "block";
-        setTimeout(() => pd.style.display = "none", 1500);
+        setTimeout(() => { pd.style.display = "none"; }, 1800);
     }
 
     function render() {
