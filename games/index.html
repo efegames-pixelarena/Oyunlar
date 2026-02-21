@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PixelArena | Next-Gen Gaming</title>
+    <title>PixelArena | Next-Gen Gaming Platform</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Syncopate:wght@700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -11,268 +11,334 @@
     <style>
         :root {
             --primary: #00ffa3;
-            --secondary: #dc143c;
-            --accent: #00d4ff;
-            --bg: #080a0f;
-            --card-bg: rgba(255, 255, 255, 0.03);
-            --glass: rgba(255, 255, 255, 0.05);
-            --border: rgba(255, 255, 255, 0.1);
-            --text: #e2e8f0;
+            --primary-glow: rgba(0, 255, 163, 0.3);
+            --accent: #7000ff;
+            --bg-body: #080a0f;
+            --bg-card: rgba(255, 255, 255, 0.03);
+            --bg-nav: rgba(8, 10, 15, 0.85);
+            --border: rgba(255, 255, 255, 0.08);
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --success: #00ffa3;
+            --danger: #ff4d4d;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
         
         body { 
-            background: var(--bg); 
-            background-image: 
-                radial-gradient(circle at 20% 20%, rgba(0, 255, 163, 0.05) 0%, transparent 40%),
-                radial-gradient(circle at 80% 80%, rgba(220, 20, 60, 0.05) 0%, transparent 40%);
-            color: var(--text);
-            font-family: 'Outfit', sans-serif;
-            min-height: 100vh;
+            background: var(--bg-body); 
+            background-image: radial-gradient(circle at 50% 0%, rgba(0, 255, 163, 0.05) 0%, transparent 50%);
+            color: var(--text-main); 
+            font-family: 'Outfit', sans-serif; 
             overflow-x: hidden;
+            min-height: 100vh;
         }
 
-        /* --- ARKA PLAN EFEKTİ --- */
-        #bg-glow {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: -1; pointer-events: none;
-        }
+        #snow { position:fixed; top:0; left:0; width:100%; height:100%; z-index:1; pointer-events:none; opacity: 0.2; }
 
-        /* --- MODERN NAVİGASYON --- */
-        nav {
+        /* --- MODERN TOP BAR --- */
+        .top-bar {
             position: fixed; top: 0; width: 100%; height: 80px;
             display: flex; align-items: center; justify-content: space-between;
-            padding: 0 40px; background: rgba(8, 10, 15, 0.8);
-            backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); z-index: 1000;
+            padding: 0 6%; background: var(--bg-nav);
+            backdrop-filter: blur(25px); border-bottom: 1px solid var(--border); z-index: 2000;
         }
 
-        .logo {
-            font-family: 'Syncopate', sans-serif; font-size: 22px; font-weight: 700;
-            background: linear-gradient(90deg, var(--primary), var(--accent));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            letter-spacing: -1px;
+        .brand {
+            font-family: 'Syncopate', sans-serif; font-size: 22px; font-weight: 700; 
+            letter-spacing: -1px; color: var(--primary);
+            text-shadow: 0 0 20px var(--primary-glow);
         }
 
-        .nav-actions { display: flex; gap: 15px; align-items: center; }
+        .right-menu { display: flex; gap: 12px; align-items: center; }
 
-        .btn {
-            padding: 10px 24px; border-radius: 12px; font-weight: 600;
-            cursor: pointer; transition: 0.3s; border: none; font-family: 'Outfit';
-            display: flex; align-items: center; gap: 8px;
-        }
-        .btn-primary { background: var(--primary); color: #000; box-shadow: 0 4px 15px rgba(0, 255, 163, 0.3); }
-        .btn-outline { background: transparent; color: white; border: 1px solid var(--border); }
-        .btn:hover { transform: translateY(-2px); filter: brightness(1.1); }
-
-        /* --- KULLANICI PANELİ --- */
-        .user-widget {
-            display: none; align-items: center; gap: 15px;
-            background: var(--glass); padding: 6px 6px 6px 18px;
+        /* --- USER PILL --- */
+        .user-pill {
+            display: none; align-items: center; gap: 12px;
+            background: rgba(255,255,255,0.05); padding: 6px 6px 6px 16px;
             border-radius: 16px; border: 1px solid var(--border);
-            position: relative; cursor: pointer;
+            cursor: pointer; position: relative; transition: 0.3s ease;
         }
-        .user-balance { font-weight: 800; color: var(--primary); font-size: 15px; }
-        .user-avatar { width: 40px; height: 40px; border-radius: 12px; object-fit: cover; border: 2px solid var(--primary); }
+        .user-pill:hover { background: rgba(255,255,255,0.08); border-color: var(--primary); }
 
-        /* --- HERO & ARAMA --- */
-        .hero { padding: 120px 40px 40px; text-align: center; }
-        .search-container {
-            max-width: 600px; margin: 30px auto; position: relative;
+        .balance-info b { 
+            font-size: 15px; color: var(--success); font-weight: 800;
         }
-        .search-container i { position: absolute; left: 20px; top: 50%; transform: translateY(-50%); color: var(--primary); }
-        .search-container input {
-            width: 100%; padding: 18px 20px 18px 55px; border-radius: 20px;
-            background: var(--glass); border: 1px solid var(--border);
-            color: white; font-size: 16px; outline: none; transition: 0.3s;
+
+        .avatar-frame { 
+            width: 38px; height: 38px; border-radius: 12px; overflow: hidden; 
+            border: 2px solid var(--primary); box-shadow: 0 0 15px var(--primary-glow);
         }
-        .search-container input:focus { border-color: var(--primary); background: rgba(255,255,255,0.08); }
+        .avatar-frame img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* --- SEARCH BOX --- */
+        .search-wrapper {
+            margin-top: 120px; padding: 0 6%; text-align:center; position: relative; z-index: 10;
+        }
+        .search-bar {
+            max-width: 550px; margin: 0 auto; position:relative;
+        }
+        .search-bar i { position:absolute; left:22px; top:50%; transform:translateY(-50%); color: var(--primary); font-size: 18px; }
+        .search-bar input {
+            width: 100%; padding: 18px 25px 18px 60px; border-radius: 20px;
+            background: var(--bg-card); border: 1px solid var(--border);
+            color: white; outline: none; font-size: 16px; transition: 0.3s;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .search-bar input:focus { border-color: var(--primary); background: rgba(255,255,255,0.07); }
 
         /* --- OYUN KARTLARI --- */
-        .container { max-width: 1300px; margin: 0 auto; padding: 20px; }
-        .section-header { 
-            display: flex; align-items: center; gap: 15px; margin: 40px 0 25px;
-            font-family: 'Syncopate'; font-size: 14px; color: var(--primary); opacity: 0.8;
+        .section-title {
+            padding: 50px 8% 25px; font-family: 'Syncopate', sans-serif; font-size: 14px; 
+            letter-spacing: 2px; color: var(--primary); opacity: 0.7;
+            display: flex; align-items: center; gap: 20px;
         }
-        .section-header::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, var(--border), transparent); }
+        .section-title::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, var(--border), transparent); }
 
-        .grid {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 25px;
+        .games-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
+            gap: 25px; padding: 0 8% 50px;
         }
 
-        .card {
-            background: var(--card-bg); border: 1px solid var(--border);
-            border-radius: 28px; padding: 30px; position: relative;
-            transition: 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-            overflow: hidden; cursor: pointer;
-            display: flex; flex-direction: column; align-items: center; text-align: center;
+        .game-card {
+            background: var(--bg-card); border-radius: 32px; padding: 40px 25px;
+            text-align: center; border: 1px solid var(--border); position: relative;
+            transition: 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); cursor: pointer; overflow: hidden;
+            display: flex; flex-direction: column; align-items: center;
         }
-        .card::before {
-            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(135deg, transparent, rgba(255,255,255,0.05));
-            pointer-events: none;
-        }
-        .card:hover {
-            transform: translateY(-10px);
+        .game-card:hover { 
+            transform: translateY(-12px); 
             background: rgba(255,255,255,0.06);
-            border-color: var(--primary);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            border-color: var(--primary); 
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5); 
         }
-
-        .card-icon {
-            width: 70px; height: 70px; background: var(--glass);
+        
+        .game-icon { 
+            width: 70px; height: 70px; background: rgba(0, 255, 163, 0.1);
             border-radius: 20px; display: flex; align-items: center; justify-content: center;
-            font-size: 32px; color: var(--primary); margin-bottom: 20px;
+            font-size: 32px; margin-bottom: 25px; color: var(--primary);
             transition: 0.3s;
         }
-        .card:hover .card-icon { transform: scale(1.1) rotate(5deg); background: var(--primary); color: #000; }
+        .game-card:hover .game-icon { transform: scale(1.1) rotate(5deg); background: var(--primary); color: #000; }
 
-        .card-title { font-size: 20px; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.5px; }
-        .card-tag { font-size: 12px; font-weight: 600; text-transform: uppercase; color: #94a3b8; }
+        .game-card span { font-weight: 700; font-size: 20px; display: block; margin-bottom: 12px; letter-spacing: -0.5px; }
+        
+        .badge { font-size: 11px; font-weight: 700; padding: 6px 14px; border-radius: 12px; background: var(--border); color: var(--text-dim); text-transform: uppercase; }
+        .badge-free { background: rgba(0, 255, 163, 0.1); color: var(--success); }
 
-        /* --- MODAL --- */
-        .modal {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.85);
-            backdrop-filter: blur(15px); display: none; align-items: center;
-            justify-content: center; z-index: 2000; padding: 20px;
+        /* --- MODALLAR --- */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(15px);
+            display: none; align-items: center; justify-content: center; z-index: 5000; padding: 20px;
         }
-        .modal-content {
-            background: #0f121a; border: 1px solid var(--border);
-            width: 100%; max-width: 450px; border-radius: 32px; padding: 40px;
-            position: relative; animation: modalIn 0.3s ease-out;
+        .modal-card { 
+            width: 100%; max-width: 480px; padding: 40px; border-radius: 35px; 
+            background: #0f121a; border: 1px solid var(--border); text-align: center;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.6);
         }
-        @keyframes modalIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+        .modal-card h2 { font-family: 'Syncopate'; margin-bottom: 30px; color: var(--primary); font-size: 20px; }
+        
+        .input-group { text-align: left; margin-bottom: 18px; }
+        .input-group label { font-size: 12px; color: var(--text-dim); margin-left: 12px; margin-bottom: 8px; display: block; }
+        .modal-card input { 
+            width: 100%; padding: 16px 20px; border-radius: 16px; 
+            background: rgba(255,255,255,0.03); border: 1px solid var(--border); color: white; outline: none; transition: 0.3s;
+        }
+        .modal-card input:focus { border-color: var(--primary); background: rgba(255,255,255,0.06); }
 
-        .input-box {
-            width: 100%; padding: 15px; background: var(--glass);
-            border: 1px solid var(--border); border-radius: 14px;
-            color: white; margin-bottom: 15px; outline: none; font-family: 'Outfit';
+        .btn-main { 
+            width: 100%; padding: 18px; border-radius: 18px; border: none; 
+            background: var(--primary); color: #000; font-weight: 800; 
+            font-size: 15px; cursor: pointer; transition: 0.3s;
         }
+        .btn-main:hover { transform: scale(1.02); filter: brightness(1.1); }
 
         /* --- DROPDOWN --- */
         .dropdown {
-            position: absolute; top: 100%; right: 0; width: 220px;
+            position: absolute; top: 75px; right: 0; width: 250px;
             background: #161b22; border: 1px solid var(--border);
-            border-radius: 18px; margin-top: 10px; display: none;
-            flex-direction: column; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border-radius: 22px; display: none; flex-direction: column; padding: 10px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.7); z-index: 3000;
         }
-        .dropdown.active { display: flex; }
-        .drop-item {
-            padding: 15px 20px; display: flex; align-items: center; gap: 12px;
-            color: #94a3b8; text-decoration: none; transition: 0.2s;
-        }
-        .drop-item:hover { background: var(--glass); color: white; }
+        .dropdown.active { display: flex; animation: slideUp 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28); }
+        .drop-item { padding: 14px 18px; display: flex; align-items: center; gap: 15px; color: var(--text-dim); text-decoration: none; font-size: 15px; border-radius: 14px; transition: 0.2s; }
+        .drop-item i { color: var(--primary); font-size: 18px; }
+        .drop-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
 
-        /* --- ÇARK --- */
-        .wheel-box { position: relative; width: 300px; height: 300px; margin: 0 auto 30px; }
-        #wheelCanvas { width: 100%; height: 100%; border-radius: 50%; border: 5px solid var(--border); }
-        .wheel-pin {
-            position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
-            z-index: 10; width: 30px; filter: drop-shadow(0 0 10px var(--primary));
-        }
+        @keyframes slideUp { from { opacity:0; transform: translateY(20px); } to { opacity:1; transform: translateY(0); } }
 
-        @media (max-width: 768px) {
-            nav { padding: 0 20px; }
-            .grid { grid-template-columns: 1fr 1fr; gap: 15px; }
-            .hero { padding: 100px 20px 20px; }
-            .card { padding: 20px; }
-            .card-icon { width: 50px; height: 50px; font-size: 24px; }
+        @media(max-width: 768px) {
+            .games-grid { grid-template-columns: 1fr 1fr; gap: 15px; padding: 0 20px; }
+            .section-title { padding: 40px 20px 20px; }
+            .brand { font-size: 18px; }
+            .game-card { padding: 30px 15px; border-radius: 24px; }
+            .game-icon { width: 55px; height: 55px; font-size: 24px; }
+            .game-card span { font-size: 17px; }
         }
     </style>
 </head>
 <body>
 
-<canvas id="bg-glow"></canvas>
+<canvas id="snow"></canvas>
 
-<nav>
-    <div class="logo">PIXELARENA</div>
-    <div class="nav-actions">
-        <button class="btn btn-outline" id="loginBtn">GİRİŞ</button>
-        <button class="btn btn-primary" id="regBtn">KAYIT OL</button>
+<div class="top-bar">
+    <div class="brand">PIXELARENA</div>
+    
+    <div class="right-menu">
+        <button class="btn-main" id="loginBtn" style="padding: 10px 20px; width:auto; background:transparent; color:white; border:1px solid var(--border);">GİRİŞ</button>
+        <button class="btn-main" id="regBtn" style="padding: 10px 20px; width:auto;">KAYIT</button>
 
-        <div class="user-widget" id="userPill">
-            <span class="user-balance" id="userBalance">0 ₺</span>
-            <img src="" class="user-avatar" id="avatarTrigger">
+        <div class="user-pill" id="userPill">
+            <div class="balance-info">
+                <b id="userBalance">0 ₺</b>
+            </div>
+            <div class="avatar-frame" id="avatarTrigger">
+                <img src="" id="userProfileImg">
+            </div>
             <div class="dropdown" id="userDropdown">
-                <a href="#" class="drop-item" onclick="openModal('profileModal')"><i class="fa-solid fa-circle-user"></i> Profilim</a>
-                <a href="#" class="drop-item" onclick="openModal('wheelModal')"><i class="fa-solid fa-star"></i> Günlük Çark</a>
-                <a href="#" class="drop-item" onclick="openModal('bonusModal')"><i class="fa-solid fa-ticket"></i> Promo Kod</a>
-                <a href="#" class="drop-item" id="logoutBtn" style="color:var(--secondary)"><i class="fa-solid fa-power-off"></i> Çıkış Yap</a>
+                <div class="drop-item" onclick="openModal('profileModal')"><i class="fa-solid fa-user-astronaut"></i> Profil Ayarları</div>
+                <div class="drop-item" onclick="openModal('wheelModal')"><i class="fa-solid fa-dice"></i> Günlük Çark</div>
+                <div class="drop-item" onclick="openModal('bonusModal')"><i class="fa-solid fa-ticket"></i> Promo Kod</div>
+                <div class="drop-item" id="logoutBtn" style="color:var(--danger); border-top:1px solid var(--border); margin-top:8px; padding-top:18px;"><i class="fa-solid fa-power-off"></i> Güvenli Çıkış</div>
             </div>
         </div>
     </div>
-</nav>
+</div>
 
-<div class="hero">
-    <h1 style="font-size: clamp(24px, 5vw, 42px); font-weight: 800;">Sınırları <span style="color: var(--primary)">Zorla.</span></h1>
-    <div class="search-container">
+<div class="search-wrapper">
+    <div class="search-bar">
         <i class="fa-solid fa-magnifying-glass"></i>
-        <input type="text" id="searchInput" placeholder="Favori oyununu keşfet...">
+        <input type="text" id="searchInput" placeholder="Favori oyununu ara...">
     </div>
 </div>
 
-<div class="container">
-    <div class="section-header">REKABETÇİ ARENA</div>
-    <div class="grid" id="gamesList">
-        <div class="card" data-name="reflex duel" onclick="checkLogin('duel.html')">
-            <div class="card-icon"><i class="fa-solid fa-bolt"></i></div>
-            <div class="card-title">Reflex Duel</div>
-            <div class="card-tag">PVP • Online</div>
+<main id="games" style="position: relative; z-index: 10;">
+    <div class="section-title">MULTIPLAYER ARENA</div>
+    <div class="games-grid">
+        <div class="game-card" data-name="reflex duel" onclick="checkLogin('duel.html')">
+            <div class="game-icon"><i class="fa-solid fa-bolt"></i></div>
+            <span>Reflex Duel</span>
+            <div class="badge">Online PvP</div>
         </div>
+        <div class="game-card" data-name="neon grid conquest" onclick="checkLogin('neongridconquest.html')">
+            <div class="game-icon"><i class="fa-solid fa-border-all"></i></div>
+            <span>Grid Conquest</span>
+            <div class="badge">Online PvP</div>
+        </div>
+    </div>
 
-        <div class="card" data-name="skycrash" onclick="checkLogin('skycrash.html')">
-            <div class="card-icon"><i class="fa-solid fa-rocket"></i></div>
-            <div class="card-title">SkyCrash</div>
-            <div class="card-tag">Multiplier • Premium</div>
+    <div class="section-title">BRAIN TRAINING</div>
+    <div class="games-grid">
+        <div class="game-card" data-name="loops" onclick="location.href='loops.html'">
+            <div class="game-icon"><i class="fa-solid fa-brain"></i></div>
+            <span>Loops</span>
+            <div class="badge badge-free">Ücretsiz</div>
         </div>
+        <div class="game-card" data-name="pattern master" onclick="location.href='patternmaster.html'">
+            <div class="game-icon"><i class="fa-solid fa-shapes"></i></div>
+            <span>Pattern Master</span>
+            <div class="badge badge-free">Ücretsiz</div>
+        </div>
+    </div>
 
-        <div class="card" data-name="mines" onclick="checkLogin('mines.html')">
-            <div class="card-icon"><i class="fa-solid fa-bomb"></i></div>
-            <div class="card-title">Mines</div>
-            <div class="card-tag">Strategy • Premium</div>
+    <div class="section-title">PREMIUM ACCESS</div>
+    <div class="games-grid">
+        <div class="game-card" data-name="skycrash" onclick="checkLogin('skycrash.html')">
+            <div class="game-icon"><i class="fa-solid fa-rocket"></i></div>
+            <span>SkyCrash</span>
+            <div class="badge">Üyelik Gerekir</div>
         </div>
+        <div class="game-card" data-name="mines" onclick="checkLogin('mines.html')">
+            <div class="game-icon"><i class="fa-solid fa-land-mine-on"></i></div>
+            <span>Mines</span>
+            <div class="badge">Üyelik Gerekir</div>
+        </div>
+        <div class="game-card" data-name="blackjack" onclick="checkLogin('blackjack.html')">
+            <div class="game-icon"><i class="fa-solid fa-id-card"></i></div>
+            <span>BlackJack</span>
+            <div class="badge">Üyelik Gerekir</div>
+        </div>
+        <div class="game-card" data-name="pisti" onclick="checkLogin('pisti.html')">
+            <div class="game-icon"><i class="fa-solid fa-copy"></i></div>
+            <span>Pişti</span>
+            <div class="badge">Üyelik Gerekir</div>
+        </div>    
+    </div>
 
-        <div class="card" data-name="blackjack" onclick="checkLogin('blackjack.html')">
-            <div class="card-icon"><i class="fa-solid fa-clover"></i></div>
-            <div class="card-title">BlackJack</div>
-            <div class="card-tag">Cards • Classic</div>
+    <div class="section-title">ARCADE HUB</div>
+    <div class="games-grid">
+        <div class="game-card" data-name="space pro" onclick="location.href='spacepro.html'">
+            <div class="game-icon"><i class="fa-solid fa-shuttle-space"></i></div>
+            <span>Space Pro</span>
+            <div class="badge badge-free">Ücretsiz</div>
         </div>
+        <div class="game-card" data-name="snake pro" onclick="location.href='snakepro.html'">
+            <div class="game-icon"><i class="fa-solid fa-worm"></i></div>
+            <span>Snake Pro</span>
+            <div class="badge badge-free">Ücretsiz</div>
+        </div>
+        <div class="game-card" data-name="cyber stack" onclick="location.href='cyberstack.html'">
+            <div class="game-icon"><i class="fa-solid fa-layer-group"></i></div>
+            <span>Cyber Stack</span>
+            <div class="badge badge-free">Ücretsiz</div>
+        </div>
+    </div>
+</main>
 
-        <div class="card" data-name="loops" onclick="location.href='loops.html'">
-            <div class="card-icon"><i class="fa-solid fa-brain"></i></div>
-            <div class="card-title">Loops</div>
-            <div class="card-tag">Puzzle • Ücretsiz</div>
+<div class="modal-overlay" id="profileModal">
+    <div class="modal-card">
+        <h2>PROFİL AYARLARI</h2>
+        <div class="input-group">
+            <label>E-posta</label>
+            <input type="text" id="profEmail" disabled>
         </div>
-
-        <div class="card" data-name="space pro" onclick="location.href='spacepro.html'">
-            <div class="card-icon"><i class="fa-solid fa-shuttle-space"></i></div>
-            <div class="card-title">Space Pro</div>
-            <div class="card-tag">Arcade • Ücretsiz</div>
+        <div class="input-group">
+            <label>Ad Soyad</label>
+            <input type="text" id="profFullName" placeholder="Ad Soyad giriniz">
         </div>
+        <div class="input-group">
+            <label>Kullanıcı Adı</label>
+            <input type="text" id="profUser" placeholder="Yeni kullanıcı adı">
+        </div>
+        <div class="input-group">
+            <label>Avatar Seçimi (<span id="avRight">0</span>/3)</label>
+            <div class="avatar-grid" id="avatarLibrary" style="display:grid; grid-template-columns: repeat(4, 1fr); gap:10px;"></div>
+        </div>
+        <button class="btn-main" onclick="updateProfile()">GÜNCELLE</button>
+        <p onclick="closeModal('profileModal')" style="margin-top:20px;cursor:pointer;opacity:0.5;font-size:13px;">Kapat</p>
     </div>
 </div>
 
-<div class="modal" id="authOverlay">
-    <div class="modal-content">
-        <h2 id="authTitle" style="margin-bottom:25px; font-family:'Syncopate'">GİRİŞ YAP</h2>
-        <input type="email" id="authEmail" class="input-box" placeholder="E-posta">
-        <input type="password" id="authPassword" class="input-box" placeholder="Şifre">
-        <input type="text" id="authUsername" class="input-box" placeholder="Kullanıcı Adı" style="display:none;">
-        <button class="btn btn-primary" id="authSubmit" style="width:100%; justify-content:center; padding:18px;">DEVAM ET</button>
-        <p id="switchMode" style="text-align:center; margin-top:20px; font-size:14px; cursor:pointer; opacity:0.6;">Hesabın yok mu? Kayıt Ol</p>
+<div class="modal-overlay" id="wheelModal">
+    <div class="modal-card">
+        <h2>ŞANS ÇARKINI ÇEVİR</h2>
+        <div class="wheel-container" style="position:relative; width:280px; height:280px; margin:20px auto;">
+            <div class="wheel-pointer" style="position:absolute; top:-15px; left:50%; transform:translateX(-50%); z-index:10; font-size:30px; color:var(--primary);"><i class="fa-solid fa-caret-down"></i></div>
+            <canvas id="wheelCanvas" width="500" height="500" style="width:100%; height:100%; transition: transform 5s cubic-bezier(0.1, 0, 0.1, 1);"></canvas>
+        </div>
+        <button class="btn-main" id="spinBtn" onclick="spinWheel()">ÇEVİR</button>
+        <p onclick="closeModal('wheelModal')" style="margin-top:20px;cursor:pointer;opacity:0.5;">Daha Sonra</p>
     </div>
 </div>
 
-<div class="modal" id="wheelModal">
-    <div class="modal-content" style="text-align:center;">
-        <h2 style="font-family:'Syncopate'; margin-bottom:20px;">ŞANS ÇARKI</h2>
-        <div class="wheel-box">
-            <img src="https://cdn-icons-png.flaticon.com/512/3585/3585145.png" class="wheel-pin">
-            <canvas id="wheelCanvas" width="500" height="500"></canvas>
-        </div>
-        <button class="btn btn-primary" id="spinBtn" onclick="spinWheel()" style="width:100%; justify-content:center;">ÇEVİR</button>
-        <button class="btn btn-outline" onclick="closeModal('wheelModal')" style="width:100%; margin-top:10px; justify-content:center;">KAPAT</button>
+<div class="modal-overlay" id="bonusModal">
+    <div class="modal-card">
+        <i class="fa-solid fa-gift" style="font-size:50px; color:var(--primary); margin-bottom:20px;"></i>
+        <h2>PROMO KOD</h2>
+        <input type="text" id="promoInput" placeholder="Kodu buraya yazın..." style="text-align:center; font-family:'Syncopate'; letter-spacing:3px; margin-bottom:20px;" class="modal-card input">
+        <button class="btn-main" onclick="claimPromo()">AKTİF ET</button>
+        <p onclick="closeModal('bonusModal')" style="margin-top:20px;cursor:pointer;opacity:0.5;">Vazgeç</p>
+    </div>
+</div>
+
+<div class="modal-overlay" id="authOverlay">
+    <div class="modal-card">
+        <h2 id="authTitle">SİSTEME GİRİŞ</h2>
+        <input type="email" id="authEmail" placeholder="E-posta" style="margin-bottom:12px;" class="modal-card input">
+        <input type="password" id="authPassword" placeholder="Şifre" style="margin-bottom:12px;" class="modal-card input">
+        <input type="text" id="authUsername" placeholder="Kullanıcı Adı" style="display:none; margin-bottom:12px;" class="modal-card input">
+        <button class="btn-main" id="authSubmit">GİRİŞ YAP</button>
+        <p id="switchMode" style="margin-top:25px;font-size:14px;cursor:pointer; color:var(--text-dim);">Hesabın yok mu? <b style="color:var(--primary)">Kayıt Ol</b></p>
     </div>
 </div>
 
@@ -294,146 +360,170 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-const avatars = ["https://i.pravatar.cc/150?img=11", "https://i.pravatar.cc/150?img=32", "https://i.pravatar.cc/150?img=44", "https://i.pravatar.cc/150?img=52"];
+const avatars = ["https://i.pravatar.cc/150?img=11", "https://i.pravatar.cc/150?img=12", "https://i.pravatar.cc/150?img=13", "https://i.pravatar.cc/150?img=14", "https://i.pravatar.cc/150?img=15", "https://i.pravatar.cc/150?img=16", "https://i.pravatar.cc/150?img=17", "https://i.pravatar.cc/150?img=18"];
+let selectedAvatarUrl = "";
 
-// --- UI KONTROLLERİ ---
-window.openModal = (id) => document.getElementById(id).style.display = 'flex';
-window.closeModal = (id) => document.getElementById(id).style.display = 'none';
+// ÇARK ÇİZİMİ
+const canvas = document.getElementById("wheelCanvas");
+const ctxWheel = canvas.getContext("2d");
+const prizes = ["1.000₺", "5.000₺", "100₺", "2.500₺", "500₺", "10.000₺", "250₺", "İFLAS"];
+const colors = ["#00ffa3", "#080a0f", "#7000ff", "#080a0f", "#00ffa3", "#080a0f", "#7000ff", "#ff4d4d"];
 
-document.getElementById("avatarTrigger").onclick = (e) => {
-    e.stopPropagation();
-    document.getElementById("userDropdown").classList.toggle("active");
-};
+function drawWheel() {
+    const arc = Math.PI / (prizes.length / 2);
+    for (let i = 0; i < prizes.length; i++) {
+        ctxWheel.beginPath();
+        ctxWheel.fillStyle = colors[i];
+        ctxWheel.moveTo(250, 250);
+        ctxWheel.arc(250, 250, 240, i * arc, (i + 1) * arc);
+        ctxWheel.fill();
+        ctxWheel.save();
+        ctxWheel.translate(250, 250);
+        ctxWheel.rotate(i * arc + arc / 2);
+        ctxWheel.fillStyle = "white";
+        ctxWheel.font = "bold 22px Outfit";
+        ctxWheel.fillText(prizes[i], 110, 10);
+        ctxWheel.restore();
+    }
+}
+drawWheel();
 
-window.onclick = () => document.getElementById("userDropdown").classList.remove("active");
-
-// --- ARAMA FİLTRESİ ---
-document.getElementById('searchInput').addEventListener('input', (e) => {
-    const term = e.target.value.toLowerCase();
-    document.querySelectorAll('.card').forEach(card => {
-        card.style.display = card.getAttribute('data-name').includes(term) ? 'flex' : 'none';
-    });
-});
-
-// --- AUTH DURUMU ---
+// AUTH DURUMU
 onAuthStateChanged(auth, user => {
     if(user) {
         document.getElementById("loginBtn").style.display="none"; 
         document.getElementById("regBtn").style.display="none";
         document.getElementById("userPill").style.display="flex";
-        
         onSnapshot(doc(db, "users", user.uid), s => {
             if(s.exists()) {
                 const data = s.data();
                 document.getElementById("userBalance").innerText = data.balance.toLocaleString('tr-TR') + " ₺";
-                document.getElementById("userAvatar").src = data.avatar || avatars[0];
+                document.getElementById("userProfileImg").src = data.avatar || avatars[0];
+                document.getElementById("profEmail").value = user.email;
+                document.getElementById("profFullName").value = data.fullName || "";
+                if(data.fullName) document.getElementById("profFullName").disabled = true;
+                document.getElementById("profUser").value = data.username || "";
+                if(data.nameChanges >= 1) document.getElementById("profUser").disabled = true;
+                document.getElementById("avRight").innerText = data.avatarChanges || 0;
+                loadAvatarLibrary(data.avatar, data.avatarChanges || 0);
             }
         });
     } else {
-        document.getElementById("loginBtn").style.display="flex"; 
-        document.getElementById("regBtn").style.display="flex";
+        document.getElementById("loginBtn").style.display="block"; 
+        document.getElementById("regBtn").style.display="block";
         document.getElementById("userPill").style.display="none";
     }
 });
 
-// --- GİRİŞ / KAYIT ---
-let isLogin = true;
-document.getElementById("loginBtn").onclick = () => { isLogin=true; updateAuthUI(); openModal('authOverlay'); };
-document.getElementById("regBtn").onclick = () => { isLogin=false; updateAuthUI(); openModal('authOverlay'); };
-document.getElementById("switchMode").onclick = () => { isLogin = !isLogin; updateAuthUI(); };
-
-function updateAuthUI() { 
-    document.getElementById("authTitle").innerText = isLogin ? "GİRİŞ YAP" : "KAYIT OL"; 
-    document.getElementById("authUsername").style.display = isLogin ? "none" : "block"; 
+function loadAvatarLibrary(current, right) {
+    const lib = document.getElementById("avatarLibrary");
+    lib.innerHTML = "";
+    avatars.forEach(url => {
+        const div = document.createElement("div");
+        div.style = "aspect-ratio:1/1; border-radius:12px; cursor:pointer; border:2px solid transparent; overflow:hidden; transition:0.2s;";
+        if(url === current) div.style.borderColor = "var(--primary)";
+        div.innerHTML = `<img src="${url}" style="width:100%; height:100%; object-fit:cover;">`;
+        div.onclick = () => {
+            if(right >= 3) return alert("Avatar değiştirme hakkınız kalmadı!");
+            document.querySelectorAll("#avatarLibrary div").forEach(i => i.style.borderColor = "transparent");
+            div.style.borderColor = "var(--primary)";
+            selectedAvatarUrl = url;
+        };
+        lib.appendChild(div);
+    });
 }
 
-document.getElementById("authSubmit").onclick = async () => {
-    const email = document.getElementById("authEmail").value;
-    const pass = document.getElementById("authPassword").value;
-    const userN = document.getElementById("authUsername").value;
-    try {
-        if(isLogin) { await signInWithEmailAndPassword(auth, email, pass); }
-        else {
-            const res = await createUserWithEmailAndPassword(auth, email, pass);
-            await setDoc(doc(db, "users", res.user.uid), { 
-                username: userN, balance: 500, lastSpin: 0, 
-                nameChanges: 0, avatarChanges: 0, fullName: "", 
-                avatar: avatars[0] 
-            });
-        }
-        closeModal('authOverlay');
-    } catch(e) { alert("Hata: " + e.message); }
+// AKSİYONLAR
+window.updateProfile = async () => {
+    const user = auth.currentUser;
+    const userDoc = await getDoc(doc(db, "users", user.uid));
+    const data = userDoc.data();
+    let updates = {};
+    const newName = document.getElementById("profUser").value;
+    const newFull = document.getElementById("profFullName").value;
+    if(!data.fullName && newFull) updates.fullName = newFull;
+    if(data.nameChanges < 1 && newName !== data.username) { updates.username = newName; updates.nameChanges = increment(1); }
+    if(selectedAvatarUrl && selectedAvatarUrl !== data.avatar && data.avatarChanges < 3) { updates.avatar = selectedAvatarUrl; updates.avatarChanges = increment(1); }
+    if(Object.keys(updates).length > 0) { await updateDoc(doc(db, "users", user.uid), updates); alert("Profil güncellendi!"); closeModal('profileModal'); }
 };
-
-document.getElementById("logoutBtn").onclick = () => signOut(auth);
-window.checkLogin = (url) => { if(!auth.currentUser) openModal('authOverlay'); else location.href = url; };
-
-// --- ÇARK SİSTEMİ (Modern Çizim) ---
-const canvas = document.getElementById("wheelCanvas");
-const ctx = canvas.getContext("2d");
-const prizes = ["1000₺", "5000₺", "100₺", "2500₺", "500₺", "10.000₺", "250₺", "İFLAS"];
-const colors = ["#00ffa3", "#080a0f", "#00d4ff", "#080a0f", "#00ffa3", "#080a0f", "#00d4ff", "#dc143c"];
-
-function drawWheel() {
-    const arc = Math.PI / (prizes.length / 2);
-    ctx.clearRect(0,0,500,500);
-    for (let i = 0; i < prizes.length; i++) {
-        ctx.beginPath();
-        ctx.fillStyle = colors[i];
-        ctx.moveTo(250, 250);
-        ctx.arc(250, 250, 240, i * arc, (i + 1) * arc);
-        ctx.fill();
-        ctx.save();
-        ctx.translate(250, 250);
-        ctx.rotate(i * arc + arc / 2);
-        ctx.fillStyle = i % 2 === 0 ? "#000" : "#fff";
-        ctx.font = "bold 22px Outfit";
-        ctx.fillText(prizes[i], 120, 10);
-        ctx.restore();
-    }
-}
-drawWheel();
 
 window.spinWheel = async () => {
     const user = auth.currentUser;
     const s = await getDoc(doc(db, "users", user.uid));
-    const last = s.data().lastSpin || 0;
-    if(Date.now() - last < 86400000) return alert("Yarın tekrar gel!");
-
-    const deg = Math.floor(Math.random() * 360) + 3600;
-    canvas.style.transition = "transform 5s cubic-bezier(0.1, 0, 0.1, 1)";
-    canvas.style.transform = `rotate(${deg}deg)`;
-
+    if(Date.now() - (s.data().lastSpin || 0) < 86400000) return alert("Günde 1 kez!");
+    const btn = document.getElementById("spinBtn"); btn.disabled = true;
+    const randomDeg = Math.floor(Math.random() * 360) + 3600;
+    document.getElementById("wheelCanvas").style.transform = `rotate(${randomDeg}deg)`;
     setTimeout(async () => {
-        const actualDeg = deg % 360;
-        const prizeIndex = Math.floor(((360 - actualDeg) % 360) / (360 / prizes.length));
+        const prizeIndex = Math.floor(((360 - (randomDeg % 360)) % 360) / (360 / prizes.length));
         const prizeStr = prizes[prizeIndex];
-        
         if(prizeStr !== "İFLAS") {
             const amount = parseInt(prizeStr.replace('.','').replace('₺',''));
             await updateDoc(doc(db, "users", user.uid), { balance: increment(amount), lastSpin: Date.now() });
-            alert("Kazandın: " + prizeStr);
+            alert(`Tebrikler! ${amount} ₺ kazandınız.`);
         } else {
             await updateDoc(doc(db, "users", user.uid), { balance: 0, lastSpin: Date.now() });
-            alert("Maalesef İflas!");
+            alert("İflas ettiniz!");
         }
-        closeModal('wheelModal');
+        btn.disabled = false; closeModal('wheelModal');
     }, 5100);
 };
 
-// Arka Plan Glow Efekti
-const bgCanvas = document.getElementById("bg-glow");
-const bgCtx = bgCanvas.getContext("2d");
-function resize() { bgCanvas.width = window.innerWidth; bgCanvas.height = window.innerHeight; }
-window.onresize = resize; resize();
+window.claimPromo = async () => {
+    const code = document.getElementById("promoInput").value.trim().toUpperCase();
+    const q = query(collection(db, "promos"), where("code", "==", code));
+    const snap = await getDocs(q);
+    if(!snap.empty) {
+        const promo = snap.docs[0];
+        await updateDoc(doc(db, "users", auth.currentUser.uid), { balance: increment(promo.data().amount) });
+        await deleteDoc(doc(db, "promos", promo.id));
+        alert("Başarılı!"); closeModal('bonusModal');
+    } else alert("Geçersiz kod!");
+};
 
-function animate() {
-    bgCtx.clearRect(0,0,bgCanvas.width, bgCanvas.height);
-    // Basit partikül veya ışık süzmesi eklenebilir
-    requestAnimationFrame(animate);
+// UI KONTROLLERİ
+document.getElementById('searchInput').addEventListener('input', (e) => {
+    const term = e.target.value.toLowerCase();
+    document.querySelectorAll('.game-card').forEach(card => card.style.display = card.getAttribute('data-name').includes(term) ? 'flex' : 'none');
+});
+
+window.openModal = (id) => document.getElementById(id).style.display = 'flex';
+window.closeModal = (id) => document.getElementById(id).style.display = 'none';
+document.getElementById("avatarTrigger").onclick = (e) => { e.stopPropagation(); document.getElementById("userDropdown").classList.toggle("active"); };
+window.onclick = () => document.getElementById("userDropdown").classList.remove("active");
+
+// AUTH FORM
+let isLogin = true;
+document.getElementById("loginBtn").onclick = () => { isLogin=true; updateAuthUI(); openModal('authOverlay'); };
+document.getElementById("regBtn").onclick = () => { isLogin=false; updateAuthUI(); openModal('authOverlay'); };
+document.getElementById("switchMode").onclick = () => { isLogin = !isLogin; updateAuthUI(); };
+function updateAuthUI() { 
+    document.getElementById("authTitle").innerText = isLogin ? "SİSTEME GİRİŞ" : "KAYIT OLUN"; 
+    document.getElementById("authUsername").style.display = isLogin ? "none" : "block"; 
 }
-animate();
+document.getElementById("authSubmit").onclick = async () => {
+    const email = document.getElementById("authEmail").value;
+    const pass = document.getElementById("authPassword").value;
+    try {
+        if(isLogin) { await signInWithEmailAndPassword(auth, email, pass); }
+        else {
+            const res = await createUserWithEmailAndPassword(auth, email, pass);
+            await setDoc(doc(db, "users", res.user.uid), { username: document.getElementById("authUsername").value, balance: 500, lastSpin: 0, nameChanges: 0, avatarChanges: 0, fullName: "", avatar: avatars[0] });
+        }
+        closeModal('authOverlay');
+    } catch(e) { alert("Hata: " + e.message); }
+};
+document.getElementById("logoutBtn").onclick = () => signOut(auth);
+window.checkLogin = (url) => { if(!auth.currentUser) openModal('authOverlay'); else location.href = url; };
 
+// Kar Efekti
+const cSnow = document.getElementById("snow"); const ctxS = cSnow.getContext("2d"); let p = [];
+function res() { cSnow.width = window.innerWidth; cSnow.height = window.innerHeight; }
+window.onresize = res; res();
+for(let i=0; i<100; i++) p.push({x:Math.random()*cSnow.width, y:Math.random()*cSnow.height, r:Math.random()*2+1, d:Math.random()*1+0.5});
+function drawS() { ctxS.clearRect(0,0,cSnow.width, cSnow.height); ctxS.fillStyle = "rgba(255,255,255,0.3)"; ctxS.beginPath(); p.forEach(p => { ctxS.moveTo(p.x, p.y); ctxS.arc(p.x, p.y, p.r, 0, Math.PI*2); p.y += p.d; if(p.y > cSnow.height) p.y = -5; }); ctxS.fill(); requestAnimationFrame(drawS); }
+drawS();
 </script>
+
 </body>
 </html>
