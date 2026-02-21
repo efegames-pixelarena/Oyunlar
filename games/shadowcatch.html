@@ -44,7 +44,7 @@
 
     h1 { margin-top:80px; font-size: 18px; letter-spacing: 1px; color: rgba(255,255,255,0.8); }
     .score-board { margin: 8px 0; font-weight: bold; color: #ffcc00; font-size: 14px; background: rgba(0,0,0,0.3); padding: 4px 15px; border-radius: 20px; }
-    #turnIndicator { font-size: 12px; color: #4fd1ff; margin-bottom: 5px; font-weight: 800; }
+    #statusInfo { font-size: 12px; color: #4fd1ff; margin-bottom: 5px; font-weight: 800; text-transform: uppercase; }
 
     .table {
         width:92%; max-width:500px; height:380px; border-radius:180px; position:relative;
@@ -108,7 +108,7 @@
         background: linear-gradient(135deg, #1a2a6c, #0b1023); color: white; padding: 30px; border-radius: 25px; width: 85%; max-width: 320px;
         text-align: center; border: 2px solid #4fd1ff;
     }
-    .modal-msg { font-size: 18px; font-weight: 800; margin-bottom: 20px; color: #ffcc00; }
+    .modal-msg { font-size: 18px; font-weight: 800; margin-bottom: 20px; color: #ffcc00; white-space: pre-line;}
     .modal-btn { background: #4fd1ff; color: #0b1023; border: none; padding: 12px 30px; border-radius: 15px; width: 100%; font-weight: 800; cursor: pointer;}
 </style>
 </head>
@@ -124,7 +124,7 @@
 </div>
 
 <h1>PixelArena Online</h1>
-<div id="turnIndicator">OYUNCU BEKLENİYOR...</div>
+<div id="statusInfo">Giriş Bekleniyor...</div>
 <div class="score-board">SİZ: <span id="myScore">0</span> — RAKİP: <span id="oppScore">0</span></div>
 
 <div class="table" id="tableArea">
@@ -155,7 +155,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, onSnapshot, updateDoc, setDoc, collection, query, where, getDocs, limit, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, doc, onSnapshot, updateDoc, setDoc, collection, query, where, getDocs, limit, deleteDoc, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
@@ -182,8 +182,7 @@ const sfx = {
 
 function playSfx(name) { sfx[name].currentTime = 0; sfx[name].play().catch(() => {}); }
 
-let myUid, userRef, currentRoomId, isHost = false, balance = 0, currentBet = 0;
-let roomUnsub = null;
+let myUid, userRef, currentRoomId, isHost = false, balance = 0, currentBet = 0, roomUnsub = null;
 
 onAuthStateChanged(auth, user => {
     if (!user) return;
@@ -191,18 +190,18 @@ onAuthStateChanged(auth, user => {
     userRef = doc(db, "users", myUid);
     onSnapshot(userRef, snap => {
         balance = snap.data().balance || 0;
-        document.getElementById("balance").innerText = balance.toLocaleString();
+        document.getElementById("balance").innerText = balance.toLocaleString('tr-TR');
     });
 });
 
 window.addBet = (amt) => { if(balance >= amt) { currentBet += amt; balance -= amt; playSfx("chip"); updateUI(); } };
 window.cancelBet = () => { balance += currentBet; currentBet = 0; playSfx("chip"); updateUI(); };
-function updateUI() { document.getElementById("bet").innerText = currentBet; document.getElementById("balance").innerText = balance; }
+function updateUI() { document.getElementById("pot").innerText = currentBet; document.getElementById("balance").innerText = balance; }
 
 window.unlockAudioAndStart = async () => {
     if(currentBet < 100) { alert("Min 100₺!"); return; }
     document.getElementById("startBtn").disabled = true;
-    document.getElementById("startBtn").innerText = "ARANIYOR...";
+    document.getElementById("startBtn").innerText = "ODA ARANIYOR...";
     await updateDoc(userRef, { balance });
     findRoom();
 };
@@ -212,7 +211,6 @@ async function findRoom() {
     const snap = await getDocs(q);
 
     if(snap.empty) {
-        // HOST OL
         isHost = true;
         currentRoomId = "room_" + myUid;
         const deck = createDeck();
@@ -225,20 +223,15 @@ async function findRoom() {
             lastAction: Date.now()
         });
     } else {
-        // GUEST OL
         isHost = false;
-        const roomDoc = snap.docs[0];
-        currentRoomId = roomDoc.id;
-        const data = roomDoc.data();
+        currentRoomId = snap.docs[0].id;
+        const data = snap.docs[0].data();
         const deck = data.deck;
         const myHand = [deck.shift(), deck.shift(), deck.shift(), deck.shift()];
         await updateDoc(doc(db, "pisti_rooms", currentRoomId), {
-            guest: myUid,
-            pot: data.pot + currentBet,
-            status: "playing",
-            deck: deck,
-            [`scores.${myUid}`]: 0,
-            [`hands.${myUid}`]: myHand
+            guest: myUid, pot: data.pot + currentBet,
+            status: "playing", deck: deck,
+            [`scores.${myUid}`]: 0, [`hands.${myUid}`]: myHand
         });
     }
     listenRoom();
@@ -254,17 +247,16 @@ function listenRoom() {
     roomUnsub = onSnapshot(doc(db, "pisti_rooms", currentRoomId), async (snap) => {
         if(!snap.exists()) return;
         const data = snap.data();
-        
-        // UI Güncelle
-        document.getElementById("pot").innerText = data.pot.toLocaleString();
-        document.getElementById("myScore").innerText = data.scores[myUid] || 0;
         const oppUid = data.host === myUid ? data.guest : data.host;
+        
+        document.getElementById("pot").innerText = data.pot.toLocaleString('tr-TR');
+        document.getElementById("myScore").innerText = data.scores[myUid] || 0;
         document.getElementById("oppScore").innerText = oppUid ? (data.scores[oppUid] || 0) : 0;
         
         if(data.status === "waiting") {
-            document.getElementById("turnIndicator").innerText = "RAKİP BEKLENİYOR...";
-        } else {
-            document.getElementById("turnIndicator").innerText = data.turn === myUid ? "SIRA SİZDE" : "RAKİPTE";
+            document.getElementById("statusInfo").innerText = "RAKİP BEKLENİYOR...";
+        } else if(data.status === "playing") {
+            document.getElementById("statusInfo").innerText = data.turn === myUid ? "SIRA SİZDE" : "RAKİPTE";
             document.getElementById("chipsArea").style.display = "none";
             document.getElementById("startBtn").style.display = "none";
         }
@@ -272,12 +264,10 @@ function listenRoom() {
         renderTable(data.table);
         renderHands(data.hands[myUid], data.hands[oppUid]);
 
-        // Tur Bitti mi? (Her iki el de boşsa)
-        if(data.status === "playing" && data.hands[myUid]?.length === 0 && data.hands[oppUid]?.length === 0) {
-            if(isHost) handleNewRound(data);
+        if(isHost && data.status === "playing" && data.hands[myUid]?.length === 0 && data.hands[oppUid]?.length === 0) {
+            handleNewRound(data);
         }
 
-        // Oyun Bitti mi?
         if(data.status === "finished") handleGameOver(data);
     });
 }
@@ -288,10 +278,8 @@ function renderTable(tableCards) {
     tableCards.forEach((c, i) => {
         const img = document.createElement("img");
         img.className = "stack-card";
-        // Sadece en üstteki kart açık, diğerleri kapalı (Oyun başında 3 kapalı 1 açık kuralı)
-        if(i === tableCards.length - 1) img.src = `https://deckofcardsapi.com/static/img/${c}.png`;
-        else img.src = `https://deckofcardsapi.com/static/img/back.png`;
-        img.style.transform = `rotate(${i * 5}deg)`;
+        img.src = i === tableCards.length - 1 ? `https://deckofcardsapi.com/static/img/${c}.png` : `https://deckofcardsapi.com/static/img/back.png`;
+        img.style.transform = `rotate(${i * 3}deg)`;
         tc.appendChild(img);
     });
 }
@@ -318,12 +306,10 @@ function renderHands(myCards, oppCards) {
 }
 
 async function playCard(card, idx) {
-    const snap = await getDocs(query(collection(db, "pisti_rooms"), where("status", "==", "playing"))); // Hızlı kontrol
     const roomRef = doc(db, "pisti_rooms", currentRoomId);
-    const roomSnap = await getDocs(query(collection(db, "pisti_rooms"), where(document.documentID, "==", currentRoomId))); // Basitleştirilmiş
     
-    // Doğrudan snap üzerinden gitmek yerine mevcut room datasını alalım
-    onSnapshot(roomRef, async (s) => {
+    await runTransaction(db, async (transaction) => {
+        const s = await transaction.get(roomRef);
         const data = s.data();
         if(data.turn !== myUid || data.status !== "playing") return;
 
@@ -331,34 +317,28 @@ async function playCard(card, idx) {
         let newTable = [...data.table, card];
         let myNewHand = [...data.hands[myUid]];
         myNewHand.splice(idx, 1);
-        
         let myNewScore = data.scores[myUid];
-        let oppUid = data.host === myUid ? data.guest : data.host;
         let finalTable = newTable;
 
-        // Kural Kontrol
         if(newTable.length >= 2) {
             const last = newTable[newTable.length - 1];
             const prev = newTable[newTable.length - 2];
             if(last[0] === prev[0] || last[0] === 'J') {
                 playSfx("cardCollect");
                 let pts = newTable.length;
-                if(newTable.length === 2 && last[0] === prev[0]) {
-                    pts = 10;
-                    showPisti();
-                }
+                if(newTable.length === 2 && last[0] === prev[0]) { pts = 10; showPisti(); }
                 myNewScore += pts;
                 finalTable = [];
             }
         }
 
-        await updateDoc(roomRef, {
+        transaction.update(roomRef, {
             table: finalTable,
-            turn: oppUid,
+            turn: data.host === myUid ? data.guest : data.host,
             [`hands.${myUid}`]: myNewHand,
             [`scores.${myUid}`]: myNewScore
         });
-    }, { once: true });
+    });
 }
 
 async function handleNewRound(data) {
@@ -377,7 +357,7 @@ async function handleNewRound(data) {
 }
 
 async function handleGameOver(data) {
-    roomUnsub();
+    if(roomUnsub) roomUnsub();
     const myS = data.scores[myUid];
     const oppUid = data.host === myUid ? data.guest : data.host;
     const oppS = data.scores[oppUid];
@@ -385,20 +365,19 @@ async function handleGameOver(data) {
     let msg = "";
     if(myS > oppS) {
         playSfx("win");
-        msg = `TEBRİKLER! KAZANDINIZ.\n${data.pot}₺ Hesabınıza eklendi.`;
+        msg = `KAZANDINIZ!\n${data.pot}₺ bakiyenize eklendi.`;
         await updateDoc(userRef, { balance: balance + data.pot });
     } else if (myS < oppS) {
         playSfx("lose");
-        msg = "MAALESEF KAYBETTİNİZ!";
+        msg = "KAYBETTİNİZ!";
     } else {
-        msg = "BERABERE! Bahis iade.";
+        msg = "BERABERE!\nBahis iade edildi.";
         await updateDoc(userRef, { balance: balance + (data.pot / 2) });
     }
 
-    if(isHost) await deleteDoc(doc(db, "pisti_rooms", currentRoomId));
-    
+    if(isHost) setTimeout(() => deleteDoc(doc(db, "pisti_rooms", currentRoomId)), 2000);
     showModal(msg);
-    setTimeout(() => location.reload(), 5000);
+    setTimeout(() => location.reload(), 6000);
 }
 
 function showPisti() {
