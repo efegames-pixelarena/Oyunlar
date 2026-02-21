@@ -37,7 +37,7 @@
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 70px; max-width: 110px; text-align: center;
         }
 
-        #lobbyScreen { flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; z-index: 10; }
+        #lobbyScreen { flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; z-index: 10; position: relative; }
         .search-input { 
             width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(79, 209, 255, 0.3); 
             padding: 12px 15px; color: #fff; border-radius: 4px; outline: none;
@@ -57,17 +57,16 @@
             margin-bottom: 10px; border-radius: 0 8px 8px 0; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
-        /* Profesyonel Çipler */
+        /* Madde 8: Profesyonel Çipler */
         .chips { display: flex; gap: 10px; justify-content: center; margin: 10px 0; }
         .chip { 
-            width:48px; height:48px; border-radius:50%; display:flex; align-items:center; justify-content:center; 
-            font-weight:900; cursor:pointer; font-size: 10px; position: relative;
-            box-shadow: 0 4px 0 #000, inset 0 0 8px rgba(0,0,0,0.5);
-            transition: transform 0.1s; border: 3px dashed rgba(255,255,255,0.3);
+            width:52px; height:52px; border-radius:50%; display:flex; align-items:center; justify-content:center; 
+            font-weight:900; cursor:pointer; font-size: 11px; border: 3px dashed rgba(255,255,255,0.4);
+            box-shadow: 0 5px 0 #000, inset 0 0 10px rgba(0,0,0,0.5); transition: 0.2s;
         }
-        .chip:active { transform: translateY(3px); }
+        .chip:active { transform: translateY(3px); box-shadow: 0 2px 0 #000; }
         .c-cancel { background: var(--danger); color: #fff; border-style: solid; }
-        .c100 { background: radial-gradient(circle, #fff, #999); color:#000; } 
+        .c100 { background: radial-gradient(circle, #ffffff, #999); color:#000; } 
         .c500 { background: radial-gradient(circle, #2ecc71, #1b5e20); color:#fff; } 
         .c2000 { background: radial-gradient(circle, #3498db, #0d47a1); color:#fff; } 
         .c10000 { background: radial-gradient(circle, #f1c40f, #e65100); color:#fff; }
@@ -89,8 +88,8 @@
         .modal-box { background: #0d1117; border: 2px solid var(--border); padding: 25px; width: 100%; max-width: 340px; text-align: center; }
         .modal-input { width: 100%; background: #161b22; border: 1px solid #30363d; padding: 12px; color: #fff; margin-bottom: 5px; text-align: center; outline: none; border-radius: 4px; }
         
-        /* Hata Yazıları */
-        .error-text { color: var(--danger); font-size: 0.85rem; font-weight: bold; margin-bottom: 10px; display: none; }
+        /* Madde 1 & 9: Hata Yazıları */
+        .error-msg { color: var(--danger); font-weight: bold; font-size: 0.8rem; margin-bottom: 10px; display: none; text-shadow: 0 0 5px rgba(255,0,0,0.5); }
 
         .table-cards { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:75px; height:105px; }
         .stack-card { width:75px; position:absolute; left:0; top:0; border-radius: 6px; box-shadow: 0 4px 8px rgba(0,0,0,0.4); background:white;}
@@ -109,7 +108,7 @@
         <div class="right-menu">
             <div class="nav-box">₺<span id="balance">0</span></div>
             <div class="nav-box" style="color:var(--warning)">B: ₺<span id="bet">0</span></div>
-            <button id="navActionBtn" onclick="handleMainExit()" style="background:var(--danger); border:none; color:white; padding:8px 10px; font-weight:900; font-size:0.65rem; clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%); cursor:pointer; flex-shrink: 0;">ÇIKIŞ</button>
+            <button id="mainActionBtn" onclick="lobbyExit()" style="background:var(--danger); border:none; color:white; padding:8px 10px; font-weight:900; font-size:0.65rem; clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%); cursor:pointer; flex-shrink: 0;">ÇIKIŞ</button>
         </div>
     </div>
 
@@ -149,12 +148,12 @@
         <div class="modal-box">
             <h3>MASA AYARLARI</h3>
             <input type="text" id="newRoomName" class="modal-input" placeholder="Masa Adı">
-            <select id="roomCapacity" class="modal-input">
+            <select id="roomCap" class="modal-input">
                 <option value="2">2 Kişilik</option>
                 <option value="4">4 Kişilik</option>
             </select>
             <input type="number" id="newRoomPass" class="modal-input" placeholder="Şifre (Opsiyonel)">
-            <div id="createBetError" class="error-text">Min 100₺ bahis gerekli!</div>
+            <div id="betError" class="error-msg">Min 100₺ bahis gerekli!</div>
             <button class="btn-neon" onclick="confirmCreateRoom()">OLUŞTUR</button>
             <button class="btn-neon btn-sec" style="margin-top:10px" onclick="closeModal('createRoomModal')">İPTAL</button>
         </div>
@@ -164,7 +163,7 @@
         <div class="modal-box">
             <h3>ŞİFRE GEREKLİ</h3>
             <input type="password" id="passInput" class="modal-input" placeholder="Şifreyi Girin">
-            <div id="wrongPassError" class="error-text">Şifre Yanlış!</div>
+            <div id="passError" class="error-msg">Şifre Yanlış!</div>
             <button class="btn-neon" id="passConfirmBtn">GİRİŞ</button>
             <button class="btn-neon btn-sec" style="margin-top:10px" onclick="closeModal('passEntryModal')">İPTAL</button>
         </div>
@@ -173,7 +172,7 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import { getFirestore, doc, onSnapshot, updateDoc, setDoc, collection, query, where, deleteDoc, getDocs, arrayUnion, onDisconnect, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getFirestore, doc, onSnapshot, updateDoc, setDoc, collection, query, where, deleteDoc, getDocs, onDisconnect, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
@@ -201,33 +200,25 @@
     let roomRef = null, myRole = null, gameState = null;
     let inGame = false;
 
-    // Profesyonel Arka Plan Animasyonu
+    // Madde 4: Profesyonel Arka Plan Animasyonu
     const canvas = document.getElementById('bg-canvas');
     const ctx = canvas.getContext('2d');
-    let stars = [];
-
-    function initStars() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        stars = [];
-        for(let i=0; i<100; i++) {
-            stars.push({x: Math.random()*canvas.width, y: Math.random()*canvas.height, size: Math.random()*2, speed: Math.random()*0.5});
-        }
+    let particles = [];
+    function initCanvas() {
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+        particles = [];
+        for(let i=0; i<60; i++) particles.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, r:Math.random()*2+1, s:Math.random()*0.5+0.2});
     }
-    function animate() {
-        ctx.fillStyle = '#03050a';
-        ctx.fillRect(0,0,canvas.width, canvas.height);
-        ctx.fillStyle = '#4fd1ff';
-        stars.forEach(s => {
-            ctx.beginPath();
-            ctx.arc(s.x, s.y, s.size, 0, Math.PI*2);
-            ctx.fill();
-            s.y += s.speed;
-            if(s.y > canvas.height) s.y = 0;
+    function draw() {
+        ctx.fillStyle = "#03050a"; ctx.fillRect(0,0,canvas.width,canvas.height);
+        ctx.fillStyle = "#4fd1ff22";
+        particles.forEach(p => {
+            ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill();
+            p.y -= p.s; if(p.y < -10) p.y = canvas.height + 10;
         });
-        requestAnimationFrame(animate);
+        requestAnimationFrame(draw);
     }
-    initStars(); animate();
+    initCanvas(); draw(); window.onresize = initCanvas;
 
     onAuthStateChanged(auth, user => {
         if (!user) return;
@@ -242,26 +233,24 @@
         listenLobby();
     });
 
-    window.handleMainExit = async () => {
-        if(inGame) {
-            // Oyun içi "Ayrıl" -> Lobiye dön (Bahis kaybedilir)
-            if(confirm("Odadan çıkarsanız bahsiniz yanacaktır. Emin misiniz?")) {
-                await processLoss();
-                location.reload();
-            }
-        } else {
-            // Lobi "Çıkış" -> index.html
-            window.location.href = "index.html";
+    // Madde 3: Lobi Çıkış
+    window.lobbyExit = () => { window.location.href = "index.html"; };
+
+    // Madde 2: Oyun İçi Ayrıl (Lobiye döner ama bahis kaybedilir)
+    window.gameExit = async () => {
+        if(confirm("Odadan çıkarsanız bahsiniz yanar ve yenilmiş sayılırsınız. Emin misiniz?")) {
+            await handleSurrender();
+            location.reload(); 
         }
     };
 
-    async function processLoss() {
-        if(!roomRef) return;
-        // Odadan çıkan oyuncuyu sil ve durumu bitir
+    // Madde 5: Odadan çıkan oyuncu kaybetsin mantığı
+    async function handleSurrender() {
+        if(!roomRef || !myRole) return;
         await updateDoc(roomRef, { 
-            [`${myRole}_out`]: true,
-            status: "finished",
-            winner: "opponent" // Diğerlerine iade tetiklemek için
+            status: "finished", 
+            winner: "surrender", 
+            loserId: uid 
         });
     }
 
@@ -294,48 +283,44 @@
     window.openCreateModal = () => { document.getElementById('createRoomModal').style.display = 'flex'; };
     window.closeModal = (id) => { 
         document.getElementById(id).style.display = 'none'; 
-        document.querySelectorAll('.error-text').forEach(e => e.style.display = 'none');
+        document.getElementById('betError').style.display = 'none';
+        document.getElementById('passError').style.display = 'none';
     };
 
     window.confirmCreateRoom = async () => {
         if (currentBet < 100) {
-            document.getElementById('createBetError').style.display = 'block';
+            document.getElementById('betError').style.display = 'block';
             return;
         }
         const name = document.getElementById("newRoomName").value || "Elite Arena";
-        const cap = parseInt(document.getElementById("roomCapacity").value);
+        const cap = parseInt(document.getElementById("roomCap").value);
         const pass = document.getElementById("newRoomPass").value || "";
         const roomId = "room_" + Date.now();
         roomRef = doc(db, "rooms", roomId);
         myRole = "p1";
         
         await setDoc(roomRef, {
-            p1: uid, bet: currentBet, status: "waiting", name: name, password: pass,
-            capacity: cap, players: [uid], deck: createDeck(), table: [], 
-            p1_score: 0, p2_score: 0, p3_score: 0, p4_score: 0,
-            p1_hand: [], p2_hand: [], p3_hand: [], p4_hand: [], turn: null
+            p1: uid, p2: null, bet: currentBet, status: "waiting", name: name, password: pass, capacity: cap,
+            deck: createDeck(), table: [], p1_score: 0, p2_score: 0, p1_hand: [], p2_hand: [], turn: null
         });
         
         await updateDoc(userRef, { balance });
-        enterGame();
+        enterGameUI();
+        listenRoom();
     };
 
     window.handleJoin = (rid, pass, bet) => {
-        const errorText = document.getElementById('wrongPassError');
         if(pass && pass !== "") {
             document.getElementById('passEntryModal').style.display = 'flex';
             document.getElementById('passConfirmBtn').onclick = () => {
-                const input = document.getElementById('passInput').value;
-                if(input === pass) {
+                if(document.getElementById('passInput').value === pass) {
                     closeModal('passEntryModal');
                     joinRoom(rid, bet);
                 } else {
-                    errorText.style.display = 'block';
+                    document.getElementById('passError').style.display = 'block';
                 }
             };
-        } else {
-            joinRoom(rid, bet);
-        }
+        } else { joinRoom(rid, bet); }
     };
 
     async function joinRoom(rid, bet) {
@@ -343,46 +328,44 @@
         balance -= bet;
         currentBet = bet;
         roomRef = doc(db, "rooms", rid);
+        myRole = "p2";
         
-        const snap = await getDocs(query(collection(db, "rooms"))); 
-        const roomData = (await getDocs(query(collection(db, "rooms"), where("__name__", "==", rid)))).docs[0].data();
-        
-        const playerIndex = roomData.players.length + 1;
-        myRole = "p" + playerIndex;
-
-        await updateDoc(roomRef, { 
-            players: arrayUnion(uid),
-            [myRole]: uid,
-            status: playerIndex === roomData.capacity ? "playing" : "waiting",
-            turn: roomData.players[0] 
-        });
-
+        await updateDoc(roomRef, { p2: uid, status: "playing", turn: uid });
         await updateDoc(userRef, { balance });
-        enterGame();
-    }
-
-    function enterGame() {
-        inGame = true;
-        document.getElementById("navActionBtn").innerText = "AYRIL";
-        document.getElementById("lobbyScreen").style.display = "none";
-        document.getElementById("gameArea").style.display = "flex";
-        closeModal('createRoomModal');
+        enterGameUI();
         listenRoom();
     }
 
+    function enterGameUI() {
+        inGame = true;
+        document.getElementById("lobbyScreen").style.display = "none";
+        document.getElementById("gameArea").style.display = "flex";
+        document.getElementById("mainActionBtn").innerText = "AYRIL";
+        document.getElementById("mainActionBtn").onclick = gameExit;
+        closeModal('createRoomModal');
+    }
+
     function listenRoom() {
+        // Madde 5 & 7: Hile ve Bağlantı Kontrolü
+        onDisconnect(roomRef).update({ status: "finished", winner: "surrender", loserId: uid });
+
         onSnapshot(roomRef, async (snap) => {
-            if(!snap.exists()) { if(inGame) location.reload(); return; }
             const data = snap.data();
+            if (!data) return;
             gameState = data;
 
-            // Hile ve Bağlantı Kontrolü (Rakip çıktıysa iade al)
-            if(data.status === "finished" && data.winner === "opponent") {
-                balance += currentBet; // Bahis iade
-                await updateDoc(userRef, { balance });
-                alert("Rakip oyundan ayrıldı, bahsiniz iade edildi.");
-                location.reload();
-                return;
+            if (data.status === "finished") {
+                if(data.winner === "surrender") {
+                    if(data.loserId !== uid) {
+                        // Diğer taraf çıktı, bahis iade
+                        balance += currentBet;
+                        await updateDoc(userRef, { balance });
+                        alert("Rakip oyundan ayrıldı, bahsiniz iade edildi!");
+                    }
+                    location.reload();
+                    return;
+                }
+                handleEnd();
             }
 
             if (data.status === "playing") {
@@ -390,91 +373,52 @@
                 if (myRole === "p1" && data.p1_hand.length === 0 && data.deck.length === 52) {
                     const d = [...data.deck];
                     const t = [d.shift(), d.shift(), d.shift(), d.shift()];
-                    const updates = { deck: d, table: t };
-                    for(let i=1; i<=data.capacity; i++) updates[`p${i}_hand`] = d.splice(0, 4);
-                    await updateDoc(roomRef, updates);
+                    await updateDoc(roomRef, { deck: d, p1_hand: d.splice(0,4), p2_hand: d.splice(0,4), table: t });
                 }
                 render();
-            } else {
-                document.getElementById("waitingStatus").style.display = "block";
             }
         });
     }
 
     function render() {
-        const ph = document.getElementById("playerHand");
-        const ch = document.getElementById("computerHand");
-        const tc = document.getElementById("tableCards");
+        const ph = document.getElementById("playerHand"), ch = document.getElementById("computerHand"), tc = document.getElementById("tableCards");
         ph.innerHTML = ""; ch.innerHTML = ""; tc.innerHTML = "";
-
         const myHand = gameState[myRole + "_hand"] || [];
+        const oppHand = gameState[(myRole === "p1" ? "p2" : "p1") + "_hand"] || [];
+
         myHand.forEach((c, i) => {
-            let img = document.createElement("img");
-            img.src = `https://deckofcardsapi.com/static/img/${c}.png`;
-            img.className = "card";
-            img.onclick = () => playCard(i);
-            ph.appendChild(img);
+            let img = document.createElement("img"); img.src = `https://deckofcardsapi.com/static/img/${c}.png`; img.className = "card";
+            img.onclick = () => playCard(i); ph.appendChild(img);
         });
-
-        // Diğer oyuncuları temsil et (basitleştirilmiş)
-        const oppCount = gameState.capacity - 1;
-        for(let i=0; i<4; i++) {
-            let img = document.createElement("img");
-            img.src = "https://deckofcardsapi.com/static/img/back.png";
-            img.className = "card";
+        oppHand.forEach(() => {
+            let img = document.createElement("img"); img.src = `https://deckofcardsapi.com/static/img/back.png`; img.className = "card";
             ch.appendChild(img);
-        }
-
+        });
         gameState.table.forEach((c, i) => {
             let img = document.createElement("img");
-            const isTop = i === gameState.table.length - 1;
-            img.src = isTop ? `https://deckofcardsapi.com/static/img/${c}.png` : "https://deckofcardsapi.com/static/img/back.png";
-            img.className = "stack-card";
-            img.style.transform = `rotate(${i * 2}deg)`;
-            tc.appendChild(img);
+            img.src = (i === gameState.table.length - 1) ? `https://deckofcardsapi.com/static/img/${c}.png` : "https://deckofcardsapi.com/static/img/back.png";
+            img.className = "stack-card"; img.style.transform = `rotate(${i*2}deg)`; tc.appendChild(img);
         });
-
         document.getElementById("ps").innerText = gameState[myRole + "_score"];
+        document.getElementById("cs").innerText = gameState[(myRole === "p1" ? "p2" : "p1") + "_score"];
     }
 
     async function playCard(i) {
         if (gameState.turn !== uid) return;
-        const handKey = myRole + "_hand";
-        const hand = [...gameState[handKey]];
+        const hand = [...gameState[myRole + "_hand"]];
         const card = hand.splice(i, 1)[0];
-        let table = [...gameState.table];
-        let score = gameState[myRole + "_score"];
-        
+        let table = [...gameState.table], score = gameState[myRole + "_score"];
         sfx.cardThrow.play();
-        if (table.length > 0) {
-            const top = table[table.length - 1];
-            if (card[0] === top[0] || card[0] === "J") {
-                score += (table.length === 1 && card[0] === top[0]) ? 10 : table.length + 1;
-                table = [];
-                sfx.cardCollect.play();
-            } else table.push(card);
+
+        if (table.length > 0 && (card[0] === table[table.length-1][0] || card[0] === "J")) {
+            score += (table.length === 1 && card[0] !== "J") ? 10 : table.length + 1;
+            table = []; sfx.cardCollect.play();
         } else table.push(card);
 
-        // Turn sırasını belirle
-        const myIdx = gameState.players.indexOf(uid);
-        const nextIdx = (myIdx + 1) % gameState.capacity;
-        const nextTurn = gameState.players[nextIdx];
-
-        let updates = { [handKey]: hand, table: table, [myRole + "_score"]: score, turn: nextTurn };
-        
-        // El bitti mi kontrolü
-        const allHandsEmpty = gameState.players.every(pId => {
-            const role = gameState.p1 === pId ? "p1" : (gameState.p2 === pId ? "p2" : (gameState.p3 === pId ? "p3" : "p4"));
-            return role === myRole ? hand.length === 0 : gameState[role+"_hand"].length === 0;
-        });
-
-        if (allHandsEmpty) {
-            if (gameState.deck.length > 0) {
-                const d = [...gameState.deck];
-                for(let k=1; k<=gameState.capacity; k++) updates[`p${k}_hand`] = d.splice(0, 4);
-                updates.deck = d;
-            } else updates.status = "finished";
-        }
+        let updates = { [myRole+"_hand"]: hand, table: table, [myRole+"_score"]: score, turn: (myRole === "p1" ? gameState.p2 : gameState.p1) };
+        if (hand.length === 0 && gameState.deck.length > 0) {
+            const d = [...gameState.deck]; updates.p1_hand = d.splice(0,4); updates.p2_hand = d.splice(0,4); updates.deck = d;
+        } else if (hand.length === 0 && gameState.deck.length === 0) updates.status = "finished";
         await updateDoc(roomRef, updates);
     }
 
@@ -485,10 +429,9 @@
     }
 
     async function handleEnd() {
-        // Puanı en yüksek olanı bul (basitleştirilmiş 2 kişilik mantık devamı)
-        const s1 = gameState.p1_score, s2 = gameState.p2_score;
-        if(myRole === "p1" && s1 > s2) balance += gameState.bet * 2;
-        if(myRole === "p2" && s2 > s1) balance += gameState.bet * 2;
+        const s1 = gameState[myRole+"_score"], s2 = gameState[(myRole === "p1"?"p2":"p1")+"_score"];
+        if (s1 > s2) { balance += gameState.bet * 2; sfx.win.play(); alert("Kazandınız!"); }
+        else { sfx.lose.play(); alert("Kaybettiniz!"); }
         await updateDoc(userRef, { balance });
         location.reload();
     }
