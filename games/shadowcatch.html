@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Shadow Catch | Demo</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap" rel="stylesheet">
+<style>
+    :root { --p: #00f2ff; --a: #ff0055; --bg: #05070a; }
+    * { margin:0; padding:0; box-sizing:border-box; font-family: 'Orbitron', sans-serif; overflow: hidden; }
+    body { background: var(--bg); height: 100vh; cursor: crosshair; }
+
+    /* Radar Efekti */
+    .sonar {
+        position: absolute; border: 2px solid var(--p); border-radius: 50%;
+        transform: translate(-50%, -50%); pointer-events: none;
+        animation: pulse 1s ease-out forwards;
+    }
+    @keyframes pulse { from { width: 0; height: 0; opacity: 1; } to { width: 500px; height: 500px; opacity: 0; } }
+
+    /* Oyuncular */
+    .entity {
+        position: absolute; width: 20px; height: 20px; border-radius: 50%;
+        transform: translate(-50%, -50%); opacity: 0; transition: opacity 0.5s;
+    }
+    #player { background: var(--p); box-shadow: 0 0 15px var(--p); }
+    #enemy { background: var(--a); box-shadow: 0 0 15px var(--a); }
+
+    /* HUD */
+    .hud { position: fixed; top: 20px; left: 20px; color: var(--p); pointer-events: none; }
+    .msg { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 2rem; color: #fff; opacity: 0; }
+</style>
+</head>
+<body>
+
+<div class="hud">ENERJİ: <span id="nrg">100</span>% <br> TIKLA VE RAKİBİ BUL!</div>
+<div id="player" class="entity"></div>
+<div id="enemy" class="entity"></div>
+<div id="msg" class="msg">YAKALANDIN!</div>
+
+<script>
+    const player = document.getElementById('player');
+    const enemy = document.getElementById('enemy');
+    const nrgEl = document.getElementById('nrg');
+    let energy = 100;
+    
+    // Rakibi rastgele bir yere koy
+    let enemyPos = { x: Math.random() * window.innerWidth, y: Math.random() * window.innerHeight };
+    enemy.style.left = enemyPos.x + 'px';
+    enemy.style.top = enemyPos.y + 'px';
+
+    window.addEventListener('mousedown', (e) => {
+        if (energy < 20) return;
+
+        // Enerji harca
+        energy -= 20;
+        nrgEl.innerText = energy;
+
+        // Sonar dalgası oluştur
+        const s = document.createElement('div');
+        s.className = 'sonar';
+        s.style.left = e.clientX + 'px';
+        s.style.top = e.clientY + 'px';
+        document.body.appendChild(s);
+        setTimeout(() => s.remove(), 1000);
+
+        // Mesafeyi kontrol et (Sonar rakibe çarptı mı?)
+        const dist = Math.hypot(e.clientX - enemyPos.x, e.clientY - enemyPos.y);
+        if (dist < 250) {
+            enemy.style.opacity = "1";
+            setTimeout(() => enemy.style.opacity = "0", 1000);
+        }
+
+        // Vuruş kontrolü (Tam üzerine mi tıkladı?)
+        if (dist < 40) {
+            document.getElementById('msg').style.opacity = 1;
+            document.getElementById('msg').innerText = "AVLANDI!";
+            setTimeout(() => location.reload(), 2000);
+        }
+    });
+
+    // Enerji dolumu
+    setInterval(() => {
+        if (energy < 100) {
+            energy += 2;
+            nrgEl.innerText = energy;
+        }
+    }, 100);
+
+    // Kendi yerimizi göster (Fener gibi)
+    window.addEventListener('mousemove', (e) => {
+        player.style.left = e.clientX + 'px';
+        player.style.top = e.clientY + 'px';
+        player.style.opacity = "0.3";
+    });
+</script>
+</body>
+</html>
