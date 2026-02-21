@@ -325,8 +325,10 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
         <h2 id="authTitle">Giriş Yap</h2>
         <input type="text" id="authEmail" placeholder="E-posta veya Kullanıcı Adı">
         <input type="password" id="authPassword" placeholder="Şifre">
+        
         <input type="email" id="regEmail" placeholder="E-posta" style="display:none;">
         <input type="text" id="authUsername" placeholder="Kullanıcı Adı" style="display:none;">
+        
         <div id="authErrorMsg" class="auth-error-area"></div>
         <button class="modal-btn" id="authSubmit">DEVAM ET</button>
         <p id="switchMode" style="margin-top:20px;font-size:13px;cursor:pointer;">Hesabın yok mu? <b style="color:var(--primary)">Kayıt Ol</b></p>
@@ -366,6 +368,7 @@ function loadAvatars(current) {
     });
 }
 
+// PROMO KOD SİSTEMİ
 window.claimBonus = async () => {
     const input = document.getElementById("bonusInput");
     const feedback = document.getElementById("promoFeedback");
@@ -401,6 +404,7 @@ window.claimBonus = async () => {
     }
 };
 
+// ÇARK SİSTEMİ (ÖDÜLLER GÜNCELLENDİ)
 window.spinWheel = async () => {
     const userRef = doc(db, "users", auth.currentUser.uid);
     const userDoc = await getDoc(userRef);
@@ -411,11 +415,12 @@ window.spinWheel = async () => {
     const spinBtn = document.getElementById("spinBtn");
     const resultText = document.getElementById("wheelResultText");
     
-    // YENİ ÖDÜL HAVUZU
-    const rewards = [2500, 5000, 10000, 15000, 0, 25000, 35000, 0, 50000, 0, 100000];
+    // Yeni Ödül Havuzu
+    const rewards = [2500, 5000, 10000, 15000, "PAS", 25000, 35000, "PAS", 50000, "PAS", 100000];
     const segmentDeg = 360 / rewards.length;
     const randomIndex = Math.floor(Math.random() * rewards.length);
     const prize = rewards[randomIndex];
+    
     const totalRotation = 3600 + (randomIndex * segmentDeg);
     
     wheel.style.transform = `rotate(${totalRotation}deg)`;
@@ -424,19 +429,22 @@ window.spinWheel = async () => {
     resultText.style.color = "var(--primary)";
 
     setTimeout(async () => {
-        if(prize > 0) {
-            await updateDoc(userRef, { balance: increment(prize), lastSpin: Date.now() });
-            resultText.innerText = `TEBRİKLER! ${prize.toLocaleString()} ₺ Kazandınız.`;
-            resultText.style.color = "var(--success)";
-        } else {
-            await updateDoc(userRef, { lastSpin: Date.now() });
-            resultText.innerText = `PAS GEÇTİNİZ! Üzgünüz...`;
+        let message = "";
+        if(prize === "PAS") {
+            message = "MAALESEF! Pas Geçtiniz.";
             resultText.style.color = "var(--danger)";
+        } else {
+            await updateDoc(userRef, { balance: increment(prize) });
+            message = `TEBRİKLER! ${prize.toLocaleString()} ₺ Kazandınız.`;
+            resultText.style.color = "var(--success)";
         }
+        await updateDoc(userRef, { lastSpin: Date.now() });
+        resultText.innerText = message;
         checkWheelCooldown();
     }, 6000);
 };
 
+// PROFİL GÜNCELLEME
 window.updateProfile = async () => {
     const userRef = doc(db, "users", auth.currentUser.uid);
     const snap = await getDoc(userRef);
@@ -456,6 +464,7 @@ window.updateProfile = async () => {
     closeModal('profileModal');
 };
 
+// AUTH & DİNAMİK ROZET TAKİBİ
 onAuthStateChanged(auth, user => {
     const authBadges = document.querySelectorAll(".auth-badge");
     if(user) {
@@ -531,7 +540,7 @@ function updateAuthUI() {
     document.getElementById("authEmail").placeholder = isLogin ? "E-posta veya Kullanıcı Adı" : "E-posta";
     document.getElementById("regEmail").style.display = isLogin ? "none" : "block";
     document.getElementById("authUsername").style.display = isLogin ? "none" : "block"; 
-    document.getElementById("authEmail").style.display = "block";
+    document.getElementById("authEmail").style.display = "block"; 
     document.getElementById("authErrorMsg").innerText = "";
 }
 
@@ -543,10 +552,9 @@ document.getElementById("authSubmit").onclick = async () => {
     try {
         if(isLogin) {
             const loginInput = document.getElementById("authEmail").value.trim();
-            if(!loginInput) throw new Error("Giriş bilgisi gerekli!");
             let finalEmail = loginInput;
 
-            // KULLANICI ADI İLE GİRİŞ MANTIĞI
+            // Kullanıcı adı ile giriş mantığı
             if(!loginInput.includes("@")) {
                 const q = query(collection(db, "users"), where("username", "==", loginInput));
                 const qs = await getDocs(q);
@@ -561,12 +569,13 @@ document.getElementById("authSubmit").onclick = async () => {
             
             if(!userN || !email || !pass) throw new Error("Tüm alanları doldurun!");
 
+            // Kullanıcı adı kontrolü
             const q = query(collection(db, "users"), where("username", "==", userN));
             const qs = await getDocs(q);
             if(!qs.empty) throw new Error("Bu kullanıcı adı zaten alınmış!");
 
             const res = await createUserWithEmailAndPassword(auth, email, pass);
-            // YENİ KAYITTA 50.000 TL OTOMATİK VERİLİYOR
+            // Kayıtta 50.000 TL otomatik veriliyor
             await setDoc(doc(db, "users", res.user.uid), { 
                 username: userN, email: email, balance: 50000, lastSpin: 0, 
                 userChangeCount: 0, fullName: "", phone: "", avatar: avatarLinks[0], usedPromos: [] 
@@ -574,7 +583,8 @@ document.getElementById("authSubmit").onclick = async () => {
             closeModal('authOverlay');
         }
     } catch(e) { 
-        if(e.code === "auth/invalid-credential") errorMsg.innerText = "Hatalı giriş bilgileri!";
+        if(e.code === "auth/email-already-in-use") errorMsg.innerText = "Bu e-posta zaten kayıtlı!";
+        else if(e.code === "auth/wrong-password") errorMsg.innerText = "Hatalı şifre!";
         else errorMsg.innerText = e.message;
     }
 };
@@ -583,6 +593,7 @@ document.getElementById("avatarTrigger").onclick = (e) => { e.stopPropagation();
 window.onclick = () => document.getElementById("userDropdown").classList.remove("active");
 document.getElementById("logoutBtn").onclick = () => signOut(auth);
 
+// Kar Efekti
 const canvas = document.getElementById("snow"); const ctx = canvas.getContext("2d"); let particles = [];
 function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
 window.onresize = resize; resize();
