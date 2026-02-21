@@ -129,6 +129,7 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
 .modal-card input { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 12px; background: #050811; border: 1px solid var(--border); color: white; outline: none; text-align: left; }
 .modal-card input:disabled { opacity: 0.5; cursor: not-allowed; background: #1a1f2e; color: #64748b; }
 .modal-btn { width: 100%; padding: 14px; border-radius: 12px; border: none; background: var(--primary); color: #000; font-weight: 900; cursor: pointer; }
+.modal-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* 5x5 Avatar */
 .avatar-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 15px 0; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 15px; }
@@ -142,10 +143,10 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
 .promo-success { color: var(--success); }
 
 /* Profesyonel Çark */
-.wheel-container { position: relative; width: 280px; height: 280px; margin: 20px auto; border-radius: 50%; box-shadow: 0 0 50px rgba(79, 209, 255, 0.2); }
-.wheel-pointer { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 45px; z-index: 100; filter: drop-shadow(0 0 10px rgba(0,0,0,0.8)); }
-#wheelImg { width: 100%; height: 100%; border-radius: 50%; border: 6px solid #1a1f2e; transition: transform 6s cubic-bezier(0.1, 0, 0.1, 1); }
-#wheelResultText { color: var(--success); font-weight: 900; font-size: 18px; margin-top: 15px; min-height: 28px; text-shadow: 0 0 15px rgba(0, 255, 163, 0.4); }
+.wheel-container { position: relative; width: 280px; height: 280px; margin: 20px auto; }
+.wheel-pointer { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 40px; z-index: 100; filter: drop-shadow(0 0 5px black); }
+#wheelImg { width: 100%; height: 100%; border-radius: 50%; transition: transform 5s cubic-bezier(0.15, 0, 0.15, 1); border: 4px solid #1a1f2e; }
+#wheelResultText { color: var(--success); font-weight: 900; font-size: 18px; margin: 15px 0; min-height: 28px; }
 
 /* Hata Mesajı Alt Kısmı */
 .auth-error-area { color: var(--danger); font-size: 12px; font-weight: 800; margin-top: 10px; min-height: 18px; display: block; text-align: center; }
@@ -352,26 +353,21 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// GÜNCELLENMİŞ AVATAR LİSTESİ (5x5)
 const avatarLinks = [
-    // Birinci Sıra
     "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRQwyXlGFYmEebbJwy3udOoiY1aHks5DHDL-LjNe-O2rw&s=10",
     "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQujzeT1nbxD37pbAAGFoEQYZfH7nHKNHebtVxjQZo1vA&s=10",
     "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQyFK0ZyigAzwNoA3Ku85fCYQ0jjn9pD4bXb3udeMJoQQ&s=10",
     "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTfv2hkYWw-qOtoeyAoimv98hwJKq2ubPB5c8oWfw1MNg&s=10",
     "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRPSbtgxOwnNkjU2HDU-8GsHnbDLDNuVIFhkcrd4iESTQ&s=10",
-    // İkinci Sıra
     "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS5MxBdQ6TQzrlGQ00a7K0MpnAlR1EtXPP4VQ5r3duMHQ&s=10",
     "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ-3doyGKL8Ea3WQFJzf_aPS99XileTNMOI_ZK7WvT4ug&s=10",
     "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSw2iCwjev-ZGXN6qsaRZIVSJiVPyWPtf00l5Vw9fBPDA&s=10",
     "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRMiWBf7b6BRXfmPP-1cpLoP-R10mmRDcnnGdoo2-X74A&s=10",
-    // Üçüncü Sıra
     "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRCHQ_Ivd7XFu1rwSWwxeznD5whsQQyWD4h1XSO7EAT4w&s=10",
     "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQTEGm7jbVBDgiF_GSrWA_KYGbtblJwJ73YfrQ889Nmug&s=10",
     "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRhgnTHC98ig0zq6ZxlbeCsxavfasV1SvTtZwa85aEkZg&s=10",
     "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSOA0bH63MfODLUkfynGXq_9DzrUFCjdqqJ54SmvLSuow&s=10",
     "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRANb8PTeKBJ5kAT8GpIZR94hQm7J770Ai7ViNCpBpp2g&s=10",
-    // Dördüncü Sıra
     "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSB1UgmpZDnWdOm3_mkMmgK2xh4j_pn0n6MRtf9GSoDMw&s=10",
     "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS7oK5eLLGyQ-9dlF2u5PJumO-7XXFugKver64cswvAJA&s=10",
     "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRUkEeAPrAXCyY5kZzvb17-FciLVhiSHq1z0krelJA1SQ&s=10",
@@ -426,79 +422,72 @@ window.claimBonus = async () => {
     }
 };
 
-// --- PROFESYONEL ÇARK SİSTEMİ ---
+// --- GÜNCELLENMİŞ ÇARK SİSTEMİ (RESİM TABANLI) ---
 const rewards = [
-    { label: "1000 ₺", value: 1000, color: "#1e2642" },
-    { label: "5000 ₺", value: 5000, color: "#2563eb" },
-    { label: "15000 ₺", value: 15000, color: "#1e2642" },
-    { label: "25000 ₺", value: 25000, color: "#4fd1ff" },
-    { label: "Pas", value: 0, color: "#1e2642" },
-    { label: "2500 ₺", value: 2500, color: "#2563eb" },
-    { label: "2000 ₺", value: 2000, color: "#ff8a00" },
-    { label: "50000 ₺", value: 50000, color: "#1e2642" }
+    { label: "1000 ₺", value: 1000 },
+    { label: "5000 ₺", value: 5000 },
+    { label: "15000 ₺", value: 15000 },
+    { label: "25000 ₺", value: 25000 },
+    { label: "Pas", value: 0 },
+    { label: "2500 ₺", value: 2500 },
+    { label: "2000 ₺", value: 2000 },
+    { label: "50000 ₺", value: 50000 }
 ];
 
-function drawWheel() {
-    const canvas = document.getElementById("wheelCanvas");
-    const ctx = canvas.getContext("2d");
-    const arc = Math.PI / (rewards.length / 2);
-    ctx.clearRect(0,0,500,500);
-    
-    rewards.forEach((reward, i) => {
-        const angle = i * arc;
-        ctx.fillStyle = reward.color;
-        ctx.beginPath();
-        ctx.moveTo(250, 250);
-        ctx.arc(250, 250, 240, angle, angle + arc);
-        ctx.fill();
-        ctx.strokeStyle = "rgba(255,255,255,0.1)";
-        ctx.stroke();
-
-        ctx.save();
-        ctx.translate(250, 250);
-        ctx.rotate(angle + arc / 2);
-        ctx.textAlign = "right";
-        ctx.fillStyle = "#fff";
-        ctx.font = "bold 22px Inter";
-        ctx.fillText(reward.label, 220, 10);
-        ctx.restore();
-    });
-}
-drawWheel();
+let isSpinning = false;
+let currentRotation = 0;
 
 window.spinWheel = async () => {
+    if (isSpinning) return;
     const userRef = doc(db, "users", auth.currentUser.uid);
     const userDoc = await getDoc(userRef);
     const lastSpin = userDoc.data().lastSpin || 0;
-    if (Date.now() - lastSpin < 86400000) return;
+    
+    if (Date.now() - lastSpin < 86400000) {
+        alert("Bugünkü hakkınızı kullandınız!");
+        return;
+    }
 
-    const canvas = document.getElementById("wheelCanvas");
+    const wheelImg = document.getElementById("wheelImg");
     const spinBtn = document.getElementById("spinBtn");
     const resultText = document.getElementById("wheelResultText");
     
-    const randomIndex = Math.floor(Math.random() * rewards.length);
-    const degree = (randomIndex * (360 / rewards.length));
-    const totalRotation = 3600 + (360 - degree); // 10 tam tur + hedef
-
-    canvas.style.transform = `rotate(${totalRotation}deg)`;
+    isSpinning = true;
     spinBtn.disabled = true;
     resultText.innerText = "Şansın dönüyor...";
-    resultText.style.color = "var(--primary)";
+    
+    // Rastgele bir ödül seç
+    const randomIndex = Math.floor(Math.random() * rewards.length);
+    const prize = rewards[randomIndex];
+    
+    // Dönüş açısını hesapla (8 dilim var, her biri 45 derece)
+    // 360 / 8 = 45 derece. 
+    //randomIndex * 45 bizi o dilime götürür.
+    const extraDegrees = (randomIndex * 45); 
+    const totalSpin = 3600 + (360 - extraDegrees); // 10 tam tur + hedef
+    currentRotation += totalSpin;
+    
+    wheelImg.style.transform = `rotate(${currentRotation}deg)`;
 
     setTimeout(async () => {
-        const prize = rewards[randomIndex];
-        await updateDoc(userRef, { balance: increment(prize.value), lastSpin: Date.now() });
+        await updateDoc(userRef, { 
+            balance: increment(prize.value), 
+            lastSpin: Date.now() 
+        });
         
         if(prize.value > 0) {
             resultText.innerText = `TEBRİKLER! ${prize.label} Kazandınız.`;
             resultText.style.color = "var(--success)";
         } else {
-            resultText.innerText = "Maalesef bu sefer ödül çıkmadı!";
+            resultText.innerText = "Pas! Bu sefer ödül gelmedi.";
             resultText.style.color = "var(--danger)";
         }
+        
+        isSpinning = false;
         checkWheelCooldown();
     }, 5000);
 };
+
 // PROFİL GÜNCELLEME
 window.updateProfile = async () => {
     const userRef = doc(db, "users", auth.currentUser.uid);
@@ -510,7 +499,7 @@ window.updateProfile = async () => {
     let updates = { avatar: selectedAvatar || data.avatar };
     if (!data.fullName && newName) updates.fullName = newName;
     if (!data.phone && newPhone) updates.phone = newPhone;
-    if (newUser !== data.username && (data.userChangeCount || 0) < 3) {
+    if (newUser && newUser !== data.username && (data.userChangeCount || 0) < 3) {
         updates.username = newUser;
         updates.userChangeCount = (data.userChangeCount || 0) + 1;
     }
@@ -557,7 +546,6 @@ onAuthStateChanged(auth, user => {
 window.openModal = (id) => { 
     document.getElementById(id).style.display = 'flex'; 
     if(id === 'wheelModal') {
-        document.getElementById("wheelImg").style.transform = "rotate(0deg)";
         document.getElementById("wheelResultText").innerText = "";
         checkWheelCooldown();
     }
@@ -568,6 +556,7 @@ window.closeModal = (id) => {
 };
 
 async function checkWheelCooldown() {
+    if(!auth.currentUser) return;
     const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
     const lastSpin = userDoc.data().lastSpin || 0;
     const diff = 86400000 - (Date.now() - lastSpin);
@@ -592,10 +581,9 @@ document.getElementById("switchMode").onclick = () => { isLogin = !isLogin; upda
 
 function updateAuthUI() { 
     document.getElementById("authTitle").innerText = isLogin ? "Giriş Yap" : "Kayıt Ol"; 
-    document.getElementById("authEmail").placeholder = isLogin ? "E-posta veya Kullanıcı Adı" : "E-posta";
+    document.getElementById("authEmail").style.display = isLogin ? "block" : "none";
     document.getElementById("regEmail").style.display = isLogin ? "none" : "block";
     document.getElementById("authUsername").style.display = isLogin ? "none" : "block"; 
-    document.getElementById("authEmail").style.display = isLogin ? "block" : "none";
     document.getElementById("authErrorMsg").innerText = "";
 }
 
@@ -603,13 +591,10 @@ document.getElementById("authSubmit").onclick = async () => {
     const errorMsg = document.getElementById("authErrorMsg");
     const pass = document.getElementById("authPassword").value;
     errorMsg.innerText = "";
-
     try {
         if(isLogin) {
             const loginInput = document.getElementById("authEmail").value.trim();
             let finalEmail = loginInput;
-
-            // Kullanıcı adı ile giriş kontrolü
             if(!loginInput.includes("@")) {
                 const q = query(collection(db, "users"), where("username", "==", loginInput));
                 const qs = await getDocs(q);
@@ -621,14 +606,10 @@ document.getElementById("authSubmit").onclick = async () => {
         } else {
             const email = document.getElementById("regEmail").value.trim();
             const userN = document.getElementById("authUsername").value.trim();
-            
             if(!userN || !email || !pass) throw new Error("Tüm alanları doldurun!");
-
-            // Aynı Kullanıcı Adı Kontrolü
             const q = query(collection(db, "users"), where("username", "==", userN));
             const qs = await getDocs(q);
             if(!qs.empty) throw new Error("Bu kullanıcı adı zaten alınmış!");
-
             const res = await createUserWithEmailAndPassword(auth, email, pass);
             await setDoc(doc(db, "users", res.user.uid), { 
                 username: userN, email: email, balance: 1000, lastSpin: 0, 
@@ -637,9 +618,7 @@ document.getElementById("authSubmit").onclick = async () => {
             closeModal('authOverlay');
         }
     } catch(e) { 
-        if(e.code === "auth/email-already-in-use") errorMsg.innerText = "Bu e-posta zaten kayıtlı!";
-        else if(e.code === "auth/wrong-password") errorMsg.innerText = "Hatalı şifre!";
-        else errorMsg.innerText = e.message;
+        errorMsg.innerText = e.message;
     }
 };
 
@@ -648,11 +627,11 @@ window.onclick = () => document.getElementById("userDropdown").classList.remove(
 document.getElementById("logoutBtn").onclick = () => signOut(auth);
 
 // Kar Efekti
-const canvas = document.getElementById("snow"); const ctx = canvas.getContext("2d"); let particles = [];
-function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+const canvasSnow = document.getElementById("snow"); const ctxSnow = canvasSnow.getContext("2d"); let particles = [];
+function resize() { canvasSnow.width = window.innerWidth; canvasSnow.height = window.innerHeight; }
 window.onresize = resize; resize();
-for(let i=0; i<100; i++) particles.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, r:Math.random()*2+1, d:Math.random()*1+0.5});
-function drawSnow() { ctx.clearRect(0,0,canvas.width, canvas.height); ctx.fillStyle = "rgba(255,255,255,0.6)"; ctx.beginPath(); particles.forEach(p => { ctx.moveTo(p.x, p.y); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); p.y += p.d; if(p.y > canvas.height) p.y = -5; }); ctx.fill(); requestAnimationFrame(drawSnow); }
+for(let i=0; i<100; i++) particles.push({x:Math.random()*canvasSnow.width, y:Math.random()*canvasSnow.height, r:Math.random()*2+1, d:Math.random()*1+0.5});
+function drawSnow() { ctxSnow.clearRect(0,0,canvasSnow.width, canvasSnow.height); ctxSnow.fillStyle = "rgba(255,255,255,0.6)"; ctxSnow.beginPath(); particles.forEach(p => { ctxSnow.moveTo(p.x, p.y); ctxSnow.arc(p.x, p.y, p.r, 0, Math.PI*2); p.y += p.d; if(p.y > canvasSnow.height) p.y = -5; }); ctxSnow.fill(); requestAnimationFrame(drawSnow); }
 drawSnow();
 
 window.checkLogin = (url) => { if(!auth.currentUser) document.getElementById("authOverlay").style.display="flex"; else location.href = url; };
