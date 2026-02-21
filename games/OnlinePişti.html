@@ -249,7 +249,6 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // MADDE 6: Bellek Sızıntısı Korumalı Ses Yönetimi
     const audioFiles = {
         chip: "https://cdn.freesound.org/previews/201/201491_3325145-lq.mp3",
         cardThrow: "https://cdn.freesound.org/previews/240/240776_4107740-lq.mp3",
@@ -266,7 +265,6 @@
     let roomRef = null, myRole = null, gameState = null, inGame = false;
     let lobbyUnsub = null, roomUnsub = null, userUnsub = null;
 
-    // MADDE 8: Çift Katmanlı Kart Görsel Desteği
     const getCardImg = (c) => `https://deckofcardsapi.com/static/img/${c}.png`;
     const getCardImgBackup = (c) => `https://raw.githubusercontent.com/Hayko92/Card-Assets/master/png/${c}.png`;
 
@@ -291,7 +289,6 @@
             if (inGame) {
                 await updateDoc(roomRef, { quitter: uid, status: "finished" });
             } else if (myRole === "p1") {
-                // MADDE 3: Lobi temizliği (Hayalet oda engelleme)
                 await deleteDoc(roomRef);
             }
             inGame = false;
@@ -299,10 +296,6 @@
         }
         location.reload();
     };
-
-    document.addEventListener('visibilitychange', () => {
-        if (document.hidden && inGame) console.log("Pasif mod...");
-    });
 
     window.handleNavAction = () => {
         if (inGame || roomRef) window.leaveRoom();
@@ -331,7 +324,6 @@
         });
     }
 
-    // MADDE 5: Bahis İşlemlerinde Yarış Durumu Koruması (Transaction)
     window.addBet = async (a) => {
         await runTransaction(db, async (t) => {
             const uSnap = await t.get(userRef);
@@ -368,7 +360,7 @@
         const name = document.getElementById("newRoomName").value || "Arena";
         const type = document.getElementById("newRoomType").value;
         const pass = document.getElementById("newRoomPass").value || "";
-        const roomId = "room_" + uid; // Sabit ID hayalet odaları önler
+        const roomId = "room_" + uid; 
         roomRef = doc(db, "rooms", roomId);
         myRole = "p1";
         
@@ -378,7 +370,7 @@
 
         await setDoc(roomRef, {
             p1: uid, p1_name: userName, bet: currentBet, status: "waiting", name, password: pass, type,
-            deck: shuffledDeck, table: [], p1_score: 0, p2_score: 0, lastTaker: null,
+            deck: shuffledDeck, table: [], p1_score: 0, p2_score: 0, lastTaker: uid,
             p1_hand: [], p2_hand: [], turn: null, quitter: null, lastRefill: 0
         });
         
@@ -407,26 +399,30 @@
         if(roomUnsub) roomUnsub();
         roomUnsub = onSnapshot(roomRef, async (snap) => {
             if(!snap.exists()) return;
-            gameState = snap.data();
+            const data = snap.data();
+            gameState = data;
 
-            if(gameState.quitter && gameState.quitter !== uid) {
-                const winAmount = gameState.bet * 2;
-                await updateDoc(userRef, { balance: balance + winAmount });
+            if(data.quitter && data.quitter !== uid) {
+                // HATA DÜZELTME: Bakiye güncellenirken transaction kullanıldı.
+                await runTransaction(db, async (t) => {
+                    const uSnap = await t.get(userRef);
+                    const b = uSnap.data().balance || 0;
+                    t.update(userRef, { balance: b + (data.bet * 2) });
+                });
                 showInfoModal("Rakip ayrıldı! Kazandınız.", "BİLGİ");
                 setTimeout(() => window.leaveRoom(), 3000);
                 return;
             }
 
-            if (gameState.status === "playing") {
+            if (data.status === "playing") {
                 document.getElementById("waitingStatus").style.display = "none";
-                // MADDE 4: Double Trigger Korumalı Refill
-                if (myRole === "p1" && gameState.p1_hand.length === 0 && gameState.p2_hand.length === 0) {
+                if (myRole === "p1" && data.p1_hand.length === 0 && data.p2_hand.length === 0) {
                     const now = Date.now();
-                    if(now - gameState.lastRefill > 2000) refillHands();
+                    if(now - data.lastRefill > 2000) refillHands();
                 }
                 render();
             }
-            if (gameState.status === "finished" && !gameState.quitter) handleEnd();
+            if (data.status === "finished" && !data.quitter) handleEnd();
         });
     }
 
@@ -449,7 +445,6 @@
         });
     }
 
-    // MADDE 1 & 7: 10S Çözümü ve Gecikme Telafisi (Optimistic)
     const getCardValue = (c) => {
         if (!c) return null;
         let v = c.length === 3 ? c.substring(0,2) : c[0];
@@ -458,8 +453,6 @@
 
     async function playCard(i) {
         if (gameState.turn !== uid) return;
-        
-        // Optimistic UI: Firebase cevabı gelmeden sesi çal
         playSFX('cardThrow');
 
         try {
@@ -484,7 +477,7 @@
                             score += table.length + 1;
                         }
                         table = [];
-                        lastTaker = uid; // MADDE 2: Son alanı kaydet
+                        lastTaker = uid; 
                     } else table.push(card);
                 } else table.push(card);
 
@@ -543,41 +536,51 @@
         gameState.table.forEach((c, i) => {
             let img = new Image();
             img.src = (i === gameState.table.length - 1) ? getCardImg(c) : "https://deckofcardsapi.com/static/img/back.png";
-            img.onerror = () => { if(i === gameState.table.length - 1) img.src = getCardImgBackup(c); };
             img.className = "stack-card";
             img.style.zIndex = i;
+            img.onerror = () => { if(i === gameState.table.length - 1) img.src = getCardImgBackup(c); };
             tc.appendChild(img);
         });
     }
 
-    // MADDE 2: Oyun Sonu Puanlama (Kalan kartlar son alana)
     async function handleEnd() {
         if (!inGame) return;
+        inGame = false; // Mükerrer tetiklemeyi önle
         
         let myFinalScore = gameState[myRole + "_score"];
         let oppFinalScore = myRole === "p1" ? gameState.p2_score : gameState.p1_score;
         
-        // Yerde kart kalmışsa son alana ekle
         if (gameState.table.length > 0 && gameState.lastTaker) {
             if (gameState.lastTaker === uid) myFinalScore += gameState.table.length;
             else oppFinalScore += gameState.table.length;
         }
 
+        let winStatus = 0; // 0: Kayıp, 1: Kazanç, 2: Berabere
         let msg = "";
+        
         if (myFinalScore > oppFinalScore) {
-            const winAmount = gameState.bet * 2;
-            await updateDoc(userRef, { balance: balance + winAmount });
-            playSFX('win');
-            msg = `KAZANDIN! +${winAmount}₺`;
+            winStatus = 1;
+            msg = `KAZANDIN! +${gameState.bet * 2}₺`;
         } else if(myFinalScore < oppFinalScore) {
+            winStatus = 0;
             msg = "KAYBETTİN!";
         } else {
-            await updateDoc(userRef, { balance: balance + gameState.bet });
+            winStatus = 2;
             msg = "BERABERE!";
         }
-        
+
+        // HATA DÜZELTME: Bakiye güncelleme Transaction ile güvenli hale getirildi.
+        await runTransaction(db, async (t) => {
+            const uSnap = await t.get(userRef);
+            const b = uSnap.data().balance || 0;
+            let finalB = b;
+            if (winStatus === 1) finalB += (gameState.bet * 2);
+            else if (winStatus === 2) finalB += gameState.bet;
+            t.update(userRef, { balance: finalB });
+        });
+
+        if(winStatus === 1) playSFX('win');
         showInfoModal(msg, "BİTTİ");
-        inGame = false;
         setTimeout(() => window.leaveRoom(), 4000);
     }
 
