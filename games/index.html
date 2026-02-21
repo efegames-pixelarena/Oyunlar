@@ -35,6 +35,18 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
     backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); z-index: 2000;
 }
 
+/* Duyuru Alanı */
+.announcement-bar {
+    position: fixed; top: 65px; width: 100%; height: 35px;
+    background: rgba(79, 209, 255, 0.1); border-bottom: 1px solid var(--border);
+    z-index: 1999; display: flex; align-items: center; overflow: hidden;
+}
+.announcement-text {
+    white-space: nowrap; font-size: 13px; font-weight: 600; color: var(--primary);
+    animation: marquee 25s linear infinite; padding-left: 100%;
+}
+@keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
+
 .brand {
     font-family: 'Montserrat', sans-serif; font-size: 18px; font-weight: 900; 
     letter-spacing: 0.5px; background: linear-gradient(90deg, var(--primary), #fff, var(--primary));
@@ -86,7 +98,7 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
     transition: 0.3s; cursor: pointer; z-index: 10;
 }
 .game-card:hover { transform: translateY(-5px); border-color: var(--primary); box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
-.game-icon { font-size: 40px; margin-bottom: 15px; display: block; }
+.game-icon { font-size: 40px; margin-bottom: 15px; display: block; filter: drop-shadow(0 0 10px var(--primary-glow)); }
 .game-card span { font-weight: 800; font-size: 15px; display: block; margin-bottom: 8px; color: #fff; }
 .badge { font-size: 9px; font-weight: 900; padding: 4px 10px; border-radius: 6px; display: inline-block; background: rgba(255, 255, 255, 0.05); color: var(--text-dim); text-transform: uppercase; transition: all 0.3s ease; }
 .badge-free { color: var(--success) !important; background: rgba(0, 255, 163, 0.1) !important; }
@@ -113,7 +125,7 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
 }
 .modal-card { width: 95%; max-width: 450px; padding: 25px; border-radius: 25px; background: #0f172a; border: 1px solid var(--border); text-align: center; max-height: 90vh; overflow-y: auto; }
 .modal-card input { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 12px; background: #050811; border: 1px solid var(--border); color: white; outline: none; text-align: left; }
-.modal-card input:disabled { opacity: 0.5; cursor: not-allowed; background: #1a1f2e; }
+.modal-card input:disabled { opacity: 0.5; cursor: not-allowed; background: #1a1f2e; color: #64748b; }
 .modal-btn { width: 100%; padding: 14px; border-radius: 12px; border: none; background: var(--primary); color: #000; font-weight: 900; cursor: pointer; }
 
 /* 5x5 Avatar */
@@ -122,11 +134,12 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
 .avatar-item img { width: 100%; height: 100%; object-fit: cover; }
 .avatar-item.active { border-color: var(--primary); box-shadow: 0 0 10px var(--primary); }
 
-.promo-error { color: var(--danger); font-size: 11px; margin-bottom: 10px; display: none; font-weight: 600; }
+.promo-error { color: var(--danger); font-size: 11px; margin-top: -5px; margin-bottom: 10px; display: none; font-weight: 600; text-align: left; padding-left: 5px; }
 
 @media(max-width: 768px) {
     .games-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 0 15px; }
     .top-bar { padding: 0 12px; height: 60px; }
+    .announcement-bar { top: 60px; }
 }
 </style>
 </head>
@@ -155,7 +168,11 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
     </div>
 </div>
 
-<div class="hero-search" style="margin-top: 100px; padding: 0 20px; text-align:center;">
+<div class="announcement-bar">
+    <div class="announcement-text" id="announcementText">PİXELARENA'YA HOŞ GELDİNİZ! • GÜNLÜK ÇARKINIZI ÇEVİRMEYİ UNUTMAYIN! • YENİ OYUNLARIMIZ ÇOK YAKINDA SİZLERLE...</div>
+</div>
+
+<div class="hero-search" style="margin-top: 135px; padding: 0 20px; text-align:center;">
     <div class="search-container" style="max-width: 500px; margin: 0 auto; position:relative;">
         <input type="text" id="searchInput" placeholder="Oyunlarda ara..." style="width: 100%; padding: 15px 20px; border-radius: 15px; background: #0f172a; border: 1px solid var(--border); color: white; outline: none; font-size: 14px;">
     </div>
@@ -165,12 +182,12 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
     <div class="section-title">Multiplayer</div>
     <div class="games-grid">
         <div class="game-card" data-name="reflex duel" onclick="checkLogin('duel.html')">
-            <div class="game-icon">⚔️</div>
+            <div class="game-icon"><i class="fa-solid fa-hand-fist"></i></div>
             <span>Reflex Duel</span>
             <div class="badge auth-badge">ONLINE PVP</div>
         </div>
         <div class="game-card" data-name="neon grid conquest" onclick="checkLogin('neongridconquest.html')">
-            <div class="game-icon">🌀</div>
+            <div class="game-icon"><i class="fa-solid fa-border-all"></i></div>
             <span>Grid Conquest</span>
             <div class="badge auth-badge">ONLINE PVP</div>
         </div>
@@ -179,12 +196,12 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
     <div class="section-title">Zeka Oyunları</div>
     <div class="games-grid">
         <div class="game-card" data-name="loops" onclick="location.href='loops.html'">
-            <div class="game-icon">🧬</div>
+            <div class="game-icon"><i class="fa-solid fa-infinity"></i></div>
             <span>Loops</span>
             <div class="badge badge-free">Giriş Gerekmez</div>
         </div>
         <div class="game-card" data-name="pattern master" onclick="location.href='patternmaster.html'">
-            <div class="game-icon">🧩</div>
+            <div class="game-icon"><i class="fa-solid fa-shapes"></i></div>
             <span>Pattern Master</span>
             <div class="badge badge-free">Giriş Gerekmez</div>
         </div>
@@ -193,22 +210,22 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
     <div class="section-title">Premium Games</div>
     <div class="games-grid">
         <div class="game-card" data-name="skycrash" onclick="checkLogin('skycrash.html')">
-            <div class="game-icon">🚀</div>
+            <div class="game-icon"><i class="fa-solid fa-plane-up"></i></div>
             <span>SkyCrash</span>
             <div class="badge auth-badge">Giriş Gerekir</div>
         </div>
         <div class="game-card" data-name="mines" onclick="checkLogin('mines.html')">
-            <div class="game-icon">💎</div>
+            <div class="game-icon"><i class="fa-solid fa-land-mine-on"></i></div>
             <span>Mines</span>
             <div class="badge auth-badge">Giriş Gerekir</div>
         </div>
         <div class="game-card" data-name="blackjack" onclick="checkLogin('blackjack.html')">
-            <div class="game-icon">🃏</div>
+            <div class="game-icon"><i class="fa-solid fa-diamond"></i></div>
             <span>BlackJack</span>
             <div class="badge auth-badge">Giriş Gerekir</div>
         </div>
         <div class="game-card" data-name="pisti" onclick="checkLogin('pisti.html')">
-            <div class="game-icon">🎴</div>
+            <div class="game-icon"><i class="fa-solid fa-clone"></i></div>
             <span>Pişti</span>
             <div class="badge auth-badge">Giriş Gerekir</div>
         </div>    
@@ -217,17 +234,17 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
     <div class="section-title">Free Play</div>
     <div class="games-grid">
         <div class="game-card" data-name="space pro" onclick="location.href='spacepro.html'">
-            <div class="game-icon">🛰️</div>
+            <div class="game-icon"><i class="fa-solid fa-user-astronaut"></i></div>
             <span>Space Pro</span>
             <div class="badge badge-free">Giriş Gerekmez</div>
         </div>
         <div class="game-card" data-name="snake pro" onclick="location.href='snakepro.html'">
-            <div class="game-icon">🐍</div>
+            <div class="game-icon"><i class="fa-solid fa-worm"></i></div>
             <span>Snake Pro</span>
             <div class="badge badge-free">Giriş Gerekmez</div>
         </div>
         <div class="game-card" data-name="Cyber Stack" onclick="location.href='cyberstack.html'">
-            <div class="game-icon">🏢</div>
+            <div class="game-icon"><i class="fa-solid fa-layer-group"></i></div>
             <span>Cyber Stack</span>
             <div class="badge badge-free">Giriş Gerekmez</div>
         </div>
@@ -248,7 +265,7 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
     <div class="modal-card">
         <h2>Profil Ayarları</h2>
         <div style="text-align:left; margin-bottom:15px;">
-            <label style="font-size:11px; color:var(--text-dim);">E-posta (Sabit)</label>
+            <label style="font-size:11px; color:var(--text-dim);">E-posta</label>
             <input type="text" id="profEmail" disabled>
             
             <label style="font-size:11px; color:var(--text-dim);">İsim Soyisim</label>
@@ -257,15 +274,15 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
             <label style="font-size:11px; color:var(--text-dim);">Telefon Numarası</label>
             <input type="text" id="profPhone" placeholder="+90 5xx xxx xx xx">
 
-            <label style="font-size:11px; color:var(--text-dim);">Kullanıcı Adı (Kalan Hak: <span id="userChangeCount">3</span>)</label>
+            <label style="font-size:11px; color:var(--text-dim);">Kullanıcı Adı (Hak: <span id="userChangeCount">3</span>)</label>
             <input type="text" id="profUser" placeholder="Kullanıcı Adı">
         </div>
 
-        <div class="cat-title">Avatar Seçimi (5x5)</div>
+        <div class="cat-title" style="text-align: left; font-size: 12px; color: var(--primary); font-weight: 800; margin-bottom: 5px;">AVATAR SEÇİMİ (5x5)</div>
         <div class="avatar-grid" id="avatarLibrary"></div>
 
-        <button class="modal-btn" onclick="updateProfile()">GÜNCELLE</button>
-        <p onclick="closeModal('profileModal')" style="margin-top:15px;cursor:pointer;opacity:0.5;">Kapat</p>
+        <button class="modal-btn" onclick="updateProfile()">BİLGİLERİ KAYDET</button>
+        <p onclick="closeModal('profileModal')" style="margin-top:15px;cursor:pointer;opacity:0.5; font-size: 13px;">Pencereyi Kapat</p>
     </div>
 </div>
 
@@ -273,8 +290,8 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
     <div class="modal-card">
         <i class="fa-solid fa-gift" style="font-size:40px;color:var(--primary);margin-bottom:15px;"></i>
         <h2>Bonus Kodu</h2>
-        <input type="text" id="bonusInput" placeholder="Kodu Yazın" style="text-align: center; font-weight: 800; letter-spacing: 2px;">
-        <div id="promoError" class="promo-error">Hatalı veya kullanılmış kod!</div>
+        <input type="text" id="bonusInput" placeholder="PROMO KODU YAZIN" style="text-align: center; font-weight: 800; letter-spacing: 2px;">
+        <div id="promoError" class="promo-error">Geçersiz veya kullanılmış kod!</div>
         <button class="modal-btn" onclick="claimBonus()">AKTİF ET</button>
         <p onclick="closeModal('bonusModal')" style="margin-top:15px;cursor:pointer;opacity:0.5;">Vazgeç</p>
     </div>
@@ -283,12 +300,12 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
 <div class="modal-overlay" id="wheelModal">
     <div class="modal-card">
         <h2>Günlük Şans Çarkı</h2>
-        <div style="position:relative;width:280px;height:280px;margin:15px auto; filter: drop-shadow(0 0 20px rgba(79, 209, 255, 0.2));">
+        <div style="position:relative;width:280px;height:280px;margin:20px auto; border-radius: 50%; box-shadow: 0 0 30px rgba(79, 209, 255, 0.2); border: 4px solid var(--border);">
             <img src="https://i.ibb.co/mRT80Pz/wheel.png" id="wheelImg" style="width:100%;height:100%;transition:5s cubic-bezier(0.15,0,0.15,1);">
-            <img src="https://i.ibb.co/9H6S4xy/pointer.png" style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);width:45px;z-index:10;filter: drop-shadow(0 0 5px black);">
+            <img src="https://i.ibb.co/9H6S4xy/pointer.png" style="position:absolute;top:-15px;left:50%;transform:translateX(-50%);width:45px;z-index:10;filter: drop-shadow(0 0 5px black);">
         </div>
         <button class="modal-btn" id="spinBtn" onclick="spinWheel()">ÜCRETSİZ ÇEVİR</button>
-        <div id="wheelTimer" style="margin-top:10px;font-weight:800;color:var(--accent);"></div>
+        <div id="wheelTimer" style="margin-top:10px;font-weight:800;color:var(--accent); font-size: 14px;"></div>
         <p onclick="closeModal('wheelModal')" style="margin-top:15px;cursor:pointer;opacity:0.5;">Kapat</p>
     </div>
 </div>
@@ -313,9 +330,9 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// AVATAR KÜTÜPHANESİ (25 ADET - 5x5)
+// AVATAR SİSTEMİ (5x5 - 25 Adet)
 const avatarLinks = [];
-for(let i=1; i<=25; i++) avatarLinks.push(`https://i.pravatar.cc/150?u=pixel${i}`);
+for(let i=1; i<=25; i++) avatarLinks.push(`https://i.pravatar.cc/150?u=arena${i}`);
 
 let selectedAvatar = "";
 function loadAvatars(current) {
@@ -354,7 +371,7 @@ window.claimBonus = async () => {
         const userData = userSnap.data();
 
         if (userData.usedPromos && userData.usedPromos.includes(code)) {
-            errorMsg.innerText = "Bu kod zaten kullanılmış!";
+            errorMsg.innerText = "Bu kodu zaten kullandınız!";
             errorMsg.style.display = "block";
             return;
         }
@@ -364,22 +381,31 @@ window.claimBonus = async () => {
             usedPromos: [...(userData.usedPromos || []), code]
         });
 
-        alert(`Başarılı! ${promoData.amount} ₺ hesabınıza eklendi.`);
+        alert(`BAŞARILI! ${promoData.amount} ₺ Bakiyenize Eklendi.`);
         closeModal('bonusModal');
         input.value = "";
     } catch(e) {
-        errorMsg.innerText = "Sistem hatası!";
+        errorMsg.innerText = "İşlem sırasında bir hata oluştu!";
         errorMsg.style.display = "block";
     }
 };
 
-// ÇARK SİSTEMİ
+// ÇARK SİSTEMİ (PROFESYONEL)
 window.spinWheel = async () => {
+    const userRef = doc(db, "users", auth.currentUser.uid);
+    const userDoc = await getDoc(userRef);
+    const lastSpin = userDoc.data().lastSpin || 0;
+    
+    if (Date.now() - lastSpin < 86400000) {
+        alert("Günde sadece 1 kez çevirebilirsiniz!");
+        return;
+    }
+
     const wheel = document.getElementById("wheelImg");
     const spinBtn = document.getElementById("spinBtn");
     
-    // Firebase'den ödül verilerini çekme (Varsayılan ödül havuzu)
-    const rewards = [1000, 5000, 2500, 10000, 500, 15000];
+    // Firebase üzerinden ödülleri simüle et (Statik ödül havuzu)
+    const rewards = [500, 2500, 1000, 10000, 5000, 15000];
     const segmentDegree = 360 / rewards.length;
     const randomIndex = Math.floor(Math.random() * rewards.length);
     const prize = rewards[randomIndex];
@@ -390,16 +416,16 @@ window.spinWheel = async () => {
     spinBtn.disabled = true;
 
     setTimeout(async () => {
-        await updateDoc(doc(db, "users", auth.currentUser.uid), { 
+        await updateDoc(userRef, { 
             balance: increment(prize), 
             lastSpin: Date.now() 
         });
-        alert(`Tebrikler! ${prize.toLocaleString()} ₺ Kazandınız.`);
+        alert(`TEBRİKLER! Çarktan ${prize.toLocaleString()} ₺ Kazandınız.`);
         checkWheelCooldown();
     }, 5000);
 };
 
-// PROFİL GÜNCELLEME
+// PROFİL GÜNCELLEME (KISITLAMALAR)
 window.updateProfile = async () => {
     const userRef = doc(db, "users", auth.currentUser.uid);
     const snap = await getDoc(userRef);
@@ -411,27 +437,30 @@ window.updateProfile = async () => {
     
     let updates = { avatar: selectedAvatar || data.avatar };
 
-    // İlk Giriş Kontrolü
+    // İsim Soyisim: Sadece boşsa kaydedilir
     if (!data.fullName && newName) updates.fullName = newName;
+    
+    // Telefon: Sadece boşsa kaydedilir
     if (!data.phone && newPhone) updates.phone = newPhone;
     
-    // Kullanıcı Adı (3 Hak)
+    // Kullanıcı Adı: 3 Hak
     if (newUser !== data.username && (data.userChangeCount || 0) < 3) {
         updates.username = newUser;
         updates.userChangeCount = (data.userChangeCount || 0) + 1;
     }
 
     await updateDoc(userRef, updates);
-    alert("Profil bilgileriniz güncellendi!");
+    alert("Profil bilgileriniz başarıyla güncellendi!");
     closeModal('profileModal');
 };
 
-// AUTH & UI
+// AUTH & UI TAKİBİ
 onAuthStateChanged(auth, user => {
     if(user) {
         document.getElementById("loginBtn").style.display="none"; 
         document.getElementById("regBtn").style.display="none";
         document.getElementById("userPill").style.display="flex";
+        
         onSnapshot(doc(db, "users", user.uid), s => {
             if(s.exists()) {
                 const data = s.data();
@@ -439,17 +468,17 @@ onAuthStateChanged(auth, user => {
                 document.getElementById("userProfileImg").src = data.avatar || avatarLinks[0];
                 document.getElementById("profEmail").value = user.email;
                 
-                // İsim kilit
+                // İsim Kilidi
                 const nameInp = document.getElementById("profNameSurname");
                 nameInp.value = data.fullName || "";
                 if(data.fullName) nameInp.disabled = true;
 
-                // Telefon kilit
+                // Telefon Kilidi
                 const phoneInp = document.getElementById("profPhone");
                 phoneInp.value = data.phone || "";
                 if(data.phone) phoneInp.disabled = true;
 
-                // Kullanıcı adı hak
+                // Kullanıcı Adı Hak Kontrolü
                 const userInp = document.getElementById("profUser");
                 userInp.value = data.username;
                 const remaining = 3 - (data.userChangeCount || 0);
@@ -457,28 +486,23 @@ onAuthStateChanged(auth, user => {
                 if(remaining <= 0) userInp.disabled = true;
 
                 loadAvatars(data.avatar);
-                updateUIForAuth(true);
             }
         });
     } else {
         document.getElementById("loginBtn").style.display="block"; 
         document.getElementById("regBtn").style.display="block";
         document.getElementById("userPill").style.display="none";
-        updateUIForAuth(false);
     }
 });
 
-// DİĞER FONKSİYONLAR
+// YARDIMCI FONKSİYONLAR
 window.openModal = (id) => { document.getElementById(id).style.display = 'flex'; if(id === 'wheelModal') checkWheelCooldown(); };
-window.closeModal = (id) => { 
-    document.getElementById(id).style.display = 'none'; 
-    if(id === 'bonusModal') document.getElementById("promoError").style.display = "none";
-};
+window.closeModal = (id) => { document.getElementById(id).style.display = 'none'; };
 
 async function checkWheelCooldown() {
     const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
     const lastSpin = userDoc.data().lastSpin || 0;
-    const diff = (24 * 60 * 60 * 1000) - (Date.now() - lastSpin);
+    const diff = 86400000 - (Date.now() - lastSpin);
     const btn = document.getElementById("spinBtn");
     const timer = document.getElementById("wheelTimer");
 
@@ -486,24 +510,11 @@ async function checkWheelCooldown() {
         btn.disabled = true;
         const h = Math.floor(diff / 3600000);
         const m = Math.floor((diff % 3600000) / 60000);
-        timer.innerText = `Kalan: ${h} Saat ${m} Dakika`;
+        timer.innerText = `Sıradaki hak: ${h} Saat ${m} Dakika`;
     } else {
         btn.disabled = false;
-        timer.innerText = "Çark Hazır!";
+        timer.innerText = "Çark Çevirmeye Hazır!";
     }
-}
-
-function updateUIForAuth(isLoggedIn) {
-    document.querySelectorAll('.games-grid').forEach(grid => {
-        const badges = grid.querySelectorAll('.badge');
-        badges.forEach(badge => {
-            if (isLoggedIn) {
-                badge.innerHTML = '<i class="fa-solid fa-play"></i> OYNA';
-            } else if (!badge.classList.contains('badge-free')) {
-                badge.innerText = 'Giriş Gerekir';
-            }
-        });
-    });
 }
 
 document.getElementById("avatarTrigger").onclick = (e) => { e.stopPropagation(); document.getElementById("userDropdown").classList.toggle("active"); };
@@ -536,7 +547,7 @@ document.getElementById("authSubmit").onclick = async () => {
 
 document.getElementById("logoutBtn").onclick = () => signOut(auth);
 
-// Kar Efekti
+// Kar Efekti (Bozulmadı)
 const canvas = document.getElementById("snow"); const ctx = canvas.getContext("2d"); let particles = [];
 function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
 window.onresize = resize; resize();
