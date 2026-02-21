@@ -141,7 +141,7 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
 .promo-error { color: var(--danger); }
 .promo-success { color: var(--success); }
 
-/* Çark Sistemi */
+/* Kod ile Tasarlanan Profesyonel Çark Sistemi */
 .wheel-container { 
     position: relative; 
     width: 300px; 
@@ -399,7 +399,7 @@ const db = getFirestore(app);
 
 // ÖDÜLLER VE ÇARK ÇİZİMİ
 const rewards = [
-    { label: "1.000 ₺", val: 1000, color: "#1a1f2e" },
+    { label: "1000 ₺", val: 1000, color: "#1a1f2e" },
     { label: "2.500 ₺", val: 2500, color: "#0f172a" },
     { label: "5.000 ₺", val: 5000, color: "#1a1f2e" },
     { label: "10.000 ₺", val: 10000, color: "#0f172a" },
@@ -421,7 +421,8 @@ function drawWheel() {
     ctx.clearRect(0,0,canvas.width, canvas.height);
 
     rewards.forEach((reward, i) => {
-        const angle = i * sliceAngle;
+        // Çarkı -90 dereceden (yukarıdan) başlatıyoruz ki dilimler okla senkronize olsun
+        const angle = i * sliceAngle - Math.PI / 2;
         
         ctx.beginPath();
         ctx.fillStyle = reward.color;
@@ -439,12 +440,13 @@ function drawWheel() {
         ctx.rotate(angle + sliceAngle / 2);
         ctx.textAlign = "right";
         ctx.fillStyle = i % 2 === 0 ? "#4fd1ff" : "#ffffff";
-        ctx.font = "bold 22px Inter";
+        ctx.font = "bold 24px Inter";
         ctx.fillText(reward.label, radius - 30, 10);
         ctx.restore();
     });
 }
 
+// Çarkı ilk açılışta çiz
 setTimeout(drawWheel, 500);
 
 // PROMO KOD SİSTEMİ
@@ -483,7 +485,7 @@ window.claimBonus = async () => {
     }
 };
 
-// ÇARK SİSTEMİ - DÜZELTİLMİŞ
+// ÇARK SİSTEMİ (DÜZELTİLMİŞ)
 let currentRotation = 0;
 window.spinWheel = async () => {
     const userRef = doc(db, "users", auth.currentUser.uid);
@@ -499,28 +501,27 @@ window.spinWheel = async () => {
     const spinBtn = document.getElementById("spinBtn");
     const resultText = document.getElementById("wheelResultText");
     
-    // Rastgele ödül indeksi seç
+    // Rastgele ödül seç
     const randomIndex = Math.floor(Math.random() * rewards.length);
     const prize = rewards[randomIndex].val;
-    const prizeLabel = rewards[randomIndex].label;
     
+    // Açı Hesaplama
     const segmentDeg = 360 / rewards.length;
-    // Çarkın duruş mantığı: Ok tepede (0 derece). Çark saat yönünde döner.
-    // Index 0'ın tepede durması için 270 derece (sol) veya -90 derece ofset gerekir.
-    // Matematiksel olarak tam dilimin ortasına denk getirme:
-    const stopAt = 360 - (randomIndex * segmentDeg) - (segmentDeg / 2); 
+    // Çarkı dilimin tam ortasında durdurmak için:
+    // 360 - (indeks * dilim_açısı) formülü kullanılır.
+    const stopAt = 360 - (randomIndex * segmentDeg); 
     const extraTours = 3600; // 10 tam tur
     
-    currentRotation += extraTours + (stopAt - (currentRotation % 360));
+    currentRotation += extraTours + stopAt;
     
     wheel.style.transform = `rotate(${currentRotation}deg)`;
     spinBtn.disabled = true;
-    resultText.innerText = "Şansın dönüyor...";
+    resultText.innerText = "Çark Dönüyor...";
     resultText.style.color = "var(--primary)";
 
     setTimeout(async () => {
         await updateDoc(userRef, { balance: increment(prize), lastSpin: Date.now() });
-        resultText.innerText = `TEBRİKLER! ${prizeLabel} Kazandınız.`;
+        resultText.innerText = `TEBRİKLER! ${prize.toLocaleString()} ₺ Kazandınız.`;
         resultText.style.color = "var(--success)";
         checkWheelCooldown();
     }, 5000);
@@ -630,7 +631,6 @@ window.closeModal = (id) => {
 };
 
 async function checkWheelCooldown() {
-    if(!auth.currentUser) return;
     const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
     const lastSpin = userDoc.data().lastSpin || 0;
     const diff = 86400000 - (Date.now() - lastSpin);
