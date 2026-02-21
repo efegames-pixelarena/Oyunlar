@@ -104,16 +104,15 @@ body::before {
     padding: 20px; display: grid; grid-template-columns: 1fr auto 1fr; 
     align-items: center; background: rgba(0,0,0,0.5); border-bottom: 1px solid var(--b);
 }
-.arena { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; position: relative; touch-action: none; }
-#bigText { font-family: 'Orbitron'; font-size: 60px; font-weight: 900; text-align: center; transition: 0.1s; }
-#subText { font-family: 'Orbitron'; font-size: 0.9rem; letter-spacing: 3px; color: #555; margin-top: 15px; text-align: center;}
-.flash { background: #fff !important; }
+.arena { 
+    flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; 
+    cursor: pointer; position: relative; touch-action: none;
+    transition: background-color 0.05s linear;
+}
+#bigText { font-family: 'Orbitron'; font-size: 60px; font-weight: 900; text-align: center; transition: 0.1s; pointer-events: none; }
+#subText { font-family: 'Orbitron'; font-size: 0.9rem; letter-spacing: 3px; color: #555; margin-top: 15px; text-align: center; pointer-events: none;}
+.flash { background-color: #fff !important; }
 .flash #bigText, .flash #subText { color: #000 !important; }
-
-/* Tutorial & Error Icons */
-.tut-icon { font-size: 50px; margin-bottom: 10px; animation: float 2s infinite ease-in-out; }
-.err-icon { font-size: 50px; margin-bottom: 10px; color: var(--a); text-shadow: 0 0 15px var(--a); }
-@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 
 .winner-screen { position: fixed; inset: 0; background: #000; z-index: 5000; display: none; flex-direction: column; justify-content: center; align-items: center; }
 .back-btn { background: var(--a); color: white; border: none; padding: 8px 12px; border-radius: 6px; font-weight: 800; font-size: 0.7rem; font-family: 'Orbitron'; }
@@ -218,7 +217,7 @@ body::before {
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, doc, setDoc, updateDoc, onSnapshot, collection, query, where, getDoc, deleteDoc, serverTimestamp, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getDatabase, ref, onValue, set, onDisconnect, serverTimestamp as rdbTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { getDatabase, ref, onValue, set, onDisconnect, off, serverTimestamp as rdbTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
@@ -236,15 +235,12 @@ const rdb = getDatabase(app);
 const auth = getAuth(app);
 
 let uid, username, currentRoomId = null, unsubRoom = null, unsubLobby = null;
-let roomData = null, tapLock = false, countdownInterval = null, lastState = "", lastBigText = "";
+let roomData = null, tapLock = false, countdownInterval = null, lastState = "", localStep = "";
 let allRooms = [], serverOffset = 0, pendingRoomId = null;
-let isTutorialRead = false;
+let unsubPresence = null;
 
-// NTP Sunucu Saati Senkronizasyonu
 const offsetRef = ref(rdb, ".info/serverTimeOffset");
-onValue(offsetRef, (snap) => {
-    serverOffset = snap.val() || 0;
-});
+onValue(offsetRef, (snap) => { serverOffset = snap.val() || 0; });
 const getServerTime = () => Date.now() + serverOffset;
 
 let audioCtx = null;
@@ -255,16 +251,14 @@ const initAudio = () => {
 
 function playBeep(freq, type, duration) {
     if(!audioCtx || audioCtx.state !== 'running') return;
-    try {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = type;
-        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-        gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
-        osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.start(); osc.stop(audioCtx.currentTime + duration);
-    } catch(e) {}
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.start(); osc.stop(audioCtx.currentTime + duration);
 }
 
 const sounds = {
@@ -325,7 +319,7 @@ function renderRooms() {
 
     filtered.forEach(data => {
         const isFull = data.player1 && data.player2;
-        const isInGame = ["countdown", "active", "result"].includes(data.state);
+        const isInGame = ["countdown", "active", "result", "finished"].includes(data.state);
         const div = document.createElement("div");
         div.className = "room-card";
         div.innerHTML = `
@@ -347,20 +341,13 @@ function renderRooms() {
 
 document.getElementById("searchInput").oninput = renderRooms;
 
-// Hızlı Katıl Fix
 document.getElementById("quickJoinBtn").onclick = async function() {
     initAudio();
     if(this.disabled) return;
     this.disabled = true;
-    
-    // Sadece bekleme aşamasındaki, şifresiz ve boş odaları ara
     const available = allRooms.find(r => r.state === "waiting" && !r.player2 && !r.password && r.player1 !== uid);
-    
-    if (available) {
-        await executeJoin(available.id);
-    } else {
-        showError("ARENA YOK", "Şu an boş ve şifresiz arena bulunamadı. Kendi arenanı kurabilirsin!");
-    }
+    if (available) { await executeJoin(available.id); } 
+    else { showError("ARENA YOK", "Boş arena bulunamadı. Kendi arenanı kur!"); }
     this.disabled = false;
 };
 
@@ -376,12 +363,11 @@ document.getElementById("confirmCreateBtn").onclick = async () => {
             player1: uid, player1Name: username, player2: null, player2Name: null,
             score1: 0, score2: 0, round: 1, state: "waiting", host: uid, 
             password: pass, createdAt: serverTimestamp(), penalty: false,
-            displayBig: "READY", displaySub: "BEKLE...",
             p1Ready: false, p2Ready: false,
-            lastTick: getServerTime()
+            startTime: 0
         });
         closeModal("createModal"); 
-        openTutorial();
+        openModal("tutorialModal");
     } catch(e) { btn.disabled = false; }
 };
 
@@ -402,9 +388,7 @@ document.getElementById("confirmJoinPassBtn").onclick = async () => {
     if (snap.exists() && snap.data().password === pass) {
         closeModal("passwordModal");
         await executeJoin(pendingRoomId);
-    } else { 
-        showError("ŞİFRE HATASI", "Girdiğin arena şifresi yanlış.");
-    }
+    } else { showError("ŞİFRE HATASI", "Arena şifresi yanlış."); }
 };
 
 async function executeJoin(id) {
@@ -414,32 +398,32 @@ async function executeJoin(id) {
             const snap = await t.get(roomRef);
             if (!snap.exists()) throw "Oda silinmiş!";
             if (snap.data().player2) throw "Arena dolmuş!";
-            t.update(roomRef, { 
-                player2: uid, 
-                player2Name: username, 
-                state: "matched",
-                p2Ready: false
-            });
+            t.update(roomRef, { player2: uid, player2Name: username, state: "matched", p2Ready: false });
             currentRoomId = id;
         });
-        openTutorial();
+        openModal("tutorialModal");
     } catch (e) { showError("HATA", e); }
-}
-
-function openTutorial() {
-    initAudio();
-    document.getElementById("tutorialModal").style.display = "flex";
 }
 
 document.getElementById("tutConfirmBtn").onclick = async () => {
     initAudio();
-    isTutorialRead = true;
     closeModal("tutorialModal");
     enterRoom();
     await updateDoc(doc(db, "rooms", currentRoomId), {
         [uid === roomData.player1 ? "p1Ready" : "p2Ready"]: true
     });
 };
+
+function setArenaUI(big, sub, color, isFlash = false, isPenalty = false) {
+    const bt = document.getElementById("bigText");
+    const st = document.getElementById("subText");
+    const ar = document.getElementById("arena");
+    bt.innerText = big;
+    st.innerText = sub;
+    bt.style.color = color;
+    isFlash ? ar.classList.add("flash") : ar.classList.remove("flash");
+    isPenalty ? st.classList.add("penalty") : st.classList.remove("penalty");
+}
 
 function enterRoom() {
     if(unsubLobby) unsubLobby(); 
@@ -448,7 +432,6 @@ function enterRoom() {
     document.getElementById("leaveBtn").style.display = "block";
     document.getElementById("lobbyExitBtn").style.display = "none";
     
-    // Bağlantı Koptuğunda Temizlik Sistemi (Presence)
     const userStatusRef = ref(rdb, `presence/${currentRoomId}/${uid}`);
     set(userStatusRef, true);
     onDisconnect(userStatusRef).remove();
@@ -458,12 +441,12 @@ function enterRoom() {
         const d = snap.data();
         roomData = d;
         
-        // Rakip Bağlantısı Koptu mu Kontrolü
-        if (d.player2) {
-            const otherPlayerUid = (uid === d.player1) ? d.player2 : d.player1;
-            onValue(ref(rdb, `presence/${currentRoomId}/${otherPlayerUid}`), (pSnap) => {
-                if (!pSnap.exists() && d.state !== "finished") {
-                    handleDisconnectWin(otherPlayerUid);
+        if (d.player2 && !unsubPresence) {
+            const otherUid = (uid === d.player1) ? d.player2 : d.player1;
+            const otherPresenceRef = ref(rdb, `presence/${currentRoomId}/${otherUid}`);
+            unsubPresence = onValue(otherPresenceRef, (pSnap) => {
+                if (!pSnap.exists() && d.state !== "finished" && d.state !== "waiting") {
+                    handleDisconnectWin(otherUid);
                 }
             });
         }
@@ -474,77 +457,69 @@ function enterRoom() {
         document.getElementById("p2Score").innerText = d.score2 || 0;
         document.getElementById("roundNum").innerText = `RD ${d.round}`;
         
-        const bigText = document.getElementById("bigText");
-        const subText = document.getElementById("subText");
-        const arena = document.getElementById("arena");
-        
-        bigText.innerText = d.displayBig || "";
-        subText.innerText = d.displaySub || "";
-
-        if (d.displayBig !== lastBigText) {
-            arena.classList.remove("flash");
-            subText.classList.remove("penalty");
-            bigText.style.color = "white";
-            if (d.displayBig === "HAZIR") { bigText.style.color = "var(--p)"; sounds.ready(); }
-            if (d.displayBig === "BEKLE") { bigText.style.color = "var(--gold)"; sounds.wait(); }
-            if (d.displayBig === "GO!") { bigText.style.color = "black"; arena.classList.add("flash"); sounds.go(); }
-            if (d.penalty) { subText.classList.add("penalty"); }
-            lastBigText = d.displayBig;
-        }
-
-        // Senkronizasyon ve Zamanlama Mantığı (Profesyonel Çözüm)
         if (d.state !== lastState) {
             if (countdownInterval) clearInterval(countdownInterval);
-            
-            // Başlangıç Senkronizasyonu
+            localStep = "";
+
             if (d.state === "matched" && uid === d.host && d.p1Ready && d.p2Ready) {
                 setTimeout(() => {
                     updateDoc(doc(db, "rooms", currentRoomId), { 
                         state: "countdown", 
-                        displayBig: "HAZIR", displaySub: "ODAKLAN",
-                        startTime: getServerTime() + 3000 // 3 saniye sonra başla
+                        startTime: getServerTime() + 3500 
                     });
                 }, 1000);
             }
 
-            // Geri Sayım ve "GO!" Senkronizasyonu
             if (d.state === "countdown") {
                 countdownInterval = setInterval(() => {
                     const now = getServerTime();
                     const diff = d.startTime - now;
                     
-                    if (diff <= 1500 && diff > 0 && d.displayBig !== "BEKLE") {
-                        if(uid === d.host) updateDoc(doc(db, "rooms", currentRoomId), { displayBig: "BEKLE", displaySub: "SAKIN BASMA!" });
-                    } 
-                    else if (diff <= 0) {
+                    if (diff > 1500 && localStep !== "ready") {
+                        localStep = "ready";
+                        setArenaUI("HAZIR", "ODAKLAN", "var(--p)");
+                        sounds.ready();
+                    } else if (diff <= 1500 && diff > 0 && localStep !== "wait") {
+                        localStep = "wait";
+                        setArenaUI("BEKLE", "SAKIN BASMA!", "var(--gold)");
+                        sounds.wait();
+                    } else if (diff <= 0) {
                         clearInterval(countdownInterval);
                         if(uid === d.host) {
-                            updateDoc(doc(db, "rooms", currentRoomId), { 
-                                state: "active", 
-                                roundStart: d.startTime, // Sabit zaman üzerinden senkronize GO!
-                                displayBig: "GO!", displaySub: "ŞİMDİ VUR!" 
-                            });
+                            updateDoc(doc(db, "rooms", currentRoomId), { state: "active" });
                         }
                     }
-                }, 50);
+                }, 16);
             }
 
-            if (d.state === "result" && uid === d.host) {
-                setTimeout(() => {
-                    if(!currentRoomId) return;
-                    const isFinal = (d.score1 >= 11 || d.score2 >= 11);
-                    if (isFinal) {
-                        updateDoc(doc(db, "rooms", currentRoomId), { state: "finished" });
-                    } else {
-                        updateDoc(doc(db, "rooms", currentRoomId), { 
-                            state: "countdown",
-                            startTime: getServerTime() + 2500,
-                            round: d.round + 1,
-                            penalty: false,
-                            displayBig: "HAZIR", displaySub: "ODAKLAN"
-                        });
-                    }
-                }, 2500);
+            if (d.state === "active") {
+                setArenaUI("GO!", "ŞİMDİ VUR!", "black", true);
+                sounds.go();
+            }
+
+            if (d.state === "result") {
+                const winnerName = (d.lastWinner === d.player1 ? d.player1Name : d.player2Name).toUpperCase();
+                if (d.penalty) {
+                    setArenaUI("HATA!", winnerName + " PUAN ALDI!", "var(--a)", false, true);
+                } else {
+                    setArenaUI(d.lastMs + "ms", winnerName + " KAZANDI", "white");
+                }
+                
+                if (uid === d.host) {
+                    setTimeout(() => {
+                        if (!currentRoomId) return;
+                        if (d.score1 >= 11 || d.score2 >= 11) {
+                            updateDoc(doc(db, "rooms", currentRoomId), { state: "finished" });
+                        } else {
+                            updateDoc(doc(db, "rooms", currentRoomId), { 
+                                state: "countdown",
+                                startTime: getServerTime() + 2500,
+                                round: d.round + 1,
+                                penalty: false
+                            });
+                        }
+                    }, 2000);
+                }
             }
 
             if (d.state === "finished") {
@@ -558,19 +533,17 @@ function enterRoom() {
     });
 }
 
-// Bağlantı Kesilmesi Durumunda Galibiyet Mantığı
 async function handleDisconnectWin(disconnectedUid) {
-    if (!currentRoomId || !roomData) return;
+    if (!currentRoomId || !roomData || roomData.state === "finished") return;
     const roomRef = doc(db, "rooms", currentRoomId);
     const isP1Lost = (disconnectedUid === roomData.player1);
-    
-    await updateDoc(roomRef, {
-        state: "finished",
-        score1: isP1Lost ? 0 : 11,
-        score2: isP1Lost ? 11 : 0,
-        displayBig: "BAĞLANTI KOPTU",
-        displaySub: "RAKİP AYRILDI"
-    });
+    try {
+        await updateDoc(roomRef, {
+            state: "finished",
+            score1: isP1Lost ? 0 : 11,
+            score2: isP1Lost ? 11 : 0
+        });
+    } catch(e) {}
 }
 
 document.getElementById("arena").addEventListener('pointerdown', async (e) => {
@@ -584,61 +557,68 @@ document.getElementById("arena").addEventListener('pointerdown', async (e) => {
     if (d.state === "countdown" || d.state === "matched") {
         tapLock = true;
         const isP1 = (uid === d.player1);
-        await updateDoc(roomRef, { 
-            state: "result", 
-            penalty: true,
-            [isP1 ? "score2" : "score1"]: (isP1 ? (d.score2 || 0) + 1 : (d.score1 || 0) + 1),
-            displayBig: "HATA!", 
-            displaySub: username.toUpperCase() + " ERKEN BASTI!"
+        await runTransaction(db, async (t) => {
+            const s = await t.get(roomRef);
+            if (s.data().state !== "countdown" && s.data().state !== "matched") return;
+            t.update(roomRef, { 
+                state: "result", 
+                penalty: true,
+                lastWinner: isP1 ? s.data().player2 : s.data().player1,
+                score1: isP1 ? s.data().score1 : (s.data().score1 + 1),
+                score2: isP1 ? (s.data().score2 + 1) : s.data().score2
+            });
         });
-        setTimeout(() => tapLock = false, 1500);
+        setTimeout(() => tapLock = false, 1000);
     } 
     else if (d.state === "active") {
         tapLock = true;
-        const reaction = now - d.roundStart;
+        const reaction = now - d.startTime;
+        const isP1 = (uid === d.player1);
         try {
             await runTransaction(db, async (t) => {
                 const s = await t.get(roomRef);
                 if (s.data().state !== "active") return;
-                const isP1 = (uid === s.data().player1);
                 t.update(roomRef, { 
                     state: "result", 
-                    [isP1 ? "score1" : "score2"]: (isP1 ? (s.data().score1 || 0) + 1 : (s.data().score2 || 0) + 1), 
-                    displayBig: Math.floor(reaction) + "ms",
-                    displaySub: username.toUpperCase() + " KAZANDI"
+                    penalty: false,
+                    lastMs: Math.floor(reaction),
+                    lastWinner: uid,
+                    score1: isP1 ? (s.data().score1 + 1) : s.data().score1, 
+                    score2: isP1 ? s.data().score2 : (s.data().score2 + 1)
                 });
             });
-        } catch(e) { console.error("Sync Error:", e); }
-        setTimeout(() => tapLock = false, 1500);
+        } catch(e) { console.error(e); }
+        setTimeout(() => tapLock = false, 1000);
     }
 });
 
 async function quitGame() {
     if (unsubRoom) { unsubRoom(); unsubRoom = null; }
+    if (unsubPresence) { off(ref(rdb, `presence/${currentRoomId}`)); unsubPresence = null; }
     if (countdownInterval) clearInterval(countdownInterval);
     
     if (currentRoomId) {
         const rId = currentRoomId;
         const rdbPresence = ref(rdb, `presence/${rId}/${uid}`);
-        set(rdbPresence, null); // Presence temizle
+        set(rdbPresence, null);
         
-        currentRoomId = null;
         try {
             const refDoc = doc(db, "rooms", rId);
-            // Oda sahibi veya tek kişi kalmışsa odayı kesin sil
-            await deleteDoc(refDoc);
+            const snap = await getDoc(refDoc);
+            if (snap.exists() && (snap.data().host === uid || snap.data().state === "finished")) {
+                await deleteDoc(refDoc);
+            }
         } catch(e) {}
+        currentRoomId = null;
     }
     location.reload();
 }
 
 document.getElementById("leaveBtn").onclick = quitGame;
 
-// Sayfa yenileme/kapatma durumu
 window.addEventListener('beforeunload', () => {
     if (currentRoomId) {
-        const rdbPresence = ref(rdb, `presence/${currentRoomId}/${uid}`);
-        set(rdbPresence, null);
+        set(ref(rdb, `presence/${currentRoomId}/${uid}`), null);
     }
 });
 </script>
