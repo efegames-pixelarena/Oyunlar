@@ -3,151 +3,237 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Shadow Catch | Mobil Düello</title>
+    <title>Shadow Catch | Demo</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-        :root { --p: #00f2ff; --a: #ff0055; --bg: #05070a; --glass: rgba(0, 242, 255, 0.1); }
+        :root { --p: #00f2ff; --a: #ff0055; --bg: #05070a; }
         * { margin:0; padding:0; box-sizing:border-box; font-family: 'Orbitron', sans-serif; user-select: none; -webkit-tap-highlight-color: transparent; }
 
-        body { background: var(--bg); color: white; height: 100vh; overflow: hidden; position: fixed; width: 100%; }
+        body { 
+            background: var(--bg); 
+            color: white; 
+            height: 100vh; 
+            overflow: hidden; 
+            position: fixed; 
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+        }
 
-        /* Arka Plan Izgarası */
+        /* Görseldeki Grid Arka Plan */
         body::before {
             content: ""; position: absolute; inset: 0;
-            background-image: linear-gradient(var(--glass) 1px, transparent 1px), linear-gradient(90deg, var(--glass) 1px, transparent 1px);
-            background-size: 40px 40px; z-index: -1; opacity: 0.3;
+            background-image: linear-gradient(rgba(0, 242, 255, 0.05) 1px, transparent 1px), 
+                              linear-gradient(90deg, rgba(0, 242, 255, 0.05) 1px, transparent 1px);
+            background-size: 50px 50px; z-index: -1;
         }
 
-        /* Üst Panel (Görseldeki HUD) */
+        /* Görseldeki Arayüz (HUD) */
         .hud {
-            padding: 40px 25px; position: relative; z-index: 100;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
+            padding: 50px 30px;
+            z-index: 100;
+            pointer-events: none;
         }
-        .energy-bar { width: 150px; height: 4px; background: #222; margin-top: 10px; border-radius: 2px; overflow: hidden; }
-        #energy-fill { width: 100%; height: 100%; background: var(--p); transition: 0.1s; box-shadow: 0 0 10px var(--p); }
-        #energy-text { color: var(--p); font-weight: 900; font-size: 1.1rem; text-shadow: 0 0 10px var(--p); }
-        .hint { font-size: 0.7rem; color: #555; margin-top: 5px; letter-spacing: 1px; }
+
+        .energy-title {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: var(--p);
+            text-shadow: 0 0 15px var(--p);
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+        }
+
+        .energy-bar-container {
+            width: 200px;
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+            overflow: hidden;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        #energy-fill {
+            width: 100%;
+            height: 100%;
+            background: var(--p);
+            box-shadow: 0 0 15px var(--p);
+            transition: width 0.2s ease;
+        }
+
+        .instruction {
+            margin-top: 15px;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.4);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
 
         /* Radar Dalgaları */
         .sonar {
-            position: absolute; border: 2px solid var(--p); border-radius: 50%;
-            transform: translate(-50%, -50%); pointer-events: none;
-            animation: sonar-expand 0.8s cubic-bezier(0, 0.5, 0.5, 1) forwards;
-        }
-        @keyframes sonar-expand {
-            0% { width: 0; height: 0; opacity: 1; border-width: 4px; }
-            100% { width: 450px; height: 450px; opacity: 0; border-width: 1px; }
+            position: absolute;
+            border: 2px solid var(--p);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            animation: sonar-ping 0.8s ease-out forwards;
         }
 
-        /* Oyuncular */
+        @keyframes sonar-ping {
+            0% { width: 0; height: 0; opacity: 1; border-width: 5px; }
+            100% { width: 400px; height: 400px; opacity: 0; border-width: 1px; }
+        }
+
+        /* Karakterler */
         .entity {
-            position: absolute; border-radius: 50%; transform: translate(-50%, -50%);
-            opacity: 0; transition: opacity 0.4s; z-index: 50;
+            position: absolute;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            opacity: 0;
         }
-        #player { width: 15px; height: 15px; background: #fff; box-shadow: 0 0 15px #fff; opacity: 0.4; }
-        #enemy { width: 25px; height: 25px; background: var(--a); box-shadow: 0 0 25px var(--a); }
 
-        /* Mesaj Ekranı */
-        #msg {
-            position: fixed; inset: 0; display: none; flex-direction: column; 
-            justify-content: center; align-items: center; background: rgba(0,0,0,0.9);
-            z-index: 1000; text-align: center;
+        #enemy {
+            width: 30px;
+            height: 30px;
+            background: var(--a);
+            box-shadow: 0 0 20px var(--a);
+            transition: opacity 0.5s;
         }
-        #msg h1 { font-size: 2.5rem; color: var(--p); text-shadow: 0 0 20px var(--p); margin-bottom: 20px; }
+
+        #player-point {
+            width: 10px;
+            height: 10px;
+            background: #fff;
+            box-shadow: 0 0 10px #fff;
+            opacity: 0.3;
+        }
+
+        /* Mesaj Paneli */
+        #popup {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.9);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .btn {
+            background: var(--p);
+            color: black;
+            border: none;
+            padding: 15px 40px;
+            font-weight: 900;
+            margin-top: 20px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
 
     <div class="hud">
-        <div id="energy-text">ENERJİ: 100%</div>
-        <div class="energy-bar"><div id="energy-fill"></div></div>
-        <div class="hint">TIKLA VE RAKİBİ BUL!</div>
+        <div class="energy-title" id="energy-val">ENERJİ: 100%</div>
+        <div class="energy-bar-container">
+            <div id="energy-fill"></div>
+        </div>
+        <div class="instruction">TIKLA VE RAKİBİ BUL!</div>
     </div>
 
-    <div id="player" class="entity"></div>
     <div id="enemy" class="entity"></div>
+    <div id="player-point" class="entity"></div>
 
-    <div id="msg">
-        <h1 id="result-text">HEDEF İMHA EDİLDİ</h1>
-        <button onclick="location.reload()" style="background:var(--p); color:#000; border:none; padding:15px 30px; font-weight:900; border-radius:5px; cursor:pointer; font-family:'Orbitron'">YENİDEN BAŞLAT</button>
+    <div id="popup">
+        <h1 id="status-text" style="color:var(--p)">HEDEF BULUNDU!</h1>
+        <button class="btn" onclick="resetGame()">YENİDEN BAŞLAT</button>
     </div>
 
 <script>
     let energy = 100;
     let enemyPos = { x: 0, y: 0 };
-    let playerPos = { x: 0, y: 0 };
     const enemyEl = document.getElementById('enemy');
-    const playerEl = document.getElementById('player');
-    const nrgFill = document.getElementById('energy-fill');
-    const nrgText = document.getElementById('energy-text');
+    const playerPoint = document.getElementById('player-point');
+    const energyFill = document.getElementById('energy-fill');
+    const energyVal = document.getElementById('energy-val');
 
-    // Başlangıç: Rakibi rastgele yerleştir
-    function init() {
-        enemyPos.x = Math.random() * (window.innerWidth - 100) + 50;
+    function resetGame() {
+        energy = 100;
+        updateUI();
+        // Rakibi rastgele güvenli bir yere koy (HUD'dan uzak)
+        enemyPos.x = Math.random() * (window.innerWidth - 60) + 30;
         enemyPos.y = Math.random() * (window.innerHeight - 200) + 150;
         enemyEl.style.left = enemyPos.x + 'px';
         enemyEl.style.top = enemyPos.y + 'px';
+        enemyEl.style.opacity = 0;
+        document.getElementById('popup').style.display = 'none';
     }
 
-    // Dokunma/Tıklama Olayı (Sonar Gönder)
-    window.addEventListener('mousedown', (e) => {
+    function updateUI() {
+        energyFill.style.width = energy + "%";
+        energyVal.innerText = `ENERJİ: ${Math.floor(energy)}%`;
+        energyFill.style.background = energy < 25 ? "var(--a)" : "var(--p)";
+    }
+
+    // Dokunma/Tıklama Algılayıcı
+    function handleAction(x, y) {
         if (energy < 25) return;
 
-        // Enerji Azalt
         energy -= 25;
-        updateEnergy();
+        updateUI();
 
-        // Sonar Görseli
+        // Sonar Efekti
         const sonar = document.createElement('div');
         sonar.className = 'sonar';
-        sonar.style.left = e.clientX + 'px';
-        sonar.style.top = e.clientY + 'px';
+        sonar.style.left = x + 'px';
+        sonar.style.top = y + 'px';
         document.body.appendChild(sonar);
         setTimeout(() => sonar.remove(), 800);
 
         // Mesafe Kontrolü
-        const dist = Math.hypot(e.clientX - enemyPos.x, e.clientY - enemyPos.y);
+        const dist = Math.hypot(x - enemyPos.x, y - enemyPos.y);
 
-        // 1. Yakınlık Algılama (Rakibi göster)
-        if (dist < 180) {
-            enemyEl.style.opacity = "1";
-            setTimeout(() => enemyEl.style.opacity = "0", 1200);
+        if (dist < 50) { // Tam vuruş
+            enemyEl.style.opacity = 1;
+            setTimeout(() => {
+                document.getElementById('status-text').innerText = "HEDEF İMHA EDİLDİ!";
+                document.getElementById('popup').style.display = 'flex';
+            }, 500);
+        } else if (dist < 150) { // Yakınından geçti
+            enemyEl.style.opacity = 0.6;
+            setTimeout(() => { if(energy > 0) enemyEl.style.opacity = 0; }, 1000);
         }
-
-        // 2. Doğrudan Vuruş Kontrolü
-        if (dist < 45) {
-            victory();
-        }
-    });
-
-    // Enerji Güncelleme
-    function updateEnergy() {
-        nrgFill.style.width = energy + "%";
-        nrgText.innerText = `ENERJİ: ${Math.floor(energy)}%`;
-        nrgFill.style.background = energy < 30 ? "var(--a)" : "var(--p)";
     }
 
-    // Enerji Yenilenmesi
+    // Mobil ve Masaüstü Desteği
+    window.addEventListener('touchstart', (e) => {
+        const touch = e.touches[0];
+        handleAction(touch.clientX, touch.clientY);
+        playerPoint.style.left = touch.clientX + 'px';
+        playerPoint.style.top = touch.clientY + 'px';
+        playerPoint.style.opacity = 0.3;
+    });
+
+    window.addEventListener('mousedown', (e) => {
+        handleAction(e.clientX, e.clientY);
+    });
+
+    window.addEventListener('mousemove', (e) => {
+        playerPoint.style.left = e.clientX + 'px';
+        playerPoint.style.top = e.clientY + 'px';
+        playerPoint.style.opacity = 0.3;
+    });
+
+    // Enerji Dolumu
     setInterval(() => {
         if (energy < 100) {
-            energy += 0.8;
-            updateEnergy();
+            energy = Math.min(100, energy + 1);
+            updateUI();
         }
-    }, 100);
+    }, 150);
 
-    // Kendi İmlecini Takip Et
-    window.addEventListener('mousemove', (e) => {
-        playerEl.style.left = e.clientX + 'px';
-        playerEl.style.top = e.clientY + 'px';
-        playerEl.style.opacity = "0.4";
-    });
-
-    function victory() {
-        document.getElementById('msg').style.display = 'flex';
-        enemyEl.style.opacity = "1";
-    }
-
-    init();
+    resetGame();
 </script>
 </body>
 </html>
