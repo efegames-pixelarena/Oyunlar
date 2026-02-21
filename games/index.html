@@ -142,13 +142,13 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
 .promo-success { color: var(--success); }
 
 /* Profesyonel Çark */
-.wheel-container { position: relative; width: 280px; height: 280px; margin: 20px auto; }
-.wheel-pointer { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 45px; z-index: 10; filter: drop-shadow(0 0 5px black); }
-#wheelImg { width: 100%; height: 100%; border-radius: 50%; border: 4px solid var(--border); box-shadow: 0 0 30px var(--primary-glow); transition: 5s cubic-bezier(0.15, 0, 0.15, 1); }
-#wheelResultText { color: var(--success); font-weight: 900; font-size: 16px; margin-top: 15px; min-height: 24px; text-shadow: 0 0 10px rgba(0, 255, 163, 0.2); }
+.wheel-container { position: relative; width: 280px; height: 280px; margin: 20px auto; border-radius: 50%; box-shadow: 0 0 50px rgba(79, 209, 255, 0.2); }
+.wheel-pointer { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 45px; z-index: 100; filter: drop-shadow(0 0 10px rgba(0,0,0,0.8)); }
+#wheelImg { width: 100%; height: 100%; border-radius: 50%; border: 6px solid #1a1f2e; transition: transform 6s cubic-bezier(0.1, 0, 0.1, 1); }
+#wheelResultText { color: var(--success); font-weight: 900; font-size: 18px; margin-top: 15px; min-height: 28px; text-shadow: 0 0 15px rgba(0, 255, 163, 0.4); }
 
-/* Auth Hata Mesajı */
-.auth-error-msg { color: var(--danger); font-size: 12px; font-weight: 700; margin-bottom: 10px; min-height: 18px; display: none; }
+/* Hata Mesajı Alt Kısmı */
+.auth-error-area { color: var(--danger); font-size: 12px; font-weight: 800; margin-top: 10px; min-height: 18px; display: block; text-align: center; }
 
 @media(max-width: 768px) {
     .games-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 0 15px; }
@@ -281,22 +281,17 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
         <div style="text-align:left; margin-bottom:15px;">
             <label style="font-size:11px; color:var(--text-dim);">E-posta</label>
             <input type="text" id="profEmail" disabled>
-            
             <label style="font-size:11px; color:var(--text-dim);">İsim Soyisim</label>
             <input type="text" id="profNameSurname" placeholder="Ad Soyad giriniz">
-            
             <label style="font-size:11px; color:var(--text-dim);">Telefon Numarası</label>
             <input type="text" id="profPhone" placeholder="+90 5xx xxx xx xx">
-
             <label style="font-size:11px; color:var(--text-dim);">Kullanıcı Adı (Hak: <span id="userChangeCount">3</span>)</label>
             <input type="text" id="profUser" placeholder="Kullanıcı Adı">
         </div>
-
         <div class="cat-title" style="text-align: left; font-size: 12px; color: var(--primary); font-weight: 800; margin-bottom: 5px;">AVATAR SEÇİMİ (5x5)</div>
         <div class="avatar-grid" id="avatarLibrary"></div>
-
         <button class="modal-btn" onclick="updateProfile()">BİLGİLERİ KAYDET</button>
-        <p onclick="closeModal('profileModal')" style="margin-top:15px;cursor:pointer;opacity:0.5; font-size: 13px;">Pencereyi Kapat</p>
+        <p onclick="closeModal('profileModal')" style="margin-top:15px;cursor:pointer;opacity:0.5; font-size: 13px;">Vazgeç</p>
     </div>
 </div>
 
@@ -321,20 +316,21 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
         <div id="wheelResultText"></div>
         <button class="modal-btn" id="spinBtn" onclick="spinWheel()">ÜCRETSİZ ÇEVİR</button>
         <div id="wheelTimer" style="margin-top:10px;font-weight:800;color:var(--accent); font-size: 14px;"></div>
-        <p onclick="closeModal('wheelModal')" style="margin-top:15px;cursor:pointer;opacity:0.5;">Kapat</p>
+        <p onclick="closeModal('wheelModal')" style="margin-top:15px;cursor:pointer;opacity:0.5;">Pencereyi Kapat</p>
     </div>
 </div>
 
 <div class="modal-overlay" id="authOverlay">
     <div class="modal-card">
         <h2 id="authTitle">Giriş Yap</h2>
-        <input type="email" id="authEmail" placeholder="E-posta">
+        <input type="text" id="authEmail" placeholder="E-posta veya Kullanıcı Adı">
         <input type="password" id="authPassword" placeholder="Şifre">
+        <input type="email" id="regEmail" placeholder="E-posta" style="display:none;">
         <input type="text" id="authUsername" placeholder="Kullanıcı Adı" style="display:none;">
-        <div id="authError" class="auth-error-msg"></div>
+        <div id="authErrorMsg" class="auth-error-area"></div>
         <button class="modal-btn" id="authSubmit">DEVAM ET</button>
         <p id="switchMode" style="margin-top:20px;font-size:13px;cursor:pointer;">Hesabın yok mu? <b style="color:var(--primary)">Kayıt Ol</b></p>
-        <p onclick="closeModal('authOverlay')" style="margin-top:15px;cursor:pointer;opacity:0.5;font-size:13px;">Vazgeç</p>
+        <p onclick="closeModal('authOverlay')" style="margin-top:15px;cursor:pointer;opacity:0.5; font-size: 13px;">Vazgeç</p>
     </div>
 </div>
 
@@ -375,38 +371,28 @@ window.claimBonus = async () => {
     const input = document.getElementById("bonusInput");
     const feedback = document.getElementById("promoFeedback");
     const code = input.value.trim().toUpperCase();
-    
     if(!code) return;
     feedback.innerText = "Kontrol ediliyor...";
     feedback.className = "promo-msg";
-
     try {
         const q = query(collection(db, "promocodes"), where("code", "==", code));
         const querySnapshot = await getDocs(q);
-
         if (querySnapshot.empty) {
             feedback.innerText = "Hatalı veya geçersiz promosyon kodu!";
             feedback.classList.add("promo-error");
             return;
         }
-
         const promoDoc = querySnapshot.docs[0];
         const promoData = promoDoc.data();
         const userRef = doc(db, "users", auth.currentUser.uid);
         const userSnap = await getDoc(userRef);
         const userData = userSnap.data();
-
         if (userData.usedPromos && userData.usedPromos.includes(code)) {
             feedback.innerText = "Bu kodu daha önce kullandınız!";
             feedback.classList.add("promo-error");
             return;
         }
-
-        await updateDoc(userRef, {
-            balance: increment(promoData.amount),
-            usedPromos: [...(userData.usedPromos || []), code]
-        });
-
+        await updateDoc(userRef, { balance: increment(promoData.amount), usedPromos: [...(userData.usedPromos || []), code] });
         feedback.innerText = `BAŞARILI! ${promoData.amount} ₺ Bakiyenize Eklendi.`;
         feedback.classList.add("promo-success");
         input.value = "";
@@ -420,40 +406,33 @@ window.claimBonus = async () => {
 window.spinWheel = async () => {
     const userRef = doc(db, "users", auth.currentUser.uid);
     const userDoc = await getDoc(userRef);
-    const userData = userDoc.data();
-    const lastSpin = userData.lastSpin || 0;
-    
-    if (Date.now() - lastSpin < 86400000) {
-        alert("Günde sadece 1 kez çevirebilirsiniz!");
-        return;
-    }
+    const lastSpin = userDoc.data().lastSpin || 0;
+    if (Date.now() - lastSpin < 86400000) { alert("Günde sadece 1 kez çevirebilirsiniz!"); return; }
 
     const wheel = document.getElementById("wheelImg");
     const spinBtn = document.getElementById("spinBtn");
     const resultText = document.getElementById("wheelResultText");
     
-    // Ödül Havuzu (Gerçekte Firebase'den de çekilebilir)
-    const rewards = [100, 500, 1000, 50, 250, 5000, 150, 300]; 
-    const segmentCount = rewards.length;
-    const randomIndex = Math.floor(Math.random() * segmentCount);
+    // Ödül Havuzu ve Açıları
+    const rewards = [250, 500, 1000, 5000, 100, 50, 2500, 10000];
+    const segmentDeg = 360 / rewards.length;
+    const randomIndex = Math.floor(Math.random() * rewards.length);
     const prize = rewards[randomIndex];
     
-    // Rastgelelik ve dönüş hesaplama
-    const extraDegrees = (360 / segmentCount) * randomIndex;
-    const totalRotation = (360 * 10) + extraDegrees; // 10 tam tur + ödül açısı
+    // Dönüş: 10 tam tur (3600 deg) + ödülün açısı
+    const totalRotation = 3600 + (randomIndex * segmentDeg);
     
     wheel.style.transform = `rotate(${totalRotation}deg)`;
     spinBtn.disabled = true;
-    resultText.innerText = "";
+    resultText.innerText = "Çark Dönüyor...";
+    resultText.style.color = "var(--primary)";
 
     setTimeout(async () => {
-        await updateDoc(userRef, { 
-            balance: increment(prize), 
-            lastSpin: Date.now() 
-        });
-        resultText.innerText = `TEBRİKLER! ${prize.toLocaleString()} ₺ Ödül Hesabınıza Eklendi.`;
+        await updateDoc(userRef, { balance: increment(prize), lastSpin: Date.now() });
+        resultText.innerText = `TEBRİKLER! ${prize.toLocaleString()} ₺ Kazandınız.`;
+        resultText.style.color = "var(--success)";
         checkWheelCooldown();
-    }, 5000);
+    }, 6000);
 };
 
 // PROFİL GÜNCELLEME
@@ -461,21 +440,16 @@ window.updateProfile = async () => {
     const userRef = doc(db, "users", auth.currentUser.uid);
     const snap = await getDoc(userRef);
     const data = snap.data();
-    
     const newName = document.getElementById("profNameSurname").value.trim();
     const newPhone = document.getElementById("profPhone").value.trim();
     const newUser = document.getElementById("profUser").value.trim();
-    
     let updates = { avatar: selectedAvatar || data.avatar };
-
     if (!data.fullName && newName) updates.fullName = newName;
     if (!data.phone && newPhone) updates.phone = newPhone;
-    
     if (newUser !== data.username && (data.userChangeCount || 0) < 3) {
         updates.username = newUser;
         updates.userChangeCount = (data.userChangeCount || 0) + 1;
     }
-
     await updateDoc(userRef, updates);
     alert("Bilgiler güncellendi.");
     closeModal('profileModal');
@@ -484,38 +458,27 @@ window.updateProfile = async () => {
 // AUTH & DİNAMİK ROZET TAKİBİ
 onAuthStateChanged(auth, user => {
     const authBadges = document.querySelectorAll(".auth-badge");
-    
     if(user) {
         document.getElementById("loginBtn").style.display="none"; 
         document.getElementById("regBtn").style.display="none";
         document.getElementById("userPill").style.display="flex";
-        
-        authBadges.forEach(badge => {
-            badge.innerText = "OYNA";
-            badge.className = "badge auth-badge badge-success";
-        });
-
+        authBadges.forEach(badge => { badge.innerText = "OYNA"; badge.className = "badge auth-badge badge-success"; });
         onSnapshot(doc(db, "users", user.uid), s => {
             if(s.exists()) {
                 const data = s.data();
                 document.getElementById("userBalance").innerText = data.balance.toLocaleString() + " ₺";
                 document.getElementById("userProfileImg").src = data.avatar || avatarLinks[0];
                 document.getElementById("profEmail").value = user.email;
-                
                 const nameInp = document.getElementById("profNameSurname");
                 nameInp.value = data.fullName || "";
                 if(data.fullName) nameInp.disabled = true;
-
                 const phoneInp = document.getElementById("profPhone");
                 phoneInp.value = data.phone || "";
                 if(data.phone) phoneInp.disabled = true;
-
                 const userInp = document.getElementById("profUser");
                 userInp.value = data.username;
-                const remaining = 3 - (data.userChangeCount || 0);
-                document.getElementById("userChangeCount").innerText = remaining;
-                if(remaining <= 0) userInp.disabled = true;
-
+                document.getElementById("userChangeCount").innerText = 3 - (data.userChangeCount || 0);
+                if((3 - (data.userChangeCount || 0)) <= 0) userInp.disabled = true;
                 loadAvatars(data.avatar);
             }
         });
@@ -523,11 +486,7 @@ onAuthStateChanged(auth, user => {
         document.getElementById("loginBtn").style.display="block"; 
         document.getElementById("regBtn").style.display="block";
         document.getElementById("userPill").style.display="none";
-
-        authBadges.forEach(badge => {
-            badge.innerText = "GİRİŞ GEREKİR";
-            badge.className = "badge auth-badge badge-danger";
-        });
+        authBadges.forEach(badge => { badge.innerText = "GİRİŞ GEREKİR"; badge.className = "badge auth-badge badge-danger"; });
     }
 });
 
@@ -541,10 +500,7 @@ window.openModal = (id) => {
 };
 window.closeModal = (id) => { 
     document.getElementById(id).style.display = 'none'; 
-    if(id === 'authOverlay') {
-        document.getElementById("authError").style.display = "none";
-        document.getElementById("authError").innerText = "";
-    }
+    document.getElementById("authErrorMsg").innerText = "";
 };
 
 async function checkWheelCooldown() {
@@ -553,7 +509,6 @@ async function checkWheelCooldown() {
     const diff = 86400000 - (Date.now() - lastSpin);
     const btn = document.getElementById("spinBtn");
     const timer = document.getElementById("wheelTimer");
-
     if (diff > 0) {
         btn.disabled = true;
         const h = Math.floor(diff / 3600000);
@@ -565,9 +520,6 @@ async function checkWheelCooldown() {
     }
 }
 
-document.getElementById("avatarTrigger").onclick = (e) => { e.stopPropagation(); document.getElementById("userDropdown").classList.toggle("active"); };
-window.onclick = () => document.getElementById("userDropdown").classList.remove("active");
-
 let isLogin = true;
 const authOverlay = document.getElementById("authOverlay");
 document.getElementById("loginBtn").onclick = () => { isLogin=true; updateAuthUI(); authOverlay.style.display="flex"; };
@@ -576,42 +528,59 @@ document.getElementById("switchMode").onclick = () => { isLogin = !isLogin; upda
 
 function updateAuthUI() { 
     document.getElementById("authTitle").innerText = isLogin ? "Giriş Yap" : "Kayıt Ol"; 
+    document.getElementById("authEmail").placeholder = isLogin ? "E-posta veya Kullanıcı Adı" : "E-posta";
+    document.getElementById("regEmail").style.display = isLogin ? "none" : "block";
     document.getElementById("authUsername").style.display = isLogin ? "none" : "block"; 
-    document.getElementById("authError").style.display = "none";
+    document.getElementById("authEmail").style.display = isLogin ? "block" : "none";
+    document.getElementById("authErrorMsg").innerText = "";
 }
 
 document.getElementById("authSubmit").onclick = async () => {
-    const email = document.getElementById("authEmail").value;
+    const errorMsg = document.getElementById("authErrorMsg");
     const pass = document.getElementById("authPassword").value;
-    const userN = document.getElementById("authUsername").value;
-    const errorEl = document.getElementById("authError");
-
-    errorEl.style.display = "none";
+    errorMsg.innerText = "";
 
     try {
-        if(isLogin) { 
-            await signInWithEmailAndPassword(auth, email, pass); 
+        if(isLogin) {
+            const loginInput = document.getElementById("authEmail").value.trim();
+            let finalEmail = loginInput;
+
+            // Kullanıcı adı ile giriş kontrolü
+            if(!loginInput.includes("@")) {
+                const q = query(collection(db, "users"), where("username", "==", loginInput));
+                const qs = await getDocs(q);
+                if(qs.empty) throw new Error("Kullanıcı adı bulunamadı!");
+                finalEmail = qs.docs[0].data().email;
+            }
+            await signInWithEmailAndPassword(auth, finalEmail, pass);
+            closeModal('authOverlay');
         } else {
-            if(!userN) throw new Error("Kullanıcı adı gerekli!");
+            const email = document.getElementById("regEmail").value.trim();
+            const userN = document.getElementById("authUsername").value.trim();
+            
+            if(!userN || !email || !pass) throw new Error("Tüm alanları doldurun!");
+
+            // Aynı Kullanıcı Adı Kontrolü
+            const q = query(collection(db, "users"), where("username", "==", userN));
+            const qs = await getDocs(q);
+            if(!qs.empty) throw new Error("Bu kullanıcı adı zaten alınmış!");
+
             const res = await createUserWithEmailAndPassword(auth, email, pass);
             await setDoc(doc(db, "users", res.user.uid), { 
-                username: userN, 
-                balance: 1000, 
-                lastSpin: 0, 
-                userChangeCount: 0, 
-                fullName: "", 
-                phone: "", 
-                avatar: avatarLinks[0], 
-                usedPromos: [] 
+                username: userN, email: email, balance: 1000, lastSpin: 0, 
+                userChangeCount: 0, fullName: "", phone: "", avatar: avatarLinks[0], usedPromos: [] 
             });
+            closeModal('authOverlay');
         }
-        authOverlay.style.display = "none";
     } catch(e) { 
-        errorEl.innerText = e.message.includes("auth/") ? "Geçersiz e-posta veya şifre!" : e.message;
-        errorEl.style.display = "block";
+        if(e.code === "auth/email-already-in-use") errorMsg.innerText = "Bu e-posta zaten kayıtlı!";
+        else if(e.code === "auth/wrong-password") errorMsg.innerText = "Hatalı şifre!";
+        else errorMsg.innerText = e.message;
     }
 };
 
+document.getElementById("avatarTrigger").onclick = (e) => { e.stopPropagation(); document.getElementById("userDropdown").classList.toggle("active"); };
+window.onclick = () => document.getElementById("userDropdown").classList.remove("active");
 document.getElementById("logoutBtn").onclick = () => signOut(auth);
 
 // Kar Efekti
