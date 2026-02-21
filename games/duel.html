@@ -3,27 +3,28 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>PixelArena Duel - Pro</title>
+<title>PixelArena Duel Pro</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
 <style>
 :root { 
     --p: #00f2ff; --a: #ff0055; --bg: #05070a; --b: #161b22; 
-    --gold: #ffcc00; --glass: rgba(10, 15, 25, 0.85); --success: #00ff88;
+    --gold: #ffcc00; --glass: rgba(10, 15, 25, 0.90); --success: #00ff88;
 }
 
 * { 
     margin:0; padding:0; box-sizing:border-box; 
     font-family: 'Rajdhani', sans-serif; 
     -webkit-tap-highlight-color:transparent; 
-    touch-action: manipulation; 
+    touch-action: none; /* Zoom ve kaydırma hatalarını engeller */
     user-select: none; 
 }
 
 body { 
-    background: var(--bg); color: white; height: 100dvh; overflow: hidden; 
+    background: var(--bg); color: white; height: 100vh; overflow: hidden; 
     display: flex; flex-direction: column; position: fixed; width: 100%;
 }
 
+/* Arkaplan Grid Efekti */
 body::before {
     content: ""; position: absolute; inset: 0;
     background-image: 
@@ -35,7 +36,7 @@ body::before {
 }
 
 .top-bar { 
-    height: 70px; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); 
+    height: 70px; background: rgba(0,0,0,0.8); backdrop-filter: blur(15px); 
     border-bottom: 2px solid var(--p); display: flex; align-items: center; 
     justify-content: space-between; padding: 0 15px; z-index: 1000;
 }
@@ -44,100 +45,77 @@ body::before {
     background: linear-gradient(to bottom, #fff, var(--p)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
 }
 
-#userBox {
-    font-weight: 700; color: var(--p); font-size: 0.8rem;
-    max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
+#userBox { font-weight: 700; color: var(--p); font-size: 0.8rem; }
 
 #lobby { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
 .lobby-controls { display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
-.search-bar { display: flex; gap: 8px; }
+
 .search-bar input {
-    flex: 1; background: var(--b); border: 1px solid #333; border-radius: 8px;
+    width: 100%; background: var(--b); border: 1px solid #333; border-radius: 8px;
     padding: 12px; color: white; font-family: 'Orbitron'; font-size: 0.75rem;
-    outline: none; transition: 0.3s; border: 1px solid transparent;
+    outline: none; transition: 0.3s;
 }
-.search-bar input:focus { border-color: var(--p); }
+.search-bar input:focus { border-color: var(--p); box-shadow: 0 0 10px rgba(0,242,255,0.2); }
 
 .action-buttons { display: flex; gap: 8px; }
 .btn {
     border: none; border-radius: 8px; font-weight: 900; font-family: 'Orbitron'; 
-    font-size: 0.65rem; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center;
+    font-size: 0.65rem; cursor: pointer; transition: 0.2s; padding: 15px;
 }
-.btn:disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(1); }
-.create-btn { flex: 1; padding: 15px; background: var(--p); color: #000; }
-.quick-btn { flex: 1; padding: 15px; background: var(--success); color: #000; }
+.create-btn { flex: 1; background: var(--p); color: #000; }
+.quick-btn { flex: 1; background: var(--success); color: #000; }
 
 .room-card { 
     background: var(--glass); border: 1px solid var(--b); padding: 15px; border-radius: 15px;
     display: flex; justify-content: space-between; align-items: center;
-    border-left: 4px solid var(--p); animation: slideIn 0.3s ease-out; margin-bottom: 5px;
+    border-left: 4px solid var(--p); animation: slideIn 0.3s ease-out;
 }
-.room-details { display: flex; flex-direction: column; gap: 4px; }
-.room-host { font-family: 'Orbitron'; font-weight: 900; font-size: 0.9rem; color: #fff; }
-.room-meta { font-size: 0.65rem; color: #888; display: flex; align-items: center; gap: 8px; }
-.badge { padding: 3px 8px; border-radius: 4px; font-size: 0.55rem; font-weight: 900; text-transform: uppercase; }
-.badge-live { background: var(--a); color: white; animation: pulse 1s infinite; }
-.badge-wait { background: var(--success); color: black; }
 
+.badge-live { background: var(--a); color: white; animation: pulse 1s infinite; padding: 3px 8px; border-radius: 4px; font-size: 0.6rem;}
+
+/* Oyun Alanı */
+#game-view { display: none; flex: 1; flex-direction: column; }
+.scoreboard { 
+    padding: 20px; display: grid; grid-template-columns: 1fr auto 1fr; 
+    align-items: center; background: rgba(0,0,0,0.5);
+}
+.score { font-size: 2rem; font-family: 'Orbitron'; font-weight: 900; }
+.arena { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: crosshair; }
+
+#bigText { font-family: 'Orbitron'; font-size: 4rem; font-weight: 900; text-align: center; }
+.flash { background: #fff !important; }
+.flash #bigText, .flash #subText { color: #000 !important; }
+
+.penalty { color: var(--a) !important; animation: shake 0.3s cubic-bezier(.36,.07,.19,.97) both; }
+@keyframes shake { 10%, 90% { transform: translate3d(-1px, 0, 0); } 20%, 80% { transform: translate3d(2px, 0, 0); } }
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 @keyframes slideIn { from { transform: translateX(-20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
 .modal {
     position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px);
-    display: none; justify-content: center; align-items: center; z-index: 2000; padding: 20px;
+    display: none; justify-content: center; align-items: center; z-index: 2000;
 }
 .modal-content {
-    background: var(--b); width: 100%; max-width: 350px; padding: 25px; border-radius: 20px;
+    background: var(--b); width: 90%; max-width: 350px; padding: 25px; border-radius: 20px;
     border: 1px solid var(--p); display: flex; flex-direction: column; gap: 15px;
-    text-align: center; animation: modalPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
-@keyframes modalPop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-
-.modal-content input {
-    background: #000; border: 1px solid #333; padding: 12px; color: var(--p);
-    border-radius: 8px; font-family: 'Orbitron'; font-size: 0.8rem; text-align: center; outline: none;
-}
-
-#game-view { display: none; flex: 1; flex-direction: column; }
-.scoreboard { 
-    padding: 20px; display: grid; grid-template-columns: 1fr auto 1fr; 
-    align-items: center; background: rgba(0,0,0,0.5); border-bottom: 1px solid var(--b);
-}
-.arena { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; position: relative; touch-action: none; }
-#bigText { font-family: 'Orbitron'; font-size: 60px; font-weight: 900; text-align: center; transition: 0.1s; }
-#subText { font-family: 'Orbitron'; font-size: 0.9rem; letter-spacing: 3px; color: #555; margin-top: 15px; text-align: center;}
-.flash { background: #fff !important; }
-.flash #bigText, .flash #subText { color: #000 !important; }
-
-.winner-screen { position: fixed; inset: 0; background: #000; z-index: 5000; display: none; flex-direction: column; justify-content: center; align-items: center; }
-.back-btn { background: var(--a); color: white; border: none; padding: 8px 12px; border-radius: 6px; font-weight: 800; font-size: 0.7rem; font-family: 'Orbitron'; }
-.exit-btn { background: #333; color: #ff4444; border: 1px solid #444; padding: 6px 10px; border-radius: 6px; font-weight: 800; font-size: 0.65rem; font-family: 'Orbitron'; }
-.penalty { color: var(--a) !important; animation: shake 0.3s infinite; }
-@keyframes shake { 0%,100%{transform: scale(1);} 50%{transform: scale(1.1);} }
 </style>
 </head>
 <body>
 
 <div class="top-bar">
-    <div class="brand">REFLEX DUEL</div>
+    <div class="brand">PIXELARENA PRO</div>
     <div style="display:flex; gap:10px; align-items:center;">
-        <div id="userBox">...</div>
-        <button id="lobbyExitBtn" class="exit-btn" onclick="window.location.href='index.html'">ÇIKIŞ</button>
-        <button id="leaveBtn" class="back-btn" style="display:none;">AYRIL</button>
+        <div id="userBox">YÜKLENİYOR...</div>
+        <button id="leaveBtn" class="btn" style="display:none; background:var(--a); color:white; padding:8px 12px;">AYRIL</button>
     </div>
 </div>
-
-<div id="errorModal" class="modal"><div class="modal-content" style="border-color: var(--a);"><div class="err-icon">⚠️</div><h2 id="errorTitle" style="font-family:'Orbitron'; color:var(--a); font-size:1.1rem;">HATA</h2><p id="errorDesc" style="font-size: 0.85rem; color: #aaa;"></p><button onclick="closeModal('errorModal')" style="padding:15px; border-radius:8px; background:var(--a); border:none; color:white; font-weight:900;">TAMAM</button></div></div>
-<div id="tutorialModal" class="modal"><div class="modal-content"><div class="tut-icon">🥊</div><h2 style="font-family:'Orbitron'; color:var(--p);">NASIL OYNANIR?</h2><p style="font-size: 0.85rem; color: #aaa;">FLASH patladığı anda rakibinden önce dokun. Erken basarsan rakibin puan kazanır.</p><button id="tutConfirmBtn" style="padding:15px; border-radius:8px; background:var(--p); border:none; font-weight:900;">ANLADIM!</button></div></div>
-<div id="createModal" class="modal"><div class="modal-content"><h2 style="font-family:'Orbitron'; color:var(--p);">ARENA OLUŞTUR</h2><input type="text" id="roomPassInput" placeholder="ŞİFRE (İSTEĞE BAĞLI)" maxlength="10"><div style="display:flex; gap:10px;"><button onclick="closeModal('createModal')" style="flex:1; padding:12px; background:#222; color:white; border:none; border-radius:8px;">İPTAL</button><button id="confirmCreateBtn" style="flex:1; padding:12px; background:var(--p); color:black; font-weight:900; border:none; border-radius:8px;">OLUŞTUR</button></div></div></div>
-<div id="passwordModal" class="modal"><div class="modal-content"><h2 style="font-family:'Orbitron'; color:var(--gold);">ŞİFRE GEREKLİ</h2><input type="password" id="joinPassInput" placeholder="ŞİFRE"><div style="display:flex; gap:10px;"><button onclick="closeModal('passwordModal')" style="flex:1; padding:12px; background:#222; border:none; border-radius:8px;">İPTAL</button><button id="confirmJoinPassBtn" style="flex:1; padding:12px; background:var(--gold); border:none; border-radius:8px; font-weight:900;">KATIL</button></div></div></div>
 
 <div id="lobby">
     <div class="lobby-controls">
         <div class="search-bar"><input type="text" id="searchInput" placeholder="ARENA ARA..."></div>
         <div class="action-buttons">
-            <button class="btn create-btn" onclick="openModal('createModal')">ODA KUR</button>
+            <button class="btn create-btn" id="createRoomBtn">ARENA KUR</button>
             <button class="btn quick-btn" id="quickJoinBtn">HIZLI KATIL</button>
         </div>
     </div>
@@ -146,19 +124,30 @@ body::before {
 
 <div id="game-view">
     <div class="scoreboard">
-        <div class="p-info"><div class="name" id="p1Name">---</div><div class="score" id="p1Score">0</div></div>
-        <div id="roundNum" style="font-weight:900; color:var(--gold);">RD 1</div>
-        <div class="p-info"><div class="name" id="p2Name">---</div><div class="score" id="p2Score">0</div></div>
+        <div style="text-align:center;">
+            <div id="p1Name" style="font-size:0.7rem; color:var(--p);">...</div>
+            <div class="score" id="p1Score">0</div>
+        </div>
+        <div id="roundNum" style="color:var(--gold); font-family:'Orbitron'; font-weight:900;">RD 1</div>
+        <div style="text-align:center;">
+            <div id="p2Name" style="font-size:0.7rem; color:var(--a);">...</div>
+            <div class="score" id="p2Score">0</div>
+        </div>
     </div>
     <div class="arena" id="arena">
         <div id="bigText">READY</div>
-        <div id="subText">BEKLE...</div>
+        <div id="subText" style="letter-spacing:5px; margin-top:10px; color:#555;">BEKLE...</div>
     </div>
 </div>
 
-<div id="winnerScreen" class="winner-screen">
-    <p style="color:var(--p);">ARENA ŞAMPİYONU</p>
-    <h1 id="championName" style="font-size:2.5rem; color:var(--gold);">PLAYER</h1>
+<div id="genericModal" class="modal">
+    <div class="modal-content" id="modalBody"></div>
+</div>
+
+<div id="winnerScreen" style="display:none; position:fixed; inset:0; background:#000; z-index:5000; flex-direction:column; justify-content:center; align-items:center;">
+    <h2 style="color:var(--gold); font-family:'Orbitron';">ŞAMPİYON</h2>
+    <h1 id="championName" style="font-size:3rem; margin:20px 0;">...</h1>
+    <p>Lobiye dönülüyor...</p>
 </div>
 
 <script type="module">
@@ -182,11 +171,12 @@ const db = getFirestore(app);
 const rtdb = getDatabase(app);
 const auth = getAuth(app);
 
-let uid, username, currentRoomId = null, unsubRoom = null, unsubLobby = null;
-let roomData = null, tapLock = false, countdownInterval = null, lastBigText = "";
-let serverOffset = 0, pendingRoomId = null;
+let uid, username, currentRoomId = null;
+let unsubRoom = null, unsubLobby = null;
+let roomData = null, tapLock = false;
+let serverOffset = 0;
 
-// 1. ÇÖZÜM: GERÇEK ZAMAN SENKRONİZASYONU
+// 1. Geliştirme: Hassas Zaman Senkronizasyonu (RTDB Offset)
 const offsetRef = ref(rtdb, ".info/serverTimeOffset");
 onValue(offsetRef, (snap) => {
     serverOffset = snap.val() || 0;
@@ -195,241 +185,224 @@ const getServerTime = () => Date.now() + serverOffset;
 
 // Ses Sistemi
 let audioCtx = null;
-const initAudio = () => {
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-};
-function playBeep(freq, type, duration) {
-    if(!audioCtx || audioCtx.state !== 'running') return;
+const playSound = (f, t, d) => {
+    if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-    gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
-    osc.connect(gain); gain.connect(audioCtx.destination);
-    osc.start(); osc.stop(audioCtx.currentTime + duration);
-}
-const sounds = {
-    ready: () => playBeep(300, 'sine', 0.15),
-    wait: () => playBeep(350, 'sine', 0.15),
-    go: () => playBeep(800, 'square', 0.2),
-    win: () => { playBeep(523, 'sine', 0.2); setTimeout(()=>playBeep(783, 'sine', 0.5), 300); }
+    const g = audioCtx.createGain();
+    osc.type = t; osc.frequency.setValueAtTime(f, audioCtx.currentTime);
+    g.gain.setValueAtTime(0.1, audioCtx.currentTime);
+    osc.connect(g); g.connect(audioCtx.destination);
+    osc.start(); osc.stop(audioCtx.currentTime + d);
 };
 
-window.openModal = (id) => { initAudio(); document.getElementById(id).style.display = "flex"; };
-window.closeModal = (id) => { document.getElementById(id).style.display = "none"; };
-
-function showError(title, desc) {
-    document.getElementById("errorTitle").innerText = title;
-    document.getElementById("errorDesc").innerText = desc;
-    openModal("errorModal");
-}
-
-// Auth ve Lobi
+// Auth
 onAuthStateChanged(auth, async (user) => {
     if (!user) { signInAnonymously(auth); return; }
     uid = user.uid;
-    const userRef = doc(db, "users", uid);
-    const snap = await getDoc(userRef);
-    username = snap.exists() ? snap.data().username : "Warrior_" + uid.slice(0,4);
-    if(!snap.exists()) await setDoc(userRef, { username, lastSeen: serverTimestamp() });
+    const snap = await getDoc(doc(db, "users", uid));
+    username = snap.exists() ? snap.data().username : "Ace_" + uid.slice(0,4);
+    if(!snap.exists()) await setDoc(doc(db, "users", uid), { username });
     document.getElementById("userBox").innerText = username.toUpperCase();
     listenLobby();
 });
 
+// Lobi Dinleme
 function listenLobby() {
     if(unsubLobby) unsubLobby();
     const q = query(collection(db, "rooms"), where("state", "in", ["waiting", "matched", "countdown", "active", "result"]));
     unsubLobby = onSnapshot(q, (snap) => {
-        const rooms = snap.docs.map(d => ({id: d.id, ...d.data()}));
-        renderRooms(rooms);
+        const list = document.getElementById("roomList");
+        list.innerHTML = "";
+        snap.forEach(doc => {
+            const d = doc.data();
+            const card = document.createElement("div");
+            card.className = "room-card";
+            card.innerHTML = `
+                <div>
+                    <div style="font-weight:900;">${d.player1Name.toUpperCase()}</div>
+                    <div style="font-size:0.6rem; color:#888;">${d.state === 'waiting' ? 'BEKLİYOR' : '<span class="badge-live">CANLI</span>'}</div>
+                </div>
+                <button class="btn create-btn" onclick="joinRoom('${doc.id}')" ${d.player2 ? 'disabled' : ''}>KATIL</button>
+            `;
+            list.appendChild(card);
+        });
     });
 }
 
-function renderRooms(rooms) {
-    const list = document.getElementById("roomList");
-    list.innerHTML = "";
-    rooms.forEach(data => {
-        const isFull = data.player1 && data.player2;
-        const div = document.createElement("div");
-        div.className = "room-card";
-        div.innerHTML = `
-            <div class="room-details">
-                <div class="room-host">${data.player1Name.toUpperCase()}</div>
-                <div class="room-meta"><span class="badge ${isFull ? 'badge-live' : 'badge-wait'}">${isFull ? 'DOLU' : 'AÇIK'}</span></div>
-            </div>
-            <button class="btn" style="padding:10px; background:var(--p);" ${isFull ? 'disabled' : ''} onclick="joinRoom('${data.id}', ${!!data.password})">GİR</button>
-        `;
-        list.appendChild(div);
-    });
-}
-
-// 2. ÇÖZÜM: TRANSACTION İLE GÜVENLİ TIKLAMA
-document.getElementById("arena").addEventListener('pointerdown', async (e) => {
-    e.preventDefault();
-    initAudio();
-    if (tapLock || !currentRoomId || !roomData) return;
-
-    const now = getServerTime();
-    const roomRef = doc(db, "rooms", currentRoomId);
-    
-    // PENALTY VEYA WIN DURUMU TRANSACTION İÇİNDE
+// 2. Geliştirme: Race Condition Engelleyici Transaction'lar
+window.joinRoom = async (roomId) => {
     try {
         await runTransaction(db, async (transaction) => {
-            const s = await transaction.get(roomRef);
-            const d = s.data();
-            if (d.state === "result" || d.state === "finished") return;
-
-            const isP1 = uid === d.player1;
+            const roomRef = doc(db, "rooms", roomId);
+            const snap = await transaction.get(roomRef);
+            if (!snap.exists()) throw "Arena kapandı!";
+            if (snap.data().player2) throw "Arena dolu!";
             
-            // Erken Basma
-            if (d.state === "countdown" || d.state === "matched") {
-                transaction.update(roomRef, {
-                    state: "result",
-                    penalty: true,
-                    [isP1 ? "score2" : "score1"]: (isP1 ? (d.score2 || 0) + 1 : (d.score1 || 0) + 1),
-                    displayBig: "HATA!",
-                    displaySub: username.toUpperCase() + " ERKEN BASTI!"
-                });
-            } 
-            // Zamanında Basma
-            else if (d.state === "active") {
-                const reaction = now - d.roundStart;
-                transaction.update(roomRef, {
-                    state: "result",
-                    [isP1 ? "score1" : "score2"]: (isP1 ? (d.score1 || 0) + 1 : (d.score2 || 0) + 1),
-                    displayBig: reaction + "ms",
-                    displaySub: username.toUpperCase() + " KAZANDI!"
-                });
-            }
+            transaction.update(roomRef, {
+                player2: uid,
+                player2Name: username,
+                state: "matched",
+                p2Ready: true
+            });
         });
-        tapLock = true;
-        setTimeout(() => tapLock = false, 1500);
-    } catch(e) { console.error("Basma hatası:", e); }
-});
-
-// Oda İşlemleri
-window.joinRoom = async (id, hasPass) => {
-    if(hasPass) { pendingRoomId = id; openModal("passwordModal"); return; }
-    executeJoin(id);
+        currentRoomId = roomId;
+        initGameView();
+    } catch (e) { alert(e); }
 };
 
-document.getElementById("confirmJoinPassBtn").onclick = async () => {
-    const pass = document.getElementById("joinPassInput").value;
-    const snap = await getDoc(doc(db, "rooms", pendingRoomId));
-    if(snap.data().password === pass) { closeModal("passwordModal"); executeJoin(pendingRoomId); }
-    else showError("HATA", "Şifre Yanlış!");
-};
-
-async function executeJoin(id) {
-    const roomRef = doc(db, "rooms", id);
-    try {
-        await runTransaction(db, async (t) => {
-            const s = await t.get(roomRef);
-            if(s.data().player2) throw "Oda Dolu";
-            t.update(roomRef, { player2: uid, player2Name: username, state: "matched" });
-        });
-        currentRoomId = id;
-        openModal("tutorialModal");
-    } catch(e) { showError("HATA", e); }
-}
-
-document.getElementById("confirmCreateBtn").onclick = async () => {
-    const pass = document.getElementById("roomPassInput").value;
-    const ref = doc(collection(db, "rooms"));
-    await setDoc(ref, {
-        player1: uid, player1Name: username, score1: 0, score2: 0,
-        state: "waiting", host: uid, password: pass, round: 1,
-        p1Ready: false, p2Ready: false, createdAt: serverTimestamp()
+document.getElementById("createRoomBtn").onclick = async () => {
+    const id = "room_" + Date.now();
+    await setDoc(doc(db, "rooms", id), {
+        player1: uid, player1Name: username, player2: null, player2Name: null,
+        score1: 0, score2: 0, round: 1, state: "waiting", host: uid,
+        p1Ready: true, p2Ready: false, lastActionTime: serverTimestamp()
     });
-    currentRoomId = ref.id;
-    closeModal("createModal");
-    openModal("tutorialModal");
+    currentRoomId = id;
+    initGameView();
 };
 
-document.getElementById("tutConfirmBtn").onclick = async () => {
-    closeModal("tutorialModal");
-    const isP1 = uid === (await getDoc(doc(db, "rooms", currentRoomId))).data().player1;
-    await updateDoc(doc(db, "rooms", currentRoomId), { [isP1 ? "p1Ready" : "p2Ready"]: true });
-    enterRoom();
-};
-
-function enterRoom() {
+function initGameView() {
     document.getElementById("lobby").style.display = "none";
     document.getElementById("game-view").style.display = "flex";
     document.getElementById("leaveBtn").style.display = "block";
-    document.getElementById("lobbyExitBtn").style.display = "none";
-
+    
     unsubRoom = onSnapshot(doc(db, "rooms", currentRoomId), (snap) => {
         if(!snap.exists()) { quitGame(); return; }
-        const d = snap.data(); roomData = d;
-        
-        document.getElementById("p1Name").innerText = d.player1Name.toUpperCase();
-        document.getElementById("p2Name").innerText = (d.player2Name || "BEKLENİYOR").toUpperCase();
-        document.getElementById("p1Score").innerText = d.score1;
-        document.getElementById("p2Score").innerText = d.score2;
-        document.getElementById("roundNum").innerText = "RD " + d.round;
-        
-        const big = document.getElementById("bigText");
-        const sub = document.getElementById("subText");
-        big.innerText = d.displayBig || "READY";
-        sub.innerText = d.displaySub || "BEKLE...";
-
-        if(d.displayBig !== lastBigText) {
-            document.getElementById("arena").classList.toggle("flash", d.displayBig === "GO!");
-            if(d.displayBig === "HAZIR") sounds.ready();
-            if(d.displayBig === "BEKLE") sounds.wait();
-            if(d.displayBig === "GO!") sounds.go();
-            lastBigText = d.displayBig;
-        }
-
-        // Host Yönetimi
-        if(uid === d.host) handleHostLogic(d);
-
-        if(d.state === "finished") {
-            document.getElementById("winnerScreen").style.display = "flex";
-            document.getElementById("championName").innerText = d.score1 >= 11 ? d.player1Name : d.player2Name;
-            sounds.win();
-            setTimeout(quitGame, 4000);
-        }
+        roomData = snap.data();
+        updateUI();
+        processState();
     });
 }
 
-function handleHostLogic(d) {
-    const ref = doc(db, "rooms", currentRoomId);
-    if(d.state === "matched" && d.p1Ready && d.p2Ready) {
-        updateDoc(ref, { state: "countdown", startTime: getServerTime() + 3000, displayBig: "HAZIR", displaySub: "ODAKLAN" });
-    }
-    if(d.state === "countdown") {
-        const diff = d.startTime - getServerTime();
-        if(diff < 1500 && diff > 0 && d.displayBig !== "BEKLE") updateDoc(ref, { displayBig: "BEKLE", displaySub: "SAKIN BASMA" });
-        if(diff <= 0) updateDoc(ref, { state: "active", roundStart: getServerTime(), displayBig: "GO!", displaySub: "VUR!" });
-    }
-    if(d.state === "result") {
-        const isFinal = d.score1 >= 11 || d.score2 >= 11;
-        setTimeout(() => {
-            if(!currentRoomId) return;
-            updateDoc(ref, { 
-                state: isFinal ? "finished" : "countdown", 
-                startTime: getServerTime() + 3000, 
-                round: isFinal ? d.round : d.round + 1,
-                displayBig: "HAZIR"
-            });
-        }, 3000);
+function updateUI() {
+    document.getElementById("p1Name").innerText = roomData.player1Name.toUpperCase();
+    document.getElementById("p2Name").innerText = (roomData.player2Name || "BEKLENİYOR").toUpperCase();
+    document.getElementById("p1Score").innerText = roomData.score1;
+    document.getElementById("p2Score").innerText = roomData.score2;
+    document.getElementById("roundNum").innerText = "RD " + roomData.round;
+}
+
+// 4. Geliştirme: Mantıksal State Yönetimi
+function processState() {
+    const arena = document.getElementById("arena");
+    const big = document.getElementById("bigText");
+    const sub = document.getElementById("subText");
+
+    switch(roomData.state) {
+        case "matched":
+            big.innerText = "HAZIR OL";
+            sub.innerText = "RAKİP GELDİ";
+            if(uid === roomData.host) {
+                setTimeout(() => updateDoc(doc(db, "rooms", currentRoomId), {
+                    state: "countdown",
+                    startTime: getServerTime() + 2000 + Math.random() * 3000
+                }), 2000);
+            }
+            break;
+        case "countdown":
+            arena.classList.remove("flash");
+            big.innerText = "BEKLE";
+            big.style.color = "var(--gold)";
+            sub.innerText = "SAKIN BASMA";
+            break;
+        case "active":
+            arena.classList.add("flash");
+            big.innerText = "VUR!";
+            big.style.color = "#000";
+            sub.innerText = "HIZLI OL!";
+            break;
+        case "result":
+            arena.classList.remove("flash");
+            big.innerText = roomData.lastReaction ? roomData.lastReaction + "ms" : "HATA!";
+            sub.innerText = roomData.winnerName + " KAZANDI";
+            if(uid === roomData.host) {
+                setTimeout(nextRound, 2000);
+            }
+            break;
     }
 }
 
-// 3. ÇÖZÜM: BAĞLANTI TEMİZLİĞİ
+async function nextRound() {
+    if(roomData.score1 >= 11 || roomData.score2 >= 11) {
+        await updateDoc(doc(db, "rooms", currentRoomId), { state: "finished" });
+        return;
+    }
+    await updateDoc(doc(db, "rooms", currentRoomId), {
+        state: "countdown",
+        round: roomData.round + 1,
+        startTime: getServerTime() + 2000 + Math.random() * 3000
+    });
+}
+
+// 2. Geliştirme Devamı: Puanlama Transaction'ı
+document.getElementById("arena").onpointerdown = async (e) => {
+    if(tapLock || !roomData || currentRoomId === null) return;
+    
+    const now = getServerTime();
+    const isP1 = uid === roomData.player1;
+    
+    // Erken Basma Cezası
+    if(roomData.state === "countdown") {
+        tapLock = true;
+        await updateDoc(doc(db, "rooms", currentRoomId), {
+            state: "result",
+            winnerName: isP1 ? roomData.player2Name : roomData.player1Name,
+            [isP1 ? 'score2' : 'score1']: (isP1 ? roomData.score2 : roomData.score1) + 1,
+            lastReaction: null
+        });
+        setTimeout(() => tapLock = false, 1000);
+        return;
+    }
+
+    if(roomData.state === "active") {
+        tapLock = true;
+        const reaction = now - roomData.startTime;
+        
+        try {
+            await runTransaction(db, async (transaction) => {
+                const roomRef = doc(db, "rooms", currentRoomId);
+                const snap = await transaction.get(roomRef);
+                if(snap.data().state !== "active") return; // Zaten biri basmış
+
+                transaction.update(roomRef, {
+                    state: "result",
+                    winnerName: username,
+                    [isP1 ? 'score1' : 'score2']: (isP1 ? snap.data().score1 : snap.data().score2) + 1,
+                    lastReaction: reaction
+                });
+            });
+        } catch(e) { console.error(e); }
+        setTimeout(() => tapLock = false, 1000);
+    }
+};
+
+// 3. Geliştirme: Bellek Sızıntılarını Önleyen Quit Fonksiyonu
 async function quitGame() {
     if(unsubRoom) unsubRoom();
-    if(currentRoomId) {
-        const ref = doc(db, "rooms", currentRoomId);
-        const s = await getDoc(ref);
-        if(s.exists() && (s.data().host === uid || !s.data().player2)) await deleteDoc(ref);
+    const roomId = currentRoomId;
+    currentRoomId = null;
+    
+    if(roomId) {
+        const snap = await getDoc(doc(db, "rooms", roomId));
+        if(snap.exists()) {
+            if(snap.data().host === uid) await deleteDoc(doc(db, "rooms", roomId));
+            else await updateDoc(doc(db, "rooms", roomId), { player2: null, state: "waiting" });
+        }
     }
     location.reload();
 }
+
 document.getElementById("leaveBtn").onclick = quitGame;
+
+// Host için periyodik kontrol (Aktif turu başlatma)
+setInterval(() => {
+    if(roomData && roomData.state === "countdown" && uid === roomData.host) {
+        if(getServerTime() >= roomData.startTime) {
+            updateDoc(doc(db, "rooms", currentRoomId), { state: "active" });
+        }
+    }
+}, 50);
+
 </script>
 </body>
 </html>
