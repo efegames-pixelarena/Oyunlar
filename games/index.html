@@ -129,7 +129,6 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
 .modal-card input { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 12px; background: #050811; border: 1px solid var(--border); color: white; outline: none; text-align: left; }
 .modal-card input:disabled { opacity: 0.5; cursor: not-allowed; background: #1a1f2e; color: #64748b; }
 .modal-btn { width: 100%; padding: 14px; border-radius: 12px; border: none; background: var(--primary); color: #000; font-weight: 900; cursor: pointer; }
-.modal-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* 5x5 Avatar */
 .avatar-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 15px 0; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 15px; }
@@ -142,13 +141,57 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
 .promo-error { color: var(--danger); }
 .promo-success { color: var(--success); }
 
-/* Profesyonel Çark - Yeni Tasarım */
-.wheel-container { position: relative; width: 280px; height: 280px; margin: 20px auto; overflow: hidden; border-radius: 50%; border: 6px solid #1e2642; box-shadow: 0 0 30px var(--primary-glow); }
-.wheel-pointer { position: absolute; top: 0px; left: 50%; transform: translateX(-50%); width: 40px; z-index: 100; filter: drop-shadow(0 0 5px black); }
-#wheelImg { width: 100%; height: 100%; border-radius: 50%; transition: transform 5s cubic-bezier(0.15, 0, 0.15, 1); }
-#wheelResultText { color: var(--success); font-weight: 900; font-size: 18px; margin: 15px 0; min-height: 28px; }
+/* Kod ile Tasarlanan Profesyonel Çark Sistemi */
+.wheel-container { 
+    position: relative; 
+    width: 300px; 
+    height: 300px; 
+    margin: 20px auto; 
+}
+#wheelCanvas { 
+    width: 100%; 
+    height: 100%; 
+    border-radius: 50%; 
+    transition: transform 5s cubic-bezier(0.15, 0, 0.15, 1);
+    box-shadow: 0 0 30px rgba(0,0,0,0.5), 0 0 0 8px #1a1f2e;
+}
+.wheel-pointer { 
+    position: absolute; 
+    top: -10px; 
+    left: 50%; 
+    transform: translateX(-50%); 
+    width: 30px; 
+    height: 40px; 
+    background: #fff; 
+    clip-path: polygon(50% 100%, 0 0, 100% 0); 
+    z-index: 100;
+    filter: drop-shadow(0 0 10px rgba(79, 209, 255, 0.8));
+}
+.wheel-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 50px;
+    height: 50px;
+    background: #1a1f2e;
+    border: 3px solid var(--primary);
+    border-radius: 50%;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 15px var(--primary-glow);
+}
+.wheel-center::after {
+    content: 'GO';
+    color: var(--primary);
+    font-weight: 900;
+    font-size: 14px;
+}
 
-/* Hata Mesajı Alt Kısmı */
+#wheelResultText { color: var(--success); font-weight: 900; font-size: 18px; margin-top: 15px; min-height: 28px; text-shadow: 0 0 15px rgba(0, 255, 163, 0.4); }
+
 .auth-error-area { color: var(--danger); font-size: 12px; font-weight: 800; margin-top: 10px; min-height: 18px; display: block; text-align: center; }
 
 @media(max-width: 768px) {
@@ -184,7 +227,7 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
 </div>
 
 <div class="announcement-bar">
-    <div class="announcement-text" id="announcementText">PİXELARENA'YA HOŞ GELDİNİZ!        •        YENİ ÜYE OLANLARA 50.000₺ OYUN PARASI HEDİYE ALMAYI UNUTMAYIN!        •        GÜNLÜK ÇARKINIZI ÇEVİRMEYİ UNUTMAYIN!        •        YENİ OYUNLARIMIZ ÇOK YAKINDA SİZLERLE...</div>
+    <div class="announcement-text" id="announcementText">PİXELARENA'YA HOŞ GELDİNİZ! • GÜNLÜK ÇARKINIZI ÇEVİRMEYİ UNUTMAYIN! • YENİ OYUNLARIMIZ ÇOK YAKINDA SİZLERLE...</div>
 </div>
 
 <div class="hero-search" style="margin-top: 135px; padding: 0 20px; text-align:center;">
@@ -311,8 +354,9 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
     <div class="modal-card">
         <h2>Günlük Şans Çarkı</h2>
         <div class="wheel-container">
-            <img src="https://i.ibb.co/9H6S4xy/pointer.png" class="wheel-pointer">
-            <img src="https://i.ibb.co/mRT80Pz/wheel.png" id="wheelImg">
+            <div class="wheel-pointer"></div>
+            <div class="wheel-center"></div>
+            <canvas id="wheelCanvas" width="500" height="500"></canvas>
         </div>
         <div id="wheelResultText"></div>
         <button class="modal-btn" id="spinBtn" onclick="spinWheel()">ÜCRETSİZ ÇEVİR</button>
@@ -353,123 +397,61 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-const avatarLinks = [
-    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRQwyXlGFYmEebbJwy3udOoiY1aHks5DHDL-LjNe-O2rw&s=10",
-    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQujzeT1nbxD37pbAAGFoEQYZfH7nHKNHebtVxjQZo1vA&s=10",
-    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQyFK0ZyigAzwNoA3Ku85fCYQ0jjn9pD4bXb3udeMJoQQ&s=10",
-    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTfv2hkYWw-qOtoeyAoimv98hwJKq2ubPB5c8oWfw1MNg&s=10",
-    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRPSbtgxOwnNkjU2HDU-8GsHnbDLDNuVIFhkcrd4iESTQ&s=10",
-    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS5MxBdQ6TQzrlGQ00a7K0MpnAlR1EtXPP4VQ5r3duMHQ&s=10",
-    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ-3doyGKL8Ea3WQFJzf_aPS99XileTNMOI_ZK7WvT4ug&s=10",
-    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSw2iCwjev-ZGXN6qsaRZIVSJiVPyWPtf00l5Vw9fBPDA&s=10",
-    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRMiWBf7b6BRXfmPP-1cpLoP-R10mmRDcnnGdoo2-X74A&s=10",
-    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRCHQ_Ivd7XFu1rwSWwxeznD5whsQQyWD4h1XSO7EAT4w&s=10",
-    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQTEGm7jbVBDgiF_GSrWA_KYGbtblJwJ73YfrQ889Nmug&s=10",
-    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRhgnTHC98ig0zq6ZxlbeCsxavfasV1SvTtZwa85aEkZg&s=10",
-    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSOA0bH63MfODLUkfynGXq_9DzrUFCjdqqJ54SmvLSuow&s=10",
-    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRANb8PTeKBJ5kAT8GpIZR94hQm7J770Ai7ViNCpBpp2g&s=10",
-    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSB1UgmpZDnWdOm3_mkMmgK2xh4j_pn0n6MRtf9GSoDMw&s=10",
-    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS7oK5eLLGyQ-9dlF2u5PJumO-7XXFugKver64cswvAJA&s=10",
-    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRUkEeAPrAXCyY5kZzvb17-FciLVhiSHq1z0krelJA1SQ&s=10",
-    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2foyhD4m6NkAJICHXJDOfhmpFKqRzUSTPHpxzZVOLRw&s=10",
-    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRmkYygtE4fo-rQ9azwFZcUkZUokE8YYrZhLKZw6UgNiw&s=10"
+// ÖDÜLLER VE ÇARK ÇİZİMİ
+const rewards = [
+    { label: "100 ₺", val: 100, color: "#1a1f2e" },
+    { label: "500 ₺", val: 500, color: "#0f172a" },
+    { label: "250 ₺", val: 250, color: "#1a1f2e" },
+    { label: "1000 ₺", val: 1000, color: "#0f172a" },
+    { label: "50 ₺", val: 50, color: "#1a1f2e" },
+    { label: "2500 ₺", val: 2500, color: "#0f172a" },
+    { label: "100 ₺", val: 100, color: "#1a1f2e" },
+    { label: "5000 ₺", val: 5000, color: "#0f172a" }
 ];
 
-let selectedAvatar = "";
-function loadAvatars(current) {
-    const container = document.getElementById("avatarLibrary"); container.innerHTML = "";
-    avatarLinks.forEach(link => {
-        const div = document.createElement("div"); div.className = `avatar-item ${link === current ? 'active' : ''}`;
-        div.innerHTML = `<img src="${link}">`;
-        div.onclick = () => { document.querySelectorAll(".avatar-item").forEach(i => i.classList.remove("active")); div.classList.add("active"); selectedAvatar = link; };
-        container.appendChild(div);
+function drawWheel() {
+    const canvas = document.getElementById("wheelCanvas");
+    if(!canvas) return;
+    const ctx = canvas.getContext("2d");
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const radius = canvas.width / 2;
+    const sliceAngle = (2 * Math.PI) / rewards.length;
+
+    ctx.clearRect(0,0,canvas.width, canvas.height);
+
+    rewards.forEach((reward, i) => {
+        const angle = i * sliceAngle;
+        
+        // Dilim Çizimi
+        ctx.beginPath();
+        ctx.fillStyle = reward.color;
+        ctx.moveTo(centerX, centerY);
+        ctx.arc(centerX, centerY, radius, angle, angle + sliceAngle);
+        ctx.closePath();
+        ctx.fill();
+
+        // Kenar çizgisi (Neon Efekt)
+        ctx.strokeStyle = "rgba(79, 209, 255, 0.2)";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Metin Çizimi
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.rotate(angle + sliceAngle / 2);
+        ctx.textAlign = "right";
+        ctx.fillStyle = i % 2 === 0 ? "#4fd1ff" : "#ffffff";
+        ctx.font = "bold 24px Inter";
+        ctx.fillText(reward.label, radius - 30, 10);
+        ctx.restore();
     });
 }
 
-// --- ENTEGRE ÇARK SİSTEMİ (RESİM TABANLI) ---
-const rewards = [
-    { label: "1000 ₺", value: 1000 },
-    { label: "5000 ₺", value: 5000 },
-    { label: "15000 ₺", value: 15000 },
-    { label: "25000 ₺", value: 25000 },
-    { label: "Pas", value: 0 },
-    { label: "2500 ₺", value: 2500 },
-    { label: "2000 ₺", value: 2000 },
-    { label: "50000 ₺", value: 50000 }
-];
+// Çarkı ilk açılışta çiz
+setTimeout(drawWheel, 500);
 
-let isSpinning = false;
-let currentRotation = 0;
-
-window.spinWheel = async () => {
-    if (isSpinning) return;
-    
-    const userRef = doc(db, "users", auth.currentUser.uid);
-    const userDoc = await getDoc(userRef);
-    const lastSpin = userDoc.data().lastSpin || 0;
-    
-    if (Date.now() - lastSpin < 86400000) {
-        alert("Günde sadece 1 kez çevirebilirsiniz!");
-        return;
-    }
-
-    const wheelImg = document.getElementById("wheelImg");
-    const spinBtn = document.getElementById("spinBtn");
-    const resultText = document.getElementById("wheelResultText");
-    
-    isSpinning = true;
-    spinBtn.disabled = true;
-    resultText.innerText = "Şansın dönüyor...";
-    resultText.style.color = "var(--primary)";
-    
-    const randomIndex = Math.floor(Math.random() * rewards.length);
-    const prize = rewards[randomIndex];
-    
-    // 8 dilim var, her dilim 45 derece.
-    const extraDegrees = (randomIndex * 45); 
-    const totalSpin = 3600 + (360 - extraDegrees); // 10 tam tur + hedef
-    currentRotation += totalSpin;
-    
-    wheelImg.style.transform = `rotate(${currentRotation}deg)`;
-
-    setTimeout(async () => {
-        await updateDoc(userRef, { 
-            balance: increment(prize.value), 
-            lastSpin: Date.now() 
-        });
-        
-        if(prize.value > 0) {
-            resultText.innerText = `TEBRİKLER! ${prize.label} Kazandınız.`;
-            resultText.style.color = "var(--success)";
-        } else {
-            resultText.innerText = "Pas! Bu sefer ödül gelmedi.";
-            resultText.style.color = "var(--danger)";
-        }
-        
-        isSpinning = false;
-        checkWheelCooldown();
-    }, 5000);
-};
-
-async function checkWheelCooldown() {
-    if(!auth.currentUser) return;
-    const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
-    const lastSpin = userDoc.data().lastSpin || 0;
-    const diff = 86400000 - (Date.now() - lastSpin);
-    const btn = document.getElementById("spinBtn");
-    const timer = document.getElementById("wheelTimer");
-    if (diff > 0) {
-        btn.disabled = true;
-        const h = Math.floor(diff / 3600000);
-        const m = Math.floor((diff % 3600000) / 60000);
-        timer.innerText = `Sıradaki hak: ${h}s ${m}d`;
-    } else {
-        btn.disabled = false;
-        timer.innerText = "Çevirmeye Hazır!";
-    }
-}
-
-// PROMO KOD SİSTEMİ (KORUNDU)
+// PROMO KOD SİSTEMİ
 window.claimBonus = async () => {
     const input = document.getElementById("bonusInput");
     const feedback = document.getElementById("promoFeedback");
@@ -505,7 +487,81 @@ window.claimBonus = async () => {
     }
 };
 
-// PROFİL GÜNCELLEME (KORUNDU)
+// ÇARK SİSTEMİ (KODLA ÇALIŞAN VERSİYON)
+let currentRotation = 0;
+window.spinWheel = async () => {
+    const userRef = doc(db, "users", auth.currentUser.uid);
+    const userDoc = await getDoc(userRef);
+    const lastSpin = userDoc.data().lastSpin || 0;
+    
+    if (Date.now() - lastSpin < 86400000) { 
+        alert("Günde sadece 1 kez çevirebilirsiniz!"); 
+        return; 
+    }
+
+    const wheel = document.getElementById("wheelCanvas");
+    const spinBtn = document.getElementById("spinBtn");
+    const resultText = document.getElementById("wheelResultText");
+    
+    // Rastgele ödül seç
+    const randomIndex = Math.floor(Math.random() * rewards.length);
+    const prize = rewards[randomIndex].val;
+    
+    // Açı Hesaplama: (360 / Dilim Sayısı)
+    const segmentDeg = 360 / rewards.length;
+    // Çarkın tam ortasına gelmesi için hesaplama (Pointer tepede olduğu için -90 offset eklenir)
+    const stopAt = 360 - (randomIndex * segmentDeg) - (segmentDeg / 2); 
+    const extraTours = 3600; // 10 tam tur
+    
+    currentRotation += extraTours + stopAt;
+    
+    wheel.style.transform = `rotate(${currentRotation}deg)`;
+    spinBtn.disabled = true;
+    resultText.innerText = "Çark Dönüyor...";
+    resultText.style.color = "var(--primary)";
+
+    setTimeout(async () => {
+        await updateDoc(userRef, { balance: increment(prize), lastSpin: Date.now() });
+        resultText.innerText = `TEBRİKLER! ${prize.toLocaleString()} ₺ Kazandınız.`;
+        resultText.style.color = "var(--success)";
+        checkWheelCooldown();
+    }, 5000);
+};
+
+// PROFİL GÜNCELLEME
+const avatarLinks = [
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRQwyXlGFYmEebbJwy3udOoiY1aHks5DHDL-LjNe-O2rw&s=10",
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQujzeT1nbxD37pbAAGFoEQYZfH7nHKNHebtVxjQZo1vA&s=10",
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQyFK0ZyigAzwNoA3Ku85fCYQ0jjn9pD4bXb3udeMJoQQ&s=10",
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTfv2hkYWw-qOtoeyAoimv98hwJKq2ubPB5c8oWfw1MNg&s=10",
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRPSbtgxOwnNkjU2HDU-8GsHnbDLDNuVIFhkcrd4iESTQ&s=10",
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS5MxBdQ6TQzrlGQ00a7K0MpnAlR1EtXPP4VQ5r3duMHQ&s=10",
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ-3doyGKL8Ea3WQFJzf_aPS99XileTNMOI_ZK7WvT4ug&s=10",
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSw2iCwjev-ZGXN6qsaRZIVSJiVPyWPtf00l5Vw9fBPDA&s=10",
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRMiWBf7b6BRXfmPP-1cpLoP-R10mmRDcnnGdoo2-X74A&s=10",
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRCHQ_Ivd7XFu1rwSWwxeznD5whsQQyWD4h1XSO7EAT4w&s=10",
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQTEGm7jbVBDgiF_GSrWA_KYGbtblJwJ73YfrQ889Nmug&s=10",
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRhgnTHC98ig0zq6ZxlbeCsxavfasV1SvTtZwa85aEkZg&s=10",
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSOA0bH63MfODLUkfynGXq_9DzrUFCjdqqJ54SmvLSuow&s=10",
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRANb8PTeKBJ5kAT8GpIZR94hQm7J770Ai7ViNCpBpp2g&s=10",
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSB1UgmpZDnWdOm3_mkMmgK2xh4j_pn0n6MRtf9GSoDMw&s=10",
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS7oK5eLLGyQ-9dlF2u5PJumO-7XXFugKver64cswvAJA&s=10",
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRUkEeAPrAXCyY5kZzvb17-FciLVhiSHq1z0krelJA1SQ&s=10",
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2foyhD4m6NkAJICHXJDOfhmpFKqRzUSTPHpxzZVOLRw&s=10",
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRmkYygtE4fo-rQ9azwFZcUkZUokE8YYrZhLKZw6UgNiw&s=10"
+];
+
+let selectedAvatar = "";
+function loadAvatars(current) {
+    const container = document.getElementById("avatarLibrary"); container.innerHTML = "";
+    avatarLinks.forEach(link => {
+        const div = document.createElement("div"); div.className = `avatar-item ${link === current ? 'active' : ''}`;
+        div.innerHTML = `<img src="${link}">`;
+        div.onclick = () => { document.querySelectorAll(".avatar-item").forEach(i => i.classList.remove("active")); div.classList.add("active"); selectedAvatar = link; };
+        container.appendChild(div);
+    });
+}
+
 window.updateProfile = async () => {
     const userRef = doc(db, "users", auth.currentUser.uid);
     const snap = await getDoc(userRef);
@@ -516,7 +572,7 @@ window.updateProfile = async () => {
     let updates = { avatar: selectedAvatar || data.avatar };
     if (!data.fullName && newName) updates.fullName = newName;
     if (!data.phone && newPhone) updates.phone = newPhone;
-    if (newUser && newUser !== data.username && (data.userChangeCount || 0) < 3) {
+    if (newUser !== data.username && (data.userChangeCount || 0) < 3) {
         updates.username = newUser;
         updates.userChangeCount = (data.userChangeCount || 0) + 1;
     }
@@ -525,7 +581,6 @@ window.updateProfile = async () => {
     closeModal('profileModal');
 };
 
-// AUTH & DİNAMİK ROZET TAKİBİ (KORUNDU)
 onAuthStateChanged(auth, user => {
     const authBadges = document.querySelectorAll(".auth-badge");
     if(user) {
@@ -563,14 +618,35 @@ onAuthStateChanged(auth, user => {
 window.openModal = (id) => { 
     document.getElementById(id).style.display = 'flex'; 
     if(id === 'wheelModal') {
+        drawWheel(); // Modal açıldığında çarkı çiz
+        document.getElementById("wheelCanvas").style.transform = "rotate(0deg)";
+        currentRotation = 0;
         document.getElementById("wheelResultText").innerText = "";
         checkWheelCooldown();
     }
 };
+
 window.closeModal = (id) => { 
     document.getElementById(id).style.display = 'none'; 
     document.getElementById("authErrorMsg").innerText = "";
 };
+
+async function checkWheelCooldown() {
+    const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
+    const lastSpin = userDoc.data().lastSpin || 0;
+    const diff = 86400000 - (Date.now() - lastSpin);
+    const btn = document.getElementById("spinBtn");
+    const timer = document.getElementById("wheelTimer");
+    if (diff > 0) {
+        btn.disabled = true;
+        const h = Math.floor(diff / 3600000);
+        const m = Math.floor((diff % 3600000) / 60000);
+        timer.innerText = `Sıradaki hak: ${h}s ${m}d`;
+    } else {
+        btn.disabled = false;
+        timer.innerText = "Çevirmeye Hazır!";
+    }
+}
 
 let isLogin = true;
 const authOverlay = document.getElementById("authOverlay");
@@ -580,9 +656,10 @@ document.getElementById("switchMode").onclick = () => { isLogin = !isLogin; upda
 
 function updateAuthUI() { 
     document.getElementById("authTitle").innerText = isLogin ? "Giriş Yap" : "Kayıt Ol"; 
-    document.getElementById("authEmail").style.display = isLogin ? "block" : "none";
+    document.getElementById("authEmail").placeholder = isLogin ? "E-posta veya Kullanıcı Adı" : "E-posta";
     document.getElementById("regEmail").style.display = isLogin ? "none" : "block";
     document.getElementById("authUsername").style.display = isLogin ? "none" : "block"; 
+    document.getElementById("authEmail").style.display = isLogin ? "block" : "none";
     document.getElementById("authErrorMsg").innerText = "";
 }
 
@@ -590,10 +667,12 @@ document.getElementById("authSubmit").onclick = async () => {
     const errorMsg = document.getElementById("authErrorMsg");
     const pass = document.getElementById("authPassword").value;
     errorMsg.innerText = "";
+
     try {
         if(isLogin) {
             const loginInput = document.getElementById("authEmail").value.trim();
             let finalEmail = loginInput;
+
             if(!loginInput.includes("@")) {
                 const q = query(collection(db, "users"), where("username", "==", loginInput));
                 const qs = await getDocs(q);
@@ -605,19 +684,24 @@ document.getElementById("authSubmit").onclick = async () => {
         } else {
             const email = document.getElementById("regEmail").value.trim();
             const userN = document.getElementById("authUsername").value.trim();
+            
             if(!userN || !email || !pass) throw new Error("Tüm alanları doldurun!");
+
             const q = query(collection(db, "users"), where("username", "==", userN));
             const qs = await getDocs(q);
             if(!qs.empty) throw new Error("Bu kullanıcı adı zaten alınmış!");
+
             const res = await createUserWithEmailAndPassword(auth, email, pass);
             await setDoc(doc(db, "users", res.user.uid), { 
-                username: userN, email: email, balance: 50000, lastSpin: 0, 
+                username: userN, email: email, balance: 1000, lastSpin: 0, 
                 userChangeCount: 0, fullName: "", phone: "", avatar: avatarLinks[0], usedPromos: [] 
             });
             closeModal('authOverlay');
         }
     } catch(e) { 
-        errorMsg.innerText = e.message;
+        if(e.code === "auth/email-already-in-use") errorMsg.innerText = "Bu e-posta zaten kayıtlı!";
+        else if(e.code === "auth/wrong-password") errorMsg.innerText = "Hatalı şifre!";
+        else errorMsg.innerText = e.message;
     }
 };
 
@@ -626,11 +710,11 @@ window.onclick = () => document.getElementById("userDropdown").classList.remove(
 document.getElementById("logoutBtn").onclick = () => signOut(auth);
 
 // Kar Efekti
-const canvasSnow = document.getElementById("snow"); const ctxSnow = canvasSnow.getContext("2d"); let particles = [];
+const canvasSnow = document.getElementById("snow"); const ctxS = canvasSnow.getContext("2d"); let particles = [];
 function resize() { canvasSnow.width = window.innerWidth; canvasSnow.height = window.innerHeight; }
 window.onresize = resize; resize();
 for(let i=0; i<100; i++) particles.push({x:Math.random()*canvasSnow.width, y:Math.random()*canvasSnow.height, r:Math.random()*2+1, d:Math.random()*1+0.5});
-function drawSnow() { ctxSnow.clearRect(0,0,canvasSnow.width, canvasSnow.height); ctxSnow.fillStyle = "rgba(255,255,255,0.6)"; ctxSnow.beginPath(); particles.forEach(p => { ctxSnow.moveTo(p.x, p.y); ctxSnow.arc(p.x, p.y, p.r, 0, Math.PI*2); p.y += p.d; if(p.y > canvasSnow.height) p.y = -5; }); ctxSnow.fill(); requestAnimationFrame(drawSnow); }
+function drawSnow() { ctxS.clearRect(0,0,canvasSnow.width, canvasSnow.height); ctxS.fillStyle = "rgba(255,255,255,0.6)"; ctxS.beginPath(); particles.forEach(p => { ctxS.moveTo(p.x, p.y); ctxS.arc(p.x, p.y, p.r, 0, Math.PI*2); p.y += p.d; if(p.y > canvasSnow.height) p.y = -5; }); ctxS.fill(); requestAnimationFrame(drawSnow); }
 drawSnow();
 
 window.checkLogin = (url) => { if(!auth.currentUser) document.getElementById("authOverlay").style.display="flex"; else location.href = url; };
