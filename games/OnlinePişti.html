@@ -27,7 +27,6 @@
             position: fixed; width: 100%; overscroll-behavior: none;
         }
 
-        /* MADDE 3: Ultra Profesyonel Lobi Arka Planı */
         #bg-canvas { 
             position: fixed; inset: 0; z-index: -1; 
             background: 
@@ -93,7 +92,6 @@
 
         #gameArea { display: none; flex: 1; flex-direction: column; align-items: center; z-index: 5; position: relative; }
         
-        /* MADDE 1: Masa Boyutu İyice Büyütüldü */
         .table {
             width:98%; max-width:620px; height:420px; border-radius:210px; 
             position: absolute; top: 52%; left: 50%; transform: translate(-50%, -50%);
@@ -114,7 +112,6 @@
         .hand { bottom: 10px; }
         .computer { top: 10px; }
 
-        /* MADDE 1: Oyuncu ve Rakip Kartları Aynı Küçüklükte/Boyutta */
         .card { 
             width:60px; height: 85px; border-radius: 6px; cursor:pointer; transition: 0.3s; 
             box-shadow: 0 8px 20px rgba(0,0,0,0.5); background:white;
@@ -137,13 +134,16 @@
             outline: none; border-radius: 8px; font-size: 1rem;
         }
 
-        /* MADDE 2: Profesyonel Pişti Animasyonu */
         #pistiDisplay {
             position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%) scale(0);
             font-size: 110px; font-weight: 900; color: #fff; text-align: center;
             text-shadow: 0 0 30px var(--border), 0 0 60px var(--accent), 0 0 90px #fff;
             display: none; z-index: 9999; font-family: 'Black Ops One';
             letter-spacing: 5px;
+            pointer-events: none;
+        }
+        .pisti-anim {
+            display: block !important;
             animation: pistiTurbo 1.8s cubic-bezier(0.19, 1, 0.22, 1) forwards;
         }
         @keyframes pistiTurbo {
@@ -238,7 +238,7 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import { getFirestore, doc, onSnapshot, updateDoc, setDoc, collection, query, where, getDocs, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getFirestore, doc, onSnapshot, updateDoc, setDoc, collection, query, where, getDocs, runTransaction, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyBykwXCOJpX6rG0pUx93HmALjVcCQWVMYA",
@@ -262,6 +262,10 @@
 
     let balance = 0, currentBet = 0, userRef = null, uid = null, userName = "Oyuncu";
     let roomRef = null, myRole = null, gameState = null, inGame = false;
+    
+    // MADDE 1: Bellek sızıntısı için dinleyici referansları
+    let lobbyUnsub = null;
+    let roomUnsub = null;
 
     onAuthStateChanged(auth, user => {
         if (!user) return;
@@ -277,21 +281,43 @@
         listenLobby();
     });
 
+    // MADDE 5: Görünürlük ve Bağlantı Kontrolü
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden && inGame) {
+            handleDisconnection();
+        }
+    });
+
     const handleDisconnection = async () => {
         if (inGame && roomRef) {
             await updateDoc(roomRef, { quitter: uid, status: "finished" });
         }
     };
+
     window.addEventListener('beforeunload', handleDisconnection);
     
+    // MADDE 4: leaveRoom Fonksiyonu
+    window.leaveRoom = async () => {
+        if (!roomRef) return;
+        if (inGame && gameState?.status === "playing") {
+            const confirmLeave = confirm("Oyundan çıkarsan bahsi kaybedeceksin. Emin misin?");
+            if (!confirmLeave) return;
+            await updateDoc(roomRef, { quitter: uid, status: "finished" });
+        } else if (myRole === "p1") {
+            await deleteDoc(roomRef);
+        }
+        location.reload();
+    };
+
     window.handleNavAction = () => {
-        if (inGame) leaveRoom();
+        if (inGame) window.leaveRoom();
         else window.location.href = "index.html";
     };
 
     function listenLobby() {
+        if (lobbyUnsub) lobbyUnsub();
         const q = query(collection(db, "rooms"), where("status", "==", "waiting"));
-        onSnapshot(q, (snap) => {
+        lobbyUnsub = onSnapshot(q, (snap) => {
             const list = document.getElementById("roomList");
             list.innerHTML = "";
             snap.forEach(roomDoc => {
@@ -332,7 +358,7 @@
         await setDoc(roomRef, {
             p1: uid, p1_name: userName, bet: currentBet, status: "waiting", name, password: pass, type,
             deck: shuffledDeck, table: [], p1_score: 0, p2_score: 0,
-            p1_hand: [], p2_hand: [], turn: null, quitter: null
+            p1_hand: [], p2_hand: [], turn: null, quitter: null, lastAction: ""
         });
         
         await updateDoc(userRef, { balance });
@@ -341,8 +367,10 @@
         listenRoom();
     };
 
-    async function joinRoom(rid, bet) {
+    async function handleJoin(rid, pass, bet) {
         if (balance < bet) return showInfoModal("Yetersiz bakiye!", "HATA");
+        if (pass && prompt("Şifre giriniz:") !== pass) return;
+        
         balance -= bet;
         roomRef = doc(db, "rooms", rid);
         myRole = "p2";
@@ -361,14 +389,15 @@
     }
 
     function listenRoom() {
-        onSnapshot(roomRef, async (snap) => {
+        if (roomUnsub) roomUnsub();
+        roomUnsub = onSnapshot(roomRef, async (snap) => {
             if(!snap.exists()) return;
             gameState = snap.data();
 
             if(gameState.quitter && gameState.quitter !== uid) {
-                balance += gameState.bet;
+                balance += gameState.bet * 2;
                 await updateDoc(userRef, { balance });
-                showInfoModal("Rakip odadan ayrıldı! Bahis iade edildi.", "BİLGİ");
+                showInfoModal("Rakip ayrıldı! Bahis kazanıldı.", "BİLGİ");
                 setTimeout(() => location.reload(), 3000);
                 return;
             }
@@ -384,21 +413,30 @@
         });
     }
 
+    // MADDE 6: Race Condition Engelleme
     async function refillHands() {
-        const d = [...gameState.deck];
-        if(d.length === 0) {
-            await updateDoc(roomRef, { status: "finished" });
-            return;
-        }
-        let updates = {};
-        if(gameState.table.length === 0) updates.table = d.splice(0, 4);
-        updates.p1_hand = d.splice(0, 4);
-        updates.p2_hand = d.splice(0, 4);
-        updates.deck = d;
-        await updateDoc(roomRef, updates);
+        try {
+            await runTransaction(db, async (transaction) => {
+                const sfDoc = await transaction.get(roomRef);
+                const data = sfDoc.data();
+                if (data.p1_hand.length > 0 || data.p2_hand.length > 0) return;
+
+                const d = [...data.deck];
+                if(d.length === 0) {
+                    transaction.update(roomRef, { status: "finished" });
+                    return;
+                }
+                let updates = {};
+                if(data.table.length === 0) updates.table = d.splice(0, 4);
+                updates.p1_hand = d.splice(0, 4);
+                updates.p2_hand = d.splice(0, 4);
+                updates.deck = d;
+                transaction.update(roomRef, updates);
+            });
+        } catch (e) { console.error("Refill Hatası:", e); }
     }
 
-    // MADDE 4: Hile Korumalı Hamle (Transaction Tabanlı Zirve Koruma)
+    // MADDE 2 & 3: Puanlama ve Güçlü Doğrulama
     async function playCard(i) {
         if (gameState.turn !== uid) return;
         
@@ -407,28 +445,32 @@
                 const rSnap = await transaction.get(roomRef);
                 const data = rSnap.data();
                 
-                // Zirve Hile Koruması: Sıra, Odadaki Oyuncu ve Kart Varlığı Kontrolü
-                if (data.turn !== uid || (myRole === "p1" && data.p1 !== uid) || (myRole === "p2" && data.p2 !== uid)) {
-                    throw "Yetkisiz veya zamansız hamle denemesi!";
-                }
+                if (data.turn !== uid) throw "Sıra sizde değil!";
                 
                 const handKey = myRole + "_hand";
                 const hand = [...data[handKey]];
-                if (!hand[i]) throw "Kart elinizde mevcut değil!";
+                if (!hand[i]) throw "Kart hatası!";
 
                 const card = hand.splice(i, 1)[0];
                 let table = [...data.table];
                 let score = data[myRole + "_score"];
+                let action = "play";
                 
-                sfx.cardThrow.play();
+                // Güçlü Kart Doğrulama (10S, 0S gibi durumları kapsar)
+                const cardVal = card.replace(/[HSCD]/, ""); 
 
                 if (table.length > 0) {
-                    const top = table[table.length - 1];
-                    if (card[0] === top[0] || card[0] === "J") {
-                        if(table.length === 1 && card[0] === top[0]) {
-                            score += 10;
-                            showPistiAnim();
-                        } else score += table.length + 1;
+                    const topCard = table[table.length - 1];
+                    const topVal = topCard.replace(/[HSCD]/, "");
+
+                    if (cardVal === topVal || cardVal === "J") {
+                        if(table.length === 1) {
+                            // PİŞTİ KURALLARI
+                            score += (cardVal === "J" && topVal === "J") ? 20 : 10;
+                            action = "pisti";
+                        } else {
+                            score += table.length + 1;
+                        }
                         table = [];
                     } else table.push(card);
                 } else table.push(card);
@@ -438,21 +480,18 @@
                     [handKey]: hand,
                     table: table,
                     [myRole + "_score"]: score,
-                    turn: next
+                    turn: next,
+                    lastAction: action + "_" + Date.now() // UI Senkronizasyonu için
                 });
             });
+            sfx.cardThrow.play();
         } catch (e) {
-            console.warn("Hile/Hata Engellendi:", e);
+            console.warn("Hamle Engellendi:", e);
         }
     }
 
-    function showPistiAnim() {
-        sfx.pisti.play();
-        const pd = document.getElementById("pistiDisplay");
-        pd.style.display = "block";
-        setTimeout(() => { pd.style.display = "none"; }, 1800);
-    }
-
+    // MADDE 7: UI Senkronizasyonu ve Animasyon Kontrolü
+    let lastActionProcessed = "";
     function render() {
         const ph = document.getElementById("playerHand");
         const ch = document.getElementById("computerHand");
@@ -468,6 +507,12 @@
         const isMyTurn = gameState.turn === uid;
         document.getElementById("head-me").classList.toggle("active", isMyTurn);
         document.getElementById("head-opp").classList.toggle("active", !isMyTurn);
+
+        // Pişti Animasyonu Tetikleyici
+        if (gameState.lastAction && gameState.lastAction.startsWith("pisti") && gameState.lastAction !== lastActionProcessed) {
+            lastActionProcessed = gameState.lastAction;
+            showPistiAnim();
+        }
 
         myHand.forEach((c, i) => {
             let img = document.createElement("img");
@@ -489,8 +534,18 @@
             img.src = (i === gameState.table.length - 1) ? `https://deckofcardsapi.com/static/img/${c}.png` : "https://deckofcardsapi.com/static/img/back.png";
             img.className = "stack-card";
             img.style.zIndex = i;
+            img.style.transform = `rotate(${i * 2}deg)`;
             tc.appendChild(img);
         });
+    }
+
+    function showPistiAnim() {
+        sfx.pisti.play();
+        const pd = document.getElementById("pistiDisplay");
+        pd.classList.remove("pisti-anim");
+        void pd.offsetWidth; // Reflow
+        pd.classList.add("pisti-anim");
+        setTimeout(() => { pd.classList.remove("pisti-anim"); }, 1800);
     }
 
     async function handleEnd() {
@@ -502,7 +557,7 @@
             const winAmount = gameState.bet * 2;
             balance += winAmount;
             sfx.win.play();
-            msg = `KAZANDIN! +${winAmount}₺`;
+            msg = `KAZANDIN! +${winAmount.toLocaleString()}₺`;
         } else if(myScore < oppScore) {
             msg = "KAYBETTİN!";
         } else {
@@ -512,12 +567,15 @@
         
         await updateDoc(userRef, { balance });
         showInfoModal(msg, "BİTTİ");
+        
+        // Dinleyicileri temizle
+        if (roomUnsub) roomUnsub();
         setTimeout(() => location.reload(), 4000);
     }
 
     function createDeck() {
         const suits = ["H", "D", "C", "S"], vals = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "0", "J", "Q", "K"];
-        let d = []; suits.forEach(s => vals.forEach(v => d.push(v + s)));
+        let d = []; suits.forEach(s => vals.forEach(v => d.push((v === "0" ? "10" : v) + s)));
         return d;
     }
 
@@ -527,15 +585,14 @@
         document.getElementById("modalMsg").innerText = m; 
         document.getElementById("infoModal").style.display = "flex"; 
     };
-    window.handleJoin = (rid, pass, bet) => {
-        if(pass && prompt("Şifre giriniz:") !== pass) return;
-        joinRoom(rid, bet);
-    };
+    
+    window.handleJoin = handleJoin;
+
     window.handleQuickJoin = async () => {
         const q = query(collection(db, "rooms"), where("status", "==", "waiting"));
         const snap = await getDocs(q);
         let joined = false;
-        snap.forEach(d => { if(!joined && d.data().bet <= balance) { joinRoom(d.id, d.data().bet); joined = true; } });
+        snap.forEach(d => { if(!joined && d.data().bet <= balance) { window.handleJoin(d.id, d.data().password, d.data().bet); joined = true; } });
         if(!joined) showInfoModal("Uygun masa yok!", "ÜZGÜNÜZ");
     };
 </script>
