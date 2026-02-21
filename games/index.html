@@ -35,7 +35,6 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
     backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); z-index: 2000;
 }
 
-/* Duyuru Alanı */
 .announcement-bar {
     position: fixed; top: 65px; width: 100%; height: 35px;
     background: rgba(79, 209, 255, 0.1); border-bottom: 1px solid var(--border);
@@ -134,7 +133,15 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
 .avatar-item img { width: 100%; height: 100%; object-fit: cover; }
 .avatar-item.active { border-color: var(--primary); box-shadow: 0 0 10px var(--primary); }
 
-.promo-error { color: var(--danger); font-size: 11px; margin-top: -5px; margin-bottom: 10px; display: none; font-weight: 600; text-align: left; padding-left: 5px; }
+.promo-msg { font-size: 11px; margin-top: -5px; margin-bottom: 10px; display: none; font-weight: 600; text-align: center; }
+.promo-error { color: var(--danger); }
+.promo-success { color: var(--success); }
+
+/* Profesyonel Çark CSS */
+.wheel-container { position:relative; width:280px; height:280px; margin:20px auto; }
+#wheelImg { width:100%; height:100%; transition: transform 5s cubic-bezier(0.15, 0, 0.15, 1); filter: drop-shadow(0 0 15px var(--primary-glow)); }
+.wheel-pointer { position:absolute; top:-15px; left:50%; transform:translateX(-50%); width:45px; z-index:10; filter: drop-shadow(0 0 5px black); }
+#wheelPrizeMsg { margin-top: 15px; font-weight: 900; color: var(--success); display: none; min-height: 20px; }
 
 @media(max-width: 768px) {
     .games-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 0 15px; }
@@ -282,7 +289,7 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
         <div class="avatar-grid" id="avatarLibrary"></div>
 
         <button class="modal-btn" onclick="updateProfile()">BİLGİLERİ KAYDET</button>
-        <p onclick="closeModal('profileModal')" style="margin-top:15px;cursor:pointer;opacity:0.5; font-size: 13px;">Pencereyi Kapat</p>
+        <p onclick="closeModal('profileModal')" style="margin-top:15px;cursor:pointer;opacity:0.5; font-size: 13px;">Kapat</p>
     </div>
 </div>
 
@@ -290,27 +297,37 @@ body{background: var(--bg-dark); color:white; overflow-x:hidden; line-height: 1.
     <div class="modal-card">
         <i class="fa-solid fa-gift" style="font-size:40px;color:var(--primary);margin-bottom:15px;"></i>
         <h2>Bonus Kodu</h2>
-        <input type="text" id="bonusInput" placeholder="PROMO KODU YAZIN" style="text-align: center; font-weight: 800; letter-spacing: 2px;">
-        <div id="promoError" class="promo-error">Geçersiz veya kullanılmış kod!</div>
+        <input type="text" id="bonusInput" placeholder="KODU BURAYA YAZIN" style="text-align: center; font-weight: 800; letter-spacing: 2px;">
+        <div id="promoResultMsg" class="promo-msg"></div>
         <button class="modal-btn" onclick="claimBonus()">AKTİF ET</button>
-        <p onclick="closeModal('bonusModal')" style="margin-top:15px;cursor:pointer;opacity:0.5;">Vazgeç</p>
+        <p onclick="closeModal('bonusModal')" style="margin-top:15px;cursor:pointer;opacity:0.5;">Geri Dön</p>
     </div>
 </div>
 
 <div class="modal-overlay" id="wheelModal">
     <div class="modal-card">
         <h2>Günlük Şans Çarkı</h2>
-        <div style="position:relative;width:280px;height:280px;margin:20px auto; border-radius: 50%; box-shadow: 0 0 30px rgba(79, 209, 255, 0.2); border: 4px solid var(--border);">
-            <img src="https://i.ibb.co/mRT80Pz/wheel.png" id="wheelImg" style="width:100%;height:100%;transition:5s cubic-bezier(0.15,0,0.15,1);">
-            <img src="https://i.ibb.co/9H6S4xy/pointer.png" style="position:absolute;top:-15px;left:50%;transform:translateX(-50%);width:45px;z-index:10;filter: drop-shadow(0 0 5px black);">
+        <div class="wheel-container">
+            <img src="https://i.ibb.co/mRT80Pz/wheel.png" id="wheelImg">
+            <img src="https://i.ibb.co/9H6S4xy/pointer.png" class="wheel-pointer">
         </div>
+        <div id="wheelPrizeMsg"></div>
         <button class="modal-btn" id="spinBtn" onclick="spinWheel()">ÜCRETSİZ ÇEVİR</button>
         <div id="wheelTimer" style="margin-top:10px;font-weight:800;color:var(--accent); font-size: 14px;"></div>
         <p onclick="closeModal('wheelModal')" style="margin-top:15px;cursor:pointer;opacity:0.5;">Kapat</p>
     </div>
 </div>
 
-<div class="modal-overlay" id="authOverlay"><div class="modal-card"><h2 id="authTitle">Giriş Yap</h2><input type="email" id="authEmail" placeholder="E-posta"><input type="password" id="authPassword" placeholder="Şifre"><input type="text" id="authUsername" placeholder="Kullanıcı Adı" style="display:none;"><button class="modal-btn" id="authSubmit">DEVAM ET</button><p id="switchMode" style="margin-top:20px;font-size:13px;cursor:pointer;">Hesabın yok mu? <b style="color:var(--primary)">Kayıt Ol</b></p></div></div>
+<div class="modal-overlay" id="authOverlay">
+    <div class="modal-card">
+        <h2 id="authTitle">Giriş Yap</h2>
+        <input type="email" id="authEmail" placeholder="E-posta">
+        <input type="password" id="authPassword" placeholder="Şifre">
+        <input type="text" id="authUsername" placeholder="Kullanıcı Adı" style="display:none;">
+        <button class="modal-btn" id="authSubmit">DEVAM ET</button>
+        <p id="switchMode" style="margin-top:20px;font-size:13px;cursor:pointer;">Hesabın yok mu? <b style="color:var(--primary)">Kayıt Ol</b></p>
+    </div>
+</div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -348,19 +365,21 @@ function loadAvatars(current) {
 // PROMO KOD SİSTEMİ
 window.claimBonus = async () => {
     const input = document.getElementById("bonusInput");
-    const errorMsg = document.getElementById("promoError");
+    const msg = document.getElementById("promoResultMsg");
     const code = input.value.trim().toUpperCase();
     
     if(!code) return;
-    errorMsg.style.display = "none";
+    msg.style.display = "none";
+    msg.className = "promo-msg";
 
     try {
         const q = query(collection(db, "promocodes"), where("code", "==", code));
         const querySnapshot = await getDocs(q);
 
         if (querySnapshot.empty) {
-            errorMsg.innerText = "Hatalı promosyon kodu!";
-            errorMsg.style.display = "block";
+            msg.innerText = "Hatalı promosyon kodu!";
+            msg.classList.add("promo-error");
+            msg.style.display = "block";
             return;
         }
 
@@ -371,8 +390,9 @@ window.claimBonus = async () => {
         const userData = userSnap.data();
 
         if (userData.usedPromos && userData.usedPromos.includes(code)) {
-            errorMsg.innerText = "Bu kodu zaten kullandınız!";
-            errorMsg.style.display = "block";
+            msg.innerText = "Bu kodu zaten kullandınız!";
+            msg.classList.add("promo-error");
+            msg.style.display = "block";
             return;
         }
 
@@ -381,46 +401,48 @@ window.claimBonus = async () => {
             usedPromos: [...(userData.usedPromos || []), code]
         });
 
-        alert(`BAŞARILI! ${promoData.amount} ₺ Bakiyenize Eklendi.`);
-        closeModal('bonusModal');
+        msg.innerText = `BAŞARILI! ${promoData.amount} ₺ Ödül Eklendi.`;
+        msg.classList.add("promo-success");
+        msg.style.display = "block";
         input.value = "";
     } catch(e) {
-        errorMsg.innerText = "İşlem sırasında bir hata oluştu!";
-        errorMsg.style.display = "block";
+        msg.innerText = "İşlem sırasında bir hata oluştu!";
+        msg.classList.add("promo-error");
+        msg.style.display = "block";
     }
 };
 
-// ÇARK SİSTEMİ (PROFESYONEL)
+// ÇARK SİSTEMİ
 window.spinWheel = async () => {
     const userRef = doc(db, "users", auth.currentUser.uid);
     const userDoc = await getDoc(userRef);
     const lastSpin = userDoc.data().lastSpin || 0;
     
-    if (Date.now() - lastSpin < 86400000) {
-        alert("Günde sadece 1 kez çevirebilirsiniz!");
-        return;
-    }
+    if (Date.now() - lastSpin < 86400000) return;
 
     const wheel = document.getElementById("wheelImg");
     const spinBtn = document.getElementById("spinBtn");
+    const prizeText = document.getElementById("wheelPrizeMsg");
     
-    // Firebase üzerinden ödülleri simüle et (Statik ödül havuzu)
-    const rewards = [500, 2500, 1000, 10000, 5000, 15000];
-    const segmentDegree = 360 / rewards.length;
+    // Firebase üzerinden veriyi simüle et (Statik ödül havuzu, segmentlere göre derece)
+    const rewards = [1000, 5000, 2500, 10000, 500, 15000];
     const randomIndex = Math.floor(Math.random() * rewards.length);
     const prize = rewards[randomIndex];
+    const segmentDegree = 360 / rewards.length;
     
     const rotation = (360 * 10) + (randomIndex * segmentDegree);
     
     wheel.style.transform = `rotate(${rotation}deg)`;
     spinBtn.disabled = true;
+    prizeText.style.display = "none";
 
     setTimeout(async () => {
         await updateDoc(userRef, { 
             balance: increment(prize), 
             lastSpin: Date.now() 
         });
-        alert(`TEBRİKLER! Çarktan ${prize.toLocaleString()} ₺ Kazandınız.`);
+        prizeText.innerText = `TEBRİKLER! ${prize.toLocaleString()} ₺ Kazandınız.`;
+        prizeText.style.display = "block";
         checkWheelCooldown();
     }, 5000);
 };
@@ -435,23 +457,30 @@ window.updateProfile = async () => {
     const newPhone = document.getElementById("profPhone").value.trim();
     const newUser = document.getElementById("profUser").value.trim();
     
-    let updates = { avatar: selectedAvatar || data.avatar };
+    let updates = {};
+    if (selectedAvatar) updates.avatar = selectedAvatar;
 
-    // İsim Soyisim: Sadece boşsa kaydedilir
-    if (!data.fullName && newName) updates.fullName = newName;
+    // İsim Soyisim Kısıtlaması
+    if (!data.fullName && newName) {
+        updates.fullName = newName;
+    }
     
-    // Telefon: Sadece boşsa kaydedilir
-    if (!data.phone && newPhone) updates.phone = newPhone;
+    // Telefon Kısıtlaması
+    if (!data.phone && newPhone) {
+        updates.phone = newPhone;
+    }
     
-    // Kullanıcı Adı: 3 Hak
-    if (newUser !== data.username && (data.userChangeCount || 0) < 3) {
+    // Kullanıcı Adı Kısıtlaması (3 Hak)
+    if (newUser && newUser !== data.username && (data.userChangeCount || 0) < 3) {
         updates.username = newUser;
         updates.userChangeCount = (data.userChangeCount || 0) + 1;
     }
 
-    await updateDoc(userRef, updates);
-    alert("Profil bilgileriniz başarıyla güncellendi!");
-    closeModal('profileModal');
+    if (Object.keys(updates).length > 0) {
+        await updateDoc(userRef, updates);
+        alert("Bilgileriniz güncellendi!");
+        closeModal('profileModal');
+    }
 };
 
 // AUTH & UI TAKİBİ
@@ -468,12 +497,12 @@ onAuthStateChanged(auth, user => {
                 document.getElementById("userProfileImg").src = data.avatar || avatarLinks[0];
                 document.getElementById("profEmail").value = user.email;
                 
-                // İsim Kilidi
+                // İsim Kilitleme
                 const nameInp = document.getElementById("profNameSurname");
                 nameInp.value = data.fullName || "";
                 if(data.fullName) nameInp.disabled = true;
 
-                // Telefon Kilidi
+                // Telefon Kilitleme
                 const phoneInp = document.getElementById("profPhone");
                 phoneInp.value = data.phone || "";
                 if(data.phone) phoneInp.disabled = true;
@@ -495,8 +524,17 @@ onAuthStateChanged(auth, user => {
     }
 });
 
-// YARDIMCI FONKSİYONLAR
-window.openModal = (id) => { document.getElementById(id).style.display = 'flex'; if(id === 'wheelModal') checkWheelCooldown(); };
+// MODAL FONKSİYONLARI
+window.openModal = (id) => { 
+    document.getElementById(id).style.display = 'flex'; 
+    if(id === 'wheelModal') {
+        document.getElementById("wheelPrizeMsg").style.display = "none";
+        checkWheelCooldown(); 
+    }
+    if(id === 'bonusModal') {
+        document.getElementById("promoResultMsg").style.display = "none";
+    }
+};
 window.closeModal = (id) => { document.getElementById(id).style.display = 'none'; };
 
 async function checkWheelCooldown() {
@@ -547,7 +585,7 @@ document.getElementById("authSubmit").onclick = async () => {
 
 document.getElementById("logoutBtn").onclick = () => signOut(auth);
 
-// Kar Efekti (Bozulmadı)
+// Kar Efekti
 const canvas = document.getElementById("snow"); const ctx = canvas.getContext("2d"); let particles = [];
 function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
 window.onresize = resize; resize();
