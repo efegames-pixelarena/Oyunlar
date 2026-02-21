@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Shadow Catch | Elite Firebase Edition</title>
+    <title>Shadow Catch | Elite V2</title>
     <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -17,60 +17,46 @@
 
         canvas { position: fixed; inset: 0; z-index: -1; }
 
-        /* --- ÜST BAR --- */
+        /* --- ÜST BAR (GÜÇLENDİRİLMİŞ) --- */
         .header { 
-            height: 70px; flex-shrink: 0; padding: 0 20px; 
+            height: 70px; flex-shrink: 0; padding: 0 15px; 
             display: flex; align-items: center; justify-content: space-between; 
             background: rgba(0,0,0,0.95); border-bottom: 2px solid var(--border); z-index: 1000;
+            gap: 10px;
         }
-        .user-badge { flex: 1; font-weight: 700; color: var(--p); font-size: 0.8rem; border-left: 2px solid var(--p); padding-left: 8px; }
-        .logo { flex: 2; text-align: center; font-family: 'Black Ops One'; font-size: 1.2rem; color: #fff; letter-spacing: 2px; text-shadow: 0 0 10px var(--p); }
-        .btn-exit { 
-            flex: 1; display: flex; justify-content: flex-end; 
-        }
-        .exit-link {
-            background: var(--danger); border: none; color: white; padding: 8px 12px; 
-            font-weight: 900; font-size: 0.7rem; clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%); cursor: pointer;
-        }
+        .user-badge { flex: 1; min-width: 80px; font-weight: 700; color: var(--p); font-size: 0.75rem; border-left: 2px solid var(--p); padding-left: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .logo { flex: 2; text-align: center; font-family: 'Black Ops One'; font-size: clamp(0.9rem, 4vw, 1.2rem); color: #fff; letter-spacing: 1px; text-shadow: 0 0 10px var(--p); }
+        .btn-exit { flex: 1; min-width: 80px; display: flex; justify-content: flex-end; }
+        .exit-link { background: var(--danger); border: none; color: white; padding: 8px 12px; font-weight: 900; font-size: 0.7rem; clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%); cursor: pointer; }
 
         /* --- LOBİ --- */
         #lobby { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; padding: 20px; }
-        .main-card {
-            background: var(--glass); border: 1px solid rgba(0, 242, 255, 0.2);
-            padding: 40px; text-align: center; width: 100%; max-width: 380px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-        }
-        .btn-neon { 
-            width: 100%; background: var(--p); color: #000; border: none; padding: 18px; 
-            font-family: 'Black Ops One'; font-size: 0.9rem; cursor: pointer;
-            clip-path: polygon(5% 0, 100% 0, 95% 100%, 0 100%); transition: 0.3s;
-            margin-top: 20px;
-        }
+        .main-card { background: var(--glass); border: 1px solid rgba(0, 242, 255, 0.2); padding: 40px; text-align: center; width: 100%; max-width: 380px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+        .btn-neon { width: 100%; background: var(--p); color: #000; border: none; padding: 18px; font-family: 'Black Ops One'; font-size: 0.9rem; cursor: pointer; clip-path: polygon(5% 0, 100% 0, 95% 100%, 0 100%); transition: 0.3s; margin-top: 20px; }
         .btn-neon:disabled { opacity: 0.3; }
 
         /* --- OYUN ALANI --- */
-        #game-view { display: none; flex: 1; position: relative; }
-        .energy-bar-wrap { position: absolute; top: 20px; left: 20px; z-index: 100; }
+        #game-view { display: none; flex: 1; position: relative; cursor: crosshair; }
+        .hud-wrap { position: absolute; top: 20px; left: 20px; z-index: 100; pointer-events: none;}
+        .timer-wrap { position: absolute; top: 20px; right: 20px; z-index: 100; font-family: 'Black Ops One'; font-size: 1.5rem; color: var(--p); text-shadow: 0 0 10px var(--p); }
+        
         #energy-fill { width: 150px; height: 6px; background: var(--p); transition: 0.1s; box-shadow: 0 0 15px var(--p); }
+        #health-fill { width: 150px; height: 6px; background: var(--danger); transition: 0.3s; box-shadow: 0 0 15px var(--danger); margin-top: 5px; }
 
-        .sonar {
-            position: absolute; border: 2px solid var(--p); border-radius: 50%;
-            transform: translate(-50%, -50%); pointer-events: none;
-            animation: sonar-ping 0.8s ease-out forwards;
-        }
+        .sonar { position: absolute; border: 2px solid var(--p); border-radius: 50%; transform: translate(-50%, -50%); pointer-events: none; animation: sonar-ping 0.8s ease-out forwards; }
         @keyframes sonar-ping { 0% { width:0; height:0; opacity:1; } 100% { width:400px; height:400px; opacity:0; } }
 
-        .enemy { position: absolute; width: 30px; height: 30px; background: var(--a); border-radius: 50%; transform: translate(-50%, -50%); opacity: 0; transition: 0.4s; box-shadow: 0 0 20px var(--a); }
+        .enemy { position: absolute; width: 35px; height: 35px; background: var(--a); border-radius: 50%; transform: translate(-50%, -50%); opacity: 0; transition: 0.4s; box-shadow: 0 0 20px var(--a); border: 2px solid #fff; }
         
-        #game-status { position: absolute; top: 50%; width: 100%; text-align: center; font-family: 'Black Ops One'; font-size: 2rem; color: #fff; pointer-events: none; display: none; }
+        .role-indicator { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); font-family: 'Black Ops One'; letter-spacing: 2px; color: var(--p); font-size: 0.8rem; z-index: 100; background: rgba(0,0,0,0.5); padding: 5px 15px; border-radius: 20px; }
     </style>
 </head>
-<body>
+<body oncontextmenu="return false;">
 
     <canvas id="bg-canvas"></canvas>
 
     <header class="header">
-        <div class="user-badge" id="meName">BAĞLANIYOR...</div>
+        <div class="user-badge" id="meName">YÜKLENİYOR...</div>
         <div class="logo">SHADOW CATCH</div>
         <div class="btn-exit">
             <button class="exit-link" onclick="window.leaveRoom()">AYRIL</button>
@@ -80,24 +66,29 @@
     <div id="lobby">
         <div class="main-card">
             <h3 style="font-family:'Black Ops One'; color:var(--p); margin-bottom:10px;">OPERASYON MERKEZİ</h3>
-            <p style="font-size:0.8rem; color:#666;">RAKİBİNİ BUL VE İMHA ET</p>
+            <p id="match-status-info" style="font-size:0.8rem; color:#666;">RAKİP ARANIYOR...</p>
             <button class="btn-neon" id="matchBtn">ARENA ARA</button>
             <div id="statusTxt" style="margin-top:20px; font-size:0.7rem; color:var(--p); letter-spacing:2px;"></div>
         </div>
     </div>
 
     <div id="game-view">
-        <div class="energy-bar-wrap">
-            <div style="font-size:0.7rem; color:var(--p); margin-bottom:5px; font-weight:900;">GÜÇ: <span id="nrgVal">100</span>%</div>
-            <div style="width:150px; height:6px; background:rgba(255,255,255,0.1)"><div id="energy-fill"></div></div>
+        <div class="hud-wrap">
+            <div style="font-size:0.7rem; color:var(--p); font-weight:900;">RADAR GÜCÜ: <span id="nrgVal">100</span>%</div>
+            <div style="width:150px; height:6px; background:rgba(255,255,255,0.1); margin-bottom:10px;"><div id="energy-fill"></div></div>
+            
+            <div id="target-health-label" style="font-size:0.7rem; color:var(--danger); font-weight:900;">HEDEF DURUMU: <span id="hpVal">100</span>%</div>
+            <div style="width:150px; height:6px; background:rgba(255,255,255,0.1)"><div id="health-fill"></div></div>
         </div>
+
+        <div class="timer-wrap" id="timer">03:00</div>
         <div id="enemy" class="enemy"></div>
-        <div id="game-status">HEDEF BULUNDU</div>
+        <div class="role-indicator" id="roleText">ROL ATANIYOR...</div>
     </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getFirestore, doc, setDoc, updateDoc, onSnapshot, collection, query, where, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, updateDoc, onSnapshot, collection, query, where, getDocs, deleteDoc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
     import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
     const firebaseConfig = {
@@ -113,9 +104,10 @@
     const db = getFirestore(app);
     const auth = getAuth(app);
 
-    let uid, username, curRoomId = null, energy = 100, isGaming = false;
+    let uid, username, curRoomId = null, energy = 100, isGaming = false, myRole = ""; 
+    let gameTimer = 180, timerInterval = null, unsubRoom = null;
 
-    // --- ARKA PLAN (IZGARA) ---
+    // --- ARKA PLAN ---
     const canvas = document.getElementById('bg-canvas');
     const ctx = canvas.getContext('2d');
     function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
@@ -130,43 +122,76 @@
     }
     draw();
 
-    // --- FIREBASE BAĞLANTI ---
-    onAuthStateChanged(auth, user => {
+    // --- AUTH & USERNAME ---
+    onAuthStateChanged(auth, async user => {
         if(!user) { signInAnonymously(auth); return; }
         uid = user.uid;
-        username = "GHOST_" + uid.slice(0,4).toUpperCase();
+        
+        // Firebase'den kullanıcı adını çek (Yoksa anonim ata)
+        const userRef = doc(db, "users", uid);
+        const userSnap = await getDoc(userRef);
+        username = userSnap.exists() ? userSnap.data().username : "OPERATOR_" + uid.slice(0,4).toUpperCase();
+        
         document.getElementById('meName').innerText = username;
         document.getElementById('matchBtn').onclick = findMatch;
     });
 
+    // --- MATCHMAKING ---
     async function findMatch() {
         document.getElementById('matchBtn').disabled = true;
-        document.getElementById('statusTxt').innerText = "SİNYAL TARANIYOR...";
+        document.getElementById('statusTxt').innerText = "RADAR TARANIYOR...";
 
         const q = query(collection(db, "shadow_rooms"), where("status", "==", "waiting"));
         const snap = await getDocs(q);
 
         if(snap.empty) {
             curRoomId = "room_" + uid;
+            myRole = "seeker"; // Odayı kuran ebedir
             await setDoc(doc(db, "shadow_rooms", curRoomId), {
-                p1: uid, p1Pos: {x: Math.random(), y: Math.random()},
-                p2: null, p2Pos: null, status: "waiting"
+                seeker: uid, seekerName: username,
+                hider: null, hiderName: null,
+                hiderPos: {x: 0.5, y: 0.5},
+                status: "waiting", hp: 100, timer: 180,
+                lastUpdate: serverTimestamp()
             });
         } else {
             curRoomId = snap.docs[0].id;
+            myRole = "hider"; // Sonradan gelen saklanandır
             await updateDoc(doc(db, "shadow_rooms", curRoomId), {
-                p2: uid, p2Pos: {x: Math.random(), y: Math.random()}, status: "playing"
+                hider: uid, hiderName: username,
+                hiderPos: {x: Math.random() * 0.8 + 0.1, y: Math.random() * 0.8 + 0.1},
+                status: "playing",
+                lastUpdate: serverTimestamp()
             });
         }
         listenRoom();
     }
 
     function listenRoom() {
-        onSnapshot(doc(db, "shadow_rooms", curRoomId), (snap) => {
-            if(!snap.exists()) { if(isGaming) location.reload(); return; }
+        unsubRoom = onSnapshot(doc(db, "shadow_rooms", curRoomId), (snap) => {
+            if(!snap.exists()) { handleGameOver("BAĞLANTI KOPUKLUĞU"); return; }
             const data = snap.data();
-            if(data.status === "terminated") { alert("Rakip Ayrıldı!"); location.reload(); }
+            
+            if(data.status === "terminated") { handleGameOver("RAKİP SAHADAN AYRILDI"); return; }
             if(data.status === "playing" && !isGaming) startGame(data);
+            
+            // HP ve Timer Güncelleme
+            if(isGaming) {
+                document.getElementById('hpVal').innerText = data.hp;
+                document.getElementById('health-fill').style.width = (data.hp * 1.5) + "px";
+                updateTimerUI(data.timer);
+
+                // Oyun Sonu Kontrolleri
+                if(data.hp <= 0) handleGameOver("SAKLANAN ELENDİ! EBE KAZANDI.");
+                if(data.timer <= 0) handleGameOver("ZAMAN DOLDU! SAKLANAN KAZANDI.");
+
+                // Saklanan kişi hareket ettiyse (Sadece ebe için güncelle)
+                if(myRole === "seeker") {
+                    const enemyEl = document.getElementById('enemy');
+                    enemyEl.style.left = (data.hiderPos.x * window.innerWidth) + "px";
+                    enemyEl.style.top = (data.hiderPos.y * window.innerHeight) + "px";
+                }
+            }
         });
     }
 
@@ -174,55 +199,113 @@
         isGaming = true;
         document.getElementById('lobby').style.display = 'none';
         document.getElementById('game-view').style.display = 'block';
+        document.getElementById('roleText').innerText = myRole === "seeker" ? "ROL: EBE (BUL)" : "ROL: SAKLANAN (KAÇ)";
         
-        const isP1 = uid === data.p1;
-        const enemyPos = isP1 ? data.p2Pos : data.p1Pos;
-        const enemyEl = document.getElementById('enemy');
-        enemyEl.style.left = (enemyPos.x * window.innerWidth) + "px";
-        enemyEl.style.top = (enemyPos.y * window.innerHeight) + "px";
+        if(myRole === "seeker") {
+            // Ebe için zamanlayıcıyı başlat (Sadece bir kişi yazsa yeterli)
+            timerInterval = setInterval(async () => {
+                gameTimer--;
+                if(gameTimer >= 0) {
+                    await updateDoc(doc(db, "shadow_rooms", curRoomId), { timer: gameTimer });
+                }
+            }, 1000);
+        }
     }
 
     // --- OYUN MEKANİĞİ ---
-    window.addEventListener('mousedown', (e) => {
-        if(!isGaming || energy < 25) return;
-        energy -= 25; updateUI();
-        
-        const sonar = document.createElement('div');
-        sonar.className = 'sonar';
-        sonar.style.left = e.clientX + 'px';
-        sonar.style.top = e.clientY + 'px';
-        document.body.appendChild(sonar);
-        setTimeout(() => sonar.remove(), 800);
+    window.addEventListener('mousedown', async (e) => {
+        if(!isGaming) return;
 
-        const enemy = document.getElementById('enemy');
-        const ex = parseFloat(enemy.style.left), ey = parseFloat(enemy.style.top);
-        const dist = Math.hypot(e.clientX - ex, e.clientY - ey);
+        if(myRole === "seeker") {
+            // EBE ATEŞ EDER
+            if(energy < 25) return;
+            energy -= 25; updateUI();
+            
+            createSonar(e.clientX, e.clientY);
 
-        if(dist < 50) { 
-            enemy.style.opacity = 1; 
-            document.getElementById('game-status').style.display = 'block';
-            setTimeout(() => window.leaveRoom(), 2000);
-        } else if(dist < 150) {
-            enemy.style.opacity = 0.5;
-            setTimeout(() => { if(isGaming) enemy.style.opacity = 0; }, 1000);
+            const enemy = document.getElementById('enemy');
+            const ex = parseFloat(enemy.style.left), ey = parseFloat(enemy.style.top);
+            const dist = Math.hypot(e.clientX - ex, e.clientY - ey);
+
+            if(dist < 50) { 
+                // BULUNDU!
+                enemy.style.opacity = 1;
+                const snap = await getDoc(doc(db, "shadow_rooms", curRoomId));
+                let newHp = snap.data().hp - 75;
+                await updateDoc(doc(db, "shadow_rooms", curRoomId), { hp: Math.max(0, newHp) });
+                setTimeout(() => { if(isGaming) enemy.style.opacity = 0; }, 1500);
+            } else if(dist < 150) {
+                enemy.style.opacity = 0.4;
+                setTimeout(() => { if(isGaming) enemy.style.opacity = 0; }, 800);
+            }
+        } else {
+            // SAKLANAN YER DEĞİŞTİRİR
+            await updateDoc(doc(db, "shadow_rooms", curRoomId), { 
+                hiderPos: { x: e.clientX / window.innerWidth, y: e.clientY / window.innerHeight } 
+            });
+            // Yer değiştirirken hafif bir iz bırak
+            createSonar(e.clientX, e.clientY, "rgba(255, 0, 85, 0.3)");
         }
     });
+
+    function createSonar(x, y, color = null) {
+        const sonar = document.createElement('div');
+        sonar.className = 'sonar';
+        if(color) sonar.style.borderColor = color;
+        sonar.style.left = x + 'px';
+        sonar.style.top = y + 'px';
+        document.body.appendChild(sonar);
+        setTimeout(() => sonar.remove(), 800);
+    }
 
     function updateUI() {
         document.getElementById('energy-fill').style.width = (energy * 1.5) + "px";
         document.getElementById('nrgVal').innerText = Math.floor(energy);
     }
 
-    setInterval(() => { if(isGaming && energy < 100) { energy += 1.5; updateUI(); } }, 200);
+    function updateTimerUI(s) {
+        const min = Math.floor(s / 60);
+        const sec = s % 60;
+        document.getElementById('timer').innerText = `${min.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}`;
+    }
 
-    // --- ÇIKIŞ FONKSİYONU ---
+    setInterval(() => { if(isGaming && energy < 100) { energy += 2; updateUI(); } }, 200);
+
+    // --- OYUN SONU VE TEMİZLİK ---
+    async function handleGameOver(reason) {
+        isGaming = false;
+        if(timerInterval) clearInterval(timerInterval);
+        if(unsubRoom) unsubRoom();
+        
+        alert(reason);
+        
+        if(curRoomId) {
+            try {
+                await deleteDoc(doc(db, "shadow_rooms", curRoomId));
+            } catch(e) {}
+        }
+        location.reload();
+    }
+
     window.leaveRoom = async () => {
         if(curRoomId) {
             await updateDoc(doc(db, "shadow_rooms", curRoomId), { status: 'terminated' });
-            setTimeout(async () => { await deleteDoc(doc(db, "shadow_rooms", curRoomId)); }, 500);
+            setTimeout(async () => { 
+                try { await deleteDoc(doc(db, "shadow_rooms", curRoomId)); } catch(e) {}
+                location.reload();
+            }, 500);
+        } else {
+            location.reload();
         }
-        location.reload();
     };
+
+    // Sayfa yenileme/kapatma koruması
+    window.addEventListener('beforeunload', () => {
+        if(curRoomId) {
+            // Navigator beacon kullanarak odayı silmeyi dene (garanti değil ama etkili)
+            updateDoc(doc(db, "shadow_rooms", curRoomId), { status: 'terminated' });
+        }
+    });
 </script>
 </body>
 </html>
