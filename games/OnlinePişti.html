@@ -8,9 +8,8 @@
     <style>
         :root {
             --p1: #ff0055; --p2: #00f2ff; --bg: #020408;
-            --glass: rgba(20, 25, 35, 0.95); 
-            --gold: #d4af37; --border: #4fd1ff;
-            --danger: #ff3b30; --warning: #ffcc00; --accent: #7d00ff;
+            --glass: rgba(20, 25, 35, 0.95); --gold: #d4af37;
+            --border: #4fd1ff; --danger: #ff3b30; --warning: #ffcc00;
             --btn-main: #4fd1ff; --btn-sec: #ffcc00;
         }
 
@@ -18,8 +17,7 @@
             margin:0; padding:0; box-sizing:border-box; 
             font-family: 'Rajdhani', sans-serif; 
             -webkit-tap-highlight-color: transparent; 
-            user-select: none;
-            touch-action: none;
+            user-select: none; touch-action: none;
         }
         
         body { 
@@ -33,103 +31,115 @@
             background: radial-gradient(circle at center, #0a0f1a 0%, #020408 100%);
         }
         
-        /* ÜST BAR YENİLEME */
+        /* ÜST BAR */
         .top-bar { 
             height: 70px; flex-shrink: 0; padding: 0 20px; display: flex; align-items: center; justify-content: space-between; 
-            background: linear-gradient(to bottom, rgba(0,0,0,1), rgba(0,0,0,0.8)); 
-            border-bottom: 2px solid var(--gold); z-index: 1000;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.8);
+            background: linear-gradient(to bottom, #000, #111); border-bottom: 2px solid var(--gold); z-index: 1000;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.8);
         }
-        .brand { font-family: 'Black Ops One'; font-size: 1.2rem; color: var(--gold); letter-spacing: 2px; text-shadow: 0 0 10px rgba(212,175,55,0.5); }
+        .brand { font-family: 'Black Ops One'; font-size: 1.3rem; color: var(--gold); letter-spacing: 2px; text-shadow: 0 0 10px rgba(212,175,55,0.5); }
         
         .right-menu { display: flex; gap: 10px; align-items: center; }
         .nav-box { 
             font-weight: 700; color: #fff; font-size: 0.9rem; padding: 6px 12px; border-radius: 4px; 
             background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(212, 175, 55, 0.3);
-            white-space: nowrap; text-align: center; box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+            white-space: nowrap; text-align: center;
         }
 
-        /* LOBİ TASARIMI */
+        /* LOBİ */
         #lobbyScreen { 
             flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 15px; 
             overflow-y: auto; z-index: 10; scroll-behavior: smooth;
         }
 
         .search-input { 
-            width: 100%; background: rgba(0,0,0,0.4); border: 1px solid var(--gold); 
+            width: 100%; background: rgba(0,0,0,0.5); border: 1px solid var(--gold); 
             padding: 14px 20px; color: #fff; border-radius: 50px; outline: none;
-            font-size: 1rem; transition: 0.3s; box-shadow: 0 0 15px rgba(212,175,55,0.1);
+            box-shadow: 0 0 15px rgba(212,175,55,0.1); transition: 0.3s;
         }
-        .search-input:focus { box-shadow: 0 0 20px rgba(212,175,55,0.3); }
         
         .btn-neon { 
-            background: linear-gradient(135deg, var(--gold), #8a6d3b); color: #000; border: none; padding: 16px; 
+            background: linear-gradient(135deg, var(--gold), #8a6d3b); color: #000; border: none; padding: 18px; 
             font-family: 'Black Ops One'; font-size: 0.9rem; cursor: pointer;
             clip-path: polygon(5% 0, 100% 0, 95% 100%, 0 100%); transition: 0.3s;
             text-align: center; width: 100%; letter-spacing: 1px; font-weight: bold;
         }
-        .btn-neon:active { transform: scale(0.96); filter: brightness(1.2); }
+        .btn-neon:hover { filter: brightness(1.2); transform: translateY(-2px); }
 
         .room-card { 
             background: var(--glass); border: 1px solid rgba(212, 175, 55, 0.2); 
-            border-left: 4px solid var(--gold); padding: 18px; display: flex; 
+            border-left: 5px solid var(--gold); padding: 18px; display: flex; 
             justify-content: space-between; align-items: center; 
             margin-bottom: 12px; border-radius: 4px 15px 15px 4px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.6);
-            animation: cardIn 0.5s ease-out forwards;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            animation: slideIn 0.4s ease-out;
         }
-        @keyframes cardIn { from { opacity:0; transform: translateY(20px); } to { opacity:1; transform: translateY(0); } }
+        @keyframes slideIn { from { opacity:0; transform:translateX(-20px); } to { opacity:1; transform:translateX(0); } }
 
-        .chips { display: flex; gap: 10px; justify-content: center; margin: 10px 0; }
+        .chips { display: flex; gap: 12px; justify-content: center; margin: 15px 0; }
         .chip { 
-            width:48px; height:48px; border-radius:50%; display:flex; align-items:center; justify-content:center; 
-            font-weight:900; cursor:pointer; border: 3px dashed rgba(255,255,255,0.2); font-size: 10px;
-            transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            width:52px; height:52px; border-radius:50%; display:flex; align-items:center; justify-content:center; 
+            font-weight:900; cursor:pointer; border: 3px dashed rgba(255,255,255,0.3); font-size: 10px;
+            transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 5px 15px rgba(0,0,0,0.4);
         }
-        .chip:hover { transform: scale(1.15) rotate(15deg); }
+        .chip:hover { transform: scale(1.2) rotate(15deg); }
 
-        /* NASIL OYNANIR ALANI */
-        .info-section {
-            background: rgba(255, 255, 255, 0.03); border-radius: 15px; padding: 20px;
-            margin-top: 30px; border: 1px solid rgba(255,255,255,0.05);
+        /* NASIL OYNANIR */
+        .how-to {
+            background: rgba(255,255,255,0.03); border-radius: 15px; padding: 20px;
+            margin-top: 30px; border: 1px solid rgba(212, 175, 55, 0.1);
         }
-        .info-section h4 { color: var(--gold); margin-bottom: 10px; font-family: 'Black Ops One'; }
-        .info-section p { font-size: 0.85rem; color: #aaa; line-height: 1.4; margin-bottom: 8px; }
+        .how-to h4 { color: var(--gold); margin-bottom: 10px; font-family: 'Black Ops One'; font-size: 0.9rem; }
+        .how-to p { font-size: 0.8rem; color: #aaa; line-height: 1.5; margin-bottom: 5px; }
 
         /* OYUN ALANI */
         #gameArea { display: none; flex: 1; flex-direction: column; align-items: center; z-index: 5; position: relative; }
-        .player-heads {
-            width: 100%; display: flex; justify-content: space-around; padding: 12px;
-            background: rgba(0,0,0,0.8); border-bottom: 1px solid var(--gold); z-index: 100;
-        }
-        .p-head { text-align: center; flex: 1; transition: 0.4s; padding: 8px; border-radius: 10px; }
-        .p-head.active { background: rgba(212, 175, 55, 0.15); box-shadow: inset 0 0 15px rgba(212,175,55,0.2); }
         
         .table {
-            width:96%; max-width:600px; height:400px; border-radius:200px; 
+            width:96%; max-width:700px; height:480px; border-radius:240px; 
             position: absolute; top: 52%; left: 50%; transform: translate(-50%, -50%);
-            background: radial-gradient(circle at center, #1a7a43 0%, #093a1d 100%);
-            box-shadow: inset 0 0 100px #000, 0 30px 60px rgba(0,0,0,0.8), 0 0 40px rgba(212,175,55,0.2);
-            border: 10px solid #2a1b0e;
+            background: radial-gradient(circle at center, #1a6d3c 0%, #08331a 100%);
+            box-shadow: inset 0 0 100px #000, 0 40px 100px rgba(0,0,0,0.9), 0 0 50px rgba(212,175,55,0.2);
+            border: 14px solid #2a1b0e;
+        }
+        .table::after {
+            content: ""; position: absolute; inset: 0; border-radius: 240px;
+            background-image: url('https://www.transparenttextures.com/patterns/felt.png'); opacity: 0.3;
         }
 
         .table-cards { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:90px; height:125px; }
-        .stack-card { width:85px; position:absolute; left:0; top:0; border-radius: 6px; box-shadow: 2px 2px 10px rgba(0,0,0,0.5); background:white; }
-        .card { width:65px; height: 92px; border-radius: 6px; cursor:pointer; transition: 0.3s ease; box-shadow: 0 5px 15px rgba(0,0,0,0.4); background:white; }
-        .card:hover { transform: translateY(-20px) scale(1.05); z-index: 100; }
+        .stack-card { 
+            width:90px; position:absolute; left:0; top:0; border-radius: 8px; 
+            box-shadow: 3px 3px 12px rgba(0,0,0,0.6); background:white;
+        }
+        
+        .hand, .computer { position:absolute; left:50%; transform:translateX(-50%); display:flex; gap:12px; width: max-content; padding: 15px; }
+        .hand { bottom: 15px; }
+        .computer { top: 15px; }
+
+        .card { 
+            width:70px; height: 98px; border-radius: 6px; cursor:pointer; transition: 0.3s; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5); background:white;
+            animation: dealCard 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+        }
+        @keyframes dealCard { from { transform: translateY(-300px) rotate(20deg); opacity: 0; } to { transform: translateY(0) rotate(0); opacity: 1; } }
+        
+        .card:hover { transform: translateY(-20px) scale(1.1); z-index: 100; box-shadow: 0 15px 35px rgba(0,0,0,0.7); }
 
         #pistiDisplay {
             position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%) scale(0);
-            font-size: 100px; font-weight: 900; color: #fff; text-align: center;
-            text-shadow: 0 0 20px var(--gold), 0 0 40px #fff;
+            font-size: 110px; font-weight: 900; color: #fff; text-align: center;
+            text-shadow: 0 0 30px var(--gold), 0 0 60px #fff;
             display: none; z-index: 9999; font-family: 'Black Ops One';
             animation: pistiTurbo 1.5s forwards;
         }
         @keyframes pistiTurbo {
             0% { transform: translate(-50%,-50%) scale(0); opacity: 0; }
-            50% { transform: translate(-50%,-50%) scale(1.2); opacity: 1; }
-            100% { transform: translate(-50%,-50%) scale(2); opacity: 0; }
+            50% { transform: translate(-50%,-50%) scale(1.5); opacity: 1; }
+            100% { transform: translate(-50%,-50%) scale(2.5); opacity: 0; }
         }
+
+        .p-head.active { background: rgba(212, 175, 55, 0.15); border-bottom: 3px solid var(--gold); }
     </style>
 </head>
 <body>
@@ -137,11 +147,11 @@
     <div id="bg-canvas"></div>
 
     <div class="top-bar">
-        <div class="brand">ELITE PİŞTİ</div>
+        <div class="brand">ELITE ARENA</div>
         <div class="right-menu">
             <div class="nav-box">₺<span id="balance">0</span></div>
             <div class="nav-box" style="color:var(--warning)">B: ₺<span id="bet">0</span></div>
-            <button id="navActionBtn" onclick="handleNavAction()" style="background:var(--danger); border:none; color:white; padding:8px 15px; font-weight:900; font-size:0.75rem; clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%); cursor:pointer;">ÇIKIŞ</button>
+            <button id="navActionBtn" onclick="handleNavAction()" style="background:var(--danger); border:none; color:white; padding:8px 15px; font-weight:900; font-size:0.75rem; clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%); cursor:pointer;">AYRIL</button>
         </div>
     </div>
 
@@ -149,8 +159,8 @@
         <input type="text" id="roomSearch" class="search-input" placeholder="MASA ARA VEYA OLUŞTUR...">
         
         <div class="chips">
-            <div class="chip" onclick="cancelBet()" style="background:#444; color:#fff;">İPTAL</div>
-            <div class="chip" onclick="addBet(100)" style="background:#fff; color:#000;">100</div>
+            <div class="chip" onclick="cancelBet()" style="background:#333; color:#fff;">İPTAL</div>
+            <div class="chip" onclick="addBet(100)" style="background:#eee; color:#000;">100</div>
             <div class="chip" onclick="addBet(500)" style="background:#2ecc71; color:#fff;">500</div>
             <div class="chip" onclick="addBet(2000)" style="background:#3498db; color:#fff;">2K</div>
             <div class="chip" onclick="addBet(10000)" style="background:var(--gold); color:#000;">10K</div>
@@ -163,26 +173,26 @@
 
         <div id="roomList"></div>
 
-        <div class="info-section">
-            <h4>NASIL OYNANILIR?</h4>
-            <p>• <b>Pişti:</b> Yerde tek bir kart varken aynısını atarsanız Pişti olur (10 Puan). Vale ile Vale piştisi 20 puandır.</p>
-            <p>• <b>Vale (J):</b> Yerdeki tüm kartları toplamanızı sağlar (Pişti hariç).</p>
-            <p>• <b>Kazanma:</b> Kartlar bittiğinde en yüksek puana ulaşan oyuncu bahsi kazanır.</p>
+        <div class="how-to">
+            <h4>KUMARHANE KURALLARI (NASIL OYNANILIR?)</h4>
+            <p>• <b>Pişti:</b> Yerde tek kart varken aynısını atarsan Pişti yaparsın (10 Puan).</p>
+            <p>• <b>Vale (J):</b> Yerdeki tüm kartları süpürür (Vale Piştisi 20 Puan değerindedir).</p>
+            <p>• <b>Puanlama:</b> Aslar 1, Karo 10'lu 3, Sinek 2'li 2 puan değerindedir.</p>
         </div>
     </div>
 
     <div id="gameArea">
         <div class="player-heads">
-            <div class="p-head" id="head-opp">
+            <div class="p-head" id="head-opp" style="text-align:center; flex:1; padding:10px;">
                 <div style="font-size:0.7rem; opacity:0.6">RAKİP</div>
-                <div id="cs" style="font-size:1.5rem; font-weight:bold">0</div>
+                <div id="cs" style="font-size:1.4rem; font-weight:bold">0</div>
             </div>
-            <div class="p-head" id="head-me">
-                <div style="font-size:0.7rem; opacity:0.6">SİZ</div>
-                <div id="ps" style="font-size:1.5rem; font-weight:bold">0</div>
+            <div class="p-head" id="head-me" style="text-align:center; flex:1; padding:10px;">
+                <div style="font-size:0.7rem; opacity:0.6">SİZİN SKORUNUZ</div>
+                <div id="ps" style="font-size:1.4rem; font-weight:bold">0</div>
             </div>
         </div>
-        <div id="waitingStatus" style="position:fixed; top:140px; color:var(--gold); background:rgba(0,0,0,0.8); padding:10px 20px; border-radius:50px; display:none; border:1px solid var(--gold); z-index:200;">OYUNCU BEKLENİYOR...</div>
+        <div id="waitingStatus" style="position:fixed; top:150px; color:var(--gold); background:rgba(0,0,0,0.8); padding:10px 25px; border-radius:50px; display:none; border:1px solid var(--gold); z-index:100;">RAKİP BEKLENİYOR...</div>
         <div class="table">
             <div class="computer" id="computerHand"></div>
             <div class="table-cards" id="tableCards"></div>
@@ -195,14 +205,14 @@
     <div id="createRoomModal" class="modal-overlay">
         <div class="modal-box" style="border-color:var(--gold)">
             <h3 style="color:var(--gold)">MASA AYARLARI</h3><br>
-            <input type="text" id="newRoomName" class="modal-input" placeholder="Masa Adı">
-            <select id="newRoomType" class="modal-input">
-                <option value="2-52">Standart (52 Kart)</option>
-                <option value="2-104">Çift Deste (104 Kart)</option>
+            <input type="text" id="newRoomName" class="modal-input" placeholder="Masa İsmi">
+            <select id="newRoomType" class="modal-input" style="background:#161b22; color:white;">
+                <option value="2-52">2 Oyuncu - Tek Deste</option>
+                <option value="2-104">2 Oyuncu - Çift Deste</option>
             </select>
-            <input type="password" id="newRoomPass" class="modal-input" placeholder="Şifre (Opsiyonel)">
-            <button class="btn-neon" onclick="confirmCreateRoom()">OLUŞTUR</button>
-            <button class="btn-neon" style="margin-top:10px; background:#444; color:#fff;" onclick="closeModal('createRoomModal')">İPTAL</button>
+            <input type="password" id="newRoomPass" class="modal-input" placeholder="Şifre (Boş bırakılabilir)">
+            <button class="btn-neon" onclick="confirmCreateRoom()">MASAYI AÇ</button>
+            <button class="btn-neon" style="margin-top:10px; background:#444; color:#fff;" onclick="closeModal('createRoomModal')">VAZGEÇ</button>
         </div>
     </div>
 
@@ -210,7 +220,7 @@
         <div class="modal-box">
             <h3 id="modalTitle" style="color:var(--gold)">BİLGİ</h3><br>
             <p id="modalMsg" style="margin-bottom:20px;"></p>
-            <button class="btn-neon" onclick="closeModal('infoModal')">ANLADIM</button>
+            <button class="btn-neon" onclick="closeModal('infoModal')">TAMAM</button>
         </div>
     </div>
 
@@ -239,10 +249,9 @@
         pisti: new Audio("https://cdn.freesound.org/previews/476/476178_7879024-lq.mp3") 
     };
 
-    let balance = 0, currentBet = 0, userRef = null, uid = null, userName = "Oyuncu";
+    let balance = 0, currentBet = 0, userRef = null, uid = null;
     let roomRef = null, myRole = null, gameState = null, inGame = false;
     let unsubs = { lobby: null, room: null, user: null };
-    let lastRenderKey = "";
 
     const normalizeCardVal = (c) => {
         if (!c) return "";
@@ -258,7 +267,6 @@
         unsubs.user = onSnapshot(userRef, snap => {
             if(snap.exists()) {
                 balance = snap.data().balance || 0;
-                userName = snap.data().username || "Oyuncu";
                 document.getElementById("balance").innerText = balance.toLocaleString('tr-TR');
             }
         });
@@ -284,17 +292,16 @@
         unsubs.lobby = onSnapshot(q, (snap) => {
             const list = document.getElementById("roomList");
             let html = "";
-            snap.forEach(roomDoc => {
-                const data = roomDoc.data();
-                html += `
-                    <div class="room-card">
-                        <div>
-                            <small style="color:var(--gold)">${data.name.toUpperCase()}</small><br>
-                            <b style="font-size:0.8rem; opacity:0.6">${data.type} | ${data.password ? '🔒' : '🔓'}</b><br>
-                            <span style="color:#fff; font-weight:bold">Bakiye: ₺${data.bet.toLocaleString()}</span>
-                        </div>
-                        <button class="btn-neon" style="width:85px; padding:10px; font-size:0.7rem;" onclick="handleJoin('${roomDoc.id}', '${data.password || ''}', ${data.bet})">MASAYA OTUR</button>
-                    </div>`;
+            snap.forEach(doc => {
+                const d = doc.data();
+                html += `<div class="room-card">
+                    <div>
+                        <small style="color:var(--gold)">${d.name.toUpperCase()}</small><br>
+                        <b style="font-size:0.8rem; opacity:0.6">${d.type} | ${d.password?'🔒':'🔓'}</b><br>
+                        <span style="font-weight:bold">Masa Bahsi: ₺${d.bet.toLocaleString()}</span>
+                    </div>
+                    <button class="btn-neon" style="width:90px; padding:10px; font-size:0.7rem" onclick="handleJoin('${doc.id}', '${d.password||''}', ${d.bet})">KATIL</button>
+                </div>`;
             });
             list.innerHTML = html;
         });
@@ -307,8 +314,8 @@
     window.openCreateModal = () => { document.getElementById('createRoomModal').style.display = 'flex'; };
 
     window.confirmCreateRoom = async () => {
-        if (currentBet < 100) return showInfoModal("Minimum 100₺ bahis gereklidir.", "UYARI");
-        const name = document.getElementById("newRoomName").value || "Elit Masa";
+        if (currentBet < 100) return showInfoModal("Min 100₺ bahis gerekli!", "UYARI");
+        const name = document.getElementById("newRoomName").value || "Vip Masa";
         const type = document.getElementById("newRoomType").value;
         const roomId = "room_" + Date.now();
         roomRef = doc(db, "rooms", roomId);
@@ -316,7 +323,7 @@
         
         const deck = createDeck().sort(() => Math.random() - 0.5);
         await setDoc(roomRef, {
-            p1: uid, p1_name: userName, bet: currentBet, status: "waiting", name, 
+            p1: uid, bet: currentBet, status: "waiting", name, 
             password: document.getElementById("newRoomPass").value || "", type,
             deck, table: [], p1_score: 0, p2_score: 0, p1_hand: [], p2_hand: [], turn: null, quitter: null
         });
@@ -327,11 +334,11 @@
     };
 
     async function joinRoom(rid, bet) {
-        if (balance < bet) return showInfoModal("Bu masa için bakiyeniz yetersiz.", "HATA");
+        if (balance < bet) return showInfoModal("Yetersiz bakiye!", "HATA");
         balance -= bet;
         roomRef = doc(db, "rooms", rid);
         myRole = "p2";
-        await updateDoc(roomRef, { p2: uid, p2_name: userName, status: "playing", turn: uid });
+        await updateDoc(roomRef, { p2: uid, status: "playing", turn: uid });
         await updateDoc(userRef, { balance });
         enterGameView();
         listenRoom();
@@ -346,41 +353,39 @@
 
     function listenRoom() {
         if(unsubs.room) unsubs.room();
-        unsubs.room = onSnapshot(roomRef, async (snap) => {
+        unsubs.room = onSnapshot(roomRef, (snap) => {
             if(!snap.exists()) return;
             gameState = snap.data();
             if(gameState.quitter && gameState.quitter !== uid) {
                 if(inGame) {
                     balance += gameState.bet * 2;
-                    await updateDoc(userRef, { balance });
-                    showInfoModal("Rakip masadan kaçtı! Bahis iade edildi.", "BİLGİ");
-                    inGame = false;
-                    setTimeout(() => window.leaveRoom(), 3000);
+                    updateDoc(userRef, { balance }).then(() => {
+                        showInfoModal("Rakip çekildi! Kazandınız.", "KAZANDIN");
+                        inGame = false;
+                        setTimeout(() => window.leaveRoom(), 3000);
+                    });
                 }
                 return;
             }
             if (gameState.status === "playing") {
                 document.getElementById("waitingStatus").style.display = "none";
                 if (myRole === "p1" && gameState.p1_hand.length === 0 && gameState.p2_hand.length === 0) refillHands();
-                requestAnimationFrame(render);
+                render();
             }
             if (gameState.status === "finished" && !gameState.quitter) handleEnd();
         });
     }
 
     async function refillHands() {
-        await runTransaction(db, async (transaction) => {
-            const fresh = (await transaction.get(roomRef)).data();
+        await runTransaction(db, async (t) => {
+            const fresh = (await t.get(roomRef)).data();
             if (fresh.p1_hand?.length > 0) return;
             const d = [...fresh.deck];
-            if(d.length === 0) {
-                transaction.update(roomRef, { status: "finished" });
-                return;
-            }
+            if(d.length === 0) { t.update(roomRef, { status: "finished" }); return; }
             let up = {};
             if(fresh.table.length === 0) up.table = d.splice(0, 4);
             up.p1_hand = d.splice(0, 4); up.p2_hand = d.splice(0, 4); up.deck = d;
-            transaction.update(roomRef, up);
+            t.update(roomRef, up);
         });
     }
 
@@ -389,6 +394,7 @@
         try {
             await runTransaction(db, async (t) => {
                 const d = (await t.get(roomRef)).data();
+                if (d.turn !== uid) throw "Sıra sende değil!";
                 const hand = [...d[myRole + "_hand"]];
                 const card = hand.splice(i, 1)[0];
                 let table = [...d.table], score = d[myRole + "_score"];
@@ -397,17 +403,15 @@
                 if (table.length > 0) {
                     const tVal = normalizeCardVal(table[table.length - 1]);
                     if (cVal === tVal || cVal === "J") {
-                        if(table.length === 1) {
-                            score += (cVal === "J" && tVal === "J") ? 20 : 10;
-                            showPistiAnim();
-                        } else score += table.length + 1;
+                        score += (table.length === 1) ? ((cVal === "J" && tVal === "J") ? 20 : 10) : (table.length + 1);
+                        if(table.length === 1) showPistiAnim();
                         table = [];
                     } else table.push(card);
                 } else table.push(card);
                 t.update(roomRef, { [myRole + "_hand"]: hand, table, [myRole + "_score"]: score, turn: (myRole === "p1" ? d.p2 : d.p1) });
             });
             sfx.cardThrow.play();
-        } catch (e) { console.error(e); }
+        } catch (e) { console.error("Hata:", e); }
     }
 
     function showPistiAnim() {
@@ -417,11 +421,11 @@
         setTimeout(() => pd.style.display = "none", 1500);
     }
 
+    let lastStateStr = "";
     function render() {
-        if(!gameState || !inGame) return;
-        const currentKey = JSON.stringify([gameState.table, gameState.p1_hand, gameState.p2_hand, gameState.turn]);
-        if (lastRenderKey === currentKey) return;
-        lastRenderKey = currentKey;
+        const stateStr = JSON.stringify([gameState.p1_hand, gameState.p2_hand, gameState.table, gameState.turn]);
+        if (stateStr === lastStateStr) return;
+        lastStateStr = stateStr;
 
         const ph = document.getElementById("playerHand"), ch = document.getElementById("computerHand"), tc = document.getElementById("tableCards");
         const myHand = gameState[myRole + "_hand"] || [], oppHand = (myRole === "p1" ? gameState.p2_hand : gameState.p1_hand) || [];
@@ -436,13 +440,15 @@
             const v = c.startsWith('10') ? '0'+c.substring(2) : c;
             img.src = `https://deckofcardsapi.com/static/img/${v}.png`;
             img.className = "card";
+            img.style.animationDelay = `${i * 0.2}s`;
             if(gameState.turn === uid) img.onclick = () => playCard(i);
             ph.appendChild(img);
         });
-        oppHand.forEach(() => {
+        oppHand.forEach((_, i) => {
             let img = document.createElement("img");
             img.src = "https://deckofcardsapi.com/static/img/back.png";
             img.className = "card";
+            img.style.animationDelay = `${i * 0.2}s`;
             ch.appendChild(img);
         });
         gameState.table.forEach((c, i) => {
@@ -461,7 +467,7 @@
         let msg = myS > oppS ? `KAZANDIN! +${gameState.bet*2}₺` : (myS < oppS ? "KAYBETTİN!" : "BERABERE!");
         if(myS > oppS) { balance += gameState.bet * 2; sfx.win.play(); } else if(myS === oppS) balance += gameState.bet;
         await updateDoc(userRef, { balance });
-        showInfoModal(msg, "SONUÇ");
+        showInfoModal(msg, "OYUN BİTTİ");
         setTimeout(() => window.leaveRoom(), 4000);
     }
 
@@ -477,7 +483,7 @@
         const snap = await getDocs(query(collection(db, "rooms"), where("status", "==", "waiting")));
         let found = false;
         snap.forEach(d => { if(!found && d.data().bet <= balance) { handleJoin(d.id, d.data().password, d.data().bet); found = true; } });
-        if(!found) showInfoModal("Uygun masa bulunamadı.", "LOBİ");
+        if(!found) showInfoModal("Uygun masa bulunamadı!", "LOBİ");
     };
 </script>
 </body>
