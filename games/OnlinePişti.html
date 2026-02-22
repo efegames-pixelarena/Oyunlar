@@ -13,12 +13,13 @@
             --btn-main: #4fd1ff; --btn-sec: #ffcc00;
         }
 
+        /* Madde 2: Çift Tık ve Zoom Engelleme */
         * { 
             margin:0; padding:0; box-sizing:border-box; 
             font-family: 'Rajdhani', sans-serif; 
             -webkit-tap-highlight-color: transparent; 
             user-select: none;
-            touch-action: none;
+            touch-action: none; /* Zoom ve kaydırmayı tarayıcı bazında engeller */
         }
         
         body { 
@@ -40,7 +41,6 @@
             height: 70px; flex-shrink: 0; padding: 0 10px; display: flex; align-items: center; justify-content: space-between; 
             background: rgba(0,0,0,0.95); border-bottom: 2px solid var(--border); z-index: 1000;
         }
-        /* Madde 10: Üst Bar Taşma Engeli */
         .brand { font-family: 'Black Ops One'; font-size: 0.95rem; color: var(--border); letter-spacing: 1px; flex-shrink: 1; overflow: hidden; white-space: nowrap; }
         
         .right-menu { display: flex; gap: 5px; align-items: center; flex-shrink: 0; }
@@ -73,7 +73,6 @@
             margin-bottom: 10px; border-radius: 0 8px 8px 0; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
-        /* Madde 2: Çip Animasyonları */
         .chips { display: flex; gap: 8px; justify-content: center; margin: 5px 0; }
         .chip { 
             width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center; 
@@ -113,17 +112,14 @@
             width:60px; height: 85px; border-radius: 6px; cursor:pointer; transition: 0.3s; 
             box-shadow: 0 8px 20px rgba(0,0,0,0.5); background:white; border: 1px solid #fff;
         }
-        /* Madde 5: Kart Pasiflik Yapısı */
         .card.passive { pointer-events: none; opacity: 0.7; transform: scale(0.95); filter: grayscale(0.5); }
         .card:hover:not(.passive) { transform: translateY(-15px); z-index: 100; }
 
-        /* Madde 1: Nasıl Oynanır Butonu */
         .how-to-btn {
             background: rgba(79, 209, 255, 0.1); border: 1px dashed var(--border); color: var(--border);
             padding: 10px; border-radius: 8px; text-align: center; cursor: pointer; font-weight: bold; margin-top: 10px;
         }
 
-        /* Madde 4: Aktif Masa Yok Yazısı */
         .empty-lobby { text-align: center; padding: 40px; color: #666; font-style: italic; font-size: 1rem; }
 
         .modal-overlay {
@@ -265,7 +261,6 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // Madde 2: Çip Sesleri
     const sfx = {
         chip: new Audio("https://cdn.freesound.org/previews/201/201491_3325145-lq.mp3"),
         cardThrow: new Audio("https://cdn.freesound.org/previews/240/240776_4107740-lq.mp3"),
@@ -276,16 +271,16 @@
     let balance = 0, currentBet = 0, userRef = null, uid = null, userName = "Oyuncu";
     let roomRef = null, myRole = null, gameState = null, inGame = false;
     let lobbyUnsub = null, roomUnsub = null, userUnsub = null;
-    let isProcessingPlay = false; // Madde 5: Spam Engelleme
+    
+    // Madde 1: İşlem kilidi (Algoritmanın bozulmasını engeller)
+    let isProcessingPlay = false; 
 
-    // Madde 3: Bağlantı Kesilmesi Yönetimi
     const handleExit = async () => {
         if(inGame && roomRef && gameState?.status === "playing") {
             await updateDoc(roomRef, { quitter: uid, status: "finished" });
         }
     };
     window.addEventListener('beforeunload', handleExit);
-    document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'hidden') handleExit(); });
 
     const normalizeCardVal = (c) => {
         if (!c) return "";
@@ -306,11 +301,10 @@
                 document.getElementById("balance").innerText = balance.toLocaleString('tr-TR');
             }
         });
-        cleanZombies(); // Madde 8: Hayalet Oda Temizliği
+        cleanZombies();
         listenLobby();
     });
 
-    // Madde 8: 10 dakikadan eski pasif odaları temizle
     async function cleanZombies() {
         const q = query(collection(db, "rooms"), where("status", "==", "waiting"));
         const snap = await getDocs(q);
@@ -344,7 +338,6 @@
         lobbyUnsub = onSnapshot(q, (snap) => {
             const list = document.getElementById("roomList");
             if(snap.empty) {
-                // Madde 4: Masa Yok Yazısı
                 list.innerHTML = `<div class="empty-lobby">Şuanda aktif masa yok. Kendi masanı kur!</div>`;
                 return;
             }
@@ -365,7 +358,6 @@
         });
     }
 
-    // Madde 2: Sesli Çipler
     window.addBet = (a) => { 
         if(balance >= a) { 
             balance -= a; currentBet += a; 
@@ -430,13 +422,12 @@
             if(!snap.exists()) return;
             gameState = snap.data();
 
-            // Madde 3: Rakip Bağlantı Kesilme Kazancı
             if(gameState.quitter && gameState.quitter !== uid) {
                 if(inGame) {
                     inGame = false;
                     balance += gameState.bet * 2;
                     await updateDoc(userRef, { balance });
-                    showInfoModal("Rakip ayrıldı! Masadaki ₺" + (gameState.bet*2) + " sizin oldu.", "GALİBİYET");
+                    showInfoModal("Rakip ayrıldı! Kazandınız.", "GALİBİYET");
                     setTimeout(() => window.leaveRoom(), 4000);
                 }
                 return;
@@ -479,12 +470,12 @@
         });
     }
 
-    // Madde 5 & 6: Sıralı Sistem ve Pişti Algoritması
+    // Madde 1: Kilit Mekanizması Uygulandı
     async function playCard(i) {
         if (gameState.turn !== uid || !inGame || isProcessingPlay) return;
         
         isProcessingPlay = true; 
-        render(); // Görsel kilitlenme
+        render(); 
 
         try {
             await runTransaction(db, async (transaction) => {
@@ -507,10 +498,9 @@
 
                     if (cardVal === topVal || cardVal === "J") {
                         if(table.length === 1) {
-                            // Madde 6: J ile Pişti Kontrolü
                             if (cardVal === "J") {
                                 if (topVal === "J") { score += 20; showPistiAnim(); }
-                                else { score += 2; } // J ile normal toplama
+                                else { score += 2; }
                             } else {
                                 score += 10; showPistiAnim();
                             }
@@ -532,8 +522,13 @@
                 });
             });
             sfx.cardThrow.play();
-        } catch (e) { console.warn("Hata:", e); }
-        finally { isProcessingPlay = false; }
+        } catch (e) { 
+            console.warn("Hata:", e); 
+        } finally { 
+            // İşlem bittikten sonra kilidi açıyoruz
+            isProcessingPlay = false; 
+            render(); 
+        }
     }
 
     function showPistiAnim() {
@@ -611,7 +606,6 @@
         showInfoModal(msg, "BİTTİ");
         
         setTimeout(async () => {
-            // Madde 9: Masa Bitince Otomatik Temizlik
             if(myRole === "p1" && roomRef) { try { await deleteDoc(roomRef); } catch(e){} }
             window.leaveRoom();
         }, 4000);
