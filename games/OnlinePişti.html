@@ -13,13 +13,12 @@
             --btn-main: #4fd1ff; --btn-sec: #ffcc00;
         }
 
-        /* Madde 2: Çift Tık ve Zoom Engelleme */
         * { 
             margin:0; padding:0; box-sizing:border-box; 
             font-family: 'Rajdhani', sans-serif; 
             -webkit-tap-highlight-color: transparent; 
             user-select: none;
-            touch-action: none; /* Zoom ve kaydırmayı tarayıcı bazında engeller */
+            touch-action: none;
         }
         
         body { 
@@ -136,6 +135,9 @@
             outline: none; border-radius: 8px; font-size: 1rem;
         }
 
+        /* Madde 2: Hata Yazısı Stili */
+        .error-msg { color: var(--danger); font-size: 0.8rem; margin-top: -10px; margin-bottom: 15px; display: none; font-weight: bold; }
+
         #pistiDisplay {
             position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%) scale(0);
             font-size: 110px; font-weight: 900; color: #fff; text-align: center;
@@ -206,6 +208,17 @@
 
     <div id="pistiDisplay">PİŞTİ!</div>
 
+    <div id="passwordModal" class="modal-overlay">
+        <div class="modal-box">
+            <h3 style="color:var(--border)">🔒 ÖZEL MASA</h3><br>
+            <p style="font-size:0.8rem; margin-bottom:15px; color:#888;">Bu masaya girmek için şifre gereklidir.</p>
+            <input type="password" id="joinRoomPass" class="modal-input" placeholder="Şifreyi Yazınız...">
+            <div id="passError" class="error-msg">HATALI ŞİFRE! TEKRAR DENEYİN.</div>
+            <button class="btn-neon" onclick="confirmPasswordJoin()">GİRİŞ YAP</button>
+            <button class="btn-neon btn-sec" style="margin-top:10px; background:var(--danger); color:white;" onclick="closeModal('passwordModal')">İPTAL</button>
+        </div>
+    </div>
+
     <div id="createRoomModal" class="modal-overlay">
         <div class="modal-box">
             <h3>MASA AYARLARI</h3><br>
@@ -271,9 +284,10 @@
     let balance = 0, currentBet = 0, userRef = null, uid = null, userName = "Oyuncu";
     let roomRef = null, myRole = null, gameState = null, inGame = false;
     let lobbyUnsub = null, roomUnsub = null, userUnsub = null;
-    
-    // Madde 1: İşlem kilidi (Algoritmanın bozulmasını engeller)
     let isProcessingPlay = false; 
+    
+    // Şifre modalı için geçici veriler
+    let pendingRoomId = null, pendingRoomPass = null, pendingRoomBet = null;
 
     const handleExit = async () => {
         if(inGame && roomRef && gameState?.status === "playing") {
@@ -470,32 +484,25 @@
         });
     }
 
-    // Madde 1: Kilit Mekanizması Uygulandı
     async function playCard(i) {
         if (gameState.turn !== uid || !inGame || isProcessingPlay) return;
-        
         isProcessingPlay = true; 
         render(); 
-
         try {
             await runTransaction(db, async (transaction) => {
                 const rSnap = await transaction.get(roomRef);
                 const data = rSnap.data();
                 if (data.turn !== uid) throw "Sıra sizde değil!";
-                
                 const handKey = myRole + "_hand";
                 const hand = [...data[handKey]];
                 const card = hand.splice(i, 1)[0];
                 let table = [...data.table];
                 let score = data[myRole + "_score"];
                 let lastCollector = data.lastCollector;
-
                 const cardVal = normalizeCardVal(card);
-
                 if (table.length > 0) {
                     const top = table[table.length - 1];
                     const topVal = normalizeCardVal(top);
-
                     if (cardVal === topVal || cardVal === "J") {
                         if(table.length === 1) {
                             if (cardVal === "J") {
@@ -504,14 +511,11 @@
                             } else {
                                 score += 10; showPistiAnim();
                             }
-                        } else {
-                            score += table.length + 1;
-                        }
+                        } else { score += table.length + 1; }
                         table = [];
                         lastCollector = uid;
                     } else table.push(card);
                 } else table.push(card);
-
                 const next = myRole === "p1" ? data.p2 : data.p1;
                 transaction.update(roomRef, {
                     [handKey]: hand,
@@ -522,10 +526,7 @@
                 });
             });
             sfx.cardThrow.play();
-        } catch (e) { 
-            console.warn("Hata:", e); 
-        } finally { 
-            // İşlem bittikten sonra kilidi açıyoruz
+        } catch (e) { console.warn("Hata:", e); } finally { 
             isProcessingPlay = false; 
             render(); 
         }
@@ -543,18 +544,14 @@
         const ph = document.getElementById("playerHand");
         const ch = document.getElementById("computerHand");
         const tc = document.getElementById("tableCards");
-        
         const myHand = gameState[myRole + "_hand"] || [];
         const oppHand = myRole === "p1" ? (gameState.p2_hand || []) : (gameState.p1_hand || []);
-
         ph.innerHTML = ""; ch.innerHTML = ""; tc.innerHTML = "";
         document.getElementById("ps").innerText = gameState[myRole + "_score"];
         document.getElementById("cs").innerText = (myRole === "p1" ? gameState.p2_score : gameState.p1_score);
-        
         const isMyTurn = gameState.turn === uid && !isProcessingPlay;
         document.getElementById("head-me").classList.toggle("active", isMyTurn);
         document.getElementById("head-opp").classList.toggle("active", !isMyTurn);
-
         myHand.forEach((c, i) => {
             let img = document.createElement("img");
             const visualCard = c.startsWith('10') ? '0' + c.substring(2) : c;
@@ -563,14 +560,12 @@
             if(isMyTurn) img.onclick = () => playCard(i);
             ph.appendChild(img);
         });
-
         oppHand.forEach(() => {
             let img = document.createElement("img");
             img.src = "https://deckofcardsapi.com/static/img/back.png";
             img.className = "card passive";
             ch.appendChild(img);
         });
-
         gameState.table.forEach((c, i) => {
             let img = document.createElement("img");
             const isTop = (i === gameState.table.length - 1);
@@ -589,22 +584,17 @@
         const myScore = gameState[myRole + "_score"];
         const oppScore = myRole === "p1" ? gameState.p2_score : gameState.p1_score;
         let msg = "";
-
         if (myScore > oppScore) {
             const winAmount = gameState.bet * 2;
             balance += winAmount;
             sfx.win.play();
             msg = `KAZANDIN! +${winAmount}₺`;
-        } else if(myScore < oppScore) {
-            msg = "KAYBETTİN!";
-        } else {
+        } else if(myScore < oppScore) { msg = "KAYBETTİN!"; } else {
             balance += gameState.bet;
             msg = "BERABERE!";
         }
-        
         await updateDoc(userRef, { balance });
         showInfoModal(msg, "BİTTİ");
-        
         setTimeout(async () => {
             if(myRole === "p1" && roomRef) { try { await deleteDoc(roomRef); } catch(e){} }
             window.leaveRoom();
@@ -624,10 +614,35 @@
         document.getElementById("modalMsg").innerText = m; 
         openModal('infoModal');
     };
+
+    // Madde 1: Şifre Giriş Yönetimi
     window.handleJoin = (rid, pass, bet) => {
-        if(pass && prompt("Şifre giriniz:") !== pass) return;
-        joinRoom(rid, bet);
+        if(pass) {
+            pendingRoomId = rid;
+            pendingRoomPass = pass;
+            pendingRoomBet = bet;
+            document.getElementById("joinRoomPass").value = "";
+            document.getElementById("passError").style.display = "none";
+            openModal('passwordModal');
+        } else {
+            joinRoom(rid, bet);
+        }
     };
+
+    // Madde 2: Şifre Onay ve Hata Kontrolü
+    window.confirmPasswordJoin = () => {
+        const input = document.getElementById("joinRoomPass").value;
+        const errorDiv = document.getElementById("passError");
+        if(input === pendingRoomPass) {
+            closeModal('passwordModal');
+            joinRoom(pendingRoomId, pendingRoomBet);
+        } else {
+            errorDiv.style.display = "block";
+            // Hafif sarsıntı efekti için inputu temizleyelim
+            document.getElementById("joinRoomPass").value = "";
+        }
+    };
+
     window.handleQuickJoin = async () => {
         const q = query(collection(db, "rooms"), where("status", "==", "waiting"));
         const snap = await getDocs(q);
