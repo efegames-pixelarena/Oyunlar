@@ -35,11 +35,6 @@
                 linear-gradient(135deg, #050a14 0%, #03050a 100%);
             background-size: cover;
         }
-        #bg-canvas::after {
-            content: ""; position: absolute; inset: 0;
-            background-image: url('https://www.transparenttextures.com/patterns/carbon-fibre.png');
-            opacity: 0.2; pointer-events: none;
-        }
         
         .top-bar { 
             height: 70px; flex-shrink: 0; padding: 0 15px; display: flex; align-items: center; justify-content: space-between; 
@@ -81,16 +76,15 @@
         .chip { 
             width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center; 
             font-weight:900; cursor:pointer; border: 2px dashed rgba(255,255,255,0.3); font-size: 9px; background: #222;
-            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        .chip:hover { transform: scale(1.1) rotate(10deg); }
-        .chip:active { transform: scale(0.9); }
+        .chip:active { transform: scale(1.3) rotate(15deg); filter: brightness(1.2); }
 
         .player-heads {
             width: 100%; display: flex; justify-content: space-around; padding: 10px;
             background: rgba(0,0,0,0.7); border-bottom: 2px solid #333; z-index: 100;
         }
-        .p-head { text-align: center; flex: 1; transition: 0.3s; padding: 5px; opacity: 0.5; }
+        .p-head { text-align: center; flex: 1; transition: 0.3s; padding: 5px; opacity: 0.6; }
         .p-head.active { border-bottom: 3px solid var(--border); background: rgba(79, 209, 255, 0.1); opacity: 1; }
 
         #gameArea { display: none; flex: 1; flex-direction: column; align-items: center; z-index: 5; position: relative; }
@@ -104,11 +98,9 @@
         }
 
         .table-cards { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:90px; height:125px; }
-        
         .stack-card { 
             width:90px; position:absolute; left:0; top:0; border-radius: 8px; 
-            box-shadow: 3px 3px 12px rgba(0,0,0,0.6); background:white;
-            border: 1px solid #ccc;
+            box-shadow: 3px 3px 12px rgba(0,0,0,0.6); background:white; border: 1px solid #ccc;
         }
         
         .hand, .computer { position:absolute; left:50%; transform:translateX(-50%); display:flex; gap:10px; width: max-content; padding: 15px; }
@@ -117,19 +109,17 @@
 
         .card { 
             width:60px; height: 85px; border-radius: 6px; cursor:pointer; transition: 0.3s; 
-            box-shadow: 0 8px 20px rgba(0,0,0,0.5); background:white;
-            border: 1px solid #fff;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.5); background:white; border: 1px solid #fff;
         }
-        .card.disabled { filter: grayscale(1); pointer-events: none; opacity: 0.5; }
-        .card:hover { transform: translateY(-15px); z-index: 100; }
-        
-        .how-to-trigger {
-            margin-top: auto; padding: 15px; text-align: center; color: var(--border);
-            border: 1px dashed var(--border); border-radius: 8px; cursor: pointer;
-            background: rgba(79, 209, 255, 0.05); font-weight: bold;
+        .card.passive { pointer-events: none; opacity: 0.7; transform: scale(0.95); filter: grayscale(0.5); }
+        .card:hover:not(.passive) { transform: translateY(-15px); z-index: 100; }
+
+        .how-to-btn {
+            background: rgba(79, 209, 255, 0.1); border: 1px dashed var(--border); color: var(--border);
+            padding: 10px; border-radius: 8px; text-align: center; cursor: pointer; font-weight: bold; margin-top: 10px;
         }
 
-        .empty-lobby { text-align: center; padding: 40px; color: #666; font-style: italic; }
+        .empty-lobby { text-align: center; padding: 40px; color: #666; font-style: italic; font-size: 1rem; }
 
         .modal-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.95); backdrop-filter: blur(12px);
@@ -150,15 +140,13 @@
             font-size: 110px; font-weight: 900; color: #fff; text-align: center;
             text-shadow: 0 0 30px var(--border), 0 0 60px var(--accent), 0 0 90px #fff;
             display: none; z-index: 9999; font-family: 'Black Ops One';
-            letter-spacing: 5px;
-            animation: pistiTurbo 1.8s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+            letter-spacing: 5px; animation: pistiTurbo 1.8s forwards;
         }
         @keyframes pistiTurbo {
-            0% { transform: translate(-50%,-50%) scale(0) rotate(-15deg); opacity: 0; filter: blur(10px); }
-            30% { transform: translate(-50%,-50%) scale(1.4) rotate(5deg); opacity: 1; filter: blur(0px); }
-            50% { transform: translate(-50%,-50%) scale(1.2) rotate(0deg); }
-            80% { transform: translate(-50%,-50%) scale(1.2) rotate(0deg); opacity: 1; }
-            100% { transform: translate(-50%,-50%) scale(3) rotate(0deg); opacity: 0; }
+            0% { transform: translate(-50%,-50%) scale(0); opacity: 0; }
+            30% { transform: translate(-50%,-50%) scale(1.2); opacity: 1; }
+            80% { transform: translate(-50%,-50%) scale(1.2); opacity: 1; }
+            100% { transform: translate(-50%,-50%) scale(3); opacity: 0; }
         }
     </style>
 </head>
@@ -193,7 +181,7 @@
 
         <div id="roomList" style="margin-top:10px"></div>
 
-        <div class="how-to-trigger" onclick="showHowToPlay()">(?) Nasıl Oynanılır ?</div>
+        <div class="how-to-btn" onclick="openModal('howToModal')">? NASIL OYNANILIR ?</div>
     </div>
 
     <div id="gameArea">
@@ -207,9 +195,7 @@
                 <div class="score" id="ps">0</div>
             </div>
         </div>
-
         <div id="waitingStatus" style="position:fixed; top:140px; color:var(--border); background:rgba(0,0,0,0.8); padding:10px 20px; border-radius:10px; display:none; border:1px solid var(--border);">OYUNCU BEKLENİYOR...</div>
-
         <div class="table" id="tableArea">
             <div class="computer" id="computerHand"></div>
             <div class="table-cards" id="tableCards"></div>
@@ -234,25 +220,25 @@
         </div>
     </div>
 
+    <div id="howToModal" class="modal-overlay">
+        <div class="modal-box" style="text-align: left; max-width: 400px;">
+            <h3 style="text-align: center; color: var(--border);">NASIL OYNANIR?</h3><br>
+            <p style="font-size: 0.9rem; line-height: 1.4;">
+                • Yerdeki kartla <b>aynı değerde</b> kart atarak yerdeki tüm kartları alırsınız.<br><br>
+                • <b>Vale (J)</b> her zaman yerdeki tüm kartları toplar.<br><br>
+                • Yerde <b>tek bir kart</b> varken aynı değerde kart atılırsa <b>PİŞTİ</b> olur.<br><br>
+                • J ile yerdeki J'yi almak Pişti'dir. Ancak J ile başka kartı almak Pişti değildir.<br><br>
+                • Oyun sonunda en çok kart toplayan masadaki ödülü kazanır!
+            </p><br>
+            <button class="btn-neon" onclick="closeModal('howToModal')">ANLADIM</button>
+        </div>
+    </div>
+
     <div id="infoModal" class="modal-overlay">
         <div class="modal-box">
             <h3 id="modalTitle">BİLGİ</h3><br>
             <p id="modalMsg" style="color:#aaa; margin-bottom:20px;"></p>
             <button class="btn-neon" onclick="closeModal('infoModal')">TAMAM</button>
-        </div>
-    </div>
-
-    <div id="howToModal" class="modal-overlay">
-        <div class="modal-box" style="max-width: 400px; text-align: left;">
-            <h3 style="text-align: center; color: var(--border);">NASIL OYNANILIR?</h3><br>
-            <p style="font-size: 0.9rem; line-height: 1.5; color: #ccc;">
-                • Yerdeki kartla aynı değerde bir kart atarak yerdeki tüm kartları alırsınız.<br>
-                • <b>Vale (J)</b> kartı yerdeki her şeyi süpürür.<br>
-                • Yerde sadece <b>tek 1 kart</b> varken aynı kartı atarsanız <b>PİŞTİ</b> olur.<br>
-                • J ile yerdeki J'yi alırsanız Pişti sayılır, ancak J ile başka bir kartı almak Pişti değildir.<br>
-                • Tüm kartlar bittiğinde en çok puanı toplayan kazanır.
-            </p><br>
-            <button class="btn-neon" onclick="closeModal('howToModal')">ANLADIM</button>
         </div>
     </div>
 
@@ -271,7 +257,7 @@
     };
 
     const app = initializeApp(firebaseConfig);
-    const auth = getAuth(auth);
+    const auth = getAuth(app);
     const db = getFirestore(app);
 
     const sfx = {
@@ -284,7 +270,7 @@
     let balance = 0, currentBet = 0, userRef = null, uid = null, userName = "Oyuncu";
     let roomRef = null, myRole = null, gameState = null, inGame = false;
     let lobbyUnsub = null, roomUnsub = null, userUnsub = null;
-    let isActionLock = false; // Spam engelleme
+    let isProcessingPlay = false; // Spam engelleme
 
     // Madde 6: Bağlantı Kesilmesi Yönetimi
     const handleExit = async () => {
@@ -293,7 +279,7 @@
         }
     };
     window.addEventListener('beforeunload', handleExit);
-    window.addEventListener('popstate', handleExit);
+    document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'hidden') handleExit(); });
 
     const normalizeCardVal = (c) => {
         if (!c) return "";
@@ -339,7 +325,7 @@
         lobbyUnsub = onSnapshot(q, (snap) => {
             const list = document.getElementById("roomList");
             if(snap.empty) {
-                // Madde 7: Masa yok uyarısı
+                // Madde 7: Masa Yok Yazısı
                 list.innerHTML = `<div class="empty-lobby">Şuanda aktif masa yok. Kendi masanı kur!</div>`;
                 return;
             }
@@ -354,14 +340,13 @@
                             <span style="color:var(--warning)">Bahis: ₺${data.bet.toLocaleString()}</span>
                         </div>
                         <button class="btn-neon" style="width:80px; padding:10px;" onclick="handleJoin('${roomDoc.id}', '${data.password || ''}', ${data.bet})">KATIL</button>
-                    </div>
-                `;
+                    </div>`;
             });
             list.innerHTML = html;
         });
     }
 
-    // Madde 5: Çip Animasyon ve Sesleri
+    // Madde 5: Sesli ve Animasyonlu Çipler
     window.addBet = (a) => { 
         if(balance >= a) { 
             balance -= a; currentBet += a; 
@@ -372,8 +357,7 @@
     window.cancelBet = () => { balance += currentBet; currentBet = 0; sfx.chip.play(); updateUI(); };
     function updateUI() { document.getElementById("bet").innerText = currentBet.toLocaleString('tr-TR'); }
 
-    window.showHowToPlay = () => { document.getElementById('howToModal').style.display = 'flex'; };
-    window.openCreateModal = () => { document.getElementById('createRoomModal').style.display = 'flex'; };
+    window.openCreateModal = () => { openModal('createRoomModal'); };
 
     window.confirmCreateRoom = async () => {
         if (currentBet < 100) return showInfoModal("Min 100₺ bahis!", "UYARI");
@@ -393,7 +377,7 @@
             p1: uid, p1_name: userName, bet: currentBet, status: "waiting", name, password: pass, type,
             deck: shuffledDeck, table: [], p1_score: 0, p2_score: 0,
             p1_hand: [], p2_hand: [], turn: null, quitter: null, 
-            lastRefill: Date.now(), lastCollector: null
+            lastCollector: null
         });
         
         await updateDoc(userRef, { balance });
@@ -427,13 +411,13 @@
             if(!snap.exists()) return;
             gameState = snap.data();
 
-            // Mağlubiyet/Bağlantı Kontrolü
+            // Madde 6: Rakip Ayrılma Kontrolü
             if(gameState.quitter && gameState.quitter !== uid) {
                 if(inGame) {
+                    inGame = false;
                     balance += gameState.bet * 2;
                     await updateDoc(userRef, { balance });
-                    showInfoModal("Rakip ayrıldı! Hükmen kazandınız.", "GALİBİYET");
-                    inGame = false;
+                    showInfoModal("Rakip ayrıldı! Kazandınız.", "GALİBİYET");
                     setTimeout(() => window.leaveRoom(), 3000);
                 }
                 return;
@@ -459,8 +443,7 @@
 
             const d = [...data.deck];
             if(d.length === 0) {
-                let p1s = data.p1_score;
-                let p2s = data.p2_score;
+                let p1s = data.p1_score; let p2s = data.p2_score;
                 if(data.table.length > 0 && data.lastCollector) {
                     if(data.lastCollector === data.p1) p1s += data.table.length;
                     else p2s += data.table.length;
@@ -477,11 +460,13 @@
         });
     }
 
-    // Madde 8: Sıralı Sistem ve Spam Engelleme
+    // Madde 8 & 9: Sıralı Sistem ve Pişti Algoritması
     async function playCard(i) {
-        if (gameState.turn !== uid || !inGame || isActionLock) return;
+        if (gameState.turn !== uid || !inGame || isProcessingPlay) return;
         
-        isActionLock = true; // Kartlar pasif olur
+        isProcessingPlay = true; 
+        render(); // Kartları pasif göstermek için tekrar renderla
+
         try {
             await runTransaction(db, async (transaction) => {
                 const rSnap = await transaction.get(roomRef);
@@ -490,8 +475,6 @@
                 
                 const handKey = myRole + "_hand";
                 const hand = [...data[handKey]];
-                if(!hand[i]) return;
-                
                 const card = hand.splice(i, 1)[0];
                 let table = [...data.table];
                 let score = data[myRole + "_score"];
@@ -503,16 +486,14 @@
                     const top = table[table.length - 1];
                     const topVal = normalizeCardVal(top);
 
-                    // Madde 9: J ile normal Pişti sayılamaz (sadece J vs J)
                     if (cardVal === topVal || cardVal === "J") {
                         if(table.length === 1) {
-                            if(cardVal === "J") {
-                                // J ile Pişti sadece yerdeki J ise olur
-                                if(topVal === "J") { score += 20; showPistiAnim(); }
-                                else { score += 2; } 
+                            // Madde 9: J ile Pişti Sadece J vs J ise olur
+                            if (cardVal === "J") {
+                                if (topVal === "J") { score += 20; showPistiAnim(); }
+                                else { score += 2; } // Pişti değil normal alım
                             } else {
-                                score += 10;
-                                showPistiAnim();
+                                score += 10; showPistiAnim();
                             }
                         } else {
                             score += table.length + 1;
@@ -532,11 +513,8 @@
                 });
             });
             sfx.cardThrow.play();
-        } catch (e) { 
-            console.warn("Hata:", e); 
-        } finally {
-            setTimeout(() => { isActionLock = false; }, 500); // Küçük bir gecikme sonrası kilidi aç
-        }
+        } catch (e) { console.warn("Hata:", e); }
+        finally { isProcessingPlay = false; }
     }
 
     function showPistiAnim() {
@@ -556,11 +534,10 @@
         const oppHand = myRole === "p1" ? (gameState.p2_hand || []) : (gameState.p1_hand || []);
 
         ph.innerHTML = ""; ch.innerHTML = ""; tc.innerHTML = "";
-
         document.getElementById("ps").innerText = gameState[myRole + "_score"];
         document.getElementById("cs").innerText = (myRole === "p1" ? gameState.p2_score : gameState.p1_score);
         
-        const isMyTurn = gameState.turn === uid;
+        const isMyTurn = gameState.turn === uid && !isProcessingPlay;
         document.getElementById("head-me").classList.toggle("active", isMyTurn);
         document.getElementById("head-opp").classList.toggle("active", !isMyTurn);
 
@@ -568,7 +545,7 @@
             let img = document.createElement("img");
             const visualCard = c.startsWith('10') ? '0' + c.substring(2) : c;
             img.src = `https://deckofcardsapi.com/static/img/${visualCard}.png`;
-            img.className = "card" + (isMyTurn && !isActionLock ? "" : " disabled");
+            img.className = "card" + (isMyTurn ? "" : " passive");
             if(isMyTurn) img.onclick = () => playCard(i);
             ph.appendChild(img);
         });
@@ -576,7 +553,7 @@
         oppHand.forEach(() => {
             let img = document.createElement("img");
             img.src = "https://deckofcardsapi.com/static/img/back.png";
-            img.className = "card";
+            img.className = "card passive";
             ch.appendChild(img);
         });
 
@@ -617,21 +594,21 @@
         setTimeout(async () => {
             if(myRole === "p1" && roomRef) { try { await deleteDoc(roomRef); } catch(e){} }
             window.leaveRoom();
-        }, 5000);
+        }, 4000);
     }
 
     function createDeck() {
         const suits = ["H", "D", "C", "S"], vals = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "0", "J", "Q", "K"];
-        let d = []; 
-        suits.forEach(s => vals.forEach(v => { d.push(v + s); }));
+        let d = []; suits.forEach(s => vals.forEach(v => { d.push(v + s); }));
         return d;
     }
 
+    window.openModal = (id) => { document.getElementById(id).style.display = "flex"; };
     window.closeModal = (id) => { document.getElementById(id).style.display = "none"; };
     window.showInfoModal = (m, t) => { 
         document.getElementById("modalTitle").innerText = t; 
         document.getElementById("modalMsg").innerText = m; 
-        document.getElementById("infoModal").style.display = "flex"; 
+        openModal('infoModal');
     };
     window.handleJoin = (rid, pass, bet) => {
         if(pass && prompt("Şifre giriniz:") !== pass) return;
@@ -647,7 +624,7 @@
                 joined = true; 
             } 
         });
-        if(!joined) showInfoModal("Uygun masa yok!", "ÜZGÜNÜZ");
+        if(!joined) showInfoModal("Uygun masa bulunamadı!", "ÜZGÜNÜZ");
     };
 </script>
 </body>
