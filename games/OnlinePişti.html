@@ -35,11 +35,6 @@
                 linear-gradient(135deg, #050a14 0%, #03050a 100%);
             background-size: cover;
         }
-        #bg-canvas::after {
-            content: ""; position: absolute; inset: 0;
-            background-image: url('https://www.transparenttextures.com/patterns/carbon-fibre.png');
-            opacity: 0.2; pointer-events: none;
-        }
         
         .top-bar { 
             height: 70px; flex-shrink: 0; padding: 0 15px; display: flex; align-items: center; justify-content: space-between; 
@@ -74,23 +69,24 @@
         .room-card { 
             background: var(--glass); border: 1px solid rgba(79, 209, 255, 0.2); border-left: 5px solid var(--border); 
             padding: 15px; display: flex; justify-content: space-between; align-items: center; 
-            margin-bottom: 10px; border-radius: 0 8px 8px 0; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            margin-bottom: 10px; border-radius: 0 8px 8px 0;
         }
 
         .chips { display: flex; gap: 8px; justify-content: center; margin: 5px 0; }
         .chip { 
             width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center; 
-            font-weight:900; cursor:pointer; border: 2px dashed rgba(255,255,255,0.3); font-size: 9px; background: #222;
-            transition: transform 0.1s;
+            font-weight:900; cursor:pointer; border: 2px dashed rgba(255,255,255,0.3); font-size: 9px; 
+            background: #222; transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        .chip:active { transform: scale(1.2); }
+        .chip:hover { transform: scale(1.1) rotate(10deg); }
+        .chip:active { transform: scale(0.9) rotate(-10deg); }
 
         .player-heads {
             width: 100%; display: flex; justify-content: space-around; padding: 10px;
             background: rgba(0,0,0,0.7); border-bottom: 2px solid #333; z-index: 100;
         }
-        .p-head { text-align: center; flex: 1; transition: 0.3s; padding: 5px; }
-        .p-head.active { border-bottom: 3px solid var(--border); background: rgba(79, 209, 255, 0.1); }
+        .p-head { text-align: center; flex: 1; transition: 0.3s; padding: 5px; opacity: 0.5; }
+        .p-head.active { border-bottom: 3px solid var(--border); background: rgba(79, 209, 255, 0.1); opacity: 1; }
 
         #gameArea { display: none; flex: 1; flex-direction: column; align-items: center; z-index: 5; position: relative; }
         
@@ -119,18 +115,13 @@
             box-shadow: 0 8px 20px rgba(0,0,0,0.5); background:white;
             border: 1px solid #fff;
         }
-        .card:hover { transform: translateY(-15px); z-index: 100; }
-        .computer .card { opacity: 0.95; }
+        .card.disabled { filter: grayscale(1); pointer-events: none; opacity: 0.6; }
 
-        /* Yeni Alan: Nasıl Oynanır */
-        .how-to-play {
-            margin-top: 20px; padding: 15px; background: rgba(79, 209, 255, 0.05);
-            border: 1px solid rgba(79, 209, 255, 0.2); border-radius: 8px;
+        .how-to-btn {
+            background: rgba(79, 209, 255, 0.1); border: 1px solid var(--border);
+            color: var(--border); padding: 10px; border-radius: 5px; text-align: center;
+            margin-top: auto; cursor: pointer; font-weight: 700;
         }
-        .how-to-play h4 { color: var(--border); font-size: 0.9rem; margin-bottom: 5px; }
-        .how-to-play p { font-size: 0.8rem; color: #aaa; line-height: 1.4; }
-
-        .empty-lobby { text-align: center; padding: 40px; color: #666; font-style: italic; }
 
         .modal-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.95); backdrop-filter: blur(12px);
@@ -143,23 +134,19 @@
         .modal-input { 
             width: 100%; background: #161b22; border: 1px solid #30363d; 
             padding: 12px; color: #fff; margin-bottom: 15px; text-align: center; 
-            outline: none; border-radius: 8px; font-size: 1rem;
+            outline: none; border-radius: 8px;
         }
 
         #pistiDisplay {
-            position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%) scale(0);
-            font-size: 110px; font-weight: 900; color: #fff; text-align: center;
-            text-shadow: 0 0 30px var(--border), 0 0 60px var(--accent), 0 0 90px #fff;
-            display: none; z-index: 9999; font-family: 'Black Ops One';
-            letter-spacing: 5px;
-            animation: pistiTurbo 1.8s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
+            font-size: 80px; font-weight: 900; color: #fff; display: none; z-index: 9999;
+            text-shadow: 0 0 20px var(--border); font-family: 'Black Ops One';
+            animation: pistiPop 1.5s forwards;
         }
-        @keyframes pistiTurbo {
-            0% { transform: translate(-50%,-50%) scale(0) rotate(-15deg); opacity: 0; filter: blur(10px); }
-            30% { transform: translate(-50%,-50%) scale(1.4) rotate(5deg); opacity: 1; filter: blur(0px); }
-            50% { transform: translate(-50%,-50%) scale(1.2) rotate(0deg); }
-            80% { transform: translate(-50%,-50%) scale(1.2) rotate(0deg); opacity: 1; }
-            100% { transform: translate(-50%,-50%) scale(3) rotate(0deg); opacity: 0; }
+        @keyframes pistiPop {
+            0% { transform: translate(-50%,-50%) scale(0); opacity: 0; }
+            50% { transform: translate(-50%,-50%) scale(1.2); opacity: 1; }
+            100% { transform: translate(-50%,-50%) scale(2); opacity: 0; }
         }
     </style>
 </head>
@@ -194,26 +181,15 @@
 
         <div id="roomList" style="margin-top:10px"></div>
 
-        <div class="how-to-play">
-            <h4>Nasıl Oynanılır?</h4>
-            <p>Yerdeki kartla aynı değerde bir kart atarak yerdeki desteyi kazanın. Vale (J) kartı her durumda yeri süpürür. Eğer yerde tek bir kart varsa ve aynı değerde kart atarsanız "Pişti" yapmış olursunuz!</p>
-        </div>
+        <div class="how-to-btn" onclick="showHowToPlay()">(?) Nasıl Oynanılır?</div>
     </div>
 
     <div id="gameArea">
         <div class="player-heads">
-            <div class="p-head" id="head-opp">
-                <div class="name">RAKİP</div>
-                <div class="score" id="cs">0</div>
-            </div>
-            <div class="p-head" id="head-me">
-                <div class="name">SİZ</div>
-                <div class="score" id="ps">0</div>
-            </div>
+            <div class="p-head" id="head-opp"><div class="name">RAKİP</div><div class="score" id="cs">0</div></div>
+            <div class="p-head" id="head-me"><div class="name">SİZ</div><div class="score" id="ps">0</div></div>
         </div>
-
         <div id="waitingStatus" style="position:fixed; top:140px; color:var(--border); background:rgba(0,0,0,0.8); padding:10px 20px; border-radius:10px; display:none; border:1px solid var(--border);">OYUNCU BEKLENİYOR...</div>
-
         <div class="table" id="tableArea">
             <div class="computer" id="computerHand"></div>
             <div class="table-cards" id="tableCards"></div>
@@ -227,13 +203,10 @@
         <div class="modal-box">
             <h3>MASA AYARLARI</h3><br>
             <input type="text" id="newRoomName" class="modal-input" placeholder="Masa Adı">
-            
-            <select id="newRoomType" class="modal-input" style="background:#161b22; color:white;">
+            <select id="newRoomType" class="modal-input">
                 <option value="2-52">2 Kişilik (52 Kart)</option>
-                <option value="2-104">2 Kişilik (104 Kart)</option>
                 <option value="4-104">4 Kişilik (104 Kart)</option>
             </select>
-
             <input type="password" id="newRoomPass" class="modal-input" placeholder="Şifre (Opsiyonel)">
             <button class="btn-neon" onclick="confirmCreateRoom()">OLUŞTUR</button>
             <button class="btn-neon btn-sec" style="margin-top:10px; background:var(--danger); color:white;" onclick="closeModal('createRoomModal')">İPTAL</button>
@@ -268,37 +241,20 @@
 
     const sfx = {
         chip: new Audio("https://cdn.freesound.org/previews/201/201491_3325145-lq.mp3"),
-        cardThrow: new Audio("https://cdn.freesound.org/previews/240/240776_4107740-lq.mp3"),
-        win: new Audio("https://cdn.freesound.org/previews/391/391539_5235550-lq.mp3"),
-        pisti: new Audio("https://cdn.freesound.org/previews/476/476178_7879024-lq.mp3") 
+        card: new Audio("https://cdn.freesound.org/previews/240/240776_4107740-lq.mp3"),
+        win: new Audio("https://cdn.freesound.org/previews/391/391539_5235550-lq.mp3")
     };
 
-    let balance = 0, currentBet = 0, userRef = null, uid = null, userName = "Oyuncu";
+    let balance = 0, currentBet = 0, uid = null, userName = "Oyuncu";
     let roomRef = null, myRole = null, gameState = null, inGame = false;
-    let lobbyUnsub = null, roomUnsub = null, userUnsub = null;
-
-    // Bağlantı Kesilmesi Yönetimi (Madde 6)
-    const handleExit = async () => {
-        if(inGame && roomRef && gameState?.status === "playing") {
-            await updateDoc(roomRef, { quitter: uid, status: "finished" });
-        }
-    };
-    window.addEventListener('beforeunload', handleExit);
-    document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'hidden') handleExit(); });
-
-    const normalizeCardVal = (c) => {
-        if (!c) return "";
-        let v = c.substring(0, c.length - 1);
-        return (v === '0') ? '10' : v;
-    };
+    let lobbyUnsub, roomUnsub, userUnsub;
+    let isProcessingMove = false;
 
     onAuthStateChanged(auth, user => {
         if (!user) return;
         uid = user.uid;
-        userRef = doc(db, "users", uid);
-        
         if(userUnsub) userUnsub();
-        userUnsub = onSnapshot(userRef, snap => {
+        userUnsub = onSnapshot(doc(db, "users", uid), snap => {
             if(snap.exists()) {
                 balance = snap.data().balance || 0;
                 userName = snap.data().username || "Oyuncu";
@@ -308,229 +264,183 @@
         listenLobby();
     });
 
-    window.leaveRoom = async () => {
-        if(roomUnsub) { roomUnsub(); roomUnsub = null; }
-        if (roomRef) {
-            try {
-                if (gameState?.status === "waiting") await deleteDoc(roomRef);
-                else if (inGame) await updateDoc(roomRef, { quitter: uid, status: "finished" });
-            } catch(e) {}
+    // Sayfa Kapanma / Bağlantı Kesilmesi (Madde 6)
+    window.addEventListener('beforeunload', async () => {
+        if(inGame && roomRef && gameState?.status === "playing") {
+            await updateDoc(roomRef, { quitter: uid, status: "finished" });
         }
-        location.reload();
-    };
-
-    window.handleNavAction = () => {
-        if (inGame || roomRef) window.leaveRoom();
-        else window.location.href = "index.html";
-    };
+    });
 
     function listenLobby() {
         if(lobbyUnsub) lobbyUnsub();
         const q = query(collection(db, "rooms"), where("status", "==", "waiting"));
-        lobbyUnsub = onSnapshot(q, (snap) => {
+        lobbyUnsub = onSnapshot(q, snap => {
             const list = document.getElementById("roomList");
             if(snap.empty) {
-                list.innerHTML = `<div class="empty-lobby">Şuanda aktif masa yok. Kendi masanı kur!</div>`;
+                list.innerHTML = `<div style="text-align:center; padding:20px; color:#666;">Şuanda aktif masa yok.</div>`;
                 return;
             }
             let html = "";
-            snap.forEach(roomDoc => {
-                const data = roomDoc.data();
-                html += `
-                    <div class="room-card">
-                        <div>
-                            <small style="color:var(--border)">${data.name} (${data.type})</small><br>
-                            <b style="font-size:1.1rem">${data.password ? '🔒 Şifreli' : '🔓 Açık'}</b><br>
-                            <span style="color:var(--warning)">Bahis: ₺${data.bet.toLocaleString()}</span>
-                        </div>
-                        <button class="btn-neon" style="width:80px; padding:10px;" onclick="handleJoin('${roomDoc.id}', '${data.password || ''}', ${data.bet})">KATIL</button>
-                    </div>
-                `;
+            snap.forEach(d => {
+                const r = d.data();
+                html += `<div class="room-card">
+                    <div><b>${r.name}</b><br><small>${r.type} - ₺${r.bet}</small></div>
+                    <button class="btn-neon" style="width:80px;" onclick="handleJoin('${d.id}', '${r.password||''}', ${r.bet})">KATIL</button>
+                </div>`;
             });
             list.innerHTML = html;
         });
     }
 
-    window.addBet = (a) => { 
-        if(balance >= a) { 
-            balance -= a; currentBet += a; 
-            sfx.chip.currentTime = 0; sfx.chip.play(); 
-            updateUI(); 
-        } 
-    };
-    window.cancelBet = () => { balance += currentBet; currentBet = 0; sfx.chip.play(); updateUI(); };
-    function updateUI() { document.getElementById("bet").innerText = currentBet.toLocaleString('tr-TR'); }
+    window.addBet = (a) => { if(balance >= a) { balance -= a; currentBet += a; sfx.chip.currentTime=0; sfx.chip.play(); updateBetUI(); } };
+    window.cancelBet = () => { balance += currentBet; currentBet = 0; sfx.chip.play(); updateBetUI(); };
+    function updateBetUI() { document.getElementById("bet").innerText = currentBet.toLocaleString(); }
 
-    window.openCreateModal = () => { document.getElementById('createRoomModal').style.display = 'flex'; };
+    window.openCreateModal = () => document.getElementById('createRoomModal').style.display='flex';
+    window.closeModal = (id) => document.getElementById(id).style.display='none';
+    window.showHowToPlay = () => window.showInfoModal("Yerdeki kartla aynı değerdeki kartı atarak yerdeki tüm kartları alırsınız. J (Vale) kartı her zaman yeri alır. Yerde tek kart varken aynı kartı atarsanız PİŞTİ olur (Vale ile pişti yapılamaz).", "NASIL OYNANIR?");
 
     window.confirmCreateRoom = async () => {
-        if (currentBet < 100) return showInfoModal("Min 100₺ bahis!", "UYARI");
+        if(currentBet < 100) return window.showInfoModal("Minimum bahis 100₺ olmalıdır.", "HATA");
         const name = document.getElementById("newRoomName").value || "Arena";
         const type = document.getElementById("newRoomType").value;
-        const pass = document.getElementById("newRoomPass").value || "";
         const roomId = "room_" + Date.now();
         roomRef = doc(db, "rooms", roomId);
         myRole = "p1";
-        
-        const isDouble = type.includes("104");
-        const baseDeck = createDeck();
-        const finalDeck = isDouble ? [...baseDeck, ...createDeck()] : [...baseDeck];
-        const shuffledDeck = finalDeck.sort(() => Math.random() - 0.5);
 
+        const deck = createDeck(type.includes("104"));
         await setDoc(roomRef, {
-            p1: uid, p1_name: userName, bet: currentBet, status: "waiting", name, password: pass, type,
-            deck: shuffledDeck, table: [], p1_score: 0, p2_score: 0,
-            p1_hand: [], p2_hand: [], turn: null, quitter: null, 
-            lastRefill: Date.now(), lastCollector: null
+            p1: uid, p1_name: userName, bet: currentBet, status: "waiting", name, type,
+            deck, table: [], p1_score: 0, p2_score: 0, p1_hand: [], p2_hand: [],
+            turn: null, quitter: null, lastCollector: null
         });
-        
-        await updateDoc(userRef, { balance });
+        await updateDoc(doc(db, "users", uid), { balance });
         closeModal('createRoomModal');
-        enterGameView();
-        listenRoom();
+        initGame();
     };
 
-    async function joinRoom(rid, bet) {
-        if (balance < bet) return showInfoModal("Yetersiz bakiye!", "HATA");
+    async function handleJoin(rid, pass, bet) {
+        if(balance < bet) return window.showInfoModal("Bakiyeniz yetersiz!", "HATA");
+        if(pass && prompt("Şifre:") !== pass) return;
         balance -= bet;
         roomRef = doc(db, "rooms", rid);
         myRole = "p2";
         await updateDoc(roomRef, { p2: uid, p2_name: userName, status: "playing", turn: uid });
-        await updateDoc(userRef, { balance });
-        enterGameView();
-        listenRoom();
+        await updateDoc(doc(db, "users", uid), { balance });
+        initGame();
     }
 
-    function enterGameView() {
+    function initGame() {
         inGame = true;
         document.getElementById("lobbyScreen").style.display = "none";
         document.getElementById("gameArea").style.display = "flex";
-        document.getElementById("navActionBtn").innerText = "AYRIL";
         document.getElementById("waitingStatus").style.display = "block";
+        listenRoom();
     }
 
     function listenRoom() {
         if(roomUnsub) roomUnsub();
-        roomUnsub = onSnapshot(roomRef, async (snap) => {
+        roomUnsub = onSnapshot(roomRef, async snap => {
             if(!snap.exists()) return;
             gameState = snap.data();
 
-            if(gameState.quitter && gameState.quitter !== uid) {
-                if(inGame) {
-                    balance += gameState.bet * 2;
-                    await updateDoc(userRef, { balance });
-                    showInfoModal("Rakip ayrıldı veya bağlantısı koptu! Kazandınız.", "GALİBİYET");
-                    inGame = false;
-                    setTimeout(() => window.leaveRoom(), 3000);
-                }
+            // Bağlantı kopması kontrolü (Madde 6)
+            if(gameState.quitter && gameState.quitter !== uid && inGame) {
+                inGame = false;
+                const win = gameState.bet * 2;
+                await updateDoc(doc(db, "users", uid), { balance: balance + win });
+                window.showInfoModal("Rakip kaçtı! Hükmen kazandınız: ₺" + win, "ZAFER");
+                setTimeout(() => location.reload(), 3000);
                 return;
             }
 
-            if (gameState.status === "playing") {
+            if(gameState.status === "playing") {
                 document.getElementById("waitingStatus").style.display = "none";
-                if (myRole === "p1" && (gameState.p1_hand?.length === 0 && gameState.p2_hand?.length === 0)) {
-                    refillHands();
-                }
+                if(myRole === "p1" && gameState.p1_hand.length === 0 && gameState.p2_hand.length === 0) refill();
                 render();
             }
-            if (gameState.status === "finished" && !gameState.quitter) handleEnd();
+            if(gameState.status === "finished" && !gameState.quitter) finalize();
         });
     }
 
-    async function refillHands() {
-        await runTransaction(db, async (transaction) => {
-            const freshSnap = await transaction.get(roomRef);
-            if(!freshSnap.exists()) return;
-            const data = freshSnap.data();
-            if (data.p1_hand?.length > 0 || data.p2_hand?.length > 0) return;
-
-            const d = [...data.deck];
-            if(d.length === 0) {
-                let p1s = data.p1_score;
-                let p2s = data.p2_score;
-                if(data.table.length > 0 && data.lastCollector) {
-                    if(data.lastCollector === data.p1) p1s += data.table.length;
-                    else p2s += data.table.length;
-                }
-                transaction.update(roomRef, { status: "finished", p1_score: p1s, p2_score: p2s, table: [] });
-                return;
+    async function refill() {
+        let d = [...gameState.deck];
+        if(d.length === 0) {
+            let p1s = gameState.p1_score, p2s = gameState.p2_score;
+            if(gameState.table.length > 0) {
+                if(gameState.lastCollector === gameState.p1) p1s += gameState.table.length;
+                else p2s += gameState.table.length;
             }
-            let updates = {};
-            if(data.table.length === 0) updates.table = d.splice(0, 4);
-            updates.p1_hand = d.splice(0, 4);
-            updates.p2_hand = d.splice(0, 4);
-            updates.deck = d;
-            transaction.update(roomRef, updates);
-        });
+            await updateDoc(roomRef, { status: "finished", p1_score: p1s, p2_score: p2s, table: [] });
+            return;
+        }
+        let updates = {
+            p1_hand: d.splice(0, 4),
+            p2_hand: d.splice(0, 4),
+            deck: d
+        };
+        if(gameState.table.length === 0) updates.table = d.splice(0, 4);
+        await updateDoc(roomRef, updates);
     }
 
-    async function playCard(i) {
-        if (gameState.turn !== uid || !inGame) return;
-        
+    async function playCard(idx) {
+        if(gameState.turn !== uid || isProcessingMove) return;
+        isProcessingMove = true;
+
         try {
             await runTransaction(db, async (transaction) => {
-                const rSnap = await transaction.get(roomRef);
-                const data = rSnap.data();
-                if (data.turn !== uid) throw "Sıra sizde değil!";
-                
-                const handKey = myRole + "_hand";
-                const hand = [...data[handKey]];
-                if(!hand[i]) return;
-                
-                const card = hand.splice(i, 1)[0];
-                let table = [...data.table];
+                const snap = await transaction.get(roomRef);
+                const data = snap.data();
+                const hand = data[myRole + "_hand"];
+                const card = hand[idx];
+                const table = data.table;
                 let score = data[myRole + "_score"];
                 let lastCollector = data.lastCollector;
 
-                const cardVal = normalizeCardVal(card);
-
-                if (table.length > 0) {
+                hand.splice(idx, 1);
+                const cardVal = card.substring(0, card.length - 1);
+                
+                if(table.length > 0) {
                     const top = table[table.length - 1];
-                    const topVal = normalizeCardVal(top);
+                    const topVal = top.substring(0, top.length - 1);
 
-                    if (cardVal === topVal || cardVal === "J") {
-                        if(table.length === 1) {
-                            score += (cardVal === "J" && topVal === "J") ? 20 : 10;
-                            showPistiAnim();
+                    // Madde 9: J ile Pişti olmaz. Sadece aynı değerle olur.
+                    if(cardVal === topVal || cardVal === "J" || (cardVal === "0" && topVal === "10") || (cardVal === "10" && topVal === "0")) {
+                        if(table.length === 1 && cardVal !== "J") {
+                            score += 10; // Pişti
+                            document.getElementById("pistiDisplay").style.display="block";
+                            setTimeout(()=>document.getElementById("pistiDisplay").style.display="none", 1500);
                         } else {
-                            score += table.length + 1;
+                            score += (table.length + 1);
                         }
-                        table = [];
-                        lastCollector = uid;
-                    } else table.push(card);
-                } else table.push(card);
+                        transaction.update(roomRef, { table: [], [myRole+"_score"]: score, lastCollector: uid });
+                    } else {
+                        table.push(card);
+                        transaction.update(roomRef, { table: table });
+                    }
+                } else {
+                    table.push(card);
+                    transaction.update(roomRef, { table: table });
+                }
 
-                const next = myRole === "p1" ? data.p2 : data.p1;
                 transaction.update(roomRef, {
-                    [handKey]: hand,
-                    table: table,
-                    [myRole + "_score"]: score,
-                    turn: next,
-                    lastCollector: lastCollector
+                    [myRole+"_hand"]: hand,
+                    turn: myRole === "p1" ? data.p2 : data.p1
                 });
             });
-            sfx.cardThrow.play();
-        } catch (e) { console.warn("İşlem hatası:", e); }
-    }
-
-    function showPistiAnim() {
-        sfx.pisti.play();
-        const pd = document.getElementById("pistiDisplay");
-        pd.style.display = "block";
-        setTimeout(() => { pd.style.display = "none"; }, 1800);
+            sfx.card.play();
+        } catch(e) { console.error(e); }
+        isProcessingMove = false;
     }
 
     function render() {
-        if(!gameState || !inGame) return;
         const ph = document.getElementById("playerHand");
         const ch = document.getElementById("computerHand");
         const tc = document.getElementById("tableCards");
-        
         const myHand = gameState[myRole + "_hand"] || [];
         const oppHand = myRole === "p1" ? (gameState.p2_hand || []) : (gameState.p1_hand || []);
 
         ph.innerHTML = ""; ch.innerHTML = ""; tc.innerHTML = "";
-
         document.getElementById("ps").innerText = gameState[myRole + "_score"];
         document.getElementById("cs").innerText = (myRole === "p1" ? gameState.p2_score : gameState.p1_score);
         
@@ -539,89 +449,63 @@
         document.getElementById("head-opp").classList.toggle("active", !isMyTurn);
 
         myHand.forEach((c, i) => {
-            let img = document.createElement("img");
-            const visualCard = c.startsWith('10') ? '0' + c.substring(2) : c;
-            img.src = `https://deckofcardsapi.com/static/img/${visualCard}.png`;
-            img.className = "card";
-            if(isMyTurn) img.onclick = () => playCard(i);
+            const img = document.createElement("img");
+            img.src = `https://deckofcardsapi.com/static/img/${c === '10' ? '0' : c}.png`;
+            img.className = "card" + (isMyTurn ? "" : " disabled");
+            img.onclick = () => playCard(i);
             ph.appendChild(img);
         });
 
         oppHand.forEach(() => {
-            let img = document.createElement("img");
+            const img = document.createElement("img");
             img.src = "https://deckofcardsapi.com/static/img/back.png";
             img.className = "card";
             ch.appendChild(img);
         });
 
         gameState.table.forEach((c, i) => {
-            let img = document.createElement("img");
-            const isTop = (i === gameState.table.length - 1);
-            const visualCard = c.startsWith('10') ? '0' + c.substring(2) : c;
-            img.src = isTop ? `https://deckofcardsapi.com/static/img/${visualCard}.png` : "https://deckofcardsapi.com/static/img/back.png";
+            const img = document.createElement("img");
+            const isTop = i === gameState.table.length - 1;
+            img.src = isTop ? `https://deckofcardsapi.com/static/img/${c}.png` : "https://deckofcardsapi.com/static/img/back.png";
             img.className = "stack-card";
-            img.style.zIndex = i;
-            img.style.transform = `translate(${i*0.5}px, ${i*0.5}px)`;
+            img.style.transform = `translate(${i*2}px, ${i*2}px)`;
             tc.appendChild(img);
         });
     }
 
-    async function handleEnd() {
-        if (!inGame) return;
+    async function finalize() {
+        if(!inGame) return;
         inGame = false;
-        const myScore = gameState[myRole + "_score"];
-        const oppScore = myRole === "p1" ? gameState.p2_score : gameState.p1_score;
-        let msg = "";
-
-        if (myScore > oppScore) {
-            const winAmount = gameState.bet * 2;
-            balance += winAmount;
-            sfx.win.play();
-            msg = `KAZANDIN! +${winAmount}₺`;
-        } else if(myScore < oppScore) {
-            msg = "KAYBETTİN!";
-        } else {
-            balance += gameState.bet;
-            msg = "BERABERE!";
-        }
+        const s1 = gameState[myRole + "_score"], s2 = myRole === "p1" ? gameState.p2_score : gameState.p1_score;
+        let win = 0;
+        if(s1 > s2) { win = gameState.bet * 2; balance += win; sfx.win.play(); window.showInfoModal("KAZANDIN! Ödül: ₺"+win, "TEBRİKLER"); }
+        else if(s1 === s2) { balance += gameState.bet; window.showInfoModal("BERABERE!", "BİLGİ"); }
+        else { window.showInfoModal("KAYBETTİN!", "ÜZGÜNÜZ"); }
         
-        await updateDoc(userRef, { balance });
-        showInfoModal(msg, "BİTTİ");
-        
-        setTimeout(async () => {
-            if(myRole === "p1" && roomRef) { try { await deleteDoc(roomRef); } catch(e){} }
-            window.leaveRoom();
-        }, 4000);
+        await updateDoc(doc(db, "users", uid), { balance });
+        setTimeout(() => location.reload(), 4000);
     }
 
-    function createDeck() {
+    function createDeck(is104) {
         const suits = ["H", "D", "C", "S"], vals = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "0", "J", "Q", "K"];
-        let d = []; 
-        suits.forEach(s => vals.forEach(v => { d.push(v + s); }));
-        return d;
+        let d = [];
+        suits.forEach(s => vals.forEach(v => d.push(v + s)));
+        if(is104) d = [...d, ...d];
+        return d.sort(() => Math.random() - 0.5);
     }
 
-    window.closeModal = (id) => { document.getElementById(id).style.display = "none"; };
+    window.handleNavAction = () => location.reload();
     window.showInfoModal = (m, t) => { 
         document.getElementById("modalTitle").innerText = t; 
         document.getElementById("modalMsg").innerText = m; 
         document.getElementById("infoModal").style.display = "flex"; 
     };
-    window.handleJoin = (rid, pass, bet) => {
-        if(pass && prompt("Şifre giriniz:") !== pass) return;
-        joinRoom(rid, bet);
-    };
+
     window.handleQuickJoin = async () => {
         const q = query(collection(db, "rooms"), where("status", "==", "waiting"));
         const snap = await getDocs(q);
-        let joined = false;
-        snap.forEach(d => { 
-            if(!joined && d.data().bet <= balance) { 
-                handleJoin(d.id, d.data().password || '', d.data().bet);
-                joined = true; 
-            } 
-        });
-        if(!joined) showInfoModal("Uygun masa yok!", "ÜZGÜNÜZ");
+        if(snap.empty) return window.showInfoModal("Uygun masa bulunamadı!", "BİLGİ");
+        handleJoin(snap.docs[0].id, "", snap.docs[0].data().bet);
     };
 </script>
 </body>
